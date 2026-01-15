@@ -2,97 +2,28 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Administrativo | Abella Joias</title>
+<title>Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.tab{display:none}
-.tab.active{display:block}
-</style>
 </head>
 
-<body>
+<body class="bg-neutral-50">
 
-<header class="bg-white border-b px-10 py-6 flex justify-between">
-  <div>
-    <h1 class="font-serif text-xl gold">Abella Joias</h1>
-    <p class="text-xs text-gray-400">Painel Administrativo</p>
-  </div>
-
-  <nav class="flex gap-6 text-xs uppercase">
-    <button onclick="openTab('empresa')" class="gold">Empresa</button>
-    <button onclick="openTab('categorias')">Categorias</button>
-    <button onclick="openTab('produtos')">Produtos</button>
-    <button onclick="openTab('pedidos')">Pedidos</button>
-  </nav>
+<header class="bg-white p-6 border-b text-center">
+<h1 class="font-serif text-2xl text-[#A68966]">Abella Joias</h1>
 </header>
 
-<main class="max-w-6xl mx-auto p-8 space-y-16">
+<div class="p-4 max-w-6xl mx-auto">
+<select id="filtroCategoria" class="border p-2 mb-4 w-full"></select>
 
-<!-- EMPRESA -->
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold">Empresa</h2>
+<div id="produtos" class="grid sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
 
-<div class="grid md:grid-cols-2 gap-4">
-<input id="empNome" placeholder="Nome" class="border p-3">
-<input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
-<input id="empPix" type="number" placeholder="% PIX" class="border p-3">
-<input id="empParcelas" type="number" placeholder="Parcelas cartão" class="border p-3">
+<a href="checkout.html" class="fixed bottom-5 right-5 bg-black text-white px-6 py-3 rounded-full">
+Finalizar Pedido
+</a>
 </div>
-
-<button onclick="salvarEmpresa()" class="bg-black text-white px-6 py-2">Salvar</button>
-</section>
-
-<!-- CATEGORIAS -->
-<section id="categorias" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Categorias</h2>
-
-<div class="flex gap-4">
-<input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
-<button onclick="salvarCategoria()" class="bg-black text-white px-6">Salvar</button>
-</div>
-
-<div id="listaCategorias" class="space-y-2"></div>
-</section>
-
-<!-- PRODUTOS -->
-<section id="produtos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Produtos</h2>
-
-<div class="grid md:grid-cols-2 gap-4">
-<input id="pNome" placeholder="Nome" class="border p-3">
-<input id="pSku" placeholder="SKU" class="border p-3">
-<input id="pPreco" type="number" placeholder="Preço" class="border p-3">
-<input id="pEstoque" type="number" placeholder="Estoque" class="border p-3">
-<input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-<select id="pCategoria" class="border p-3"></select>
-<input id="pImagem" placeholder="URL da imagem" class="border p-3 md:col-span-2">
-</div>
-
-<button onclick="salvarProduto()" class="bg-black text-white px-6 py-2">Salvar Produto</button>
-<select id="filtroCategoria" class="border p-3 w-full mb-6">
-  <option value="">Todas as categorias</option>
-</select>
-
-<div id="produtosGrid" class="grid md:grid-cols-3 gap-6"></div>
-
-</section>
-
-<!-- PEDIDOS -->
-<section id="pedidos" class="tab">
-<h2 class="font-serif text-2xl gold mb-4">Pedidos</h2>
-<div id="listaPedidos" class="space-y-4"></div>
-<button onclick="backupAgora()" class="bg-green-600 text-white px-6 py-2 mt-4">Backup Manual</button>
-</section>
-
-</main>
 
 <script>
 firebase.initializeApp({
@@ -101,128 +32,48 @@ firebase.initializeApp({
   databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
   projectId: "SEU_PROJETO"
 });
-const db = firebase.database();
 
-function openTab(id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+const db=firebase.database();
+let produtos=[],cart=[];
 
-/* EMPRESA */
-function salvarEmpresa(){
-  db.ref('settings').set({
-    name: empNome.value,
-    whatsapp: empWhatsapp.value,
-    pix:+empPix.value,
-    parcelas:+empParcelas.value
-  });
-}
-
-/* CATEGORIAS */
-function salvarCategoria(){
-  db.ref('categories').push({name:catNome.value});
-  catNome.value='';
-}
-db.ref('categories').on('value',s=>{
-  listaCategorias.innerHTML='';
-  pCategoria.innerHTML='<option value="">Categoria</option>';
-  s.forEach(c=>{
-    listaCategorias.innerHTML+=`<div>${c.val().name}</div>`;
-    pCategoria.innerHTML+=`<option>${c.val().name}</option>`;
-  });
-});
-
-/* PRODUTOS */
-function salvarProduto(){
-  db.ref('products').push({
-    name:pNome.value,
-    sku:pSku.value,
-    price:+pPreco.value,
-    stock:+pEstoque.value,
-    weight:+pPeso.value,
-    category:pCategoria.value,
-    image:pImagem.value
-  });
-}
-db.ref('products').on('value',s=>{
-  listaProdutos.innerHTML='';
-  s.forEach(p=>{
-    listaProdutos.innerHTML+=`
-    <div class="bg-white p-4">
-      <img src="${p.val().image}" class="h-32 w-full object-cover">
-      <p>${p.val().name}</p>
-      <p>${p.val().category}</p>
-      <p>${p.val().weight}g</p>
-    </div>`;
-  });
-});
-
-/* PEDIDOS */
-db.ref('orders').on('value',s=>{
-  listaPedidos.innerHTML='';
-  s.forEach(p=>{
-    listaPedidos.innerHTML+=`
-    <div class="bg-white p-4">
-      <p>${p.val().cliente}</p>
-      <p>Peso total: ${p.val().pesoTotal} g</p>
-      <strong>R$ ${p.val().total}</strong>
-    </div>`;
-  });
-});
-
-/* BACKUP */
-function backupAgora(){
-  Promise.all([
-    db.ref('products').once('value'),
-    db.ref('categories').once('value'),
-    db.ref('orders').once('value'),
-    db.ref('settings').once('value')
-  ]).then(([p,c,o,s])=>{
-    db.ref('backups').push({
-      data:new Date().toISOString(),
-      products:p.val(),
-      categories:c.val(),
-      orders:o.val(),
-      settings:s.val()
-    });
-    alert('Backup criado');
-  });
-}
-<script>
-let produtos=[];
-
-firebase.database().ref('categories').on('value',s=>{
+db.ref('categories').on('value',snap=>{
   filtroCategoria.innerHTML='<option value="">Todas</option>';
-  s.forEach(c=>{
-    filtroCategoria.innerHTML+=`<option>${c.val().name}</option>`;
+  snap.forEach(s=>{
+    filtroCategoria.innerHTML+=`<option value="${s.key}">${s.val().name}</option>`;
   });
 });
 
-firebase.database().ref('products').on('value',s=>{
+db.ref('products').on('value',snap=>{
   produtos=[];
-  s.forEach(p=>produtos.push(p.val()));
-  render(produtos);
+  snap.forEach(s=>{
+    produtos.push({...s.val(),id:s.key});
+  });
+  render();
 });
 
-filtroCategoria.onchange=()=>{
-  render(
-    filtroCategoria.value
-      ? produtos.filter(p=>p.category===filtroCategoria.value)
-      : produtos
-  );
-};
+filtroCategoria.onchange=render;
 
-function render(lista){
-  produtosGrid.innerHTML='';
-  lista.forEach(p=>{
-    produtosGrid.innerHTML+=`
-      <div class="bg-white p-4 border">
-        <img src="${p.image}" class="h-48 w-full object-cover mb-2">
-        <h3>${p.name}</h3>
-        <p class="text-xs text-gray-500">${p.category}</p>
-        <strong>R$ ${p.price.toFixed(2)}</strong>
+function render(){
+  produtosDiv.innerHTML='';
+  produtos.filter(p=>!filtroCategoria.value||p.category===filtroCategoria.value)
+  .forEach(p=>{
+    produtosDiv.innerHTML+=`
+      <div class="bg-white border p-4">
+        <img src="${p.image}" class="h-40 w-full object-cover">
+        <p>${p.name}</p>
+        <p class="text-xs">Peso: ${p.weight}g</p>
+        <p>R$ ${p.price.toFixed(2)}</p>
+        <button onclick='add(${JSON.stringify(p)})' class="bg-black text-white w-full mt-2 py-1">
+          Adicionar
+        </button>
       </div>`;
   });
+}
+
+function add(p){
+  const i=cart.find(x=>x.id===p.id);
+  if(i)i.qty++; else cart.push({...p,qty:1});
+  localStorage.setItem('cart',JSON.stringify(cart));
 }
 </script>
 
