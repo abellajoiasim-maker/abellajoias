@@ -36,23 +36,21 @@ body{background:#F8F6F2}
 
 <main class="max-w-6xl mx-auto p-8 space-y-16">
 
-/* EMPRESA */
-function salvarEmpresa(){
-  db.ref('settings').set({
-    name: empNome.value,
-    whatsapp: empWhatsapp.value,
-    pix: Number(empPix.value||0),
-    parcelas: Number(empParcelas.value||1)
-  }).then(()=>alert('Empresa salva!'));
-}
+<!-- EMPRESA -->
+<section id="empresa" class="tab active space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Dados da Empresa</h2>
 
-db.ref('settings').once('value').then(s=>{
-  if(!s.val())return;
-  empNome.value=s.val().name||'';
-  empWhatsapp.value=s.val().whatsapp||'';
-  empPix.value=s.val().pix||0;
-  empParcelas.value=s.val().parcelas||1;
-});
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
+  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
+  <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
+  <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
+  <input id="empParcelas" type="number" placeholder="Parcelas no cartão" class="border p-3">
+</div>
+
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
+SALVAR
+</button>
+</section>
 
 <!-- CATEGORIAS -->
 <section id="categorias" class="tab space-y-6">
@@ -76,13 +74,17 @@ db.ref('settings').once('value').then(s=>{
   <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
   <input id="pEstoque" type="number" placeholder="Estoque" class="border p-3">
   <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
+
   <select id="pCategoria" class="border p-3">
     <option value="">Selecione a categoria</option>
   </select>
+
   <input id="pImagemUrl" placeholder="URL da imagem" class="border p-3 md:col-span-2">
 </div>
 
-<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
+<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">
+SALVAR PRODUTO
+</button>
 
 <div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
 </section>
@@ -115,9 +117,19 @@ function openTab(id){
 function salvarEmpresa(){
   db.ref('settings').set({
     name: empNome.value,
-    whatsapp: empWhatsapp.value
-  });
+    whatsapp: empWhatsapp.value,
+    pix: Number(empPix.value||0),
+    parcelas: Number(empParcelas.value||1)
+  }).then(()=>alert('Empresa salva!'));
 }
+
+db.ref('settings').once('value').then(s=>{
+  if(!s.val()) return;
+  empNome.value = s.val().name || '';
+  empWhatsapp.value = s.val().whatsapp || '';
+  empPix.value = s.val().pix || 0;
+  empParcelas.value = s.val().parcelas || 1;
+});
 
 /* CATEGORIAS */
 function salvarCategoria(){
@@ -130,18 +142,19 @@ db.ref('categories').on('value',snap=>{
   listaCategorias.innerHTML='';
   pCategoria.innerHTML='<option value="">Selecione</option>';
   snap.forEach(s=>{
+    const nome=s.val().name;
     listaCategorias.innerHTML+=`
       <div class="bg-white border p-3 flex justify-between">
-        ${s.val().name}
+        ${nome}
         <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600 text-xs">Excluir</button>
       </div>`;
-    pCategoria.innerHTML+=`<option value="${s.val().name}">${s.val().name}</option>`;
+    pCategoria.innerHTML+=`<option value="${nome}">${nome}</option>`;
   });
 });
 
 /* PRODUTOS */
 function salvarProduto(){
-  const produto={
+  db.ref('products').push({
     name:pNome.value,
     sku:pSku.value,
     price:Number(pPreco.value),
@@ -149,8 +162,7 @@ function salvarProduto(){
     weight:Number(pPeso.value||0),
     category:pCategoria.value,
     image:pImagemUrl.value
-  };
-  db.ref('products').push(produto);
+  }).then(()=>alert('Produto salvo!'));
 }
 
 /* LISTAR PRODUTOS */
