@@ -6,8 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
@@ -26,90 +24,96 @@ body{background:#faf9f7}
 </header>
 
 <!-- CATEGORIAS -->
-<section class="max-w-6xl mx-auto px-4 py-6">
+<section class="max-w-6xl mx-auto px-4 py-4">
   <div id="filtroCategorias" class="flex gap-3 flex-wrap justify-center"></div>
 </section>
 
 <!-- PRODUTOS -->
-<section class="max-w-6xl mx-auto px-4 pb-16">
+<section class="max-w-6xl mx-auto px-4 pb-32">
   <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
 </section>
 
+<!-- BOTÃO CARRINHO -->
+<a href="checkout.html"
+   class="fixed bottom-6 right-6 bg-black text-white px-6 py-3 rounded-full text-xs tracking-widest shadow-lg">
+🛒 Finalizar Pedido
+</a>
+
 <script>
-/* 🔥 FIREBASE — CONFIGURAÇÃO REAL DA ABELLA */
+/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.firebasestorage.app",
-  messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+  projectId: "catalogo-abella-joias"
 });
-
 const db = firebase.database();
-
-const listaProdutos = document.getElementById('listaProdutos');
-const filtroCategorias = document.getElementById('filtroCategorias');
 
 let produtos = [];
 let categoriaAtiva = 'Todos';
+let carrinho = JSON.parse(localStorage.getItem('cart')) || [];
 
-/* 🔹 CARREGAR CATEGORIAS */
+/* CATEGORIAS */
 db.ref('categories').on('value', snap => {
-  filtroCategorias.innerHTML = '';
+  const wrap = document.getElementById('filtroCategorias');
+  wrap.innerHTML = '';
 
-  const btnTodos = document.createElement('button');
-  btnTodos.textContent = 'Todos';
-  btnTodos.className = 'px-4 py-2 border text-xs';
-  btnTodos.onclick = () => {
-    categoriaAtiva = 'Todos';
-    renderProdutos();
-  };
-  filtroCategorias.appendChild(btnTodos);
+  criarBtnCategoria('Todos', wrap);
 
-  snap.forEach(s => {
-    const cat = s.val().name;
-
-    const btn = document.createElement('button');
-    btn.textContent = cat;
-    btn.className = 'px-4 py-2 border text-xs';
-    btn.onclick = () => {
-      categoriaAtiva = cat;
-      renderProdutos();
-    };
-
-    filtroCategorias.appendChild(btn);
-  });
+  snap.forEach(s => criarBtnCategoria(s.val().name, wrap));
 });
 
-/* 🔹 CARREGAR PRODUTOS */
+function criarBtnCategoria(nome, wrap){
+  const b = document.createElement('button');
+  b.textContent = nome;
+  b.className = 'px-4 py-2 border text-xs';
+  b.onclick = () => {
+    categoriaAtiva = nome;
+    renderProdutos();
+  };
+  wrap.appendChild(b);
+}
+
+/* PRODUTOS */
 db.ref('products').on('value', snap => {
   produtos = [];
-  snap.forEach(s => {
-    produtos.push({ id:s.key, ...s.val() });
-  });
+  snap.forEach(s => produtos.push({id:s.key, ...s.val()}));
   renderProdutos();
 });
 
-/* 🔹 RENDERIZAR PRODUTOS */
+/* RENDER */
 function renderProdutos(){
-  listaProdutos.innerHTML = '';
+  const lista = document.getElementById('listaProdutos');
+  lista.innerHTML = '';
 
   produtos
     .filter(p => categoriaAtiva === 'Todos' || p.category === categoriaAtiva)
     .forEach(p => {
-      listaProdutos.innerHTML += `
-        <div class="bg-white border hover:shadow-lg transition">
-          <img src="${p.image}" class="w-full aspect-square object-cover">
-          <div class="p-3 space-y-1">
-            <p class="text-sm font-medium">${p.name}</p>
-            <p class="text-xs text-gray-400">${p.category || ''}</p>
-            <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-          </div>
+      lista.innerHTML += `
+      <div class="bg-white border hover:shadow-md transition">
+        <img src="${p.image}" class="w-full aspect-square object-cover">
+        <div class="p-3 space-y-1">
+          <p class="text-sm font-medium">${p.name}</p>
+          <p class="text-xs text-gray-400">${p.category}</p>
+          <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+
+          <button onclick='addCarrinho(${JSON.stringify(p)})'
+            class="w-full mt-2 border text-xs py-2 hover:bg-black hover:text-white">
+            ADICIONAR
+          </button>
         </div>
-      `;
+      </div>`;
     });
+}
+
+/* CARRINHO */
+function addCarrinho(p){
+  const item = carrinho.find(i => i.id === p.id);
+  if(item) item.qty++;
+  else carrinho.push({...p, qty:1});
+
+  localStorage.setItem('cart', JSON.stringify(carrinho));
+  alert('Produto adicionado ao carrinho');
 }
 </script>
 
