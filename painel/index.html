@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- FIREBASE COMPAT (HTML PURO) -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
@@ -38,15 +40,17 @@ body{background:#F8F6F2}
 
 <!-- EMPRESA -->
 <section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+<h2 class="font-serif text-2xl gold border-b pb-2">Dados da Empresa</h2>
 
 <div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
   <input id="empNome" placeholder="Nome da empresa" class="border p-3">
   <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
+  <input id="empPix" type="number" placeholder="% desconto no PIX" class="border p-3">
+  <input id="empParcelas" type="number" placeholder="Parcelas no cartão" class="border p-3">
 </div>
 
 <button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
-SALVAR CONFIGURAÇÕES
+SALVAR
 </button>
 </section>
 
@@ -56,9 +60,7 @@ SALVAR CONFIGURAÇÕES
 
 <div class="bg-white border p-6 flex gap-4">
   <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
-  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">
-    SALVAR
-  </button>
+  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">ADICIONAR</button>
 </div>
 
 <div id="listaCategorias" class="space-y-2"></div>
@@ -72,6 +74,7 @@ SALVAR CONFIGURAÇÕES
   <input id="pNome" placeholder="Nome do produto" class="border p-3">
   <input id="pSku" placeholder="SKU" class="border p-3">
   <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
+  <input id="pEstoque" type="number" placeholder="Estoque" class="border p-3">
   <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
 
   <select id="pCategoria" class="border p-3">
@@ -84,30 +87,27 @@ SALVAR CONFIGURAÇÕES
 <button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">
 SALVAR PRODUTO
 </button>
+
+<div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
 </section>
 
 <!-- PEDIDOS / RELATÓRIO -->
-<section id="pedidos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos / Relatório de Vendas</h2>
-
-<div id="listaPedidos" class="space-y-4"></div>
-
-<div class="bg-white border p-4 text-right">
-  <strong>Total vendido:</strong>
-  <span id="totalVendas" class="gold font-semibold">R$ 0,00</span>
-</div>
+<section id="pedidos" class="tab space-y-4">
+<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos / Relatório</h2>
+<div id="listaPedidos" class="space-y-3"></div>
 </section>
 
 </main>
 
 <script>
-// 🔥 FIREBASE
+/* 🔥 FIREBASE CONFIG CORRETA */
 firebase.initializeApp({
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
-  projectId: "SEU_PROJETO"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
 });
+
 const db = firebase.database();
 
 /* TABS */
@@ -120,40 +120,25 @@ function openTab(id){
 function salvarEmpresa(){
   db.ref('settings').set({
     name: empNome.value,
-    whatsapp: empWhatsapp.value
-  }).then(()=>alert('Dados da empresa salvos'));
+    whatsapp: empWhatsapp.value,
+    pix: Number(empPix.value||0),
+    parcelas: Number(empParcelas.value||1)
+  }).then(()=>alert('Empresa salva!'));
 }
 
-db.ref('settings').once('value').then(s=>{
+db.ref('settings').on('value',s=>{
   if(!s.val()) return;
   empNome.value = s.val().name || '';
   empWhatsapp.value = s.val().whatsapp || '';
+  empPix.value = s.val().pix || 0;
+  empParcelas.value = s.val().parcelas || 1;
 });
 
 /* CATEGORIAS */
-let editCat = null;
-
 function salvarCategoria(){
   if(!catNome.value) return;
-
-  if(editCat){
-    db.ref('categories/'+editCat).update({name:catNome.value});
-    editCat = null;
-  } else {
-    db.ref('categories').push({name:catNome.value});
-  }
+  db.ref('categories').push({ name: catNome.value });
   catNome.value='';
-}
-
-function editarCategoria(id,nome){
-  catNome.value=nome;
-  editCat=id;
-}
-
-function excluirCategoria(id){
-  if(confirm('Excluir categoria?')){
-    db.ref('categories/'+id).remove();
-  }
 }
 
 db.ref('categories').on('value',snap=>{
@@ -161,58 +146,56 @@ db.ref('categories').on('value',snap=>{
   pCategoria.innerHTML='<option value="">Selecione a categoria</option>';
 
   snap.forEach(s=>{
-    listaCategorias.innerHTML+=`
-    <div class="bg-white border p-3 flex justify-between">
-      ${s.val().name}
-      <div class="flex gap-3 text-xs">
-        <button onclick="editarCategoria('${s.key}','${s.val().name}')" class="text-blue-600">Editar</button>
-        <button onclick="excluirCategoria('${s.key}')" class="text-red-600">Excluir</button>
-      </div>
-    </div>`;
-    pCategoria.innerHTML+=`<option value="${s.val().name}">${s.val().name}</option>`;
+    const nome = s.val().name;
+    listaCategorias.innerHTML += `
+      <div class="bg-white border p-3 flex justify-between">
+        ${nome}
+        <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600 text-xs">Excluir</button>
+      </div>`;
+    pCategoria.innerHTML += `<option value="${nome}">${nome}</option>`;
   });
 });
 
 /* PRODUTOS */
 function salvarProduto(){
-  if(!pNome.value || !pCategoria.value){
-    alert('Informe nome e categoria');
-    return;
-  }
-
-  db.ref('products').push({
-    name:pNome.value,
-    sku:pSku.value,
-    price:Number(pPreco.value||0),
-    weight:Number(pPeso.value||0),
-    category:pCategoria.value,
-    image:pImagemUrl.value
-  });
-
-  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value='';
-  pCategoria.value='';
+  const produto = {
+    name: pNome.value,
+    sku: pSku.value,
+    price: Number(pPreco.value),
+    stock: Number(pEstoque.value||0),
+    weight: Number(pPeso.value||0),
+    category: pCategoria.value,
+    image: pImagemUrl.value
+  };
+  db.ref('products').push(produto);
 }
+
+db.ref('products').on('value',snap=>{
+  listaProdutos.innerHTML='';
+  snap.forEach(s=>{
+    const p=s.val();
+    listaProdutos.innerHTML += `
+    <div class="bg-white border p-4">
+      <img src="${p.image}" class="h-40 w-full object-cover">
+      <p class="mt-2">${p.name}</p>
+      <p class="text-xs">${p.category} • ${p.weight}g</p>
+      <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+    </div>`;
+  });
+});
 
 /* PEDIDOS / RELATÓRIO */
 db.ref('orders').on('value',snap=>{
-  let total=0;
   listaPedidos.innerHTML='';
-
   snap.forEach(s=>{
     const o=s.val();
-    total+=Number(o.total||0);
-
-    listaPedidos.innerHTML+=`
-    <div class="bg-white border p-4 text-sm">
-      <p><strong>Cliente:</strong> ${o.cliente||'-'}</p>
-      <p><strong>Data:</strong> ${o.data}</p>
-      <p><strong>Total:</strong> R$ ${Number(o.total).toFixed(2)}</p>
-      <p><strong>Peso:</strong> ${o.peso||0} g</p>
-      <p><strong>Pagamento:</strong> ${o.pagamento||'-'}</p>
-    </div>`;
+    listaPedidos.innerHTML += `
+      <div class="bg-white border p-4">
+        <p><strong>${o.cliente || o.customer}</strong></p>
+        <p class="text-xs text-gray-400">${o.data}</p>
+        <p>Total: R$ ${o.total.toFixed(2)}</p>
+      </div>`;
   });
-
-  totalVendas.innerText='R$ '+total.toFixed(2);
 });
 </script>
 
