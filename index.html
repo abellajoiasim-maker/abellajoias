@@ -2,8 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Abella Joias</title>
+<title>Painel Administrativo | Marcinha Semijoias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -12,111 +13,292 @@
 body{background:#F8F6F2}
 .font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-#telaCarrinho{transform:translateX(100%);transition:transform .4s ease}
-#telaCarrinho.show{transform:translateX(0)}
+.tab{display:none}
+.tab.active{display:block}
+
+.status-Novo{background:#fef3c7;color:#92400e}
+.status-Emseparação{background:#e0f2fe;color:#075985}
+.status-Enviado{background:#ede9fe;color:#5b21b6}
+.status-Finalizado{background:#ecfdf5;color:#065f46}
+
+@media print{
+  body *{visibility:hidden}
+  #romaneio, #romaneio *{visibility:visible}
+  #romaneio{position:absolute;top:0;left:0;width:100%}
+}
 </style>
 </head>
 <body>
 
-<header class="bg-white p-8 border-b text-center relative">
-  <h1 class="font-serif text-3xl tracking-widest gold">Abella Joias</h1>
-  <p class="text-xs tracking-widest text-gray-400 mt-1">CATÁLOGO EXCLUSIVO</p>
+<header class="bg-white border-b px-10 py-6 flex justify-between">
+  <div>
+    <h1 class="font-serif text-xl tracking-widest gold">Marcinha Semijoias</h1>
+    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
+  </div>
 
-  <button id="btnCarrinhoDesktop"
-    class="absolute top-5 right-10 hidden lg:inline-block bg-black text-white px-4 py-2 rounded text-xs tracking-widest">
-    🛒 Carrinho
-  </button>
+  <nav class="flex gap-8 text-xs tracking-widest uppercase">
+    <button onclick="openTab('empresa')" class="gold">Empresa</button>
+    <button onclick="openTab('produtos')">Produtos</button>
+    <button onclick="openTab('pedidos')">Pedidos</button>
+  </nav>
 </header>
 
-<main class="max-w-7xl mx-auto p-8">
-  <section id="produtos"
-    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-8"></section>
-</main>
+<main class="max-w-6xl mx-auto p-8 space-y-16">
 
-<button id="btnCarrinhoMobile"
-  class="fixed bottom-5 right-5 bg-black text-white px-5 py-3 rounded-full text-xs tracking-widest lg:hidden shadow-lg z-50">
-  🛒 Carrinho
+<!-- EMPRESA -->
+<section id="empresa" class="tab active space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Dados da Empresa</h2>
+
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
+  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
+  <input id="empWhatsapp" placeholder="WhatsApp (somente números)" class="border p-3">
+  <input id="empPix" type="number" placeholder="% desconto PIX" class="border p-3">
+  <input id="empParcelas" type="number" placeholder="Parcelas no cartão" class="border p-3">
+</div>
+
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs tracking-widest">
+SALVAR
+</button>
+</section>
+
+<!-- PRODUTOS -->
+<section id="produtos" class="tab space-y-8">
+<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
+
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
+  <input id="pNome" placeholder="Nome do produto" class="border p-3">
+  <input id="pSku" placeholder="SKU" class="border p-3">
+  <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
+  <input id="pEstoque" type="number" placeholder="Estoque" class="border p-3">
+  <input id="pImagemUrl" placeholder="URL da imagem" class="border p-3 md:col-span-2">
+</div>
+
+<button id="btnSalvarProduto" class="bg-black text-white px-8 py-3 text-xs tracking-widest">
+SALVAR PRODUTO
 </button>
 
-<div id="telaCarrinho" class="fixed inset-0 bg-black/50 z-50 hidden">
-  <div class="bg-white w-full lg:w-96 h-full p-6 overflow-y-auto relative">
-    <button id="voltarCompras"
-      class="absolute top-4 right-4 bg-gray-200 px-3 py-1 rounded">✕</button>
+<div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
+</section>
 
-    <h2 class="font-serif text-lg gold mb-4">Carrinho</h2>
+<!-- PEDIDOS -->
+<section id="pedidos" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
+<div id="listaPedidos" class="space-y-4"></div>
+</section>
 
-    <input id="clienteNomeFull" class="border p-2 w-full mb-3" placeholder="Seu nome">
+<!-- ROMANEIO -->
+<div id="romaneio" class="hidden bg-white p-10 text-sm">
+  <h2 class="font-serif text-2xl gold mb-4">Romaneio</h2>
+  <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+  <p><strong>Data:</strong> <span id="rData"></span></p>
 
-    <div id="carrinhoFull" class="space-y-4 mb-4"></div>
+  <table class="w-full border mt-6">
+    <thead>
+      <tr class="border-b">
+        <th class="p-2">Produto</th>
+        <th class="p-2">SKU</th>
+        <th class="p-2">Qtd</th>
+        <th class="p-2">Valor</th>
+      </tr>
+    </thead>
+    <tbody id="rItens"></tbody>
+  </table>
 
-    <p>Total: <strong>R$ <span id="totalFull">0.00</span></strong></p>
-
-    <button onclick="finalizarPedidoFull()"
-      class="w-full bg-black text-white py-3 tracking-widest text-xs mt-4">
-      FINALIZAR NO WHATSAPP
-    </button>
-  </div>
+  <p class="mt-6 text-right font-bold">Total: R$ <span id="rTotal"></span></p>
 </div>
+
+</main>
 
 <script>
 firebase.initializeApp({
-  apiKey: "SUA_API_KEY_AQUI",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
-  projectId: "SEU_PROJETO"
+  apiKey: "AIzaSyD5RdWTYOnaTov7VtM9ZGenUpFYSZVGoPs",
+  authDomain: "marcinha-semijoias.firebaseapp.com",
+  databaseURL: "https://marcinha-semijoias-default-rtdb.firebaseio.com",
+  projectId: "marcinha-semijoias"
 });
 
 const db = firebase.database();
-const produtosEl = document.getElementById('produtos');
-const carrinhoEl = document.getElementById('carrinhoFull');
-const totalEl = document.getElementById('totalFull');
-const tela = document.getElementById('telaCarrinho');
 
-let produtos={}, carrinho=[];
+/* TABS */
+function openTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* EMPRESA */
+function salvarEmpresa(){
+  db.ref('settings').set({
+    name: empNome.value,
+    whatsapp: empWhatsapp.value,
+    pix: parseInt(empPix.value||0),
+    parcelas: parseInt(empParcelas.value||1)
+  }).then(()=>alert('Empresa salva!'));
+}
+
+db.ref('settings').once('value').then(s=>{
+  if(!s.val())return;
+  empNome.value = s.val().name || '';
+  empWhatsapp.value = s.val().whatsapp || '';
+  empPix.value = s.val().pix || 0;
+  empParcelas.value = s.val().parcelas || 1;
+});
 
 /* PRODUTOS */
-db.ref('products').on('value', snap=>{
-  produtosEl.innerHTML='';
-  produtos={};
+const pNome = document.getElementById('pNome');
+const pSku = document.getElementById('pSku');
+const pPreco = document.getElementById('pPreco');
+const pEstoque = document.getElementById('pEstoque');
+const pImagemUrl = document.getElementById('pImagemUrl');
+const listaProdutos = document.getElementById('listaProdutos');
+const btnSalvarProduto = document.getElementById('btnSalvarProduto');
+
+let editarId = null;
+
+function salvarProduto() {
+  const url = pImagemUrl.value.trim();
+
+  if(!pNome.value.trim() || !pPreco.value || (!editarId && !url)){
+    return alert('Preencha nome, preço e informe a URL da imagem!');
+  }
+
+  const produto = {
+    name: pNome.value.trim(),
+    sku: pSku.value.trim(),
+    price: parseFloat(pPreco.value),
+    stock: parseInt(pEstoque.value) || 0,
+    image: url
+  };
+
+  const refProduto = editarId ? db.ref('products/' + editarId) : db.ref('products');
+  const salvar = editarId ? refProduto.update(produto) : refProduto.push(produto);
+
+  salvar.then(()=>{
+    alert(editarId ? 'Produto atualizado!' : 'Produto salvo!');
+    resetFormProduto();
+  }).catch(err=>alert('Erro ao salvar produto: '+err));
+}
+
+function resetFormProduto(){
+  pNome.value = '';
+  pSku.value = '';
+  pPreco.value = '';
+  pEstoque.value = '';
+  pImagemUrl.value = '';
+  editarId = null;
+  btnSalvarProduto.textContent = 'SALVAR PRODUTO';
+}
+
+btnSalvarProduto.onclick = salvarProduto;
+
+/* LISTAR PRODUTOS */
+db.ref('products').on('value', snap => {
+  listaProdutos.innerHTML = '';
+  snap.forEach(s => {
+    const p = s.val();
+    const id = s.key;
+    listaProdutos.innerHTML += `
+      <div class="bg-white border p-4">
+        <img src="${p.image}" class="h-40 w-full object-cover">
+        <p class="font-medium mt-2">${p.name}</p>
+        <p class="text-xs text-gray-400">SKU: ${p.sku}</p>
+        <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+        <div class="flex gap-2 mt-2 text-xs">
+          <button onclick="editarProduto('${id}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
+          <button onclick="excluirProduto('${id}')" class="bg-red-500 text-white px-2 py-1">Excluir</button>
+        </div>
+      </div>`;
+  });
+});
+
+function excluirProduto(id){
+  if(!confirm('Deseja excluir este produto?')) return;
+  db.ref('products/'+id).remove()
+    .then(()=>alert('Produto excluído!'))
+    .catch(err=>alert('Erro ao excluir: '+err));
+}
+
+function editarProduto(id){
+  db.ref('products/'+id).once('value')
+    .then(snap=>{
+      const p = snap.val();
+      pNome.value = p.name;
+      pSku.value = p.sku;
+      pPreco.value = p.price;
+      pEstoque.value = p.stock;
+      pImagemUrl.value = p.image || '';
+      editarId = id;
+      btnSalvarProduto.textContent = 'ATUALIZAR PRODUTO';
+    }).catch(err=>alert('Erro ao carregar produto: '+err));
+}
+
+/* PEDIDOS */
+const listaPedidos = document.getElementById('listaPedidos');
+
+db.ref('orders').on('value',snap=>{
+  listaPedidos.innerHTML='';
   snap.forEach(s=>{
-    const p=s.val(); p.id=s.key; produtos[p.id]=p;
-    produtosEl.innerHTML+=`
-    <div class="bg-white border p-4 rounded">
-      <img src="${p.image}" class="w-full h-48 object-cover rounded">
-      <h3 class="mt-2 text-center">${p.name}</h3>
-      <p class="text-center gold">R$ ${Number(p.price).toFixed(2)}</p>
-      <button onclick="add('${p.id}')"
-        class="w-full border py-2 text-xs mt-2">ADICIONAR</button>
+    const o = s.val();
+    const id = s.key;
+    const status = o.status||'Novo';
+
+    listaPedidos.innerHTML+=`
+    <div class="bg-white border p-5 space-y-3">
+      <div class="flex justify-between">
+        <div>
+          <p>${o.cliente||o.customer}</p>
+          <p class="text-xs text-gray-400">${o.data}</p>
+        </div>
+        <span class="px-3 py-1 text-xs rounded status-${status.replace(' ','')}">${status}</span>
+      </div>
+
+      <div class="flex gap-2 text-xs">
+        ${['Novo','Em separação','Enviado','Finalizado'].map(st=>`
+          <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-3 py-1">${st}</button>
+        `).join('')}
+      </div>
+
+      <div class="flex justify-between items-center">
+        <strong>R$ ${o.total.toFixed(2)}</strong>
+
+        <div class="flex gap-4 text-xs">
+          <button onclick='imprimirRomaneio(${JSON.stringify(o)})' class="underline">Romaneio</button>
+          <button onclick="excluirPedido('${id}')" class="text-red-600 underline">Excluir</button>
+        </div>
+      </div>
     </div>`;
   });
 });
 
-function add(id){
-  const i=carrinho.find(x=>x.id===id);
-  i?i.qtd++:carrinho.push({id,qtd:1});
-  render();
+function excluirPedido(id){
+  if(!confirm('Deseja excluir este pedido?')) return;
+  db.ref('orders/'+id).remove()
+    .then(()=>alert('Pedido excluído!'));
 }
 
-function render(){
-  carrinhoEl.innerHTML='';
-  let total=0;
-  carrinho.forEach(i=>{
-    const p=produtos[i.id];
-    total+=p.price*i.qtd;
-    carrinhoEl.innerHTML+=`<p>${i.qtd}x ${p.name}</p>`;
+/* ROMANEIO */
+function imprimirRomaneio(o){
+  const rCliente = document.getElementById('rCliente');
+  const rData = document.getElementById('rData');
+  const rItens = document.getElementById('rItens');
+  const rTotal = document.getElementById('rTotal');
+  const romaneio = document.getElementById('romaneio');
+
+  rCliente.textContent = o.cliente||o.customer;
+  rData.textContent = o.data;
+  rItens.innerHTML='';
+  o.itens.forEach(i=>{
+    rItens.innerHTML+=`
+    <tr>
+      <td class="p-2">${i.nome}</td>
+      <td class="p-2">${i.sku}</td>
+      <td class="p-2">${i.qtd}</td>
+      <td class="p-2">R$ ${i.valor.toFixed(2)}</td>
+    </tr>`;
   });
-  totalEl.textContent=total.toFixed(2);
+  rTotal.textContent = o.total.toFixed(2);
+  romaneio.classList.remove('hidden');
+  window.print();
 }
-
-function finalizarPedidoFull(){
-  alert('Pedido enviado!');
-}
-
-function abrir(){tela.classList.remove('hidden');setTimeout(()=>tela.classList.add('show'),10)}
-function fechar(){tela.classList.remove('show');setTimeout(()=>tela.classList.add('hidden'),400)}
-btnCarrinhoMobile.onclick=abrir;
-btnCarrinhoDesktop.onclick=abrir;
-voltarCompras.onclick=fechar;
 </script>
 
 </body>
