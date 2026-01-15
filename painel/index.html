@@ -36,17 +36,23 @@ body{background:#F8F6F2}
 
 <main class="max-w-6xl mx-auto p-8 space-y-16">
 
-<!-- EMPRESA -->
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+/* EMPRESA */
+function salvarEmpresa(){
+  db.ref('settings').set({
+    name: empNome.value,
+    whatsapp: empWhatsapp.value,
+    pix: Number(empPix.value||0),
+    parcelas: Number(empParcelas.value||1)
+  }).then(()=>alert('Empresa salva!'));
+}
 
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
-  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-  <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
-</div>
-
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR</button>
-</section>
+db.ref('settings').once('value').then(s=>{
+  if(!s.val())return;
+  empNome.value=s.val().name||'';
+  empWhatsapp.value=s.val().whatsapp||'';
+  empPix.value=s.val().pix||0;
+  empParcelas.value=s.val().parcelas||1;
+});
 
 <!-- CATEGORIAS -->
 <section id="categorias" class="tab space-y-6">
