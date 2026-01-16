@@ -2,69 +2,44 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Categoria | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Categorias | Abella Joias</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>
-body{font-family:'Poppins',sans-serif;background:#fcfaf7;margin:0;}
-.header{padding:1rem;text-align:center;background:white;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
-.grid-prod{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;padding:1rem;}
-.card{border:1px solid #eee;border-radius:16px;padding:1rem;text-align:center;box-shadow:0 4px 20px rgba(212,175,55,0.2);aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:space-between;}
-.card img{width:100%;height:auto;object-fit:cover;border-radius:12px;}
-.card button{margin-top:0.5rem;padding:0.5rem;border-radius:9999px;font-weight:700;background:black;color:white;cursor:pointer;transition:0.2s;}
-.card button:hover{opacity:0.85;}
-</style>
-</head>
-<body>
-<header class="header">
-<h1 class="text-2xl font-bold" id="catTitle">Produtos</h1>
-</header>
-<main class="grid-prod" id="produtosCategoria"></main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-<script>
 const firebaseConfig = {
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.firebasestorage.app",
+  storageBucket: "catalogo-abella-joias.appspot.com",
   messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+  appId: "1:727568435294:web:442c0179ecf0686dff4ccf",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
-const urlParams = new URLSearchParams(window.location.search);
-const catId = urlParams.get('id');
-const catName = urlParams.get('name');
-document.getElementById('catTitle').textContent = decodeURIComponent(catName);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-db.ref('products').orderByChild('categoria').equalTo(catId).on('value',snap=>{
-  const div = document.getElementById('produtosCategoria');
-  div.innerHTML='';
-  snap.forEach(s=>{
-    const p = s.val();
-    div.innerHTML+=`
-      <div class="card">
-        <img src="${p.image||'https://via.placeholder.com/400'}" alt="${p.name}">
-        <div class="font-bold text-lg mt-2">${p.name}</div>
-        <div class="text-gray-700">R$ ${p.preco}</div>
-        <button onclick="adicionarCarrinho('${p.name}',${p.preco},'${p.sku}')">Adicionar ao Carrinho</button>
-      </div>
-    `;
+document.addEventListener('DOMContentLoaded', ()=>{
+  const container=document.getElementById('categoriasContainer');
+  onValue(ref(db,'categories'),snapshot=>{
+    container.innerHTML='';
+    snapshot.forEach(s=>{
+      const c = s.val();
+      container.innerHTML += `
+      <div class="border p-4 rounded aspect-square flex flex-col items-center bg-white shadow-md">
+        <img src="${c.image||'https://via.placeholder.com/300'}" class="w-full h-full object-cover rounded mb-2">
+        <p class="text-center font-semibold">${c.name}</p>
+      </div>`;
+    });
   });
 });
-
-function adicionarCarrinho(name,preco,sku){
-  let carrinho=JSON.parse(localStorage.getItem('carrinho'))||[];
-  const index=carrinho.findIndex(p=>p.sku===sku);
-  if(index>=0) carrinho[index].qty+=1;
-  else carrinho.push({name,preco,sku,qty:1});
-  localStorage.setItem('carrinho',JSON.stringify(carrinho));
-  alert('Produto adicionado!');
-}
 </script>
+</head>
+<body class="bg-gray-50 p-6">
+<h1 class="text-xl font-serif gold mb-4">Categorias</h1>
+<div id="categoriasContainer" class="grid sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
 </body>
 </html>
