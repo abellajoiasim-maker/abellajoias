@@ -12,6 +12,7 @@
 body{background:#F8F6F2;font-family:'Cinzel',serif}
 .gold{color:#A68966}.tab{display:none}.tab.active{display:block}
 .status-Novo{background:#FEF3C7}.status-Separação{background:#E0F2FE}.status-Enviado{background:#EDE9FE}.status-Finalizado{background:#ECFDF5}
+.aspect-square{aspect-ratio:1/1}
 @media print{body *{visibility:hidden} #romaneio,#romaneio *{visibility:visible} #romaneio{position:absolute;top:0;left:0;width:100%}}
 </style>
 </head>
@@ -42,35 +43,35 @@ body{background:#F8F6F2;font-family:'Cinzel',serif}
 <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
 <input id="empParcelas" placeholder="Parcelas cartão (ex: 3x sem juros)" class="border p-3">
 </div>
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR EMPRESA</button>
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs rounded">SALVAR EMPRESA</button>
 </section>
 
 <!-- Categorias -->
 <section id="categorias" class="tab space-y-6">
 <h2 class="text-2xl gold border-b pb-2">Categorias</h2>
 <div class="bg-white border p-6 flex gap-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
-  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">ADICIONAR</button>
+  <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1 rounded">
+  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs rounded">ADICIONAR</button>
 </div>
-<div id="listaCategorias" class="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
+<div id="listaCategorias" class="grid sm:grid-cols-1 md:grid-cols-4 gap-4 mt-4"></div>
 <h3 class="mt-6 font-semibold">Trocar imagem das categorias</h3>
-<div id="categoriasAdmin" class="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mt-2"></div>
+<div id="categoriasAdmin" class="grid sm:grid-cols-1 md:grid-cols-4 gap-4 mt-2"></div>
 </section>
 
 <!-- Produtos -->
 <section id="produtos" class="tab space-y-6">
 <h2 class="text-2xl gold border-b pb-2">Produtos</h2>
 <div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="pNome" placeholder="Nome do produto" class="border p-3">
-  <input id="pSku" placeholder="SKU" class="border p-3">
-  <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
-  <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-  <select id="pCategoria" class="border p-3">
+  <input id="pNome" placeholder="Nome do produto" class="border p-3 rounded">
+  <input id="pSku" placeholder="SKU" class="border p-3 rounded">
+  <input id="pPreco" type="number" placeholder="Preço" class="border p-3 rounded">
+  <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3 rounded">
+  <select id="pCategoria" class="border p-3 rounded">
     <option value="">Selecione a categoria</option>
   </select>
-  <input id="pImagem" placeholder="URL da imagem 1:1" class="border p-3 md:col-span-2">
+  <input id="pImagem" placeholder="URL da imagem 1:1" class="border p-3 rounded md:col-span-2">
 </div>
-<button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
+<button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-8 py-3 text-xs rounded">SALVAR PRODUTO</button>
 <div id="listaProdutos" class="grid sm:grid-cols-1 md:grid-cols-4 gap-6 mt-6"></div>
 </section>
 
@@ -143,7 +144,7 @@ body{background:#F8F6F2;font-family:'Cinzel',serif}
 </div>
 
 <script>
-/* FIREBASE */
+// FIREBASE
 firebase.initializeApp({
   apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain:"catalogo-abella-joias.firebaseapp.com",
@@ -153,27 +154,27 @@ firebase.initializeApp({
 });
 const db=firebase.database(), storage=firebase.storage();
 
-/* TABS */
+// TABS
 function openTab(id){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.getElementById(id).classList.add('active');}
 
-/* EMPRESA */
+// EMPRESA
 function salvarEmpresa(){db.ref('settings').set({name:empNome.value,whatsapp:empWhatsapp.value,pix:Number(empPix.value||0),parcelas:empParcelas.value});alert('Empresa salva');}
 db.ref('settings').on('value',s=>{if(!s.val())return; empNome.value=s.val().name||''; empWhatsapp.value=s.val().whatsapp||''; empPix.value=s.val().pix||0; empParcelas.value=s.val().parcelas||'';});
 
-/* CATEGORIAS */
+// CATEGORIAS
 function salvarCategoria(){if(!catNome.value)return; db.ref('categories').push({name:catNome.value,image:''}); catNome.value='';}
 db.ref('categories').on('value',snap=>{
  listaCategorias.innerHTML=''; pCategoria.innerHTML='<option value="">Selecione</option>'; categoriasAdmin.innerHTML='';
  snap.forEach(s=>{
    const cat=s.val(), id=s.key;
-   listaCategorias.innerHTML+=`<div class="bg-white border p-3 flex justify-between items-center"><img src="${cat.image||'https://via.placeholder.com/150'}" class="w-20 h-20 object-cover rounded mr-2">${cat.name}<button onclick="db.ref('categories/${id}').remove()" class="text-red-600 text-xs ml-auto">Excluir</button></div>`;
+   listaCategorias.innerHTML+=`<div class="bg-white border p-3 flex items-center gap-2"><img src="${cat.image||'https://via.placeholder.com/150'}" class="w-20 h-20 object-cover rounded">${cat.name}<button onclick="db.ref('categories/${id}').remove()" class="text-red-600 text-xs ml-auto rounded">Excluir</button></div>`;
    categoriasAdmin.innerHTML+=`<div class="flex items-center justify-between bg-gray-100 p-3 rounded"><span class="font-semibold">${cat.name}</span><div class="flex items-center gap-2"><img src="${cat.image||'https://via.placeholder.com/50'}" class="h-12 w-12 object-cover rounded border"><input type="file" onchange="trocarImagem('${id}', this.files[0])" class="border p-1 rounded"></div></div>`;
    pCategoria.innerHTML+=`<option>${cat.name}</option>`;
  });
 });
-function trocarImagem(id,file){const ref=storage.ref('categorias/'+file.name);ref.put(file).then(()=>ref.getDownloadURL().then(url=>{db.ref('categories/'+id).update({image:url});alert('Imagem atualizada com sucesso!');}));}
+function trocarImagem(id,file){const ref=storage.ref('categorias/'+file.name);ref.put(file).then(()=>ref.getDownloadURL().then(url=>{db.ref('categories/'+id).update({image:url});alert('Imagem atualizada!');}));}
 
-/* PRODUTOS */
+// PRODUTOS
 let editando=null;
 function salvarProduto(){
  const produto={name:pNome.value,sku:pSku.value,price:Number(pPreco.value),weight:Number(pPeso.value),category:pCategoria.value,image:pImagem.value};
@@ -189,7 +190,7 @@ db.ref('products').on('value',snap=>{
 });
 function editarProduto(id){db.ref('products/'+id).once('value').then(s=>{const p=s.val();pNome.value=p.name;pSku.value=p.sku;pPreco.value=p.price;pPeso.value=p.weight;pCategoria.value=p.category;pImagem.value=p.image;editando=id;btnProduto.textContent='ATUALIZAR PRODUTO';});}
 
-/* PEDIDOS */
+// PEDIDOS & ROMANEIO
 db.ref('orders').on('value',snap=>{
  listaPedidos.innerHTML='';
  snap.forEach(s=>{
@@ -197,17 +198,9 @@ db.ref('orders').on('value',snap=>{
   listaPedidos.innerHTML+=`<div class="bg-white border p-4 status-${o.status}"><p class="font-semibold">${o.cliente}</p><p class="text-xs">${o.data}</p><p>${o.pagamento} • ${o.peso}g</p><strong>R$ ${o.total.toFixed(2)}</strong><div class="flex gap-2 mt-2 text-xs">${['Novo','Separação','Enviado','Finalizado'].map(st=>`<button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1 rounded">${st}</button>`).join('')}<button onclick="imprimir(${JSON.stringify(o).replace(/"/g,'&quot;')})" class="bg-black text-white px-2 py-1 rounded">Romaneio</button><button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1 rounded">Excluir</button></div></div>`;
  });
 });
+function imprimir(o){rCliente.textContent=o.cliente;rWhats.textContent=o.whatsapp;rPag.textContent=o.pagamento;rParcelas.textContent=o.parcelas||'-';rPeso.textContent=o.peso;rTotal.textContent=o.total.toFixed(2);rData.textContent=o.data;rStatus.textContent=o.status;rItens.innerHTML='';o.itens.forEach(i=>{rItens.innerHTML+=`<tr><td class="border p-2"></td><td class="border p-2">${i.name}</td><td class="border p-2">${i.sku}</td><td class="border p-2">${i.qty}</td><td class="border p-2">${i.weight}</td><td class="border p-2">${(i.qty*i.weight).toFixed(2)}</td></tr>`;});romaneio.classList.remove('hidden');window.print();romaneio.classList.add('hidden');}
 
-/* ROMANEIO */
-function imprimir(o){
-  rCliente.textContent=o.cliente; rWhats.textContent=o.whatsapp; rPag.textContent=o.pagamento; rParcelas.textContent=o.parcelas||'-';
-  rPeso.textContent=o.peso; rTotal.textContent=o.total.toFixed(2); rData.textContent=o.data; rStatus.textContent=o.status;
-  rItens.innerHTML='';
-  o.itens.forEach(i=>{rItens.innerHTML+=`<tr><td class="border p-2"></td><td class="border p-2">${i.name}</td><td class="border p-2">${i.sku}</td><td class="border p-2">${i.qty}</td><td class="border p-2">${i.weight}</td><td class="border p-2">${(i.weight*i.qty).toFixed(2)}</td></tr>`;});
-  romaneio.classList.remove('hidden'); window.print(); romaneio.classList.add('hidden');
-}
-
-/* GALVÂNICAS */
+// GALVÂNICAS
 formGalvanica.addEventListener('submit', e=>{
  e.preventDefault();
  const nome=document.getElementById('nome').value;
@@ -218,18 +211,15 @@ formGalvanica.addEventListener('submit', e=>{
  const logoFile=document.getElementById('logo').files[0];
  if(logoFile){
    const logoRef=storage.ref('galvanicas/'+logoFile.name);
-   logoRef.put(logoFile).then(()=>logoRef.getDownloadURL().then(url=>{salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,url);}));
- }else salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,'');
-});
-function salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,logo){
- db.ref('galvanicas').push({nome,endereco,telefone,whatsapp,descricao,logo});
- alert('Galvânica cadastrada com sucesso!'); formGalvanica.reset();
+   logoRef.put(logoFile).then(()=>logoRef.getDownloadURL().then(url=>{db.ref('galvanicas').push({nome,endereco,telefone,whatsapp,descricao,logo:url});alert('Galvânica cadastrada!');formGalvanica.reset();}));
+ }else{db.ref('galvanicas').push({nome,endereco,telefone,whatsapp,descricao,logo:''});alert('Galvânica cadastrada!');formGalvanica.reset();}
 }
+);
 db.ref('galvanicas').on('value',snap=>{
  listaGalvanicas.innerHTML='';
  snap.forEach(s=>{
    const g=s.val(), id=s.key;
-   listaGalvanicas.innerHTML+=`<div class="bg-white border p-4 flex justify-between items-center rounded"><div class="flex items-center gap-4"><img src="${g.logo||'https://via.placeholder.com/150'}" class="h-24 w-24 object-cover rounded border"><div><p class="font-semibold">${g.nome}</p><p class="text-xs">${g.endereco}</p><p class="text-xs">${g.telefone} • ${g.whatsapp}</p></div></div><button onclick="db.ref('galvanicas/${id}').remove()" class="text-red-600 px-2 py-1 text-xs rounded">Excluir</button></div>`;
+   listaGalvanicas.innerHTML+=`<div class="bg-white border p-4 flex flex-col items-center rounded"><img src="${g.logo||'https://via.placeholder.com/150'}" class="w-full aspect-square object-cover rounded mb-2"><p class="font-semibold">${g.nome}</p><p class="text-xs">${g.endereco}</p><p class="text-xs">${g.telefone} • ${g.whatsapp}</p><button onclick="db.ref('galvanicas/${id}').remove()" class="text-red-600 px-2 py-1 rounded mt-2">Excluir</button></div>`;
  });
 });
 </script>
