@@ -92,7 +92,7 @@ function renderCarrinho(){
         <img src="${i.image}" class="w-16 h-16 object-cover border rounded">
         <div class="flex-1">
           <p class="font-medium">${i.name}</p>
-          <p class="text-xs">${i.weight}g</p>
+          <p class="text-xs">SKU: ${i.sku} • ${i.weight}g</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="alterarQtd(${idx},-1)" class="border px-2">-</button>
@@ -142,16 +142,24 @@ function finalizarPedido(){
   if(!nome.value||!whats.value) return alert('Preencha os dados');
 
   const pedido={
-    cliente:nome.value,
-    whatsapp:whats.value,
-    data:new Date().toLocaleString('pt-BR'),
-    pagamento: pagamento.value==='PIX'
-      ? `PIX (${pixDesconto}% OFF)`
-      : `Cartão (${parcelas}x sem acréscimo)`,
-    peso:Number(pesoTotalEl.textContent),
-    total:Number(totalEl.textContent),
-    status:'Novo',
-    itens:carrinho
+    cliente: nome.value,
+    customer: nome.value, // compatibilidade painel
+    whatsapp: whats.value,
+    data: new Date().toLocaleString('pt-BR'),
+    status: 'Novo',
+    pagamento: pagamento.value,
+    parcelas: pagamento.value==='CARTAO'
+      ? `${parcelas}x sem acréscimo`
+      : 'À vista',
+    peso: Number(pesoTotalEl.textContent),
+    total: Number(totalEl.textContent),
+    itens: carrinho.map(i=>({
+      nome: i.name,
+      sku: i.sku,
+      qtd: i.qty,
+      valor: i.price,
+      peso: i.weight
+    }))
   };
 
   db.ref('orders').push(pedido);
@@ -159,7 +167,7 @@ function finalizarPedido(){
 
   let msg=`Pedido de *${pedido.cliente}*:%0A`;
   pedido.itens.forEach(i=>{
-    msg+=`${i.qty}x ${i.name}%0A`;
+    msg+=`${i.qtd}x ${i.nome}%0A`;
   });
   msg+=`%0ATotal: R$ ${pedido.total}%0APagamento: ${pedido.pagamento}`;
 
