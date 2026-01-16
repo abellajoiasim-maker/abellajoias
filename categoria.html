@@ -10,14 +10,17 @@
 <style>
 body{font-family:'Poppins',sans-serif;background:#fcfaf7;margin:0;}
 .header{padding:1rem;text-align:center;background:white;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
-.grid-prod{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;padding:1rem;}
-.card{border:1px solid #eee;border-radius:16px;padding:1rem;text-align:center;box-shadow:0 4px 12px rgba(212,175,55,0.15);}
-.btn{padding:0.5rem 1rem;border-radius:9999px;font-weight:600;text-xs;transition:0.2s;cursor:pointer;}
-.btn-black{background:black;color:white;}
+.grid-prod{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;padding:1rem;}
+.card{border:1px solid #eee;border-radius:16px;padding:1rem;text-align:center;box-shadow:0 4px 20px rgba(212,175,55,0.2);aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:space-between;}
+.card img{width:100%;height:auto;object-fit:cover;border-radius:12px;}
+.card button{margin-top:0.5rem;padding:0.5rem;border-radius:9999px;font-weight:700;background:black;color:white;cursor:pointer;transition:0.2s;}
+.card button:hover{opacity:0.85;}
 </style>
 </head>
 <body>
-<header class="header"><h1 class="text-xl font-bold" id="catTitle">Produtos</h1></header>
+<header class="header">
+<h1 class="text-2xl font-bold" id="catTitle">Produtos</h1>
+</header>
 <main class="grid-prod" id="produtosCategoria"></main>
 
 <script>
@@ -45,10 +48,10 @@ db.ref('products').orderByChild('categoria').equalTo(catId).on('value',snap=>{
     const p = s.val();
     div.innerHTML+=`
       <div class="card">
-        <img src="${p.image||'https://via.placeholder.com/200'}" class="w-full h-40 object-cover mb-2">
-        <div class="font-bold">${p.name}</div>
-        <div>R$ ${p.preco}</div>
-        <button class="btn btn-black mt-2" onclick="adicionarCarrinho('${p.name}',${p.preco},'${p.sku}')">Adicionar</button>
+        <img src="${p.image||'https://via.placeholder.com/400'}" alt="${p.name}">
+        <div class="font-bold text-lg mt-2">${p.name}</div>
+        <div class="text-gray-700">R$ ${p.preco}</div>
+        <button onclick="adicionarCarrinho('${p.name}',${p.preco},'${p.sku}')">Adicionar ao Carrinho</button>
       </div>
     `;
   });
