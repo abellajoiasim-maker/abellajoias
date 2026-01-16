@@ -2,91 +2,71 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carrinho | Abella Joias</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com",
-  messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-let carrinho = [];
-
-function renderCarrinho() {
-  const container = document.getElementById('carrinhoItens');
-  container.innerHTML = '';
-  let total = 0;
-  carrinho.forEach((p,i)=>{
-    container.innerHTML += `<div class="flex justify-between items-center border-b p-2">
-      <span>${p.name} (${p.qty}x)</span>
-      <span>R$ ${(p.price*p.qty).toFixed(2)}</span>
-      <button class="text-red-600 text-xs" onclick="remover(${i})">Excluir</button>
-    </div>`;
-    total += p.price*p.qty;
-  });
-  document.getElementById('carrinhoTotal').textContent = total.toFixed(2);
-}
-
-window.remover = function(i){ carrinho.splice(i,1); renderCarrinho(); }
-
-window.addEventListener('load',()=>{
-  onValue(ref(db,'products'),snapshot=>{
-    const produtosSelect=document.getElementById('produtosSelect');
-    produtosSelect.innerHTML='';
-    snapshot.forEach(s=>{
-      const p = s.val();
-      produtosSelect.innerHTML += `<option value="${s.key}" data-price="${p.price}" data-name="${p.name}">${p.name} - R$ ${p.price.toFixed(2)}</option>`;
-    });
-  });
-});
-
-window.adicionar = function(){
-  const sel = document.getElementById('produtosSelect');
-  const idx = sel.selectedIndex;
-  const name = sel.options[idx].dataset.name;
-  const price = Number(sel.options[idx].dataset.price);
-  carrinho.push({name, price, qty:1});
-  renderCarrinho();
-}
-
-window.finalizar = function(){
-  const cliente = document.getElementById('cliente').value;
-  const whatsapp = document.getElementById('whatsapp').value;
-  const pagamento = document.getElementById('pagamento').value;
-  push(ref(db,'orders'),{
-    cliente, whatsapp, pagamento, itens: carrinho, total: carrinho.reduce((a,b)=>a+b.price*b.qty,0), status:'Novo', data:new Date().toLocaleDateString()
-  });
-  alert('Pedido registrado com sucesso!');
-  carrinho=[];
-  renderCarrinho();
-}
-</script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<style>
+body{font-family:'Poppins',sans-serif;background:#fcfaf7}
+img.aspect-square{aspect-ratio:1/1;object-fit:cover}
+</style>
 </head>
-<body class="bg-gray-50 p-6">
-<h1 class="text-xl font-serif gold mb-4">Carrinho Premium</h1>
+<body>
+<header class="bg-white shadow-sm py-6 text-center border-b-2 border-[#d4af37]">
+<h1 class="text-2xl font-bold text-gray-800">MEU CARRINHO</h1>
+<a href="index.html" class="text-xs text-[#b8860b] hover:underline">← Voltar à loja</a>
+</header>
 
-<select id="produtosSelect" class="border p-2 rounded text-sm w-full mb-2"></select>
-<button onclick="adicionar()" class="bg-black text-white px-4 py-2 rounded mb-4">Adicionar Produto</button>
+<main class="max-w-4xl mx-auto p-6 space-y-4">
+<div id="cartList" class="space-y-4"></div>
+<div class="flex justify-between font-semibold text-lg">
+<span>Total:</span><span id="cartTotal">R$ 0.00</span>
+</div>
+<button id="checkoutBtn" class="w-full bg-black text-white px-4 py-3 rounded">Finalizar Compra</button>
+</main>
 
-<div id="carrinhoItens" class="bg-white border p-4 rounded mb-4"></div>
-<p class="text-right font-bold">Total: R$ <span id="carrinhoTotal">0.00</span></p>
+<script>
+const firebaseConfig={apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",authDomain:"catalogo-abella-joias.firebaseapp.com",databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",projectId:"catalogo-abella-joias"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-<h2 class="text-lg font-semibold mt-6">Dados do Cliente</h2>
-<input id="cliente" placeholder="Nome" class="border p-2 w-full mb-2 rounded">
-<input id="whatsapp" placeholder="WhatsApp" class="border p-2 w-full mb-2 rounded">
-<input id="pagamento" placeholder="Pagamento" class="border p-2 w-full mb-4 rounded">
+let cart=JSON.parse(localStorage.getItem('abellaCart')||'[]');
+const cartList=document.getElementById('cartList'), cartTotal=document.getElementById('cartTotal');
 
-<button onclick="finalizar()" class="bg-gold text-white px-6 py-2 rounded">Finalizar Pedido</button>
+function renderCart(){
+ if(cart.length===0){cartList.innerHTML='<p>Carrinho vazio</p>'; cartTotal.textContent='R$ 0.00'; return;}
+ cartList.innerHTML='';
+ let total=0;
+ db.ref('products').once('value').then(snap=>{
+   snap.forEach(s=>{
+     const p=s.val(); const c=cart.find(x=>x.id===s.key);
+     if(c){
+       const subtotal=p.price*c.qty;
+       total+=subtotal;
+       cartList.innerHTML+=`<div class="flex gap-4 items-center border p-2 rounded">
+         <img src="${p.image}" class="w-20 h-20 aspect-square rounded">
+         <div class="flex-1">
+           <p class="font-semibold">${p.name}</p>
+           <p class="text-xs">R$ ${p.price.toFixed(2)} x ${c.qty}</p>
+           <p class="font-bold">Subtotal: R$ ${subtotal.toFixed(2)}</p>
+           <div class="flex gap-2 mt-1">
+             <button onclick="changeQty('${s.key}',-1)" class="px-2 py-1 border rounded text-xs">-</button>
+             <button onclick="changeQty('${s.key}',1)" class="px-2 py-1 border rounded text-xs">+</button>
+             <button onclick="removeItem('${s.key}')" class="px-2 py-1 border rounded text-xs text-red-600">Remover</button>
+           </div>
+         </div>
+       </div>`;
+     }
+   });
+   cartTotal.textContent='R$ '+total.toFixed(2);
+ });
+}
+
+function changeQty(id,delta){cart=cart.map(p=>p.id===id?{...p,qty:p.qty+delta}:p).filter(p=>p.qty>0);localStorage.setItem('abellaCart',JSON.stringify(cart));renderCart();}
+function removeItem(id){cart=cart.filter(p=>p.id!==id);localStorage.setItem('abellaCart',JSON.stringify(cart));renderCart();}
+
+renderCart();
+</script>
 </body>
 </html>
