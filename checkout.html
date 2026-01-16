@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body { background:#F8F6F2 }
+body{background:#F8F6F2}
 .gold{color:#A68966}
 .font-serif{font-family:'Cinzel',serif}
 </style>
@@ -20,7 +20,7 @@ body { background:#F8F6F2 }
 
 <h1 class="font-serif gold text-xl mb-4 text-center">Finalizar Pedido</h1>
 
-<!-- DADOS CLIENTE -->
+<!-- CLIENTE -->
 <div class="bg-white border p-4 space-y-2 mb-4">
   <input id="nome" placeholder="Nome completo" class="border p-2 w-full">
   <input id="whats" placeholder="WhatsApp (somente números)" class="border p-2 w-full">
@@ -38,8 +38,8 @@ body { background:#F8F6F2 }
 </div>
 
 <!-- PAGAMENTO -->
-<div class="bg-white border p-4 mt-4 space-y-2">
-  <select id="pagamento" onchange="calcularTotais()" class="border p-2 w-full">
+<div class="bg-white border p-4 mt-4">
+  <select id="pagamento" class="border p-2 w-full">
     <option value="PIX">PIX</option>
     <option id="opCartao" value="CARTAO">Cartão</option>
   </select>
@@ -50,7 +50,7 @@ FINALIZAR NO WHATSAPP
 </button>
 
 <script>
-/* 🔥 FIREBASE — ABELLA JOIAS */
+/* 🔥 FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
@@ -59,23 +59,27 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-/* VARIÁVEIS */
+/* ELEMENTOS */
+const subtotalEl = document.getElementById('subtotal');
+const totalEl = document.getElementById('total');
+const pesoTotalEl = document.getElementById('pesoTotal');
+const linhaPix = document.getElementById('linhaPix');
+const pagamento = document.getElementById('pagamento');
+const listaCarrinho = document.getElementById('listaCarrinho');
+
 let carrinho = JSON.parse(localStorage.getItem('cart')) || [];
 let pixDesconto = 0;
 let parcelas = 1;
-let whatsappLoja = '';
+let whatsappLoja = "";
 
-/* CARREGA CONFIG DA EMPRESA */
+/* CONFIG EMPRESA */
 db.ref('settings').once('value').then(s=>{
   if(!s.val()) return;
-
   pixDesconto = Number(s.val().pix || 0);
   parcelas = Number(s.val().parcelas || 1);
   whatsappLoja = s.val().whatsapp || '';
-
   document.getElementById('opCartao').textContent =
     `Cartão (${parcelas}x sem acréscimo)`;
-
   calcularTotais();
 });
 
@@ -88,7 +92,6 @@ function renderCarrinho(){
         <img src="${i.image}" class="w-16 h-16 object-cover border rounded">
         <div class="flex-1">
           <p class="font-medium">${i.name}</p>
-          <p class="text-xs text-gray-400">${i.sku || ''}</p>
           <p class="text-xs">${i.weight}g</p>
         </div>
         <div class="flex items-center gap-2">
@@ -100,79 +103,73 @@ function renderCarrinho(){
   });
 }
 
-/* ALTERAR QUANTIDADE */
+/* ALTERAR QTD */
 function alterarQtd(i,delta){
-  carrinho[i].qty += delta;
+  carrinho[i].qty+=delta;
   if(carrinho[i].qty<=0) carrinho.splice(i,1);
   localStorage.setItem('cart',JSON.stringify(carrinho));
   renderCarrinho();
   calcularTotais();
 }
 
-/* CALCULAR TOTAIS */
+/* CALCULAR */
 function calcularTotais(){
-  let sub=0, peso=0;
+  let sub=0,peso=0;
   carrinho.forEach(i=>{
-    sub += i.price*i.qty;
-    peso += i.weight*i.qty;
+    sub+=i.price*i.qty;
+    peso+=i.weight*i.qty;
   });
 
-  subtotal.textContent=sub.toFixed(2);
-  pesoTotal.textContent=peso;
+  subtotalEl.textContent=sub.toFixed(2);
+  pesoTotalEl.textContent=peso;
 
   let total=sub;
   linhaPix.classList.add('hidden');
 
   if(pagamento.value==='PIX' && pixDesconto>0){
-    const desc=sub*(pixDesconto/100);
-    total=sub-desc;
-    linhaPix.textContent=`Desconto PIX (${pixDesconto}%): -R$ ${desc.toFixed(2)}`;
+    const d=sub*(pixDesconto/100);
+    total=sub-d;
+    linhaPix.textContent=`Desconto PIX (${pixDesconto}%): -R$ ${d.toFixed(2)}`;
     linhaPix.classList.remove('hidden');
   }
 
-  totalSpan.textContent=total.toFixed(2);
+  totalEl.textContent=total.toFixed(2);
 }
 
 /* FINALIZAR */
 function finalizarPedido(){
   if(carrinho.length===0) return alert('Carrinho vazio');
-  if(!nome.value||!whats.value) return alert('Preencha nome e WhatsApp');
-
-  let total=Number(totalSpan.textContent);
-  let peso=Number(pesoTotal.textContent);
-  let pag=pagamento.value;
+  if(!nome.value||!whats.value) return alert('Preencha os dados');
 
   const pedido={
     cliente:nome.value,
     whatsapp:whats.value,
     data:new Date().toLocaleString('pt-BR'),
-    pagamento: pag==='PIX' ? `PIX (${pixDesconto}% OFF)` : `Cartão (${parcelas}x sem acréscimo)`,
-    peso,
-    total,
+    pagamento: pagamento.value==='PIX'
+      ? `PIX (${pixDesconto}% OFF)`
+      : `Cartão (${parcelas}x sem acréscimo)`,
+    peso:Number(pesoTotalEl.textContent),
+    total:Number(totalEl.textContent),
     status:'Novo',
-    itens:carrinho.map(i=>({
-      name:i.name,
-      sku:i.sku,
-      qty:i.qty,
-      price:i.price,
-      weight:i.weight
-    }))
+    itens:carrinho
   };
 
   db.ref('orders').push(pedido);
   localStorage.removeItem('cart');
 
-  let msg=`Olá! Pedido de *${pedido.cliente}*:%0A%0A`;
+  let msg=`Pedido de *${pedido.cliente}*:%0A`;
   pedido.itens.forEach(i=>{
-    msg+=`${i.qty}x ${i.name} (${i.sku})%0A`;
+    msg+=`${i.qty}x ${i.name}%0A`;
   });
-  msg+=`%0APagamento: ${pedido.pagamento}%0ATotal: R$ ${total.toFixed(2)}%0APeso: ${peso}g`;
+  msg+=`%0ATotal: R$ ${pedido.total}%0APagamento: ${pedido.pagamento}`;
 
   window.open(`https://wa.me/55${whatsappLoja}?text=${msg}`);
 }
 
 /* INIT */
+pagamento.onchange = calcularTotais;
 renderCarrinho();
+calcularTotais();
 </script>
 
 </body>
