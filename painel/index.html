@@ -8,6 +8,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
 
 <style>
 body{background:#F8F6F2}
@@ -42,6 +43,7 @@ body{background:#F8F6F2}
     <button onclick="openTab('categorias')">Categorias</button>
     <button onclick="openTab('produtos')">Produtos</button>
     <button onclick="openTab('pedidos')">Pedidos</button>
+    <button onclick="openTab('galvanicas')">Galvânicas</button>
   </nav>
 </header>
 
@@ -71,6 +73,9 @@ body{background:#F8F6F2}
 </div>
 
 <div id="listaCategorias" class="space-y-2"></div>
+
+<h3 class="mt-6 font-semibold">Trocar imagem das categorias</h3>
+<div id="categoriasAdmin" class="space-y-4"></div>
 </section>
 
 <!-- PRODUTOS -->
@@ -90,10 +95,7 @@ body{background:#F8F6F2}
   <input id="pImagem" placeholder="URL da imagem" class="border p-3 md:col-span-2">
 </div>
 
-<button onclick="salvarProduto()" id="btnProduto"
- class="bg-black text-white px-8 py-3 text-xs">
-SALVAR PRODUTO
-</button>
+<button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
 
 <div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
 </section>
@@ -104,25 +106,41 @@ SALVAR PRODUTO
 <div id="listaPedidos" class="space-y-4"></div>
 </section>
 
+<!-- GALVÂNICAS -->
+<section id="galvanicas" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Cadastrar / Editar Galvânicas</h2>
+<form id="formGalvanica" class="space-y-4">
+
+  <input type="text" id="nome" placeholder="Nome da Galvânica" class="border p-2 w-full rounded" required>
+  <input type="text" id="endereco" placeholder="Endereço" class="border p-2 w-full rounded" required>
+  <input type="text" id="telefone" placeholder="Telefone" class="border p-2 w-full rounded" required>
+  <input type="url" id="whatsapp" placeholder="Link WhatsApp" class="border p-2 w-full rounded" required>
+  <textarea id="descricao" placeholder="Descrição/Observações" class="border p-2 w-full rounded" rows="3"></textarea>
+  <label class="block">
+    Logo Padronizada:
+    <input type="file" id="logo" accept="image/*" class="border p-2 rounded w-full">
+  </label>
+
+  <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Salvar Galvânica</button>
+</form>
+
+<div id="listaGalvanicas" class="mt-6 space-y-4"></div>
+</section>
+
 </main>
 
 <!-- ROMANEIO PREMIUM -->
 <div id="romaneio" class="hidden bg-white p-10 text-sm font-sans">
-
   <div class="flex justify-between items-center border-b pb-4 mb-6">
     <div>
       <h1 class="text-xl font-bold tracking-widest gold">ABELLA JOIAS</h1>
-      <p class="text-xs uppercase tracking-widest text-gray-400">
-        Romaneio de Separação e Envio
-      </p>
+      <p class="text-xs uppercase tracking-widest text-gray-400">Romaneio de Separação e Envio</p>
     </div>
     <div class="text-xs text-right">
       <p><strong>Data:</strong> <span id="rData"></span></p>
       <p><strong>Status:</strong> <span id="rStatus"></span></p>
     </div>
   </div>
-
-  <!-- CLIENTE -->
   <div class="grid grid-cols-2 gap-6 mb-6">
     <div>
       <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
@@ -133,8 +151,6 @@ SALVAR PRODUTO
       <p><strong>Parcelas:</strong> <span id="rParcelas"></span></p>
     </div>
   </div>
-
-  <!-- TABELA -->
   <table class="w-full border text-xs">
     <thead>
       <tr class="bg-gray-100">
@@ -148,8 +164,6 @@ SALVAR PRODUTO
     </thead>
     <tbody id="rItens"></tbody>
   </table>
-
-  <!-- RESUMO -->
   <div class="grid grid-cols-2 gap-6 mt-6 text-sm">
     <div>
       <p><strong>Observações:</strong></p>
@@ -160,8 +174,6 @@ SALVAR PRODUTO
       <p><strong>Total Pedido:</strong> R$ <span id="rTotal"></span></p>
     </div>
   </div>
-
-  <!-- ASSINATURA -->
   <div class="grid grid-cols-2 gap-6 mt-12 text-xs">
     <div>
       <div class="border-t pt-2">Separação / Conferência</div>
@@ -170,9 +182,7 @@ SALVAR PRODUTO
       <div class="border-t pt-2">Cliente / Recebimento</div>
     </div>
   </div>
-
 </div>
-
 
 <script>
 /* 🔥 FIREBASE */
@@ -180,9 +190,11 @@ firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.appspot.com"
 });
 const db=firebase.database();
+const storage=firebase.storage();
 
 /* TABS */
 function openTab(id){
@@ -212,22 +224,46 @@ db.ref('settings').on('value',s=>{
 /* CATEGORIAS */
 function salvarCategoria(){
  if(!catNome.value)return;
- db.ref('categories').push({name:catNome.value});
+ db.ref('categories').push({name:catNome.value, image:''});
  catNome.value='';
 }
 
 db.ref('categories').on('value',snap=>{
  listaCategorias.innerHTML='';
  pCategoria.innerHTML='<option value="">Selecione</option>';
+ categoriasAdmin.innerHTML='';
  snap.forEach(s=>{
+   const cat=s.val();
+   const id=s.key;
+
+   // Lista simples
    listaCategorias.innerHTML+=`
    <div class="bg-white border p-3 flex justify-between">
-     ${s.val().name}
-     <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600 text-xs">Excluir</button>
+     ${cat.name}
+     <button onclick="db.ref('categories/${id}').remove()" class="text-red-600 text-xs">Excluir</button>
    </div>`;
-   pCategoria.innerHTML+=`<option>${s.val().name}</option>`;
+
+   // Opção upload de imagem
+   categoriasAdmin.innerHTML+=`
+   <div class="flex items-center justify-between bg-gray-100 p-3 rounded">
+     <span class="font-semibold">${cat.name}</span>
+     <div class="flex items-center gap-2">
+       <img src="${cat.image||'https://via.placeholder.com/50'}" alt="${cat.name}" class="h-12 w-12 object-cover rounded border">
+       <input type="file" onchange="trocarImagem('${id}', this.files[0])" class="border p-1 rounded">
+     </div>
+   </div>`;
+
+   pCategoria.innerHTML+=`<option>${cat.name}</option>`;
  });
 });
+
+function trocarImagem(id,file){
+ const ref=storage.ref('categorias/'+file.name);
+ ref.put(file).then(()=>ref.getDownloadURL().then(url=>{
+   db.ref('categories/'+id).update({image:url});
+   alert('Imagem atualizada com sucesso!');
+ }));
+}
 
 /* PRODUTOS */
 let editando=null;
@@ -244,9 +280,7 @@ function salvarProduto(){
   db.ref('products/'+editando).set(produto);
   editando=null;
   btnProduto.textContent='SALVAR PRODUTO';
- }else{
-  db.ref('products').push(produto);
- }
+ }else db.ref('products').push(produto);
  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagem.value='';
  pCategoria.value='';
 }
@@ -294,7 +328,6 @@ db.ref('orders').on('value',snap=>{
    <p class="text-xs">${o.data}</p>
    <p>${o.pagamento} • ${o.peso}g</p>
    <strong>R$ ${o.total.toFixed(2)}</strong>
-
    <div class="flex gap-2 mt-2 text-xs">
     ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
      <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
@@ -307,7 +340,6 @@ db.ref('orders').on('value',snap=>{
 });
 
 /* ROMANEIO */
-<script>
 function imprimir(o){
   rCliente.textContent = o.cliente;
   rWhats.textContent = o.whatsapp;
@@ -317,25 +349,71 @@ function imprimir(o){
   rTotal.textContent = o.total.toFixed(2);
   rData.textContent = o.data;
   rStatus.textContent = o.status;
-
   rItens.innerHTML='';
   o.itens.forEach(i=>{
-    rItens.innerHTML += `
+    rItens.innerHTML+=`
       <tr>
         <td class="border p-2"></td>
         <td class="border p-2">${i.name}</td>
         <td class="border p-2">${i.sku}</td>
         <td class="border p-2">${i.qty}</td>
         <td class="border p-2">${i.weight}</td>
-        <td class="border p-2">${(i.weight * i.qty).toFixed(2)}</td>
-      </tr>
-    `;
+        <td class="border p-2">${(i.weight*i.qty).toFixed(2)}</td>
+      </tr>`;
   });
-
   romaneio.classList.remove('hidden');
   window.print();
   romaneio.classList.add('hidden');
 }
+
+/* ===== GALVÂNICAS ===== */
+const formGalvanica=document.getElementById('formGalvanica');
+const listaGalvanicas=document.getElementById('listaGalvanicas');
+
+formGalvanica.addEventListener('submit', e=>{
+ e.preventDefault();
+ const nome=document.getElementById('nome').value;
+ const endereco=document.getElementById('endereco').value;
+ const telefone=document.getElementById('telefone').value;
+ const whatsapp=document.getElementById('whatsapp').value;
+ const descricao=document.getElementById('descricao').value;
+ const logoFile=document.getElementById('logo').files[0];
+
+ if(logoFile){
+   const logoRef=storage.ref('galvanicas/'+logoFile.name);
+   logoRef.put(logoFile).then(()=>logoRef.getDownloadURL().then(url=>{
+     salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,url);
+   }));
+ } else salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,'');
+});
+
+function salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,logo){
+ const newGalv=db.ref('galvanicas').push();
+ newGalv.set({nome,endereco,telefone,whatsapp,descricao,logo});
+ alert('Galvânica cadastrada com sucesso!');
+ formGalvanica.reset();
+}
+
+/* Mostrar lista de galvanicas */
+db.ref('galvanicas').on('value',snap=>{
+ listaGalvanicas.innerHTML='';
+ snap.forEach(s=>{
+   const g=s.val();
+   const id=s.key;
+   listaGalvanicas.innerHTML+=`
+   <div class="bg-white border p-4 flex justify-between items-center rounded">
+     <div class="flex items-center gap-4">
+       <img src="${g.logo||'https://via.placeholder.com/50'}" class="h-12 w-12 object-cover rounded border">
+       <div>
+         <p class="font-semibold">${g.nome}</p>
+         <p class="text-xs">${g.endereco}</p>
+         <p class="text-xs">${g.telefone} • ${g.whatsapp}</p>
+       </div>
+     </div>
+     <button onclick="db.ref('galvanicas/${id}').remove()" class="text-red-600 px-2 py-1 text-xs">Excluir</button>
+   </div>`;
+ });
+});
 </script>
 
 </body>
