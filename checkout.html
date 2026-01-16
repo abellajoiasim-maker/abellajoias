@@ -2,40 +2,59 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Finalizar Pedido | Abella Joias</title>
+<title>Checkout | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+.floating-back{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  z-index:50;
+}
+</style>
 </head>
 
 <body class="bg-neutral-50 p-4 max-w-xl mx-auto">
 
-<h1 class="text-xl font-serif mb-4 text-center">Finalizar Pedido</h1>
+<h1 class="text-xl font-serif text-center mb-4">Finalizar Pedido</h1>
 
-<!-- ITENS DO CARRINHO -->
-<div id="listaCarrinho" class="space-y-3 mb-4"></div>
+<!-- CARRINHO -->
+<div id="listaCarrinho" class="space-y-3 mb-6"></div>
 
-<!-- DADOS DO CLIENTE -->
-<input id="cliente" placeholder="Nome" class="border p-2 w-full mb-2">
-<input id="whatsapp" placeholder="WhatsApp (DDD + número)" class="border p-2 w-full mb-4">
+<!-- DADOS -->
+<input id="cliente" placeholder="Nome completo" class="border p-3 w-full mb-2">
+<input id="whatsapp" placeholder="WhatsApp (DDD + número)" class="border p-3 w-full mb-4">
 
 <!-- RESUMO -->
-<div class="bg-white border p-3 mb-4 text-sm space-y-1">
+<div class="bg-white border p-4 text-sm space-y-1 mb-6">
   <p>Subtotal: R$ <span id="subtotal">0.00</span></p>
   <p id="linhaPix" class="text-green-600 hidden"></p>
-  <p class="font-semibold text-lg">Total: R$ <span id="total">0.00</span></p>
-  <p class="text-xs text-gray-500">Peso total: <span id="pesoTotal">0</span>g</p>
+  <p class="font-semibold text-lg">
+    Total: R$ <span id="total">0.00</span>
+  </p>
+  <p class="text-xs text-gray-500">
+    Peso total: <span id="pesoTotal">0</span>g
+  </p>
 </div>
 
 <button onclick="finalizarPedido()"
-  class="bg-black text-white w-full py-3 tracking-widest">
+ class="bg-black text-white w-full py-4 tracking-widest">
 FINALIZAR PEDIDO
 </button>
 
+<!-- 🔙 BOTÃO FLUTUANTE -->
+<button onclick="voltarLoja()"
+ class="floating-back bg-white border shadow px-4 py-2 text-sm rounded-full">
+← Voltar
+</button>
+
 <script>
-/* 🔥 FIREBASE — MANTIDO */
+/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
@@ -47,46 +66,43 @@ const db = firebase.database();
 /* DADOS */
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 const pagamento = localStorage.getItem('payment') || 'PIX';
+let descontoPix = 0;
 
 let subtotal = 0;
 let pesoTotal = 0;
-let descontoPix = 0;
 
-/* CONFIGURAÇÕES DA EMPRESA */
+/* EMPRESA */
 db.ref('settings').once('value').then(s=>{
-  if(s.val()){
-    descontoPix = Number(s.val().pix||0);
-  }
+  if(s.val()) descontoPix = Number(s.val().pix||0);
   render();
 });
 
-/* RENDER CARRINHO */
+/* RENDER */
 function render(){
   listaCarrinho.innerHTML='';
   subtotal=0;
   pesoTotal=0;
 
   cart.forEach((i,idx)=>{
-    subtotal += i.price * i.qty;
-    pesoTotal += (i.weight||0) * i.qty;
+    subtotal += i.price*i.qty;
+    pesoTotal += (i.weight||0)*i.qty;
 
     listaCarrinho.innerHTML+=`
-      <div class="bg-white border p-3 flex gap-3">
-        <img src="${i.image}" class="w-16 h-16 object-cover rounded">
-        <div class="flex-1">
-          <p class="font-semibold">${i.name}</p>
-          <p class="text-xs text-gray-500">${i.weight||0}g por unidade</p>
-
-          <div class="flex items-center gap-2 mt-1">
-            <button onclick="alterarQtd(${idx},-1)" class="border px-2">−</button>
-            <span>${i.qty}</span>
-            <button onclick="alterarQtd(${idx},1)" class="border px-2">+</button>
-          </div>
+    <div class="bg-white border p-3 flex gap-3">
+      <img src="${i.image}" class="w-16 h-16 rounded object-cover">
+      <div class="flex-1">
+        <p class="font-semibold">${i.name}</p>
+        <p class="text-xs text-gray-500">${i.weight||0}g / un</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="alterarQtd(${idx},-1)" class="border px-2">−</button>
+          <span>${i.qty}</span>
+          <button onclick="alterarQtd(${idx},1)" class="border px-2">+</button>
         </div>
-        <div class="text-right text-sm">
-          R$ ${(i.price*i.qty).toFixed(2)}
-        </div>
-      </div>`;
+      </div>
+      <div class="text-sm">
+        R$ ${(i.price*i.qty).toFixed(2)}
+      </div>
+    </div>`;
   });
 
   subtotalEl.textContent=subtotal.toFixed(2);
@@ -95,8 +111,8 @@ function render(){
   linhaPix.classList.add('hidden');
 
   if(pagamento==='PIX' && descontoPix>0){
-    const desc = subtotal*(descontoPix/100);
-    total = subtotal-desc;
+    const desc=subtotal*(descontoPix/100);
+    total=subtotal-desc;
     linhaPix.textContent=`Desconto PIX (${descontoPix}%): -R$ ${desc.toFixed(2)}`;
     linhaPix.classList.remove('hidden');
   }
@@ -105,10 +121,10 @@ function render(){
   pesoTotalEl.textContent=pesoTotal;
 }
 
-/* CONTROLES */
-function alterarQtd(idx,delta){
-  cart[idx].qty+=delta;
-  if(cart[idx].qty<=0) cart.splice(idx,1);
+/* QTD */
+function alterarQtd(i,d){
+  cart[i].qty+=d;
+  if(cart[i].qty<=0) cart.splice(i,1);
   localStorage.setItem('cart',JSON.stringify(cart));
   render();
 }
@@ -116,10 +132,10 @@ function alterarQtd(idx,delta){
 /* FINALIZAR */
 function finalizarPedido(){
   if(cart.length===0) return alert('Carrinho vazio');
-  if(!cliente.value || !whatsapp.value)
+  if(!cliente.value||!whatsapp.value)
     return alert('Preencha nome e WhatsApp');
 
-  const totalFinal = Number(totalEl.textContent);
+  const totalFinal=Number(totalEl.textContent);
 
   const pedido={
     cliente:cliente.value,
@@ -133,10 +149,9 @@ function finalizarPedido(){
   };
 
   db.ref('orders').push(pedido).then(()=>{
-    /* ✅ NOVA FUNÇÃO — CONFIRMAÇÃO */
     alert(
-      'Pedido enviado com sucesso! 💛\n\n' +
-      'Em instantes a Abella Joias entrará em contato para a finalização.'
+      '✅ Pedido finalizado com sucesso!\n\n' +
+      'A Abella Joias entrará em contato em instantes para finalização.'
     );
 
     let msg='🛍️ *NOVO PEDIDO*%0A%0A';
@@ -144,14 +159,19 @@ function finalizarPedido(){
       msg+=`${i.qty}x ${i.name}%0A`;
     });
     msg+=`%0A💳 Pagamento: ${pagamento}`;
-    msg+=`%0A⚖️ Peso total: ${pesoTotal}g`;
+    msg+=`%0A⚖️ Peso: ${pesoTotal}g`;
     msg+=`%0A💰 Total: R$ ${totalFinal.toFixed(2)}`;
 
-    localStorage.removeItem('cart');
+    localStorage.clear(); // 🔥 APAGA DEFINITIVO
 
     window.location.href=
       `https://wa.me/55${whatsapp.value}?text=${msg}`;
   });
+}
+
+/* VOLTAR */
+function voltarLoja(){
+  window.location.href='index.html';
 }
 
 /* ELEMENTOS */
