@@ -4,153 +4,76 @@
 <meta charset="UTF-8">
 <title>Checkout | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.tailwindcss.com"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body { background:#F8F6F2 }
-.font-serif { font-family:'Cinzel', serif }
-.gold { color:#A68966 }
-</style>
 </head>
 
-<body class="max-w-xl mx-auto p-6">
+<body class="bg-neutral-50 p-6 max-w-xl mx-auto">
 
-<h1 class="font-serif text-2xl gold text-center mb-6">Finalizar Pedido</h1>
+<h1 class="text-xl font-serif mb-4 text-center">Finalizar Pedido</h1>
 
-<!-- CLIENTE -->
-<input id="clienteNome" placeholder="Nome do cliente"
-  class="border p-3 w-full mb-3">
+<input id="cliente" placeholder="Nome" class="border p-3 w-full mb-3">
+<input id="whatsapp" placeholder="WhatsApp" class="border p-3 w-full mb-4">
 
-<input id="clienteWhats" placeholder="WhatsApp (somente números)"
-  class="border p-3 w-full mb-6">
-
-<!-- ITENS -->
-<div id="itens" class="space-y-3 mb-6"></div>
-
-<!-- RESUMO -->
-<div class="border-t pt-4 space-y-1 text-sm">
-  <p>Peso total: <strong><span id="pesoTotal">0</span> g</strong></p>
-  <p>Subtotal: R$ <span id="subtotal">0.00</span></p>
-  <p class="text-lg font-semibold">Total: R$ <span id="total">0.00</span></p>
-</div>
-
-<!-- PAGAMENTO -->
-<div class="mt-6 space-y-2">
-  <label class="flex items-center gap-2">
-    <input type="radio" name="pagamento" value="PIX" checked>
-    <span class="gold font-medium">PIX</span>
-  </label>
-
-  <label class="flex items-center gap-2">
-    <input type="radio" name="pagamento" value="CARTAO">
-    <span>Cartão</span>
-  </label>
-
-  <select id="parcelas" class="border p-2 w-full hidden">
-    <option value="1x">1x sem juros</option>
-    <option value="2x">2x sem juros</option>
-    <option value="3x">3x sem juros</option>
-  </select>
-</div>
-
-<!-- FINALIZAR -->
-<button onclick="finalizarPedido()"
-  class="w-full bg-black text-white py-3 mt-6 tracking-widest text-xs">
-  FINALIZAR NO WHATSAPP
+<button onclick="finalizar()"
+  class="bg-black text-white w-full py-3 tracking-widest">
+ENVIAR PEDIDO
 </button>
 
 <script>
-/* 🔥 FIREBASE — MESMO DO PROJETO */
 firebase.initializeApp({
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
-  projectId: "SEU_PROJETO"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
 });
-
 const db = firebase.database();
 
-/* DADOS LOCAIS (MANTÉM PADRÃO DA MARCINHA) */
-const cart = JSON.parse(localStorage.getItem('cart')) || [];
-const storePhone = localStorage.getItem('storePhone') || '';
-const config = JSON.parse(localStorage.getItem('storeConfig')) || {};
+const cart = JSON.parse(localStorage.getItem("cart")) || [];
+const pagamento = localStorage.getItem("payment") || "PIX";
 
-const itensEl = document.getElementById('itens');
-const subtotalEl = document.getElementById('subtotal');
-const totalEl = document.getElementById('total');
-const pesoEl = document.getElementById('pesoTotal');
-const parcelasEl = document.getElementById('parcelas');
+function finalizar(){
+  if(cart.length===0) return alert("Carrinho vazio");
 
-let subtotal = 0;
-let pesoTotal = 0;
+  const nome = cliente.value.trim();
+  const tel = whatsapp.value.trim();
+  if(!nome || !tel) return alert("Preencha os dados");
 
-/* RENDER */
-cart.forEach(i => {
-  subtotal += i.price * i.qty;
-  pesoTotal += (i.weight || 0) * i.qty;
+  let total = 0;
+  let peso = 0;
 
-  itensEl.innerHTML += `
-    <div class="flex justify-between border-b pb-2 text-sm">
-      <div>
-        <p>${i.qty}x ${i.name}</p>
-        <p class="text-xs text-gray-400">SKU: ${i.sku || '-'}</p>
-      </div>
-      <strong>R$ ${(i.price * i.qty).toFixed(2)}</strong>
-    </div>
-  `;
-});
-
-subtotalEl.textContent = subtotal.toFixed(2);
-totalEl.textContent = subtotal.toFixed(2);
-pesoEl.textContent = pesoTotal;
-
-/* PAGAMENTO */
-document.querySelectorAll('[name=pagamento]').forEach(r => {
-  r.onchange = () => {
-    parcelasEl.classList.toggle('hidden', r.value !== 'CARTAO');
-  };
-});
-
-/* FINALIZAR */
-function finalizarPedido(){
-  const nome = clienteNome.value.trim();
-  const whats = clienteWhats.value.trim();
-  if(!nome || !whats) return alert('Informe nome e WhatsApp');
-
-  const pagamento = document.querySelector('[name=pagamento]:checked').value;
-  const parcelas = pagamento === 'CARTAO' ? parcelasEl.value : 'À vista';
+  cart.forEach(i=>{
+    total += i.price * i.qty;
+    peso += (i.weight||0) * i.qty;
+  });
 
   const pedido = {
     cliente: nome,
-    whatsapp: whats,
-    data: new Date().toLocaleString('pt-BR'),
+    whatsapp: tel,
+    data: new Date().toLocaleString("pt-BR"),
+    total,
+    peso,
     pagamento,
-    parcelas,
-    subtotal,
-    total: subtotal,
-    pesoTotal,
-    status: 'Novo',
+    status: "Novo",
     itens: cart
   };
 
-  /* SALVA NO FIREBASE */
-  db.ref('orders').push(pedido);
+  db.ref("orders").push(pedido);
 
-  /* MENSAGEM WHATSAPP (IGUAL AO FLUXO ANTIGO) */
-  let msg = `🛍️ Pedido de *${nome}*:%0A%0A`;
-  cart.forEach(i => {
-    msg += `${i.qty}x ${i.name} - R$ ${i.price}%0A`;
+  let msg = `✨ Pedido Abella Joias ✨%0A%0ACliente: ${nome}%0A%0A`;
+  cart.forEach(i=>{
+    msg += `${i.qty}x ${i.name}%0A`;
   });
-  msg += `%0A⚖️ Peso: ${pesoTotal} g`;
-  msg += `%0A💳 Pagamento: ${pagamento}`;
-  msg += `%0A💰 Total: R$ ${subtotal.toFixed(2)}`;
 
-  localStorage.removeItem('cart');
+  msg += `%0ATotal: R$ ${total.toFixed(2)}`;
+  msg += `%0APeso total: ${peso}g`;
+  msg += `%0A%0ARecebemos seu pedido! Em breve entraremos em contato para finalizar 💎`;
 
-  window.open(`https://wa.me/55${whats}?text=${msg}`);
+  localStorage.removeItem("cart");
+
+  window.open(`https://wa.me/55${tel}?text=${msg}`);
 }
 </script>
 
