@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Abella Joias</title>
+<title>Catálogo | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -13,27 +13,63 @@
 body{background:#F8F6F2}
 .font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
+
+.card-cat{
+  aspect-ratio:1/1;
+  background-size:cover;
+  background-position:center;
+  position:relative;
+  border-radius:16px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.3s;
+}
+.card-cat:hover{transform:scale(1.02)}
+
+.card-overlay{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.55),transparent 60%);
+}
+
+.card-title{
+  position:absolute;
+  bottom:16px;
+  left:16px;
+  color:#fff;
+  font-size:18px;
+  font-weight:600;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <header class="bg-white border-b px-8 py-6 flex justify-between items-center">
-  <h1 class="font-serif text-2xl gold">Abella Joias</h1>
-  <a href="checkout.html" class="text-sm uppercase tracking-widest">
-    🛒 Carrinho (<span id="cartCount">0</span>)
+  <h1 class="font-serif gold text-xl tracking-widest">
+    Abella Joias
+  </h1>
+
+  <!-- BOTÃO GALVÂNICAS -->
+  <a href="galvanicas.html"
+     class="text-xs tracking-widest uppercase border px-4 py-2 hover:bg-black hover:text-white transition">
+    Galvânicas Parceiras
   </a>
 </header>
 
-<!-- CATEGORIAS -->
-<nav class="px-8 py-4 flex gap-4 overflow-x-auto text-sm uppercase tracking-widest">
-  <button onclick="filtrar('')" class="border px-4 py-2">Todas</button>
-  <div id="menuCategorias" class="flex gap-4"></div>
-</nav>
+<main class="max-w-7xl mx-auto p-8">
 
-<!-- PRODUTOS -->
-<main class="px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8" id="listaProdutos"></main>
+  <h2 class="font-serif gold text-2xl tracking-widest mb-8 text-center">
+    Catálogo por Categorias
+  </h2>
+
+  <div id="gridCategorias"
+       class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+  </div>
+
+</main>
 
 <script>
 /* 🔥 FIREBASE */
@@ -45,74 +81,32 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-let produtos=[];
-let carrinho = JSON.parse(localStorage.getItem('cart'))||[];
-
-/* CARRINHO */
-function atualizarCarrinho(){
-  localStorage.setItem('cart',JSON.stringify(carrinho));
-  cartCount.textContent = carrinho.reduce((s,i)=>s+i.qty,0);
-}
-atualizarCarrinho();
-
-function addCarrinho(p){
-  const item = carrinho.find(i=>i.id===p.id);
-  if(item) item.qty++;
-  else carrinho.push({...p, qty:1});
-  atualizarCarrinho();
-  alert('Produto adicionado ao carrinho');
-}
-
-/* FILTRO */
-function filtrar(cat){
-  render(produtos.filter(p=>!cat || p.category===cat));
-}
-
-/* RENDER */
-function render(lista){
-  listaProdutos.innerHTML='';
-  lista.forEach(p=>{
-    const pix = (p.price * 0.9).toFixed(2);
-    listaProdutos.innerHTML+=`
-    <div class="bg-white p-4 shadow-sm">
-      <img src="${p.image}" class="aspect-square object-cover mb-3">
-      <h2 class="font-serif text-sm">${p.name}</h2>
-      <p class="text-xs text-gray-400">${p.category} • ${p.weight}g</p>
-
-      <div class="mt-2 space-y-1">
-        <p class="text-sm">R$ ${p.price.toFixed(2)}</p>
-        <p class="text-xs text-green-700">PIX R$ ${pix}</p>
-        <p class="text-xs text-gray-500">
-          ${p.parcelas||3}x de R$ ${(p.price/(p.parcelas||3)).toFixed(2)}
-        </p>
-      </div>
-
-      <button onclick='addCarrinho(${JSON.stringify(p)})'
-        class="mt-3 w-full bg-black text-white text-xs py-2">
-        ADICIONAR AO CARRINHO
-      </button>
-    </div>`;
-  });
-}
-
 /* CATEGORIAS */
-db.ref('categories').on('value',snap=>{
-  menuCategorias.innerHTML='';
-  snap.forEach(s=>{
-    const c=s.val().name;
-    menuCategorias.innerHTML+=`
-      <button onclick="filtrar('${c}')" class="border px-4 py-2">${c}</button>`;
+db.ref('categories').on('value', snap => {
+  gridCategorias.innerHTML = '';
+
+  snap.forEach(s => {
+    const nome = s.val().name;
+
+    /* imagem padrão (você pode trocar depois) */
+    const img = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338';
+
+    gridCategorias.innerHTML += `
+      <div class="card-cat"
+           style="background-image:url('${img}')"
+           onclick="abrirCategoria('${nome}')">
+
+        <div class="card-overlay"></div>
+        <div class="card-title">${nome}</div>
+      </div>
+    `;
   });
 });
 
-/* PRODUTOS */
-db.ref('products').on('value',snap=>{
-  produtos=[];
-  snap.forEach(s=>{
-    produtos.push({id:s.key,...s.val(), parcelas:3});
-  });
-  render(produtos);
-});
+/* REDIRECIONA */
+function abrirCategoria(cat){
+  window.location.href = `categoria.html?cat=${encodeURIComponent(cat)}`;
+}
 </script>
 
 </body>
