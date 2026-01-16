@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meu Carrinho | Abella Joias</title>
+<title>Carrinho | Abella Joias</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -21,11 +21,13 @@ body{font-family:'Poppins',sans-serif;background:#fcfaf7;margin:0;}
 <header class="header">
 <h1 class="text-xl font-bold">Meu Carrinho</h1>
 </header>
-
 <main class="max-w-4xl mx-auto p-4">
   <div id="carrinhoProdutos"></div>
   <div class="total">Total: R$ <span id="totalCart">0.00</span></div>
-  <button id="finalizar" class="btn btn-black mt-4 w-full">Finalizar Pedido</button>
+  <div class="flex gap-2 mt-4">
+    <button id="finalizar" class="btn btn-black flex-1">Finalizar Pedido</button>
+    <button id="romaneio" class="btn btn-gold flex-1">Gerar Romaneio / Imprimir</button>
+  </div>
 </main>
 
 <script>
@@ -46,18 +48,15 @@ const carrinhoDiv = document.getElementById('carrinhoProdutos');
 const totalSpan = document.getElementById('totalCart');
 
 function atualizarCarrinho(){
-  let total = 0;
+  let total=0;
   carrinhoDiv.innerHTML='';
   carrinho.forEach((p,i)=>{
     total+=Number(p.preco)*p.qty;
     carrinhoDiv.innerHTML+=`
       <div class="card">
         <div>${p.qty}x ${p.name} - R$ ${p.preco}</div>
-        <div>
-          <button onclick="removerProduto(${i})" class="btn btn-gold text-xs">Remover</button>
-        </div>
-      </div>
-    `;
+        <div><button onclick="removerProduto(${i})" class="btn btn-gold text-xs">Remover</button></div>
+      </div>`;
   });
   totalSpan.textContent=total.toFixed(2);
 }
@@ -69,9 +68,18 @@ document.getElementById('finalizar').onclick=()=>{
   const whatsapp = prompt("WhatsApp:");
   if(!nome || !whatsapp) return alert("Informe nome e WhatsApp!");
   db.ref('orders').push({cliente:nome,whatsapp,itens:carrinho,total:carrinho.reduce((a,b)=>a+b.preco*b.qty,0),pagamento:"PIX",status:"Novo"});
-  localStorage.removeItem('carrinho');
+  localStorage.removeItem('carrinho'); carrinho=[]; atualizarCarrinho();
   alert("Pedido finalizado!");
-  location.reload();
+};
+
+document.getElementById('romaneio').onclick=()=>{
+  let win = window.open('', '_blank');
+  let html = `<html><head><title>Romaneio de Pedidos</title>
+  <style>body{font-family:Poppins,sans-serif;}h1{text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;}td,th{border:1px solid #222;padding:8px;text-align:left;}th{background:#d4af37;color:white;}</style>
+  </head><body><h1>Romaneio de Pedidos</h1><table><tr><th>Produto</th><th>Qtd</th><th>Preço</th></tr>`;
+  carrinho.forEach(p=>html+=`<tr><td>${p.name}</td><td>${p.qty}</td><td>R$ ${p.preco}</td></tr>`);
+  html+=`</table></body></html>`;
+  win.document.write(html); win.document.close(); win.print();
 };
 </script>
 </body>
