@@ -1,1 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Galvânicas Parceiras | Abella Joias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold-border: #d4af37; --gold-text: #b8860b; --card-shadow: rgba(212,175,55,0.2); }
+        body { font-family: "Poppins", sans-serif; background: #fcfaf7; }
+        .card-galv {
+            border: 2px solid var(--gold-border);
+            border-radius: 18px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .card-galv:hover { transform: translateY(-5px); box-shadow: 0 10px 30px var(--card-shadow); }
+        .selo {
+            position: absolute; top: -12px; right: -12px;
+            background: linear-gradient(135deg,#ffd700,#ffec8b);
+            color: #6b4f00; font-size: 10px; font-weight: 800;
+            padding: 8px; border-radius: 50%; border: 2px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <header class="p-6 border-b bg-white flex items-center gap-4">
+        <a href="index.html" class="font-bold text-gray-400 italic">← VOLTAR</a>
+        <h1 class="text-xl font-extrabold text-[#b8860b] uppercase tracking-tighter">Galvânicas Parceiras</h1>
+    </header>
 
+    <main class="max-w-6xl mx-auto p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
+                <div class="selo">ABELLA GOLD</div>
+                <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-5-300x129.jpg" class="h-24 object-contain mb-4">
+                <h2 class="text-lg font-bold text-gray-800">Franco Galvânica</h2>
+                <p class="text-xs text-gray-500 mb-4">Especializada em Ouro, Prata e Ródio Branco/Negro.</p>
+                <div class="text-left w-full text-xs space-y-1 mb-4">
+                    <p><strong>📍 Endereço:</strong> R. José Motta dos Santos, 113</p>
+                    <p><strong>📞 Tel:</strong> (19) 3451-6246</p>
+                </div>
+                <a href="https://wa.me/5519984202600" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
+            </div>
+
+            <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
+                <div class="selo">ABELLA GOLD</div>
+                <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" class="h-24 object-contain mb-4">
+                <h2 class="text-lg font-bold text-gray-800">ORO Galvânica</h2>
+                <p class="text-xs text-gray-500 mb-4">Excelência em Banhos para Semijoias de Alto Padrão.</p>
+                <div class="text-left w-full text-xs space-y-1 mb-4">
+                    <p><strong>📍 Endereço:</strong> R. Pércio Machado Gomes, 243</p>
+                    <p><strong>📞 Tel:</strong> (19) 98907-2453</p>
+                </div>
+                <a href="https://wa.me/5519989072453" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
+            </div>
+
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="https://wa.me/5519988207658">
+                <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Gemini_Generated_Image_56v05c56v05c56v0.png" class="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl border-4 border-[#d4af37]">
+            </a>
+        </div>
+    </main>
+</body>
+</html>
