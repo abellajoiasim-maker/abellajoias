@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#faf9f7}
+body{background:#F8F6F2}
 .font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
 </style>
@@ -18,26 +18,31 @@ body{background:#faf9f7}
 
 <body>
 
-<header class="bg-white border-b p-6 text-center">
-  <h1 class="font-serif text-2xl tracking-widest gold">Abella Joias</h1>
-  <p class="text-xs tracking-widest text-gray-400 uppercase">Catálogo Oficial</p>
+<header class="bg-white border-b px-8 py-6 flex justify-between items-center">
+  <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
+  <button onclick="abrirCarrinho()" class="text-sm">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</button>
 </header>
 
-<!-- CATEGORIAS -->
-<section class="max-w-6xl mx-auto px-4 py-4">
-  <div id="filtroCategorias" class="flex gap-3 flex-wrap justify-center"></div>
-</section>
-
-<!-- PRODUTOS -->
-<section class="max-w-6xl mx-auto px-4 pb-32">
+<main class="max-w-6xl mx-auto p-8">
   <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-</section>
+</main>
 
-<!-- BOTÃO CARRINHO -->
-<a href="checkout.html"
-   class="fixed bottom-6 right-6 bg-black text-white px-6 py-3 rounded-full text-xs tracking-widest shadow-lg">
-🛒 Finalizar Pedido
-</a>
+<!-- CARRINHO -->
+<div id="modalCarrinho" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+  <div class="bg-white w-full max-w-md p-6 space-y-4">
+    <h2 class="font-serif gold text-lg">Carrinho</h2>
+
+    <div id="itensCarrinho" class="space-y-2"></div>
+
+    <p class="text-sm">Peso total: <strong><span id="pesoTotal">0</span>g</strong></p>
+    <p class="text-sm">Total: <strong>R$ <span id="totalCarrinho">0.00</span></strong></p>
+
+    <div class="flex gap-2">
+      <button onclick="finalizar()" class="bg-black text-white px-4 py-2 text-xs flex-1">Finalizar</button>
+      <button onclick="fecharCarrinho()" class="border px-4 py-2 text-xs">Fechar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* FIREBASE */
@@ -47,73 +52,95 @@ firebase.initializeApp({
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
-const db = firebase.database();
 
-let produtos = [];
-let categoriaAtiva = 'Todos';
-let carrinho = JSON.parse(localStorage.getItem('cart')) || [];
+const db=firebase.database();
+const listaProdutos=document.getElementById('listaProdutos');
 
-/* CATEGORIAS */
-db.ref('categories').on('value', snap => {
-  const wrap = document.getElementById('filtroCategorias');
-  wrap.innerHTML = '';
+let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
+atualizarCarrinho();
 
-  criarBtnCategoria('Todos', wrap);
+/* CONFIGURAÇÕES DA LOJA */
+let descontoPix=0;
+let parcelas=1;
 
-  snap.forEach(s => criarBtnCategoria(s.val().name, wrap));
+db.ref('settings').once('value').then(s=>{
+  if(!s.val())return;
+  descontoPix=Number(s.val().pix||0);
+  parcelas=Number(s.val().parcelas||1);
 });
-
-function criarBtnCategoria(nome, wrap){
-  const b = document.createElement('button');
-  b.textContent = nome;
-  b.className = 'px-4 py-2 border text-xs';
-  b.onclick = () => {
-    categoriaAtiva = nome;
-    renderProdutos();
-  };
-  wrap.appendChild(b);
-}
 
 /* PRODUTOS */
-db.ref('products').on('value', snap => {
-  produtos = [];
-  snap.forEach(s => produtos.push({id:s.key, ...s.val()}));
-  renderProdutos();
+db.ref('products').on('value',snap=>{
+  listaProdutos.innerHTML='';
+  snap.forEach(s=>{
+    const p=s.val();
+
+    const precoPix=(p.price*(1-descontoPix/100)).toFixed(2);
+    const parcela=(p.price/parcelas).toFixed(2);
+
+    listaProdutos.innerHTML+=`
+      <div class="bg-white border p-3 space-y-2">
+        <img src="${p.image}" class="aspect-square object-cover">
+        <p class="text-sm">${p.name}</p>
+
+        <p class="text-xs">💳 ${parcelas}x R$ ${parcela}</p>
+        <p class="text-xs text-green-700">⚡ PIX R$ ${precoPix}</p>
+        <p class="font-semibold gold">R$ ${p.price.toFixed(2)}</p>
+
+        <button onclick='addCarrinho(${JSON.stringify(p)})'
+          class="bg-black text-white w-full text-xs py-2">Adicionar ao carrinho</button>
+      </div>
+    `;
+  });
 });
-
-/* RENDER */
-function renderProdutos(){
-  const lista = document.getElementById('listaProdutos');
-  lista.innerHTML = '';
-
-  produtos
-    .filter(p => categoriaAtiva === 'Todos' || p.category === categoriaAtiva)
-    .forEach(p => {
-      lista.innerHTML += `
-      <div class="bg-white border hover:shadow-md transition">
-        <img src="${p.image}" class="w-full aspect-square object-cover">
-        <div class="p-3 space-y-1">
-          <p class="text-sm font-medium">${p.name}</p>
-          <p class="text-xs text-gray-400">${p.category}</p>
-          <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-
-          <button onclick='addCarrinho(${JSON.stringify(p)})'
-            class="w-full mt-2 border text-xs py-2 hover:bg-black hover:text-white">
-            ADICIONAR
-          </button>
-        </div>
-      </div>`;
-    });
-}
 
 /* CARRINHO */
 function addCarrinho(p){
-  const item = carrinho.find(i => i.id === p.id);
+  const item=carrinho.find(i=>i.sku===p.sku);
   if(item) item.qty++;
-  else carrinho.push({...p, qty:1});
+  else carrinho.push({...p,qty:1});
+  salvarCarrinho();
+}
 
-  localStorage.setItem('cart', JSON.stringify(carrinho));
-  alert('Produto adicionado ao carrinho');
+function salvarCarrinho(){
+  localStorage.setItem('carrinho',JSON.stringify(carrinho));
+  atualizarCarrinho();
+}
+
+function atualizarCarrinho(){
+  document.getElementById('qtdCarrinho').textContent=
+    carrinho.reduce((s,i)=>s+i.qty,0);
+}
+
+function abrirCarrinho(){
+  const lista=document.getElementById('itensCarrinho');
+  let total=0,peso=0;
+  lista.innerHTML='';
+
+  carrinho.forEach(i=>{
+    total+=i.price*i.qty;
+    peso+=(i.weight||0)*i.qty;
+    lista.innerHTML+=`
+      <div class="flex justify-between text-xs">
+        <span>${i.name} (${i.qty})</span>
+        <span>R$ ${(i.price*i.qty).toFixed(2)}</span>
+      </div>
+    `;
+  });
+
+  document.getElementById('totalCarrinho').textContent=total.toFixed(2);
+  document.getElementById('pesoTotal').textContent=peso;
+
+  document.getElementById('modalCarrinho').classList.remove('hidden');
+}
+
+function fecharCarrinho(){
+  document.getElementById('modalCarrinho').classList.add('hidden');
+}
+
+/* FINALIZAR */
+function finalizar(){
+  location.href="checkout.html";
 }
 </script>
 
