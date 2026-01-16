@@ -20,6 +20,12 @@ body{background:#F8F6F2}
 .status-Separação{background:#E0F2FE}
 .status-Enviado{background:#EDE9FE}
 .status-Finalizado{background:#ECFDF5}
+
+@media print{
+ body *{visibility:hidden}
+ #romaneio, #romaneio *{visibility:visible}
+ #romaneio{position:absolute;top:0;left:0;width:100%}
+}
 </style>
 </head>
 
@@ -49,7 +55,7 @@ body{background:#F8F6F2}
   <input id="empNome" placeholder="Nome da empresa" class="border p-3">
   <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
   <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" placeholder="Parcelas no cartão (ex: 3x)" class="border p-3">
+  <input id="empParcelas" type="number" placeholder="Parcelas no cartão (ex: 3)" class="border p-3">
 </div>
 
 <button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
@@ -102,8 +108,32 @@ SALVAR PRODUTO
 
 </main>
 
+<!-- ROMANEIO -->
+<div id="romaneio" class="hidden bg-white p-10 text-sm">
+  <h2 class="font-serif text-xl gold mb-4">Romaneio</h2>
+  <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+  <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
+  <p><strong>Pagamento:</strong> <span id="rPag"></span></p>
+  <p><strong>Peso total:</strong> <span id="rPeso"></span> g</p>
+
+  <table class="w-full border mt-4">
+    <thead>
+      <tr>
+        <th class="border p-2">Produto</th>
+        <th class="border p-2">Qtd</th>
+        <th class="border p-2">Peso</th>
+        <th class="border p-2">Total</th>
+      </tr>
+    </thead>
+    <tbody id="rItens"></tbody>
+  </table>
+
+  <p class="mt-4 text-right font-bold">
+    Total: R$ <span id="rTotal"></span>
+  </p>
+</div>
+
 <script>
-/* 🔥 FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
@@ -121,19 +151,18 @@ function openTab(id){
 /* EMPRESA */
 function salvarEmpresa(){
   db.ref('settings').set({
-    name: empNome.value,
-    whatsapp: empWhatsapp.value,
-    pix: Number(empPix.value||0),
-    parcelas: empParcelas.value
+    name:empNome.value,
+    whatsapp:empWhatsapp.value,
+    pix:Number(empPix.value||0),
+    parcelas:Number(empParcelas.value||1)
   });
 }
-
 db.ref('settings').on('value',s=>{
   if(!s.val()) return;
   empNome.value=s.val().name||'';
   empWhatsapp.value=s.val().whatsapp||'';
   empPix.value=s.val().pix||0;
-  empParcelas.value=s.val().parcelas||'';
+  empParcelas.value=s.val().parcelas||1;
 });
 
 /* CATEGORIAS */
@@ -142,10 +171,9 @@ function salvarCategoria(){
   db.ref('categories').push({name:catNome.value});
   catNome.value='';
 }
-
 db.ref('categories').on('value',snap=>{
   listaCategorias.innerHTML='';
-  pCategoria.innerHTML='<option value="">Selecione</option>';
+  pCategoria.innerHTML='<option value="">Selecione a categoria</option>';
   snap.forEach(s=>{
     listaCategorias.innerHTML+=`
       <div class="bg-white border p-3 flex justify-between">
@@ -156,9 +184,8 @@ db.ref('categories').on('value',snap=>{
   });
 });
 
-/* PRODUTOS (CRIAR + EDITAR) */
-let produtoEditando=null;
-
+/* PRODUTOS */
+let editId=null;
 function salvarProduto(){
   const produto={
     name:pNome.value,
@@ -168,20 +195,10 @@ function salvarProduto(){
     category:pCategoria.value,
     image:pImagemUrl.value
   };
-
-  if(produtoEditando){
-    db.ref('products/'+produtoEditando).set(produto);
-    produtoEditando=null;
-    btnSalvarProduto.textContent='SALVAR PRODUTO';
-  }else{
-    db.ref('products').push(produto);
-  }
-
+  editId ? db.ref('products/'+editId).set(produto) : db.ref('products').push(produto);
+  editId=null; btnSalvarProduto.textContent='SALVAR PRODUTO';
   pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value='';
-  pCategoria.value='';
 }
-
-/* LISTAR PRODUTOS */
 db.ref('products').on('value',snap=>{
   listaProdutos.innerHTML='';
   snap.forEach(s=>{
@@ -189,30 +206,67 @@ db.ref('products').on('value',snap=>{
     listaProdutos.innerHTML+=`
     <div class="bg-white border p-4">
       <img src="${p.image}" class="h-40 w-full object-cover">
-      <p class="mt-2 font-semibold">${p.name}</p>
+      <p class="font-semibold">${p.name}</p>
       <p class="text-xs">${p.category} • ${p.weight}g</p>
-      <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+      <p class="gold">R$ ${p.price.toFixed(2)}</p>
+      <div class="flex gap-2 text-xs mt-2">
+        <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2">Editar</button>
+        <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2">Excluir</button>
+      </div>
+    </div>`;
+  });
+});
+function editarProduto(id){
+  db.ref('products/'+id).once('value').then(s=>{
+    const p=s.val();
+    pNome.value=p.name; pSku.value=p.sku; pPreco.value=p.price;
+    pPeso.value=p.weight; pCategoria.value=p.category; pImagemUrl.value=p.image;
+    editId=id; btnSalvarProduto.textContent='ATUALIZAR PRODUTO';
+  });
+}
 
-      <div class="flex gap-2 mt-2 text-xs">
-        <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
-        <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
+/* PEDIDOS */
+db.ref('orders').on('value',snap=>{
+  listaPedidos.innerHTML='';
+  snap.forEach(s=>{
+    const o=s.val(), id=s.key;
+    listaPedidos.innerHTML+=`
+    <div class="bg-white border p-4 status-${o.status||'Novo'}">
+      <p class="font-semibold">${o.cliente}</p>
+      <p class="text-xs">${o.data}</p>
+      <p class="text-xs">${o.pagamento}</p>
+      <strong>R$ ${Number(o.total).toFixed(2)}</strong>
+
+      <div class="flex flex-wrap gap-2 mt-2 text-xs">
+        ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
+          <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2">${st}</button>`).join('')}
+        <button onclick='imprimir(${JSON.stringify(o).replace(/"/g,'&quot;')})'
+         class="bg-black text-white px-2">Romaneio</button>
+        <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2">Excluir</button>
       </div>
     </div>`;
   });
 });
 
-function editarProduto(id){
-  db.ref('products/'+id).once('value').then(s=>{
-    const p=s.val();
-    pNome.value=p.name;
-    pSku.value=p.sku;
-    pPreco.value=p.price;
-    pPeso.value=p.weight;
-    pCategoria.value=p.category;
-    pImagemUrl.value=p.image;
-    produtoEditando=id;
-    btnSalvarProduto.textContent='ATUALIZAR PRODUTO';
+function imprimir(o){
+  rCliente.textContent=o.cliente;
+  rWhats.textContent=o.whatsapp;
+  rPag.textContent=o.pagamento;
+  rPeso.textContent=o.peso;
+  rTotal.textContent=Number(o.total).toFixed(2);
+  rItens.innerHTML='';
+  o.itens.forEach(i=>{
+    rItens.innerHTML+=`
+    <tr>
+      <td class="border p-2">${i.name}<br><small>${i.sku}</small></td>
+      <td class="border p-2">${i.qty}</td>
+      <td class="border p-2">${i.weight*i.qty}g</td>
+      <td class="border p-2">R$ ${(i.price*i.qty).toFixed(2)}</td>
+    </tr>`;
   });
+  romaneio.classList.remove('hidden');
+  window.print();
+  romaneio.classList.add('hidden');
 }
 </script>
 
