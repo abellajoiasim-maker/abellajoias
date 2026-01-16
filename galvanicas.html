@@ -2,52 +2,47 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Galvânicas Parceiras | Abella Joias</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>
-body{font-family:'Poppins',sans-serif;background:#fcfaf7;margin:0;padding:2rem;}
-h1{text-align:center;color:#b8860b;font-weight:800;margin-bottom:2rem;}
-.grid-gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;}
-.card{border:2px solid #d4af37;border-radius:18px;padding:1rem;box-shadow:0 6px 22px rgba(212,175,55,0.3);position:relative;}
-.card h2{color:#b8860b;font-weight:800;margin:0.5rem 0;}
-.card p{font-size:14px;margin:0.2rem 0;}
-.btn-whats{background:#25d366;color:white;padding:0.5rem 1rem;border-radius:9999px;font-weight:700;display:inline-block;text-decoration:none;margin-top:0.5rem;}
-</style>
-</head>
-<body>
-<h1>Galvânicas Parceiras da Abella Joias</h1>
-<div class="grid-gal" id="galvanicasGrid"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-<script>
 const firebaseConfig = {
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.firebasestorage.app",
+  storageBucket: "catalogo-abella-joias.appspot.com",
   messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+  appId: "1:727568435294:web:442c0179ecf0686dff4ccf",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
 
-db.ref('galvanicas').on('value',snap=>{
-  const div=document.getElementById('galvanicasGrid');
-  div.innerHTML='';
-  snap.forEach(s=>{
-    const g=s.val();
-    div.innerHTML+=`
-      <div class="card">
-        <h2>${g.name}</h2>
-        <p><strong>Endereço:</strong> ${g.endereco}</p>
-        <p><strong>Telefone:</strong> ${g.telefone}</p>
-        <a href="https://wa.me/${g.whatsapp}" target="_blank" class="btn-whats">Falar no WhatsApp 📲</a>
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const container = document.getElementById('galvanicasContainer');
+  onValue(ref(db,'galvanicas'),snapshot=>{
+    container.innerHTML='';
+    snapshot.forEach(s=>{
+      const g=s.val();
+      container.innerHTML+=`
+      <div class="border p-4 rounded shadow-md flex flex-col items-center bg-white">
+        <img src="${g.logo||'https://via.placeholder.com/150'}" class="w-32 h-32 object-cover rounded mb-2">
+        <h2 class="font-semibold text-center">${g.nome}</h2>
+        <p class="text-xs text-center">${g.endereco}</p>
+        <p class="text-xs text-center">${g.telefone} • <a href="${g.whatsapp}" target="_blank" class="text-green-600">WhatsApp</a></p>
+        <p class="text-sm mt-2 text-center">${g.descricao}</p>
       </div>`;
+    });
   });
 });
 </script>
+</head>
+<body class="bg-gray-50 p-6">
+<h1 class="text-xl font-serif gold mb-4">Galvânicas Parceiras</h1>
+<div id="galvanicasContainer" class="grid sm:grid-cols-1 md:grid-cols-4 gap-6"></div>
 </body>
 </html>
