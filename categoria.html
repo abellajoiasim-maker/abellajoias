@@ -1,1 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Categoria | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body{background:#F8F6F2}
+.font-serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+
+/* CARD PRODUTO */
+.card{
+  background:white;
+  border-radius:16px;
+  overflow:hidden;
+  transition:.3s;
+}
+.card:hover{transform:translateY(-4px)}
+
+.card img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+}
+
+/* FLOAT BUTTONS */
+.fab{
+  position:fixed;
+  right:20px;
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  color:white;
+  z-index:50;
+}
+#btnBack{bottom:90px;background:#111}
+#btnCart{bottom:20px;background:#A68966}
+</style>
+</head>
+
+<body>
+
+<header class="bg-white border-b px-8 py-6 text-center">
+  <h1 id="tituloCategoria"
+      class="font-serif gold text-xl tracking-widest uppercase"></h1>
+</header>
+
+<main class="max-w-7xl mx-auto p-8">
+  <div id="listaProdutos"
+       class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+  </div>
+</main>
+
+<!-- BOTÕES FLUTUANTES -->
+<button id="btnBack" class="fab"
+ onclick="history.back()">←</button>
+
+<button id="btnCart" class="fab"
+ onclick="window.location.href='checkout.html'">🛒</button>
+
+<script>
+/* 🔥 FIREBASE */
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
+});
+const db = firebase.database();
+
+/* PARÂMETRO CATEGORIA */
+const params = new URLSearchParams(window.location.search);
+const categoria = params.get('cat');
+tituloCategoria.textContent = categoria || 'Categoria';
+
+/* CONFIG EMPRESA */
+let descontoPix = 0;
+let parcelas = 1;
+
+db.ref('settings').once('value').then(s=>{
+  if(!s.val()) return;
+  descontoPix = Number(s.val().pix || 0);
+  parcelas = Number(s.val().parcelas || 1);
+});
+
+/* PRODUTOS */
+db.ref('products').on('value', snap=>{
+  listaProdutos.innerHTML = '';
+
+  let produtos = [];
+
+  snap.forEach(s=>{
+    const p = s.val();
+    if(p.category === categoria){
+      produtos.push(p);
+    }
+  });
+
+  /* ORDENAR POR SKU */
+  produtos.sort((a,b)=>{
+    return (a.sku || '').localeCompare(b.sku || '', undefined, {numeric:true});
+  });
+
+  produtos.forEach(p=>{
+    const precoPix = p.price - (p.price * descontoPix / 100);
+    const parcela = (p.price / parcelas).toFixed(2);
+
+    listaProdutos.innerHTML += `
+      <div class="card">
+        <img src="${p.image}">
+        <div class="p-4 space-y-1">
+          <p class="font-semibold">${p.name}</p>
+          <p class="text-xs text-gray-500">SKU ${p.sku} • ${p.weight}g</p>
+
+          <p class="font-semibold gold text-lg">
+            R$ ${p.price.toFixed(2)}
+          </p>
+
+          <p class="text-xs text-green-700">
+            PIX: R$ ${precoPix.toFixed(2)}
+          </p>
+
+          <p class="text-xs text-gray-600">
+            ${parcelas}x de R$ ${parcela} sem acréscimo
+          </p>
+
+          <button onclick='addCart(${JSON.stringify(p)})'
+            class="mt-2 w-full bg-black text-white py-2 text-xs tracking-widest">
+            ADICIONAR AO CARRINHO
+          </button>
+        </div>
+      </div>
+    `;
+  });
+});
+
+/* CARRINHO */
+function addCart(p){
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const found = cart.find(i=>i.sku===p.sku);
+
+  if(found){
+    found.qty++;
+  }else{
+    cart.push({
+      name:p.name,
+      sku:p.sku,
+      price:p.price,
+      weight:p.weight,
+      image:p.image,
+      qty:1
+    });
+  }
+
+  localStorage.setItem('cart', JSON.stringify(cart));
+  alert('Produto adicionado ao carrinho');
+}
+</script>
+
+</body>
+</html>
 
