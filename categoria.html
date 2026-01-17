@@ -1,105 +1,276 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Categoria | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Categoria | Abella Joias</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <!-- Fonte -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-<style>
-body{background:#F8F6F2}
-.gold{color:#A68966}
-.float{
- position:fixed;right:20px;padding:12px 16px;
- background:#000;color:#fff;border-radius:999px;
- font-size:12px;z-index:50
-}
-#btnVoltar{bottom:80px}
-#btnCarrinho{bottom:20px}
-#btnGalv{bottom:140px}
-</style>
+  <style>
+    :root {
+      --gold: #e6c97a;
+      --gold-dark: #c9ab5d;
+      --bg: #0f0f0f;
+      --card: #161616;
+      --text: #f5f5f5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 30px 20px 10px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 30px;
+      color: var(--gold);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 30px 20px 120px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 26px;
+    }
+
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* Card do produto */
+    .product {
+      background: var(--card);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 26px rgba(0,0,0,.6);
+      transition: transform .3s ease, box-shadow .3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 36px rgba(230,201,122,.35);
+    }
+
+    .product img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+    }
+
+    .info {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .info h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1.3;
+      min-height: 38px;
+    }
+
+    .sku {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .price {
+      margin-top: 6px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .pix {
+      font-size: 13px;
+      color: #8dffb1;
+      font-weight: 700;
+    }
+
+    .parcelas {
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    .btn {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #111;
+      font-weight: 800;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .25s ease;
+      font-size: 14px;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Botões flutuantes */
+    .fab {
+      position: fixed;
+      right: 18px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #111;
+      font-size: 22px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 8px 22px rgba(230,201,122,.55);
+      z-index: 999;
+    }
+
+    .fab:hover { transform: scale(1.08); }
+
+    .fab-back { bottom: 160px; }
+    .fab-cart { bottom: 90px; }
+    .fab-galv { bottom: 20px; }
+  </style>
 </head>
 
-<body class="p-6 max-w-7xl mx-auto">
+<body>
 
-<h1 id="tituloCat" class="font-serif text-3xl gold mb-8"></h1>
+<header>
+  <h1 id="tituloCategoria">Categoria</h1>
+</header>
 
-<div id="listaProdutos"
- class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+<div class="container">
+  <div id="produtos" class="grid"></div>
 </div>
 
-<a href="index.html" id="btnVoltar" class="float">Voltar</a>
-<a href="cart_checkout_premium.html" id="btnCarrinho" class="float">Carrinho</a>
-<a href="galvanicas.html" id="btnGalv" class="float">Galvânicas</a>
+<!-- Botões flutuantes -->
+<a href="index.html" class="fab fab-back" title="Voltar para categorias">🔙</a>
+<a href="cart_checkout_premium.html" class="fab fab-cart" title="Carrinho">🛒</a>
+<a href="galvanicas.html" class="fab fab-galv" title="Galvânicas Parceiras">🧪</a>
 
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
-});
-const db=firebase.database();
+<!-- Firebase + Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    query,
+    where
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const params=new URLSearchParams(location.search);
-const catId=params.get('cat');
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_DOMINIO.firebaseapp.com",
+    projectId: "SEU_PROJECT_ID",
+    storageBucket: "SEU_BUCKET.appspot.com",
+    messagingSenderId: "SEU_ID",
+    appId: "SEU_APP_ID"
+  };
 
-let settings={};
-db.ref('settings').once('value').then(s=>settings=s.val());
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-db.ref('categories/'+catId).once('value')
-.then(s=>tituloCat.textContent=s.val().name);
+  const params = new URLSearchParams(window.location.search);
+  const categoriaId = params.get("id");
 
-db.ref('products')
-.orderByChild('sku')
-.on('value',snap=>{
-  listaProdutos.innerHTML='';
-  snap.forEach(s=>{
-    const p=s.val();
-    if(p.category!==catId) return;
+  const grid = document.getElementById("produtos");
+  const titulo = document.getElementById("tituloCategoria");
 
-    const desconto=settings.pix||0;
-    const valorPix=p.price*(1-desconto/100);
-    const parcelas=settings.parcelas||1;
+  function getCarrinho() {
+    return JSON.parse(localStorage.getItem("carrinho")) || [];
+  }
 
-    listaProdutos.innerHTML+=`
-      <div class="bg-white border rounded p-3">
-        <img src="${p.image}"
-         class="aspect-square object-cover w-full mb-2">
-        <strong>${p.name}</strong>
-        <p class="text-xs text-gray-500">${p.sku}</p>
+  function salvarCarrinho(carrinho) {
+    localStorage.setItem("carrinho", JSON.stringify(carrinho));
+  }
 
-        <p class="mt-1">
-          <span class="line-through text-xs text-gray-400">
-            R$ ${p.price.toFixed(2)}
-          </span><br>
-          <span class="gold font-semibold">
-            PIX: R$ ${valorPix.toFixed(2)}
-          </span><br>
-          <span class="text-xs">
-            ${parcelas}x sem acréscimo
-          </span>
-        </p>
+  function adicionarAoCarrinho(produto) {
+    const carrinho = getCarrinho();
+    const existente = carrinho.find(p => p.id === produto.id);
 
-        <button onclick='addCarrinho(${JSON.stringify(p)})'
-         class="bg-black text-white w-full mt-3 py-2 text-xs">
-         Adicionar ao Carrinho
-        </button>
-      </div>`;
-  });
-});
+    if (existente) {
+      existente.qtd += 1;
+    } else {
+      carrinho.push({ ...produto, qtd: 1 });
+    }
 
-function addCarrinho(p){
-  let cart=JSON.parse(localStorage.getItem('cart')||'[]');
-  const i=cart.find(x=>x.sku===p.sku);
-  if(i) i.qty++;
-  else cart.push({...p,qty:1});
-  localStorage.setItem('cart',JSON.stringify(cart));
-  alert('Produto adicionado ao carrinho');
-}
+    salvarCarrinho(carrinho);
+    alert("Produto adicionado ao carrinho!");
+  }
+
+  async function carregarProdutos() {
+    const q = query(
+      collection(db, "produtos"),
+      where("categoriaId", "==", categoriaId)
+    );
+
+    const snapshot = await getDocs(q);
+    const produtos = [];
+
+    snapshot.forEach(doc => {
+      produtos.push({ id: doc.id, ...doc.data() });
+    });
+
+    // Ordenar por SKU crescente
+    produtos.sort((a, b) => (a.sku || "").localeCompare(b.sku || "", "pt-BR", { numeric: true }));
+
+    if (produtos.length > 0) {
+      titulo.textContent = produtos[0].categoriaNome || "Categoria";
+    }
+
+    produtos.forEach(p => {
+      const precoPix = (p.preco * (1 - (p.descontoPix || 0) / 100)).toFixed(2);
+      const parcela = (p.preco / (p.parcelas || 1)).toFixed(2);
+
+      const card = document.createElement("div");
+      card.className = "product";
+      card.innerHTML = `
+        <img src="${p.imagem}" alt="${p.nome}">
+        <div class="info">
+          <h2>${p.nome}</h2>
+          <div class="sku">SKU: ${p.sku}</div>
+          <div class="price">R$ ${p.preco.toFixed(2)}</div>
+          <div class="pix">PIX: R$ ${precoPix}</div>
+          <div class="parcelas">${p.parcelas}x de R$ ${parcela} sem acréscimo</div>
+          <div class="btn">Adicionar ao carrinho</div>
+        </div>
+      `;
+
+      card.querySelector(".btn").onclick = () => adicionarAoCarrinho(p);
+      grid.appendChild(card);
+    });
+  }
+
+  carregarProdutos();
 </script>
 
 </body>
