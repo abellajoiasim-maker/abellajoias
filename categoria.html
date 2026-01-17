@@ -2,80 +2,233 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Categoria | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.tailwindcss.com"></script>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#F8F6F2}
-.gold{color:#A68966}
-.font-serif{font-family:'Cinzel',serif}
+:root{
+  --gold:#d4af37;
+  --bg:#0b0b0b;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:'Poppins',Arial,sans-serif;
+}
+
+header{
+  padding:18px;
+  text-align:center;
+  border-bottom:1px solid #222;
+}
+
+header h1{
+  margin:0;
+  color:var(--gold);
+  font-size:24px;
+}
+
+/* GRID PRODUTOS */
+.container{
+  max-width:1500px;
+  margin:auto;
+  padding:30px 20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:26px;
+}
+
+@media(max-width:1100px){
+  .grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr;}
+}
+
+.card{
+  background:#111;
+  border:2px solid var(--gold);
+  border-radius:18px;
+  padding:12px;
+  box-shadow:0 10px 28px rgba(212,175,55,.25);
+  transition:.3s;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+}
+
+.card img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:14px;
+}
+
+.card h3{
+  font-size:16px;
+  margin:10px 0 6px;
+  color:var(--gold);
+}
+
+.card small{
+  display:block;
+  opacity:.75;
+  font-size:13px;
+}
+
+/* PREÇOS */
+.price{
+  margin:8px 0;
+  font-size:14px;
+}
+
+.price del{
+  opacity:.6;
+}
+
+.pix{
+  color:#00ff9c;
+  font-weight:700;
+}
+
+.parcelas{
+  font-size:13px;
+  opacity:.85;
+}
+
+/* BOTÃO */
+.btn{
+  margin-top:10px;
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:22px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(135deg,#ffd700,#b8860b);
+  color:#111;
+}
+
+/* BOTÕES FLUTUANTES */
+.floating{
+  position:fixed;
+  bottom:22px;
+  right:22px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  z-index:999;
+}
+
+.float-btn{
+  padding:12px 16px;
+  border-radius:26px;
+  border:none;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(135deg,#ffd700,#b8860b);
+  color:#111;
+}
 </style>
 </head>
 
-<body class="max-w-7xl mx-auto p-6">
+<body>
 
-<header class="flex justify-between items-center mb-6">
-  <button onclick="history.back()"
-   class="border px-4 py-2 text-xs">Voltar</button>
-
-  <h1 id="titulo" class="font-serif text-2xl gold"></h1>
-
-  <a href="cart_checkout_premium.html"
-   class="border px-4 py-2 text-xs">Carrinho</a>
+<header>
+  <h1 id="tituloCategoria">Categoria</h1>
 </header>
 
-<div id="produtos" class="grid sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+<div class="container">
+  <div class="grid" id="produtosGrid"></div>
+</div>
 
-<a href="galvanicas.html"
- class="fixed bottom-6 right-6 bg-black text-white px-6 py-3 text-xs rounded-full shadow-lg">
-Galvânicas
-</a>
+<!-- BOTÕES FLUTUANTES -->
+<div class="floating">
+  <button class="float-btn" onclick="history.back()">⬅ Categorias</button>
+  <button class="float-btn" onclick="window.location.href='galvanicas.html'">Galvânicas</button>
+  <button class="float-btn" onclick="window.location.href='cart_checkout_premium.html'">Carrinho</button>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
-});
-const db=firebase.database();
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMINIO",
+  projectId: "SEU_PROJECT_ID",
+};
 
-const params=new URLSearchParams(location.search);
-const categoria=params.get('cat');
-titulo.textContent=categoria;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-db.ref('products').orderByChild('sku').on('value',snap=>{
-  produtos.innerHTML='';
-  snap.forEach(s=>{
-    const p=s.val();
-    if(p.category===categoria){
-      produtos.innerHTML+=`
-      <div class="bg-white border p-4">
-        <img src="${p.image}" class="w-full h-48 object-cover">
-        <p class="mt-2 font-semibold">${p.name}</p>
-        <p class="text-xs">SKU: ${p.sku}</p>
-        <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-        <button onclick="addCarrinho('${s.key}')"
-         class="bg-black text-white w-full mt-3 py-2 text-xs">
-        Adicionar ao carrinho
-        </button>
-      </div>`;
-    }
-  });
-});
+/* CAPTURA CATEGORIA */
+const params = new URLSearchParams(window.location.search);
+const categoria = params.get("cat");
 
-function addCarrinho(id){
-  let cart=JSON.parse(localStorage.getItem('cart')||'[]');
-  const existe=cart.find(i=>i.id===id);
-  if(existe){ existe.qty++; }
-  else{ cart.push({id,qty:1}); }
-  localStorage.setItem('cart',JSON.stringify(cart));
-  alert('Produto adicionado ao carrinho');
+document.getElementById("tituloCategoria").innerText = categoria;
+
+/* CARRINHO */
+function getCart(){
+  return JSON.parse(localStorage.getItem("cart")) || [];
 }
+function saveCart(cart){
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+/* ADD AO CARRINHO */
+function addToCart(prod){
+  let cart = getCart();
+  let found = cart.find(p=>p.id===prod.id);
+
+  if(found){
+    found.qtd++;
+  }else{
+    cart.push({...prod,qtd:1});
+  }
+  saveCart(cart);
+  alert("Produto adicionado ao carrinho ✅");
+}
+
+/* CARREGAR PRODUTOS */
+const grid = document.getElementById("produtosGrid");
+
+db.collection("produtos")
+  .where("categoria","==",categoria)
+  .orderBy("sku")
+  .onSnapshot(snapshot=>{
+    grid.innerHTML="";
+    snapshot.forEach(doc=>{
+      const p = doc.data();
+      const precoPix = (p.preco * (1 - (p.descontoPix||0)/100)).toFixed(2);
+      const parcela = (p.preco / (p.parcelas||1)).toFixed(2);
+
+      const div = document.createElement("div");
+      div.className="card";
+      div.innerHTML = `
+        <img src="${p.imagem}">
+        <h3>${p.nome}</h3>
+        <small>SKU: ${p.sku}</small>
+
+        <div class="price">
+          <del>R$ ${p.preco.toFixed(2)}</del><br>
+          <span class="pix">PIX: R$ ${precoPix}</span><br>
+          <span class="parcelas">${p.parcelas}x de R$ ${parcela} sem acréscimo</span>
+        </div>
+
+        <button class="btn">Adicionar ao Carrinho</button>
+      `;
+      div.querySelector("button").onclick=()=>addToCart({id:doc.id,...p});
+      grid.appendChild(div);
+    });
+  });
 </script>
 
 </body>
