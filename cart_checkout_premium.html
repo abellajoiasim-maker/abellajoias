@@ -1,6 +1,272 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+<head><!DOCTYPE html>
+<html lang="pt-BR">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Pedido | Abella Joias</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --gold: #d4af37; --bg: #0b0b0b; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Poppins', sans-serif; padding-bottom: 100px; }
+        header { text-align: center; padding: 25px; border-bottom: 1px solid #222; background: #000; }
+        header h1 { margin: 0; color: var(--gold); font-size: 1.5rem; letter-spacing: 2px; text-transform: uppercase; }
+        
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+
+        /* Itens do Carrinho */
+        .item {
+            display: grid;
+            grid-template-columns: 80px 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #222;
+        }
+        .item img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 1px solid #333; }
+        .item-info b { display: block; font-size: 14px; text-transform: uppercase; }
+        .item-info small { color: #888; font-size: 11px; }
+
+        .qty-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .qty-controls button { 
+            width: 28px; height: 28px; border: 1px solid var(--gold); background: transparent; 
+            color: var(--gold); border-radius: 50%; cursor: pointer; font-weight: bold;
+        }
+        .qty-controls span { font-size: 14px; font-weight: bold; }
+
+        /* Botão Excluir Individual */
+        .btn-remove {
+            background: transparent;
+            border: none;
+            color: #ff4d4d;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        /* Formulário e Totais */
+        .box { background: #111; border: 1px solid #222; border-radius: 20px; padding: 25px; margin-top: 30px; }
+        .box h3 { color: var(--gold); font-size: 14px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input, select {
+            width: 100%; padding: 12px; margin-bottom: 15px; background: #1a1a1a; 
+            border: 1px solid #333; border-radius: 10px; color: #fff; box-sizing: border-box;
+        }
+
+        .total-line { display: flex; justify-content: space-between; margin: 10px 0; font-size: 14px; }
+        .total-line.final { font-size: 18px; font-weight: bold; border-top: 1px solid #222; margin-top: 15px; padding-top: 15px; }
+        .pix-destaque { color: #00ff9c; }
+        .gold-text { color: var(--gold); }
+
+        button.main {
+            width: 100%; padding: 16px; margin-top: 20px; border: none;
+            border-radius: 12px; font-weight: 900; font-size: 14px;
+            background: linear-gradient(135deg, #ffd700, #b8860b);
+            color: #000; cursor: pointer; transition: 0.3s;
+        }
+        button.main:hover { transform: scale(1.02); opacity: 0.9; }
+
+        .btn-voltar {
+            display: inline-block; margin-top: 20px; color: #888; text-decoration: none; font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Abella Joias</h1>
+</header>
+ <h1>Atacado de joias no bruto</h1>
+</header>
+
+<div class="container">
+    <div id="listaCarrinho"></div>
+
+    <div class="box">
+        <h3>Seus Dados</h3>
+        <input type="text" id="nomeCliente" placeholder="Seu Nome Completo">
+        <input type="tel" id="whatsCliente" placeholder="Seu WhatsApp (DDD + Número)">
+
+        <h3>Pagamento</h3>
+        <select id="metodoPagamento" onchange="atualizarTotais()">
+            <option value="pix">PIX (com desconto)</option>
+            <option value="cartao">Cartão de Crédito</option>
+        </select>
+
+        <div id="resumo">
+            <div class="total-line">
+                <span>Subtotal:</span>
+                <span>R$ <span id="txtTotalCheio">0.00</span></span>
+            </div>
+            <div class="total-line pix-destaque" id="linhaPix">
+                <span>Desconto PIX:</span>
+                <span>- R$ <span id="txtDescontoPix">0.00</span></span>
+            </div>
+            <div class="total-line final">
+                <span>Total a Pagar:</span>
+                <span class="gold-text">R$ <span id="txtTotalFinal">0.00</span></span>
+            </div>
+            <p id="infoParcelas" style="font-size: 11px; color: #888; text-align: right;"></p>
+        </div>
+
+        <button class="main" onclick="enviarPedido()">FINALIZAR COMPRA VIA WHATSAPP</button>
+        <center><a href="index.html" class="btn-voltar">← Continuar Comprando</a></center>
+    </div>
+</div>
+
+<script>
+/* 🔥 CONFIGURAÇÃO FIREBASE */
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    authDomain: "catalogo-abella-joias.firebaseapp.com",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+    projectId: "catalogo-abella-joias",
+    storageBucket: "catalogo-abella-joias.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let configuracoes = { pix: 0, installments: 1, phone: "" };
+
+db.ref('settings').on('value', snap => {
+    if(snap.exists()) {
+        configuracoes = snap.val();
+        atualizarTotais();
+    }
+});
+
+function getCart() { return JSON.parse(localStorage.getItem("cart")) || []; }
+
+function atualizarTotais() {
+    const cart = getCart();
+    const lista = document.getElementById("listaCarrinho");
+    const metodo = document.getElementById("metodoPagamento").value;
+    
+    lista.innerHTML = "";
+    let totalBruto = 0;
+
+    if(cart.length === 0) {
+        lista.innerHTML = "<p style='text-align:center; color:#666;'>Seu carrinho está vazio.</p>";
+        totalBruto = 0;
+    } else {
+        cart.forEach((item, index) => {
+            const precoItem = parseFloat(item.price || 0);
+            const quantidade = parseInt(item.qty || 1);
+            totalBruto += precoItem * quantidade;
+
+            lista.innerHTML += `
+                <div class="item">
+                    <img src="${item.image || 'https://via.placeholder.com/80'}">
+                    <div class="item-info">
+                        <b>${item.name}</b>
+                        <small>SKU: ${item.sku} | ${item.weight || 0}g</small>
+                        <div class="qty-controls">
+                            <button onclick="alterarQtd(${index}, -1)">−</button>
+                            <span>${quantidade}</span>
+                            <button onclick="alterarQtd(${index}, 1)">+</button>
+                        </div>
+                    </div>
+                    <div style="font-weight:bold; font-size:14px; text-align:right;">
+                        R$ ${(precoItem * quantidade).toFixed(2)}
+                    </div>
+                    <button class="btn-remove" onclick="removerItem(${index})" title="Remover item">
+                        🗑️
+                    </button>
+                </div>`;
+        });
+    }
+
+    const valorDescontoPix = totalBruto * (configuracoes.pix / 100);
+    const totalComDesconto = totalBruto - valorDescontoPix;
+
+    document.getElementById("txtTotalCheio").innerText = totalBruto.toFixed(2);
+    
+    if(metodo === "pix") {
+        document.getElementById("linhaPix").style.display = "flex";
+        document.getElementById("txtDescontoPix").innerText = valorDescontoPix.toFixed(2);
+        document.getElementById("txtTotalFinal").innerText = totalComDesconto.toFixed(2);
+        document.getElementById("infoParcelas").innerText = "";
+    } else {
+        document.getElementById("linhaPix").style.display = "none";
+        document.getElementById("txtTotalFinal").innerText = totalBruto.toFixed(2);
+        const valorParcela = totalBruto / (configuracoes.installments || 1);
+        document.getElementById("infoParcelas").innerText = `Ou em até ${configuracoes.installments}x de R$ ${valorParcela.toFixed(2)} s/ juros`;
+    }
+}
+
+function alterarQtd(index, delta) {
+    let cart = getCart();
+    cart[index].qty = (cart[index].qty || 1) + delta;
+    if(cart[index].qty <= 0) {
+        if(confirm("Deseja remover este item do carrinho?")) {
+            cart.splice(index, 1);
+        } else {
+            cart[index].qty = 1;
+        }
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+    atualizarTotais();
+}
+
+function removerItem(index) {
+    if(confirm("Tem certeza que deseja remover este produto?")) {
+        let cart = getCart();
+        cart.splice(index, 1);
+        localStorage.setItem("cart", JSON.stringify(cart));
+        atualizarTotais();
+    }
+}
+
+async function enviarPedido() {
+    const cart = getCart();
+    const nome = document.getElementById("nomeCliente").value;
+    const whats = document.getElementById("whatsCliente").value;
+    const metodo = document.getElementById("metodoPagamento").value;
+
+    if(!nome || !whats) return alert("Por favor, preencha seu nome e WhatsApp.");
+    if(cart.length === 0) return alert("Seu carrinho está vazio.");
+
+    const totalFinal = document.getElementById("txtTotalFinal").innerText;
+    
+    const pedido = {
+        cliente: nome,
+        whatsapp: whats,
+        pagamento: metodo.toUpperCase(),
+        total: parseFloat(totalFinal),
+        data: new Date().toLocaleString("pt-BR"),
+        status: "Novo",
+        itens: cart
+    };
+
+    try {
+        await db.ref("orders").push(pedido);
+        let msg = `*NOVO PEDIDO - ABELLA JOIAS*%0A%0A`;
+        msg += `*Cliente:* ${nome}%0A`;
+        msg += `*Pagamento:* ${metodo.toUpperCase()}%0A%0A`;
+        msg += `*ITENS:*%0A`;
+        cart.forEach(i => { msg += `- ${i.name} (x${i.qty})%0A`; });
+        msg += `%0A*TOTAL: R$ ${totalFinal}*%0A%0AAGUARDANDO CONFIRMAÇÃO`;
+
+        alert("Pedido registrado!");
+        localStorage.removeItem("cart");
+        window.location.href = `https://api.whatsapp.com/send?phone=${configuracoes.phone}&text=${msg}`;
+    } catch (e) {
+        alert("Erro ao salvar pedido. Tente novamente.");
+    }
+}
+
+atualizarTotais();
+</script>
+
+</body>
+</html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar Pedido | Abella Joias</title>
