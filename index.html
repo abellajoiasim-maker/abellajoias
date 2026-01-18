@@ -1,242 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Abella Joias | Atacado de Joias no Bruto</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Abella Joias — Atacado de Joias no Bruto. Catálogo organizado por categorias para lojistas e fabricantes.">
+<meta charset="UTF-8">
+<title>Abella Joias | Catálogo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Fonte -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-  <style>
-    :root {
-      --gold: #e6c97a;
-      --gold-dark: #c9ab5d;
-      --bg: #0f0f0f;
-      --card: #161616;
-      --text: #f5f5f5;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    header {
-      text-align: center;
-      padding: 40px 20px 20px;
-    }
-
-    header h1 {
-      font-size: 34px;
-      font-weight: 800;
-      color: var(--gold);
-      letter-spacing: 1px;
-    }
-
-    header p {
-      margin-top: 6px;
-      font-size: 15px;
-      color: #ccc;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 30px 20px 100px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 26px;
-    }
-
-    @media (max-width: 1100px) {
-      .grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    @media (max-width: 768px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    .card {
-      position: relative;
-      aspect-ratio: 1 / 1;
-      border-radius: 18px;
-      overflow: hidden;
-      cursor: pointer;
-      background: var(--card);
-      box-shadow: 0 10px 30px rgba(0,0,0,.5);
-      transition: transform .35s ease, box-shadow .35s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-6px) scale(1.015);
-      box-shadow: 0 18px 38px rgba(230,201,122,.35);
-    }
-
-    .card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform .6s ease;
-    }
-
-    .card:hover img {
-      transform: scale(1.08);
-    }
-
-    .overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.15));
-      display: flex;
-      align-items: flex-end;
-      padding: 22px;
-    }
-
-    .overlay h2 {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--gold);
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      text-shadow: 0 2px 6px rgba(0,0,0,.7);
-    }
-
-    /* Botões flutuantes */
-   .nav-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 1000;
+<style>
+body{background:#F8F6F2}
+.font-serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+.btn-float{
+ position:fixed;
+ right:20px;
+ z-index:50;
 }
-
-.nav-box {
-  display: flex;
-  align-items: center;
-  padding: 10px 18px;
-  text-decoration: none;
-  border-radius: 8px; /* Bordas levemente arredondadas para elegância */
-  font-family: 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  min-width: 130px;
-}
-
-.nav-box:hover {
-  transform: translateX(-5px); /* Efeito sutil ao passar o mouse */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-.nav-box .icon {
-  margin-right: 10px;
-  font-size: 18px;
-}
-
-/* Cores Personalizadas */
-.btn-back {
-  background-color: #6c757d; /* Cinza sóbrio */
-}
-
-.btn-galv {
-  background-color: #2c3e50; /* Azul escuro elegante */
-}
-
-.btn-cart {
-  background-color: #27ae60; /* Verde sofisticado */
-}
-  </style>
+.btn-cart{bottom:20px}
+.btn-galv{bottom:90px}
+</style>
 </head>
 
 <body>
 
-  <header>
-    <h1>Abella Joias</h1>
-    <p>Atacado de Joias no Bruto</p>
-  </header>
+<!-- HEADER -->
+<header class="bg-white border-b px-6 py-6 text-center">
+  <h1 class="font-serif text-2xl gold tracking-widest">ABELLA JOIAS</h1>
+  <p class="text-xs tracking-widest text-gray-400 uppercase">
+    Atacado de Joias no Bruto
+  </p>
+</header>
 
-  <div class="container">
-    <div id="categorias" class="grid">
-      <!-- Categorias do Firebase -->
-    </div>
+<!-- CATEGORIAS -->
+<main class="max-w-7xl mx-auto p-6">
+  <h2 class="font-serif text-xl gold mb-6 tracking-widest">
+    Catálogo de Categorias
+  </h2>
+
+  <div id="gridCategorias"
+       class="grid grid-cols-2 md:grid-cols-4 gap-6">
   </div>
+</main>
 
-  <!-- Botões flutuantes -->
-  <div class="nav-container">
-  <a href="javascript:history.back()" class="nav-box btn-back" title="Voltar">
-    <span class="icon">⬅️</span>
-    <span class="label">Voltar</span>
-  </a>
+<!-- BOTÕES FLUTUANTES -->
+<a href="cart_checkout_premium.html"
+   class="btn-float btn-cart bg-black text-white px-5 py-3 rounded-full shadow-lg text-xs uppercase tracking-widest">
+🛒 Carrinho
+</a>
 
-  <a href="galvanicas.html" class="nav-box btn-galv" title="Galvânicas Parceiras">
-    <span class="icon">🧪</span>
-    <span class="label">Galvânicas</span>
-  </a>
+<a href="galvanicas.html"
+   class="btn-float btn-galv bg-white border px-5 py-3 rounded-full shadow-lg text-xs uppercase tracking-widest gold">
+✨ Galvânicas
+</a>
 
-  <a href="cart_checkout_premium.html" class="nav-box btn-cart" title="Carrinho">
-    <span class="icon">🛒</span>
-    <span class="label">Carrinho</span>
-  </a>
-</div>
-  <!-- Firebase + Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script>
+/* FIREBASE */
+firebase.initializeApp({
+ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ authDomain: "catalogo-abella-joias.firebaseapp.com",
+ databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId: "catalogo-abella-joias"
+});
+const db = firebase.database();
 
-    // 🔥 CONFIG FIREBASE (MANTER A SUA)
-    const firebaseConfig = {
-      apiKey: "SUA_API_KEY",
-      authDomain: "SEU_DOMINIO.firebaseapp.com",
-      projectId: "SEU_PROJECT_ID",
-      storageBucket: "SEU_BUCKET.appspot.com",
-      messagingSenderId: "SEU_ID",
-      appId: "SEU_APP_ID"
-    };
+/* CARREGAR CATEGORIAS */
+db.ref('categories').on('value', snap => {
+ const grid = document.getElementById('gridCategorias');
+ grid.innerHTML = '';
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+ snap.forEach(s => {
+   const c = s.val();
+   const nome = encodeURIComponent(c.name);
 
-    const grid = document.getElementById("categorias");
+   grid.innerHTML += `
+    <a href="categoria.html?cat=${nome}"
+       class="bg-white border shadow-sm hover:shadow-lg transition rounded overflow-hidden group">
 
-    async function carregarCategorias() {
-      const querySnapshot = await getDocs(collection(db, "categorias"));
-      querySnapshot.forEach((doc) => {
-        const c = doc.data();
+      <div class="aspect-square w-full overflow-hidden">
+        <img src="images/categorias/${c.image}"
+             class="w-full h-full object-cover group-hover:scale-105 transition">
+      </div>
 
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <img src="images/categorias/${c.imagem}" alt="${c.nome}">
-          <div class="overlay">
-            <h2>${c.nome}</h2>
-          </div>
-        `;
-
-        card.onclick = () => {
-          window.location.href = `categoria.html?id=${doc.id}`;
-        };
-
-        grid.appendChild(card);
-      });
-    }
-
-    carregarCategorias();
-  </script>
+      <div class="p-4 text-center">
+        <p class="font-serif gold tracking-widest text-sm uppercase">
+          ${c.name}
+        </p>
+      </div>
+    </a>
+   `;
+ });
+});
+</script>
 
 </body>
 </html>
