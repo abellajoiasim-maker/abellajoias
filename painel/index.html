@@ -16,6 +16,8 @@ body{background:#F8F6F2}
 .tab{display:none}
 .tab.active{display:block}
 img.square{aspect-ratio:1/1;object-fit:contain}
+.log-ok{color:#047857}
+.log-err{color:#b91c1c}
 </style>
 </head>
 
@@ -38,46 +40,17 @@ img.square{aspect-ratio:1/1;object-fit:contain}
 
 <main class="max-w-7xl mx-auto p-8 space-y-16">
 
-<!-- EMPRESA -->
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold">Empresa</h2>
-<div class="grid md:grid-cols-2 gap-4 bg-white p-6 border">
-<input id="empNome" placeholder="Nome" class="border p-3">
-<input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
-<input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-<input id="empParcelas" placeholder="Parcelas no cartão (ex: 3)" class="border p-3">
-</div>
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3">Salvar</button>
-</section>
-
-<!-- CATEGORIAS -->
-<section id="categorias" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Categorias</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-<input id="catNome" placeholder="Nome da categoria" class="border p-3">
-<input id="catImagem" placeholder="URL imagem (Firebase Storage)" class="border p-3">
-</div>
-<button onclick="salvarCategoria()" class="bg-black text-white px-6 py-2">Salvar categoria</button>
-
-<div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-</section>
-
-<!-- PRODUTOS -->
-<section id="produtos" class="tab space-y-8">
-<h2 class="font-serif text-2xl gold">Produtos</h2>
-<div id="listaProdutos"></div>
-</section>
-
 <!-- IMPORTAÇÃO CSV -->
-<section id="importacao" class="tab space-y-6">
+<section id="importacao" class="tab active space-y-6">
 <h2 class="font-serif text-2xl gold">Importação de Produtos (CSV)</h2>
 
 <div class="bg-white border p-6 space-y-4">
 <p class="text-sm text-gray-600">
-📥 Envie um arquivo CSV para cadastrar produtos em massa.<br>
-Separador obrigatório: <b>;</b>
+📥 Envie um arquivo CSV usando <b>;</b> como separador<br>
+Cabeçalho obrigatório:
 </p>
+
+<pre class="bg-gray-100 p-3 text-xs">tipo;nome;sku;categoria;preco;peso;imagem;variacoes</pre>
 
 <input type="file" id="csvFile" accept=".csv" class="border p-3 w-full">
 
@@ -85,110 +58,102 @@ Separador obrigatório: <b>;</b>
 IMPORTAR PRODUTOS
 </button>
 
-<div id="importLog" class="text-sm text-gray-600"></div>
+<div id="importStatus" class="text-sm mt-4"></div>
+<div id="importLog" class="text-xs mt-4 space-y-1"></div>
 </div>
-</section>
-
-<!-- PEDIDOS -->
-<section id="pedidos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Pedidos</h2>
-<div id="listaPedidos"></div>
 </section>
 
 </main>
 
 <script>
-
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
-  apiKey: "SUA_API_KEY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+   authDomain: "catalogo-abella-joias.firebaseapp.com",
+ databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com"
 });
-
 const db = firebase.database();
 
-/* TABS */
 function openTab(id){
  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
  document.getElementById(id).classList.add('active');
 }
 
-/* EMPRESA */
-function salvarEmpresa(){
- db.ref('settings').set({
-  name:empNome.value,
-  whatsapp:empWhatsapp.value,
-  pix:Number(empPix.value||0),
-  parcelas:Number(empParcelas.value||0)
- });
-}
-db.ref('settings').on('value',s=>{
- if(!s.val())return;
- empNome.value=s.val().name||'';
- empWhatsapp.value=s.val().whatsapp||'';
- empPix.value=s.val().pix||0;
- empParcelas.value=s.val().parcelas||0;
-});
-
-/* CATEGORIAS */
-function salvarCategoria(){
- if(!catNome.value || !catImagem.value) return alert('Preencha tudo');
- db.ref('categories').push({
-  name:catNome.value,
-  image:catImagem.value
- });
- catNome.value='';catImagem.value='';
-}
-db.ref('categories').on('value',snap=>{
- listaCategorias.innerHTML='';
- const arr=[];
- snap.forEach(s=>arr.push({...s.val(),id:s.key}));
- arr.sort((a,b)=>a.name.localeCompare(b.name));
- arr.forEach(c=>{
-  listaCategorias.innerHTML+=`
-  <div class="bg-white border p-3 text-center">
-    <img src="${c.image}" class="square w-full mb-2">
-    <p>${c.name}</p>
-    <button onclick="db.ref('categories/${c.id}').remove()" class="text-red-600 text-xs mt-2">Excluir</button>
-  </div>`;
- });
-});
-
-/* IMPORTAÇÃO CSV */
 function importarCSV(){
- const file=document.getElementById('csvFile').files[0];
- if(!file) return alert('Selecione o CSV');
+ const file = document.getElementById('csvFile').files[0];
+ const status = document.getElementById('importStatus');
+ const log = document.getElementById('importLog');
 
- const reader=new FileReader();
- reader.onload=e=>{
-  const linhas=e.target.result.split('\n');
-  linhas.shift(); // remove cabeçalho
-  let count=0;
+ log.innerHTML='';
+ status.innerHTML='';
 
-  linhas.forEach(l=>{
-   if(!l.trim()) return;
-   const [tipo,nome,sku,categoria,preco,peso,imagem,variacoes]=l.split(';');
-   const produto={
-    name:nome,
-    sku:sku,
-    category:categoria,
-    price:Number(preco),
-    weight:Number(peso),
-    image:imagem||'',
-    type:tipo
-   };
-   if(tipo==='variacao'){
-    produto.variacoes=(variacoes||'').split('|');
+ if(!file){
+  status.innerHTML='<span class="log-err">❌ Nenhum arquivo selecionado</span>';
+  return;
+ }
+
+ status.innerHTML='⏳ Lendo arquivo...';
+
+ const reader = new FileReader();
+
+ reader.onerror = ()=>{
+  status.innerHTML='<span class="log-err">❌ Erro ao ler o arquivo</span>';
+ };
+
+ reader.onload = (e)=>{
+  const texto = e.target.result.replace(/\r/g,'').trim();
+  const linhas = texto.split('\n');
+
+  if(linhas.length < 2){
+   status.innerHTML='<span class="log-err">❌ CSV vazio ou inválido</span>';
+   return;
+  }
+
+  const cabecalho = linhas[0].toLowerCase().trim();
+  if(!cabecalho.startsWith('tipo;nome;sku;categoria;preco;peso')){
+   status.innerHTML='<span class="log-err">❌ Cabeçalho inválido</span>';
+   return;
+  }
+
+  let sucesso = 0;
+  let erros = 0;
+
+  linhas.slice(1).forEach((linha, index)=>{
+   if(!linha.trim()) return;
+
+   const col = linha.split(';');
+   if(col.length < 6){
+    log.innerHTML+=`<div class="log-err">Linha ${index+2}: colunas insuficientes</div>`;
+    erros++;
+    return;
    }
+
+   const produto = {
+    type: col[0],
+    name: col[1],
+    sku: col[2],
+    category: col[3],
+    price: Number(col[4]),
+    weight: Number(col[5]),
+    image: col[6] || ''
+   };
+
+   if(produto.type === 'variacao'){
+    produto.variacoes = (col[7]||'').split('|');
+   }
+
    db.ref('products').push(produto);
-   count++;
+   sucesso++;
+   log.innerHTML+=`<div class="log-ok">✔ ${produto.name} (${produto.sku})</div>`;
   });
 
-  importLog.innerHTML=`✅ ${count} produtos importados com sucesso`;
+  status.innerHTML = `
+   <b>✅ Importação finalizada</b><br>
+   Produtos importados: ${sucesso}<br>
+   Erros: ${erros}
+  `;
  };
+
  reader.readAsText(file,'UTF-8');
 }
 </script>
