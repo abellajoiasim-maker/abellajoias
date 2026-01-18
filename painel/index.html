@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Painel Administrativo | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -12,7 +11,6 @@
 <style>
 body{background:#F8F6F2}
 .gold{color:#A68966}
-.font-serif{font-family:'Cinzel',serif}
 .tab{display:none}
 .tab.active{display:block}
 </style>
@@ -21,176 +19,70 @@ body{background:#F8F6F2}
 <body>
 
 <header class="bg-white border-b px-10 py-6 flex justify-between">
-  <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
-    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
-  </div>
-
-  <nav class="flex gap-8 text-xs tracking-widest uppercase">
-    <button onclick="openTab('empresa')" class="gold">Empresa</button>
+  <h1 class="font-serif text-xl gold">Abella Joias — Painel</h1>
+  <nav class="flex gap-6 text-xs uppercase">
+    <button onclick="openTab('empresa')">Empresa</button>
     <button onclick="openTab('categorias')">Categorias</button>
     <button onclick="openTab('produtos')">Produtos</button>
-    <button onclick="openTab('importacao')">Importação</button>
+    <button onclick="openTab('pedidos')">Pedidos</button>
   </nav>
 </header>
 
-<main class="max-w-7xl mx-auto p-8 space-y-16">
+<main class="max-w-7xl mx-auto p-8">
 
-<!-- EMPRESA -->
-<section id="empresa" class="tab active">
-<h2 class="font-serif text-2xl gold mb-4">Empresa</h2>
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-  <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
-  <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" placeholder="Parcelas no cartão (ex: 3)" class="border p-3">
-</div>
-<button onclick="salvarEmpresa()" class="mt-4 bg-black text-white px-6 py-2 text-xs">SALVAR</button>
-</section>
-
-<!-- CATEGORIAS -->
-<section id="categorias" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Categorias</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3">
-  <input id="catImagem" placeholder="URL da imagem (Firebase Storage)" class="border p-3">
-</div>
-
-<button onclick="salvarCategoria()" class="bg-black text-white px-6 py-2 text-xs mt-2">
-SALVAR CATEGORIA
-</button>
-
-<div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8"></div>
-</section>
-
-<!-- PRODUTOS -->
-<section id="produtos" class="tab space-y-8">
-<h2 class="font-serif text-2xl gold">Produtos</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="pNome" placeholder="Nome do produto" class="border p-3">
-  <input id="pSku" placeholder="SKU" class="border p-3">
-  <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
-  <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-  <select id="pCategoria" class="border p-3"></select>
-  <input id="pImagem" placeholder="URL da imagem (Firebase)" class="border p-3">
-</div>
-
-<button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-6 py-2 text-xs">
-SALVAR PRODUTO
-</button>
-
-<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8"></div>
-</section>
-
-<!-- IMPORTAÇÃO EM MASSA -->
-<section id="importacao" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Importação em Massa</h2>
-
-<div class="bg-white border p-6 space-y-4">
-  <p class="text-sm text-gray-600">
-    Envie um arquivo CSV com colunas:
-    <strong>name,sku,price,weight,category,image</strong>
-  </p>
-
-  <input type="file" id="csvFile" accept=".csv">
-  <button onclick="importarCSV()" class="bg-black text-white px-6 py-2 text-xs">
-IMPORTAR PRODUTOS
-</button>
-</div>
+<!-- PEDIDOS -->
+<section id="pedidos" class="tab active space-y-6">
+<h2 class="font-serif text-2xl gold">Pedidos</h2>
+<div id="listaPedidos" class="space-y-4"></div>
 </section>
 
 </main>
 
 <script>
-// FIREBASE
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
-const db = firebase.database();
+const db=firebase.database();
 
-// TABS
 function openTab(id){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// EMPRESA
-function salvarEmpresa(){
-  db.ref('settings').set({
-    name: empNome.value,
-    whatsapp: empWhatsapp.value,
-    pix: Number(empPix.value),
-    parcelas: Number(empParcelas.value)
-  });
-}
-
-// CATEGORIAS
-let editCat=null;
-function salvarCategoria(){
-  const data={name:catNome.value,image:catImagem.value};
-  editCat ? db.ref('categories/'+editCat).set(data) : db.ref('categories').push(data);
-  catNome.value=catImagem.value='';
-  editCat=null;
-}
-
-db.ref('categories').on('value',snap=>{
-  listaCategorias.innerHTML='';
-  pCategoria.innerHTML='<option value="">Categoria</option>';
+/* ===== PEDIDOS ===== */
+db.ref('orders').on('value',snap=>{
+  listaPedidos.innerHTML='';
   snap.forEach(s=>{
-    const c=s.val();
-    listaCategorias.innerHTML+=`
-      <div class="bg-white border p-3">
-        <img src="${c.image}" class="aspect-square object-cover w-full mb-2">
-        <p class="text-sm font-semibold">${c.name}</p>
-        <div class="flex gap-2 mt-2 text-xs">
-          <button onclick="editarCategoria('${s.key}','${c.name}','${c.image}')" class="bg-blue-500 text-white px-2">Editar</button>
-          <button onclick="db.ref('categories/${s.key}').remove()" class="bg-red-500 text-white px-2">Excluir</button>
-        </div>
-      </div>`;
-    pCategoria.innerHTML+=`<option>${c.name}</option>`;
+    const o=s.val();
+    let itensHTML='';
+    o.itens.forEach(p=>{
+      if(p.variations){
+        Object.entries(p.variations).forEach(([letra,qtd])=>{
+          itensHTML+=`<p>${p.name} • Letra ${letra} • Qtd ${qtd}</p>`;
+        });
+      }else{
+        itensHTML+=`<p>${p.name} • Qtd ${p.qty}</p>`;
+      }
+    });
+
+    listaPedidos.innerHTML+=`
+    <div class="bg-white border p-4">
+      <p><strong>Data:</strong> ${o.data}</p>
+      <p><strong>Pagamento:</strong> ${o.pagamento}</p>
+      <p><strong>Total:</strong> R$ ${Number(o.total).toFixed(2)}</p>
+
+      <div class="mt-2 text-sm">${itensHTML}</div>
+
+      <div class="flex gap-2 mt-4">
+        <button onclick="db.ref('orders/${s.key}').remove()" class="bg-red-600 text-white px-3 py-1 text-xs">Excluir</button>
+        <button onclick="window.print()" class="bg-black text-white px-3 py-1 text-xs">Romaneio</button>
+      </div>
+    </div>`;
   });
 });
-
-function editarCategoria(id,n,i){
-  catNome.value=n;
-  catImagem.value=i;
-  editCat=id;
-}
-
-// PRODUTOS
-function salvarProduto(){
-  db.ref('products').push({
-    name:pNome.value, sku:pSku.value,
-    price:Number(pPreco.value),
-    weight:Number(pPeso.value),
-    category:pCategoria.value,
-    image:pImagem.value
-  });
-  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagem.value='';
-}
-
-// IMPORTAÇÃO CSV
-function importarCSV(){
-  const file=document.getElementById('csvFile').files[0];
-  if(!file) return alert('Selecione o arquivo CSV');
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const rows=e.target.result.split('\n').slice(1);
-    rows.forEach(r=>{
-      const [name,sku,price,weight,category,image]=r.split(',');
-      if(name) db.ref('products').push({
-        name,sku,price:Number(price),weight:Number(weight),category,image
-      });
-    });
-    alert('Produtos importados com sucesso!');
-  };
-  reader.readAsText(file);
-}
 </script>
 
 </body>
