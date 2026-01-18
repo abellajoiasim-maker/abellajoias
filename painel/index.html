@@ -79,82 +79,90 @@ function openTab(id){
  document.getElementById(id).classList.add('active');
 }
 
-function importarCSV(){
- const file = document.getElementById('csvFile').files[0];
- const status = document.getElementById('importStatus');
- const log = document.getElementById('importLog');
+function importarCSV() {
+  const file = document.getElementById('csvFile').files[0];
+  const status = document.getElementById('importStatus');
+  const log = document.getElementById('importLog');
 
- log.innerHTML='';
- status.innerHTML='';
+  log.innerHTML = '';
+  status.innerHTML = '';
 
- if(!file){
-  status.innerHTML='<span class="log-err">❌ Nenhum arquivo selecionado</span>';
-  return;
- }
-
- status.innerHTML='⏳ Lendo arquivo...';
-
- const reader = new FileReader();
-
- reader.onerror = ()=>{
-  status.innerHTML='<span class="log-err">❌ Erro ao ler o arquivo</span>';
- };
-
- reader.onload = (e)=>{
-  const texto = e.target.result.replace(/\r/g,'').trim();
-  const linhas = texto.split('\n');
-
-  if(linhas.length < 2){
-   status.innerHTML='<span class="log-err">❌ CSV vazio ou inválido</span>';
-   return;
-  }
-
-  const cabecalho = linhas[0].toLowerCase().trim();
-  if(!cabecalho.startsWith('tipo;nome;sku;categoria;preco;peso')){
-   status.innerHTML='<span class="log-err">❌ Cabeçalho inválido</span>';
-   return;
-  }
-
-  let sucesso = 0;
-  let erros = 0;
-
-  linhas.slice(1).forEach((linha, index)=>{
-   if(!linha.trim()) return;
-
-   const col = linha.split(';');
-   if(col.length < 6){
-    log.innerHTML+=`<div class="log-err">Linha ${index+2}: colunas insuficientes</div>`;
-    erros++;
+  if (!file) {
+    status.innerHTML = '<span class="log-err">❌ Nenhum arquivo selecionado</span>';
     return;
-   }
+  }
 
-   const produto = {
-    type: col[0],
-    name: col[1],
-    sku: col[2],
-    category: col[3],
-    price: Number(col[4]),
-    weight: Number(col[5]),
-    image: col[6] || ''
-   };
+  status.innerHTML = '⏳ Lendo arquivo e enviando para o Firebase...';
 
-   if(produto.type === 'variacao'){
-    produto.variacoes = (col[7]||'').split('|');
-   }
+  const reader = new FileReader();
 
-   db.ref('products').push(produto);
-   sucesso++;
-   log.innerHTML+=`<div class="log-ok">✔ ${produto.name} (${produto.sku})</div>`;
-  });
+  reader.onload = async (e) => {
+    const texto = e.target.result.replace(/\r/g, '').trim();
+    const linhas = texto.split('\n');
 
-  status.innerHTML = `
-   <b>✅ Importação finalizada</b><br>
-   Produtos importados: ${sucesso}<br>
-   Erros: ${erros}
-  `;
- };
+    if (linhas.length < 2) {
+      status.innerHTML = '<span class="log-err">❌ CSV vazio ou inválido</span>';
+      return;
+    }
 
- reader.readAsText(file,'UTF-8');
+    const cabecalho = linhas[0].toLowerCase().trim();
+    // Verificação flexível do cabeçalho
+    if (!cabecalho.includes('tipo') || !cabecalho.includes('sku')) {
+      status.innerHTML = '<span class="log-err">❌ Cabeçalho inválido. Use: tipo;nome;sku...</span>';
+      return;
+    }
+
+    let sucesso = 0;
+    let erros = 0;
+
+    // Usar for...of para permitir o uso de 'await' e garantir a gravação
+    const dados = linhas.slice(1);
+
+    for (const [index, linha] of dados.entries()) {
+      if (!linha.trim()) continue;
+
+      const col = linha.split(';');
+      if (col.length < 6) {
+        log.innerHTML += `<div class="log-err">Linha ${index + 2}: Colunas insuficientes</div>`;
+        erros++;
+        continue;
+      }
+
+      // Limpeza de dados: remove espaços e garante formato numérico
+      const precoLimpo = col[4].replace(',', '.').trim();
+      const pesoLimpo = col[5].replace(',', '.').trim();
+
+      const produto = {
+        tipo: col[0].trim(),
+        nome: col[1].trim(),
+        sku: col[2].trim(),
+        categoria: col[3].trim(),
+        preco: parseFloat(precoLimpo) || 0,
+        peso: parseFloat(pesoLimpo) || 0,
+        imagem: col[6] ? col[6].trim() : '',
+        variacoes: col[7] ? col[7].trim() : 'FALSE',
+        dataImportacao: new Date().toISOString()
+      };
+
+      try {
+        // IMPORTANTE: Verifique se o caminho 'products' é o mesmo usado na sua página de exibição
+        await db.ref('products').push(produto);
+        sucesso++;
+        log.innerHTML += `<div class="log-ok">✔ ${produto.nome} (${produto.sku}) salvo.</div>`;
+      } catch (error) {
+        erros++;
+        log.innerHTML += `<div class="log-err">❌ Erro no SKU ${produto.sku}: ${error.message}</div>`;
+      }
+    }
+
+    status.innerHTML = `
+      <b class="log-ok">✅ Importação Finalizada!</b><br>
+      Produtos salvos no banco: ${sucesso}<br>
+      Falhas: ${erros}
+    `;
+  };
+
+  reader.readAsText(file, 'UTF-8');
 }
 </script>
 
