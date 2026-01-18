@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Carrinho | Abella Joias</title>
+<title>Abella Joias | Carrinho</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -10,215 +10,162 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.btn-float{position:fixed;bottom:20px;right:20px;z-index:50}
+body { background:#F8F6F2 }
+.gold { color:#A68966 }
 </style>
 </head>
 
-<body>
+<body class="max-w-4xl mx-auto p-6">
 
-<!-- HEADER -->
-<header class="bg-white border-b px-6 py-6 text-center space-y-1">
-  <h1 class="font-serif text-2xl gold tracking-widest">Abella Joias</h1>
-  <p class="text-xs tracking-widest uppercase text-gray-500">
-    Atacado de Joias no Bruto
-  </p>
-  <h2 class="mt-2 text-lg tracking-widest uppercase">
-    Carrinho de Compras
-  </h2>
-</header>
-
-<main class="max-w-5xl mx-auto p-6 space-y-6">
-
-<!-- LISTA DE PRODUTOS -->
-<div id="lista"></div>
-
-<!-- RESUMO -->
-<div class="bg-white border p-6 rounded space-y-2 text-sm">
-  <p>Peso total: <strong><span id="pesoTotal">0</span> g</strong></p>
-
-  <hr>
-
-  <p>Valor cheio:
-    <strong>R$ <span id="totalCheio">0.00</span></strong>
-  </p>
-
-  <p class="gold">
-    Valor PIX:
-    <strong>R$ <span id="totalPix">0.00</span></strong>
-  </p>
-
-  <p>
-    Valor em parcelas:
-    <span id="parcelas"></span>
-  </p>
+<!-- TÍTULO -->
+<div class="text-center mb-8">
+  <h1 class="text-2xl gold font-serif">Abella Joias</h1>
+  <p class="text-xs tracking-widest">ATACADO DE JOIAS NO BRUTO</p>
+  <h2 class="mt-4 text-lg font-semibold">Carrinho de Compras</h2>
 </div>
 
-<!-- PAGAMENTO -->
-<div class="bg-white border p-6 rounded space-y-4">
-  <p class="font-semibold tracking-widest uppercase text-sm">
-    Forma de pagamento
+<div id="listaCarrinho" class="space-y-4"></div>
+
+<!-- RESUMO -->
+<div class="bg-white p-6 mt-6 space-y-2 text-sm">
+  <p>Peso total: <strong><span id="pesoTotal">0.00</span> g</strong></p>
+
+  <p>Valor cheio: <strong>R$ <span id="valorCheio">0.00</span></strong></p>
+  <p>Valor PIX: <strong>R$ <span id="valorPix">0.00</span></strong></p>
+  <p>Valor em parcelas:
+    <strong>
+      <span id="parcelasTxt"></span>
+    </strong>
   </p>
 
-  <label class="block">
-    <input type="radio" name="pg" value="PIX" checked>
-    PIX (desconto aplicado)
-  </label>
+  <select id="formaPagamento" class="border p-2 w-full mt-2">
+    <option value="pix">PIX</option>
+    <option value="cartao">Cartão</option>
+  </select>
 
-  <label class="block">
-    <input type="radio" name="pg" value="Cartão">
-    Cartão de Crédito
-  </label>
-
-  <button onclick="finalizar()"
-    class="w-full bg-black text-white py-4 uppercase tracking-widest">
+  <button onclick="finalizarPedido()"
+    class="w-full bg-black text-white py-3 mt-4">
     Finalizar Pedido
   </button>
 </div>
 
-</main>
-
-<!-- BOTÃO VOLTAR -->
+<!-- VOLTAR -->
 <a href="index.html"
- class="btn-float bg-white border px-5 py-3 rounded-full shadow text-xs uppercase tracking-widest">
-⬅ Voltar à Loja
+ class="fixed bottom-6 left-6 bg-white border px-4 py-2 shadow">
+⬅ Voltar
 </a>
 
 <script>
-/* FIREBASE */
+// FIREBASE
 firebase.initializeApp({
- apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- authDomain:"catalogo-abella-joias.firebaseapp.com",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
- projectId:"catalogo-abella-joias"
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 });
 const db = firebase.database();
 
-/* VARIÁVEIS */
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
-let descontoPix = 0;
-let parcelasTxt = '';
-
-/* CONFIG EMPRESA */
+// DADOS EMPRESA
+let settings={pix:0,parcelas:1};
 db.ref('settings').once('value').then(s=>{
- if(s.val()){
-   descontoPix = Number(s.val().pix || 0);
-   parcelasTxt = s.val().parcelas || '';
-   document.getElementById('parcelas').textContent =
-     parcelasTxt + ' sem acréscimo';
- }
- render();
+  if(s.val()) settings=s.val();
+  atualizarResumo();
 });
 
-/* RENDER */
+// CARRINHO
+let carrinho = JSON.parse(localStorage.getItem('cart') || '[]');
+
+function salvarCarrinho(){
+  localStorage.setItem('cart', JSON.stringify(carrinho));
+  render();
+}
+
 function render(){
- let html='';
- let total=0;
- let peso=0;
+  listaCarrinho.innerHTML='';
+  carrinho.forEach((p,i)=>{
+    listaCarrinho.innerHTML+=`
+    <div class="bg-white p-4 flex gap-4 items-center">
+      <img src="${p.image}" class="w-20 h-20 object-cover">
 
- cart.forEach((i,idx)=>{
-  const sub = i.price * i.qty;
-  total += sub;
-  peso += i.weight * i.qty;
-
-  html+=`
-  <div class="bg-white border rounded p-4 mb-4 flex gap-4 items-center">
-    <img src="${i.image}" class="w-20 h-20 object-cover">
-
-    <div class="flex-1">
-      <p class="font-semibold">${i.name}</p>
-      <p class="text-xs text-gray-400">${i.sku}</p>
-      <p class="text-xs">Peso unit: ${i.weight}g</p>
-    </div>
-
-    <div class="flex flex-col items-center gap-2">
-      <div class="flex items-center gap-2">
-        <button onclick="menos(${idx})" class="px-3 border">−</button>
-        <span>${i.qty}</span>
-        <button onclick="mais(${idx})" class="px-3 border">+</button>
+      <div class="flex-1">
+        <p class="font-semibold">${p.name}</p>
+        <p class="text-xs">${p.sku}</p>
+        <p class="gold">R$ ${p.price.toFixed(2)}</p>
       </div>
 
-      <button onclick="excluir(${idx})"
-        class="text-xs text-red-600 uppercase">
+      <div class="flex items-center gap-2">
+        <button onclick="alterarQtd(${i},-1)" class="border px-2">-</button>
+
+        <input type="number" min="1"
+          value="${p.qty}"
+          onchange="setQtd(${i}, this.value)"
+          class="border w-16 text-center">
+
+        <button onclick="alterarQtd(${i},1)" class="border px-2">+</button>
+      </div>
+
+      <button onclick="remover(${i})"
+        class="text-red-600 text-xs">
         Excluir
       </button>
-    </div>
-  </div>`;
- });
-
- document.getElementById('lista').innerHTML = html;
-
- document.getElementById('totalCheio').textContent =
-  total.toFixed(2);
-
- const pix = total*(1-descontoPix/100);
- document.getElementById('totalPix').textContent =
-  pix.toFixed(2);
-
- document.getElementById('pesoTotal').textContent = peso;
+    </div>`;
+  });
+  atualizarResumo();
 }
 
-/* AÇÕES */
-function mais(i){ cart[i].qty++; salvar(); }
-function menos(i){
- if(cart[i].qty>1) cart[i].qty--;
- else excluir(i);
- salvar();
-}
-function excluir(i){
- cart.splice(i,1);
- salvar();
-}
-function salvar(){
- localStorage.setItem('cart',JSON.stringify(cart));
- render();
+function alterarQtd(i,delta){
+  carrinho[i].qty=Math.max(1,carrinho[i].qty+delta);
+  salvarCarrinho();
 }
 
-/* FINALIZAR */
-function finalizar(){
- if(cart.length===0){
-  alert('Carrinho vazio');
-  return;
- }
-
- const pg =
-  document.querySelector('input[name=pg]:checked').value;
-
- let total = cart.reduce((s,i)=>s+i.price*i.qty,0);
- let totalPix = total*(1-descontoPix/100);
-
- const pedido = {
-  data:new Date().toISOString(),
-  pagamento:pg,
-  totalCheio:total.toFixed(2),
-  totalPix:totalPix.toFixed(2),
-  pesoTotal:document.getElementById('pesoTotal').textContent,
-  itens:cart
- };
-
- db.ref('orders').push(pedido);
-
- let msg=
-`Olá Abella Joias,%0A
-Novo pedido realizado.%0A
-Valor: R$ ${(pg==='PIX'?totalPix:total).toFixed(2)}%0A
-Pagamento: ${pg}%0A
-Aguardando contato para confirmação.`;
-
- window.open(
- `https://wa.me/5519988207658?text=${msg}`,'_blank'
- );
-
- localStorage.removeItem('cart');
-
- alert(
- 'Pedido enviado com sucesso! Em instantes a Abella Joias entrará em contato.'
- );
-
- window.location.href='index.html';
+function setQtd(i,val){
+  carrinho[i].qty=Math.max(1,parseInt(val)||1);
+  salvarCarrinho();
 }
+
+function remover(i){
+  carrinho.splice(i,1);
+  salvarCarrinho();
+}
+
+// RESUMO
+function atualizarResumo(){
+  let peso=0,total=0;
+  carrinho.forEach(p=>{
+    peso+=p.weight*p.qty;
+    total+=p.price*p.qty;
+  });
+
+  pesoTotal.textContent=peso.toFixed(2);
+  valorCheio.textContent=total.toFixed(2);
+
+  let pixTotal= total*(1-settings.pix/100);
+  valorPix.textContent=pixTotal.toFixed(2);
+
+  let parcelaValor=(total/settings.parcelas).toFixed(2);
+  parcelasTxt.textContent=
+    `${settings.parcelas}x sem acréscimo de R$ ${parcelaValor}`;
+}
+
+// FINALIZAR
+function finalizarPedido(){
+  if(!carrinho.length) return alert('Carrinho vazio');
+
+  db.ref('orders').push({
+    itens:carrinho,
+    total:+valorCheio.textContent,
+    pagamento:formaPagamento.value,
+    peso:+pesoTotal.textContent,
+    status:'Novo',
+    data:new Date().toLocaleString()
+  });
+
+  alert('Pedido enviado com sucesso! Em instantes a Abella Joias entrará em contato.');
+  localStorage.removeItem('cart');
+  carrinho=[];
+  render();
+}
+
+// INIT
+render();
 </script>
 
 </body>
