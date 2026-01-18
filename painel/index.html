@@ -1,262 +1,52 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Painel Administrativo | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ROMANEIO -->
+<div id="romaneio" class="hidden bg-white p-10 text-sm">
+  <h2 class="font-serif text-xl gold mb-4">Romaneio de Pedido</h2>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.tab{display:none}
-.tab.active{display:block}
-</style>
-</head>
-
-<body>
-
-<header class="bg-white border-b px-10 py-6 flex justify-between">
-  <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
-    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
+  <div class="mb-4 text-sm">
+    <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+    <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
+    <p><strong>Forma de pagamento:</strong> <span id="rPag"></span></p>
+    <p><strong>Peso total:</strong> <span id="rPeso"></span> g</p>
   </div>
 
-  <nav class="flex gap-8 text-xs tracking-widest uppercase">
-    <button onclick="openTab('empresa')" class="gold">Empresa</button>
-    <button onclick="openTab('categorias')">Categorias</button>
-    <button onclick="openTab('produtos')">Produtos</button>
-    <button onclick="openTab('pedidos')">Pedidos</button>
-  </nav>
-</header>
+  <!-- OPÇÕES -->
+  <div class="mb-4 flex gap-4 text-xs">
+    <label>
+      <input type="checkbox" id="chkImagem" checked>
+      Romaneio com imagens
+    </label>
+  </div>
 
-<main class="max-w-6xl mx-auto p-8 space-y-20">
+  <table class="w-full border text-xs">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="border p-2">Imagem</th>
+        <th class="border p-2">Produto</th>
+        <th class="border p-2">SKU</th>
+        <th class="border p-2">Qtd</th>
+        <th class="border p-2">Peso unit.</th>
+        <th class="border p-2">Peso total</th>
+        <th class="border p-2">Valor</th>
+      </tr>
+    </thead>
+    <tbody id="rItens"></tbody>
+  </table>
 
-<!-- ================= EMPRESA ================= -->
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-  <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
-  <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" placeholder="Parcelas no cartão (ex: 3)" class="border p-3">
+  <div class="mt-6 text-right text-sm space-y-1">
+    <p>Valor cheio: R$ <span id="rValorCheio"></span></p>
+    <p id="rLinhaDesconto" class="hidden">
+      Desconto PIX: - R$ <span id="rDesconto"></span>
+    </p>
+    <p class="font-bold text-base">
+      Total final: R$ <span id="rTotal"></span>
+    </p>
+  </div>
 </div>
 
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
-SALVAR EMPRESA
-</button>
-</section>
-
-<!-- ================= CATEGORIAS ================= -->
-<section id="categorias" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3">
-  <input id="catImagem" placeholder="Imagem (ex: pingentes.jpg)" class="border p-3">
-  <label class="flex items-center gap-2 text-sm">
-    <input type="checkbox" id="catAZ">
-    Usa variações A–Z
-  </label>
-</div>
-
-<button onclick="salvarCategoria()" class="bg-black text-white px-6 py-2 text-xs">
-SALVAR CATEGORIA
-</button>
-
-<div id="listaCategorias" class="space-y-2"></div>
-</section>
-
-<!-- ================= PRODUTOS ================= -->
-<section id="produtos" class="tab space-y-8">
-<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="pNome" placeholder="Nome do produto" class="border p-3">
-  <input id="pSku" placeholder="SKU" class="border p-3">
-  <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
-  <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-
-  <select id="pCategoria" class="border p-3"></select>
-  <input id="pImagemUrl" placeholder="Imagem do produto" class="border p-3">
-</div>
-
-<p id="infoAZ" class="text-xs text-gray-500 hidden">
-⚠ Este produto usará variações A–Z automaticamente
-</p>
-
-<button onclick="salvarProduto()" id="btnSalvarProduto"
- class="bg-black text-white px-8 py-3 text-xs">
-SALVAR PRODUTO
-</button>
-
-<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-</section>
-
-<!-- ================= PEDIDOS ================= -->
-<section id="pedidos" class="tab space-y-4">
-<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
-<div id="listaPedidos"></div>
-</section>
-
-</main>
-
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
-});
-const db=firebase.database();
-
-function openTab(id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+<style>
+@media print{
+  body *{visibility:hidden}
+  #romaneio, #romaneio *{visibility:visible}
+  #romaneio{position:absolute;top:0;left:0;width:100%}
 }
-
-/* EMPRESA */
-function salvarEmpresa(){
-  db.ref('settings').set({
-    name: empNome.value,
-    whatsapp: empWhatsapp.value,
-    pix: Number(empPix.value||0),
-    parcelas: Number(empParcelas.value||1)
-  });
-}
-db.ref('settings').on('value',s=>{
-  if(!s.val()) return;
-  empNome.value=s.val().name||'';
-  empWhatsapp.value=s.val().whatsapp||'';
-  empPix.value=s.val().pix||0;
-  empParcelas.value=s.val().parcelas||1;
-});
-
-/* CATEGORIAS */
-let catEditando=null;
-
-function salvarCategoria(){
-  const categoria={
-    name:catNome.value,
-    image:catImagem.value,
-    az:catAZ.checked
-  };
-
-  if(catEditando){
-    db.ref('categories/'+catEditando).set(categoria);
-    catEditando=null;
-  }else{
-    db.ref('categories').push(categoria);
-  }
-
-  catNome.value=catImagem.value='';
-  catAZ.checked=false;
-}
-
-db.ref('categories').on('value',snap=>{
-  listaCategorias.innerHTML='';
-  pCategoria.innerHTML='<option value="">Selecione</option>';
-
-  snap.forEach(s=>{
-    const c=s.val();
-    listaCategorias.innerHTML+=`
-      <div class="bg-white border p-3 flex justify-between items-center text-sm">
-        <div>
-          <strong>${c.name}</strong>
-          ${c.az?' • A–Z':''}
-        </div>
-        <div class="flex gap-2">
-          <button onclick="editarCategoria('${s.key}')" class="text-blue-600">Editar</button>
-          <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600">Excluir</button>
-        </div>
-      </div>`;
-    pCategoria.innerHTML+=`<option value="${s.key}">${c.name}</option>`;
-  });
-});
-
-function editarCategoria(id){
-  db.ref('categories/'+id).once('value').then(s=>{
-    const c=s.val();
-    catNome.value=c.name;
-    catImagem.value=c.image;
-    catAZ.checked=!!c.az;
-    catEditando=id;
-  });
-}
-
-/* PRODUTOS */
-let produtoEditando=null;
-let categoriasCache={};
-
-db.ref('categories').on('value',s=>{
-  categoriasCache={};
-  s.forEach(c=>categoriasCache[c.key]=c.val());
-});
-
-pCategoria.onchange=()=>{
-  const c=categoriasCache[pCategoria.value];
-  infoAZ.classList.toggle('hidden', !c?.az);
-};
-
-function salvarProduto(){
-  const produto={
-    name:pNome.value,
-    sku:pSku.value,
-    price:Number(pPreco.value),
-    weight:Number(pPeso.value),
-    category:pCategoria.value,
-    image:pImagemUrl.value
-  };
-
-  if(produtoEditando){
-    db.ref('products/'+produtoEditando).set(produto);
-    produtoEditando=null;
-    btnSalvarProduto.textContent='SALVAR PRODUTO';
-  }else{
-    db.ref('products').push(produto);
-  }
-
-  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value='';
-  pCategoria.value='';
-}
-
-db.ref('products').on('value',snap=>{
-  listaProdutos.innerHTML='';
-  snap.forEach(s=>{
-    const p=s.val();
-    listaProdutos.innerHTML+=`
-    <div class="bg-white border p-3">
-      <img src="${p.image}" class="aspect-square object-cover w-full mb-2">
-      <strong>${p.name}</strong>
-      <p class="text-xs">${p.sku}</p>
-      <p class="gold">R$ ${p.price.toFixed(2)}</p>
-      <div class="flex gap-2 mt-2 text-xs">
-        <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
-        <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
-      </div>
-    </div>`;
-  });
-});
-
-function editarProduto(id){
-  db.ref('products/'+id).once('value').then(s=>{
-    const p=s.val();
-    pNome.value=p.name;
-    pSku.value=p.sku;
-    pPreco.value=p.price;
-    pPeso.value=p.weight;
-    pCategoria.value=p.category;
-    pImagemUrl.value=p.image;
-    produtoEditando=id;
-    btnSalvarProduto.textContent='ATUALIZAR PRODUTO';
-  });
-}
-</script>
-
-</body>
-</html>
+</style>
