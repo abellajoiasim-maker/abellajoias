@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Checkout | Abella Joias</title>
+<title>Carrinho | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -19,33 +19,54 @@ body{background:#F8F6F2}
 
 <body>
 
-<header class="bg-white border-b px-6 py-6 text-center">
-  <h1 class="font-serif text-2xl gold tracking-widest">
-    CHECKOUT ABELLA JOIAS
-  </h1>
+<!-- HEADER -->
+<header class="bg-white border-b px-6 py-6 text-center space-y-1">
+  <h1 class="font-serif text-2xl gold tracking-widest">Abella Joias</h1>
+  <p class="text-xs tracking-widest uppercase text-gray-500">
+    Atacado de Joias no Bruto
+  </p>
+  <h2 class="mt-2 text-lg tracking-widest uppercase">
+    Carrinho de Compras
+  </h2>
 </header>
 
 <main class="max-w-5xl mx-auto p-6 space-y-6">
 
-<!-- LISTA -->
+<!-- LISTA DE PRODUTOS -->
 <div id="lista"></div>
 
 <!-- RESUMO -->
-<div class="bg-white border p-6 rounded space-y-3">
-  <p>Total cheio: <strong>R$ <span id="totalCheio">0.00</span></strong></p>
-  <p class="gold">PIX: <strong>R$ <span id="totalPix">0.00</span></strong></p>
-  <p class="text-sm text-gray-500">
-    Cartão: <span id="parcelas"></span> sem acréscimo
+<div class="bg-white border p-6 rounded space-y-2 text-sm">
+  <p>Peso total: <strong><span id="pesoTotal">0</span> g</strong></p>
+
+  <hr>
+
+  <p>Valor cheio:
+    <strong>R$ <span id="totalCheio">0.00</span></strong>
+  </p>
+
+  <p class="gold">
+    Valor PIX:
+    <strong>R$ <span id="totalPix">0.00</span></strong>
+  </p>
+
+  <p>
+    Valor em parcelas:
+    <span id="parcelas"></span>
   </p>
 </div>
 
 <!-- PAGAMENTO -->
 <div class="bg-white border p-6 rounded space-y-4">
-  <p class="font-semibold">Forma de pagamento</p>
+  <p class="font-semibold tracking-widest uppercase text-sm">
+    Forma de pagamento
+  </p>
+
   <label class="block">
     <input type="radio" name="pg" value="PIX" checked>
     PIX (desconto aplicado)
   </label>
+
   <label class="block">
     <input type="radio" name="pg" value="Cartão">
     Cartão de Crédito
@@ -80,45 +101,51 @@ let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let descontoPix = 0;
 let parcelasTxt = '';
 
-/* EMPRESA */
+/* CONFIG EMPRESA */
 db.ref('settings').once('value').then(s=>{
  if(s.val()){
    descontoPix = Number(s.val().pix || 0);
    parcelasTxt = s.val().parcelas || '';
-   document.getElementById('parcelas').textContent = parcelasTxt;
+   document.getElementById('parcelas').textContent =
+     parcelasTxt + ' sem acréscimo';
  }
  render();
 });
 
 /* RENDER */
 function render(){
- let html = '';
- let total = 0;
- let totalPeso = 0;
+ let html='';
+ let total=0;
+ let peso=0;
 
  cart.forEach((i,idx)=>{
   const sub = i.price * i.qty;
   total += sub;
-  totalPeso += i.weight * i.qty;
+  peso += i.weight * i.qty;
 
-  html += `
-   <div class="bg-white border rounded p-4 mb-4 flex gap-4 items-center">
-     <img src="${i.image}"
-      class="w-20 h-20 object-cover">
+  html+=`
+  <div class="bg-white border rounded p-4 mb-4 flex gap-4 items-center">
+    <img src="${i.image}" class="w-20 h-20 object-cover">
 
-     <div class="flex-1">
-       <p class="font-semibold">${i.name}</p>
-       <p class="text-xs text-gray-400">${i.sku}</p>
-       <p class="text-xs">Peso unit: ${i.weight}g</p>
-     </div>
+    <div class="flex-1">
+      <p class="font-semibold">${i.name}</p>
+      <p class="text-xs text-gray-400">${i.sku}</p>
+      <p class="text-xs">Peso unit: ${i.weight}g</p>
+    </div>
 
-     <div class="flex items-center gap-2">
-       <button onclick="menos(${idx})" class="px-3 border">−</button>
-       <span>${i.qty}</span>
-       <button onclick="mais(${idx})" class="px-3 border">+</button>
-     </div>
-   </div>
-  `;
+    <div class="flex flex-col items-center gap-2">
+      <div class="flex items-center gap-2">
+        <button onclick="menos(${idx})" class="px-3 border">−</button>
+        <span>${i.qty}</span>
+        <button onclick="mais(${idx})" class="px-3 border">+</button>
+      </div>
+
+      <button onclick="excluir(${idx})"
+        class="text-xs text-red-600 uppercase">
+        Excluir
+      </button>
+    </div>
+  </div>`;
  });
 
  document.getElementById('lista').innerHTML = html;
@@ -126,16 +153,22 @@ function render(){
  document.getElementById('totalCheio').textContent =
   total.toFixed(2);
 
- const pix = total * (1 - descontoPix/100);
+ const pix = total*(1-descontoPix/100);
  document.getElementById('totalPix').textContent =
   pix.toFixed(2);
+
+ document.getElementById('pesoTotal').textContent = peso;
 }
 
-/* + − */
+/* AÇÕES */
 function mais(i){ cart[i].qty++; salvar(); }
 function menos(i){
  if(cart[i].qty>1) cart[i].qty--;
- else cart.splice(i,1);
+ else excluir(i);
+ salvar();
+}
+function excluir(i){
+ cart.splice(i,1);
  salvar();
 }
 function salvar(){
@@ -146,8 +179,8 @@ function salvar(){
 /* FINALIZAR */
 function finalizar(){
  if(cart.length===0){
-   alert('Carrinho vazio');
-   return;
+  alert('Carrinho vazio');
+  return;
  }
 
  const pg =
@@ -157,26 +190,25 @@ function finalizar(){
  let totalPix = total*(1-descontoPix/100);
 
  const pedido = {
-   data:new Date().toISOString(),
-   pagamento:pg,
-   totalCheio:total.toFixed(2),
-   totalPix:totalPix.toFixed(2),
-   itens:cart
+  data:new Date().toISOString(),
+  pagamento:pg,
+  totalCheio:total.toFixed(2),
+  totalPix:totalPix.toFixed(2),
+  pesoTotal:document.getElementById('pesoTotal').textContent,
+  itens:cart
  };
 
  db.ref('orders').push(pedido);
 
- /* WHATSAPP COMPACTO */
- let msg =
- `Olá Abella Joias,%0A
- Novo pedido realizado.%0A
- Valor: R$ ${(pg==='PIX'?totalPix:total).toFixed(2)}%0A
- Pagamento: ${pg}%0A
- Aguardando contato para confirmação.`;
+ let msg=
+`Olá Abella Joias,%0A
+Novo pedido realizado.%0A
+Valor: R$ ${(pg==='PIX'?totalPix:total).toFixed(2)}%0A
+Pagamento: ${pg}%0A
+Aguardando contato para confirmação.`;
 
  window.open(
- `https://wa.me/5519988207658?text=${msg}`,
- '_blank'
+ `https://wa.me/5519988207658?text=${msg}`,'_blank'
  );
 
  localStorage.removeItem('cart');
