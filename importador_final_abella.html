@@ -1,95 +1,61 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Importador Ultra - Abella</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-</head>
-<body style="font-family:sans-serif; text-align:center; padding:30px; background:#f4f4f4;">
+<script>
+    async function importar() {
+        var input = document.getElementById('arquivoCsv');
+        var status = document.getElementById('status');
+        var log = document.getElementById('log');
 
-    <div style="background:white; max-width:600px; margin:auto; padding:20px; border-radius:10px; border:2px solid #A68966;">
-        <h2>Importador Ultra (1.300 Itens)</h2>
-        <p>Selecione todos os arquivos de uma vez</p>
-        <input type="file" id="arquivoCsv" multiple accept=".csv">
-        <br><br>
-        <button onclick="importar()" style="padding:15px 30px; cursor:pointer; background:black; color:white; font-weight:bold;">INICIAR IMPORTAÇÃO TOTAL</button>
-        
-        <h3 id="status" style="color:blue;">Aguardando...</h3>
-        <div id="log" style="text-align:left; background:#1e1e1e; color:#00ff00; padding:15px; font-size:12px; height:250px; overflow-y:auto; font-family:monospace; border-radius:5px;"></div>
-    </div>
+        if (input.files.length === 0) return alert("Selecione os arquivos!");
 
-    <script>
-        var firebaseConfig = {
-            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-            authDomain: "catalogo-abella-joias.firebaseapp.com",
-            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-            projectId: "catalogo-abella-joias"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        var db = firebase.database();
+        log.innerHTML = "Iniciando processamento robusto...<br>";
+        var arquivos = Array.from(input.files);
+        var totalGeral = 0;
 
-        async function importar() {
-            var input = document.getElementById('arquivoCsv');
-            var status = document.getElementById('status');
-            var log = document.getElementById('log');
+        for (var f = 0; f < arquivos.length; f++) {
+            var file = arquivos[f];
+            var texto = await file.text();
+            
+            // O SEGREDO: Uma limpeza mais agressiva nas quebras de linha
+            var linhas = texto.replace(/\r/g, "").split("\n");
+            var batch = {};
+            var itensNesteArquivo = 0;
 
-            if (input.files.length === 0) return alert("Selecione os arquivos!");
+            for (var i = 0; i < linhas.length; i++) {
+                var linhaLimpa = linhas[i].trim();
+                if (!linhaLimpa) continue; // Pula linhas totalmente vazias
 
-            log.innerHTML = "Iniciando processamento pesado...<br>";
-            var arquivos = Array.from(input.files);
-            var totalGeral = 0;
+                var colunas = linhaLimpa.split(';');
+                
+                // Pula o cabeçalho se a primeira ou terceira coluna for "tipo" ou "sku"
+                if (colunas[2] === "sku" || colunas[0] === "tipo") continue;
 
-            for (var f = 0; f < arquivos.length; f++) {
-                var file = arquivos[f];
-                var texto = await file.text();
-                // Divide por quebra de linha e limpa espaços vazios
-                var linhas = texto.split(/\r?\n/).filter(line => line.trim() !== "");
-                var batch = {};
-                var itensNesteArquivo = 0;
+                if (colunas.length >= 4) {
+                    var skuOrigem = colunas[2] ? colunas[2].trim() : "";
+                    if (!skuOrigem) continue;
 
-                log.innerHTML += "> Lendo " + file.name + "...<br>";
+                    var chave = skuOrigem.replace(/[\.\#\$\/\[\]]/g, "_");
 
-                for (var i = 1; i < linhas.length; i++) {
-                    try {
-                        var colunas = linhas[i].split(';');
-                        
-                        // Verifica se a linha tem as colunas básicas (nome, sku, categoria, preco)
-                        if (colunas.length < 4) continue;
-
-                        var sku = colunas[2] ? colunas[2].trim() : "";
-                        if (!sku || sku.toLowerCase() === 'sku') continue;
-
-                        var chave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
-
-                        batch[chave] = {
-                            nome: colunas[1] ? colunas[1].trim() : "Produto sem nome",
-                            sku: sku,
-                            categoria: colunas[3] ? colunas[3].trim() : "Geral",
-                            preco: colunas[4] ? parseFloat(colunas[4].replace(',', '.')) : 0,
-                            peso: colunas[5] ? parseFloat(colunas[5].replace(',', '.')) : 0,
-                            imagem: ""
-                        };
-                        itensNesteArquivo++;
-                    } catch (e) {
-                        console.log("Erro na linha " + i);
-                    }
+                    batch[chave] = {
+                        nome: colunas[1] ? colunas[1].trim() : "Sem nome",
+                        sku: skuOrigem,
+                        categoria: colunas[3] ? colunas[3].trim() : "Geral",
+                        preco: colunas[4] ? parseFloat(colunas[4].replace(',', '.')) : 0,
+                        peso: colunas[5] ? parseFloat(colunas[5].replace(',', '.')) : 0,
+                        imagem: "" // Ficar vazio aqui está correto!
+                    };
+                    itensNesteArquivo++;
                 }
-
-                // Envio para o Firebase
-                if (Object.keys(batch).length > 0) {
-                    await db.ref('products').update(batch);
-                    totalGeral += itensNesteArquivo;
-                    log.innerHTML += "<span style='color:white;'>✅ " + file.name + " finalizado com " + itensNesteArquivo + " itens.</span><br>";
-                }
-                log.scrollTop = log.scrollHeight;
             }
 
-            status.innerText = "IMPORTAÇÃO CONCLUÍDA!";
-            log.innerHTML += "<br>---<br>FIM: " + totalGeral + " produtos processados no total.";
-            alert("Sucesso! Total de " + totalGeral + " itens.");
+            if (Object.keys(batch).length > 0) {
+                await db.ref('products').update(batch);
+                totalGeral += itensNesteArquivo;
+                log.innerHTML += "✅ " + file.name + ": " + itensNesteArquivo + " itens processados.<br>";
+            }
+            log.scrollTop = log.scrollHeight;
         }
-    </script>
-</body>
-</html>
+
+        status.innerText = "IMPORTAÇÃO CONCLUÍDA!";
+        log.innerHTML += "<br><b>TOTAL FINAL NO BANCO: " + totalGeral + "</b>";
+        alert("Sucesso! Total de " + totalGeral + " produtos.");
+    }
+</script>
