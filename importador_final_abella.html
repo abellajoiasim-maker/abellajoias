@@ -1,49 +1,10 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Importador Master - Abella Joias</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <style>
-        body { font-family: sans-serif; padding: 40px; background: #F8F6F2; text-align: center; }
-        .card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; border: 1px solid #A68966; }
-        .btn-import { background: black; color: white; padding: 15px 30px; border: none; cursor: pointer; width: 100%; font-weight: bold; }
-        #status { margin-top: 20px; font-weight: bold; color: #A68966; }
-        .log { font-size: 10px; height: 150px; overflow-y: auto; background: #eee; margin-top: 10px; padding: 10px; text-align: left; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h2 style="color:#A68966">Importação em Massa</h2>
-    <p>Selecione um ou mais arquivos CSV (Parte 1 a 10)</p>
-    
-    <input type="file" id="csvFiles" multiple accept=".csv" style="margin-bottom: 20px;">
-    
-    <button onclick="importarTudo()" class="btn-import">LIMPAR BANCO E IMPORTAR AGORA</button>
-    
-    <div id="status">Aguardando...</div>
-    <div id="log" class="log"></div>
-</div>
-
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        authDomain: "catalogo-abella-joias.firebaseapp.com",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-        projectId: "catalogo-abella-joias"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
     async function importarTudo() {
         const input = document.getElementById('csvFiles');
         const status = document.getElementById('status');
         const log = document.getElementById('log');
 
         if (input.files.length === 0) return alert("Selecione os arquivos CSV!");
-
         if (!confirm("Isso apagará os produtos atuais para evitar duplicados. Deseja continuar?")) return;
 
         status.innerText = "Limpando banco de dados...";
@@ -51,41 +12,46 @@
 
         let totalGeral = 0;
 
-        for (let f = 0; f < input.files.length; f++) {
-            const file = input.files[f];
+        // Transformar a lista de arquivos em um Array para processar em ordem
+        const arquivos = Array.from(input.files);
+
+        for (const file of arquivos) {
             status.innerText = `Lendo arquivo ${file.name}...`;
             
             const texto = await file.text();
             const linhas = texto.split(/\r?\n/);
             const batch = {};
 
-            // Começa do 1 para pular o cabeçalho (tipo;nome;sku...)
             for (let i = 1; i < linhas.length; i++) {
+                // Importante: Seus CSVs usam ponto e vírgula (;)
                 const colunas = linhas[i].split(';');
-                if (colunas.length < 5) continue;
+                
+                // Pula se a linha for vazia ou se for o cabeçalho repetido
+                if (colunas.length < 5 || colunas[2] === "sku") continue;
 
                 const sku = colunas[2]?.trim();
                 if (!sku) continue;
 
-                const idUnico = db.ref('products').push().key;
-                batch[idUnique] = {
-                    nome: colunas[1]?.trim(),
+                // Aqui estava o erro: usei idUnico/idUnique misturado. Agora corrigido:
+                const novoId = db.ref('products').push().key;
+                
+                batch[novoId] = {
+                    nome: colunas[1]?.trim() || "Sem nome",
                     sku: sku,
-                    categoria: colunas[3]?.trim(),
-                    preco: parseFloat(colunas[4]?.replace(',', '.')),
+                    categoria: colunas[3]?.trim() || "Geral",
+                    preco: parseFloat(colunas[4]?.replace(',', '.') || 0),
                     peso: parseFloat(colunas[5]?.replace(',', '.') || 0),
-                    imagem: "" // Fica vazio para o Sincronizador de Fotos preencher
+                    imagem: "" 
                 };
                 totalGeral++;
             }
             
+            // Envia o bloco de produtos deste arquivo para o Firebase
             await db.ref('products').update(batch);
-            log.innerHTML += `✅ ${file.name} processado.<br>`;
+            log.innerHTML += `✅ ${file.name} - ${Object.keys(batch).length} itens.<br>`;
+            log.scrollTop = log.scrollHeight;
         }
 
-        status.innerText = `SUCESSO! ${totalGeral} produtos importados.`;
-        alert("Importação Concluída!");
+        status.innerHTML = `<b style="color:green">SUCESSO! ${totalGeral} produtos importados.</b>`;
     }
 </script>
-</body>
-</html>
