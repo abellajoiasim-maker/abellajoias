@@ -27,28 +27,27 @@ ATACADO DE JOIAS NO BRUTO<br>
 
 <div id="lista" class="max-w-4xl mx-auto space-y-4"></div>
 
-<div class="max-w-4xl mx-auto bg-white border p-4 mt-6">
-  <p id="peso"></p>
+<div class="max-w-4xl mx-auto bg-white border p-4 mt-6 shadow-sm">
+  <p id="peso" class="text-gray-500 text-sm"></p>
   <p id="valorCheio"></p>
   <p id="valorPix" class="text-green-700 font-semibold"></p>
   <p id="parcelas"></p>
 
-  <div class="mt-4">
-    <label class="block mb-2 font-semibold">Forma de pagamento:</label>
-    <select id="pagamento" class="w-full border p-2">
+  <div class="mt-4 border-t pt-4">
+    <label class="block mb-2 font-semibold text-xs uppercase gold">Forma de pagamento:</label>
+    <select id="pagamento" class="w-full border p-3 bg-gray-50" onchange="render()">
       <option value="Pix">Pix</option>
       <option value="Cartão">Cartão</option>
     </select>
   </div>
 
-  <button onclick="finalizar()" class="mt-4 bg-black text-white w-full py-3">
+  <button onclick="finalizar()" class="mt-4 bg-black text-white w-full py-4 font-bold text-xs tracking-widest uppercase">
     FINALIZAR COMPRA
   </button>
 </div>
 
-<!-- Botão flutuante -->
 <div class="floating">
-  <a href="index.html" class="bg-gray-800 text-white px-4 py-3 rounded-full text-sm">🔙 Voltar</a>
+  <a href="index.html" class="bg-gray-800 text-white px-5 py-3 rounded-full text-xs font-bold shadow-lg uppercase">🔙 Voltar</a>
 </div>
 
 <script>
@@ -58,98 +57,112 @@ firebase.initializeApp({
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
-const db=firebase.database();
+const db = firebase.database();
 
-let cart=JSON.parse(localStorage.getItem('cart')||'[]');
-let pixDesc=0, parcelasCfg=1;
+let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+let pixDesc = 0, parcelasCfg = 1;
 
-db.ref('settings').once('value').then(s=>{
-  pixDesc=s.val()?.pix||0;
-  parcelasCfg=s.val()?.parcelas||1;
+db.ref('settings').once('value').then(s => {
+  const v = s.val();
+  pixDesc = v?.pix || 0;
+  parcelasCfg = v?.parcelas || 1;
   render();
 });
 
-function render(){
-  let pesoT=0, total=0;
-  lista.innerHTML='';
+function render() {
+  const listaDiv = document.getElementById('lista');
+  let pesoT = 0, total = 0;
+  listaDiv.innerHTML = '';
 
-  cart.forEach((p,i)=>{
-    pesoT+=p.weight*p.qty;
-    total+=p.price*p.qty;
+  if (cart.length === 0) {
+    listaDiv.innerHTML = '<p class="text-center py-10 text-gray-400">Seu carrinho está vazio.</p>';
+    return;
+  }
 
-    lista.innerHTML+=`
-    <div class="bg-white border p-3 flex gap-3">
-      <img src="${p.image}" class="w-20 h-20 object-contain">
+  cart.forEach((p, i) => {
+    // Compatibilidade de campos preco/price e imagem/image
+    const precoUnit = parseFloat(p.preco || p.price || 0);
+    const pesoUnit = parseFloat(p.peso || p.weight || 0);
+    const imgUrl = p.imagem || p.image || 'https://via.placeholder.com/100';
+
+    pesoT += pesoUnit * p.qty;
+    total += precoUnit * p.qty;
+
+    listaDiv.innerHTML += `
+    <div class="bg-white border p-3 flex gap-4 items-center">
+      <img src="${imgUrl}" class="w-16 h-16 object-contain">
       <div class="flex-1">
-        <p class="font-semibold">${p.name}</p>
-        <p class="text-xs text-gray-500">SKU ${p.sku}</p>
+        <p class="font-semibold text-sm uppercase">${p.nome || p.name}</p>
+        <p class="text-[10px] text-gray-400 font-bold">SKU ${p.sku}</p>
 
         <div class="flex items-center gap-2 mt-2">
-          <button onclick="alterar(${i},-1)" class="px-2 border">-</button>
-          <input type="number" min="1" value="${p.qty}"
-            class="w-16 border text-center"
-            onchange="digitar(${i},this.value)">
-          <button onclick="alterar(${i},1)" class="px-2 border">+</button>
+          <button onclick="alterar(${i},-1)" class="px-2 border bg-gray-100 font-bold">-</button>
+          <input type="number" readonly value="${p.qty}" class="w-10 text-center text-sm border-0">
+          <button onclick="alterar(${i},1)" class="px-2 border bg-gray-100 font-bold">+</button>
 
-          <button onclick="excluir(${i})" class="ml-auto text-red-600 text-sm">
-            Excluir Produto
+          <button onclick="excluir(${i})" class="ml-auto text-red-600 text-[10px] font-bold uppercase">
+            Remover
           </button>
         </div>
       </div>
     </div>`;
   });
 
-  const pixVal=total*(1-pixDesc/100);
-  const parcelaVal=(total/parcelasCfg);
+  const pixVal = total * (1 - pixDesc / 100);
+  const parcelaVal = (total / parcelasCfg);
 
-  peso.innerText=`Peso total: ${pesoT.toFixed(2).replace('.',',')} g`;
-  valorCheio.innerText=`Valor Cheio: R$ ${total.toFixed(2)}`;
-  valorPix.innerText=`Valor Pix: R$ ${pixVal.toFixed(2)}`;
-  parcelas.innerText=`${parcelasCfg}x de R$ ${parcelaVal.toFixed(2)} sem acréscimo`;
+  document.getElementById('peso').innerText = `Peso total: ${pesoT.toFixed(2).replace('.', ',')} g`;
+  document.getElementById('valorCheio').innerText = `Valor Cheio: R$ ${total.toFixed(2)}`;
+  document.getElementById('valorPix').innerText = `Valor Pix: R$ ${pixVal.toFixed(2)}`;
+  document.getElementById('parcelas').innerText = `${parcelasCfg}x de R$ ${parcelaVal.toFixed(2)} sem acréscimo`;
 }
 
-function alterar(i,v){
-  cart[i].qty=Math.max(1,cart[i].qty+v);
+function alterar(i, v) {
+  cart[i].qty = Math.max(1, cart[i].qty + v);
   salvar();
 }
-function digitar(i,v){
-  cart[i].qty=Math.max(1,parseInt(v||1));
+
+function excluir(i) {
+  cart.splice(i, 1);
   salvar();
 }
-function excluir(i){
-  cart.splice(i,1);
-  salvar();
-}
-function salvar(){
-  localStorage.setItem('cart',JSON.stringify(cart));
+
+function salvar() {
+  localStorage.setItem('cart', JSON.stringify(cart));
   render();
 }
 
-function finalizar(){
-  if(!cart.length) return alert('Carrinho vazio');
+function finalizar() {
+  if (!cart.length) return alert('Carrinho vazio');
 
-  const forma=pagamento.value;
-  const total=cart.reduce((s,p)=>s+p.price*p.qty,0);
-  const final=forma==='Pix'?total*(1-pixDesc/100):total;
-
-  const pedido=db.ref('orders').push();
-  pedido.set({
-    data:new Date().toLocaleString(),
-    pagamento:forma,
-    total:final,
-    itens:cart
+  const forma = document.getElementById('pagamento').value;
+  let subtotal = 0;
+  cart.forEach(p => {
+    subtotal += parseFloat(p.preco || p.price || 0) * p.qty;
   });
 
-  const msg=`Olá, fiz um pedido na Abella Joias.
+  const final = forma === 'Pix' ? subtotal * (1 - pixDesc / 100) : subtotal;
+
+  // Salva no Banco de Dados
+  const pedido = db.ref('orders').push();
+  pedido.set({
+    data: new Date().toLocaleString(),
+    pagamento: forma,
+    total: final.toFixed(2),
+    itens: cart
+  });
+
+  // MENSAGEM CURTA (Mantida conforme solicitado)
+  const msg = `Olá, fiz um pedido na Abella Joias.
 Valor: R$ ${final.toFixed(2)}
 Pagamento: ${forma}
 Status: aguardando contato para confirmação.`;
 
-  window.open(`https://wa.me/5519988207658?text=${encodeURIComponent(msg)}`,'_blank');
+  window.open(`https://wa.me/5519988207658?text=${encodeURIComponent(msg)}`, '_blank');
 
   alert('Pedido enviado com sucesso! Em instantes a Abella Joias entrará em contato.');
   localStorage.removeItem('cart');
-  location.href='index.html';
+  location.href = 'index.html';
 }
 </script>
 
