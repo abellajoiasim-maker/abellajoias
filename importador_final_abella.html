@@ -2,22 +2,24 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Importador Abella</title>
+    <title>Importador Ultra - Abella</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body style="font-family:sans-serif; text-align:center; padding:50px;">
+<body style="font-family:sans-serif; text-align:center; padding:30px; background:#f4f4f4;">
 
-    <h2>Importador Abella Joias</h2>
-    <input type="file" id="arquivoCsv" multiple accept=".csv">
-    <br><br>
-    <button onclick="importar()" style="padding:10px 20px; cursor:pointer;">IMPORTAR ARQUIVOS</button>
-    
-    <p id="status">Aguardando...</p>
-    <div id="log" style="text-align:left; max-width:500px; margin:auto; background:#eee; padding:10px; font-size:12px;"></div>
+    <div style="background:white; max-width:600px; margin:auto; padding:20px; border-radius:10px; border:2px solid #A68966;">
+        <h2>Importador Ultra (1.300 Itens)</h2>
+        <p>Selecione todos os arquivos de uma vez</p>
+        <input type="file" id="arquivoCsv" multiple accept=".csv">
+        <br><br>
+        <button onclick="importar()" style="padding:15px 30px; cursor:pointer; background:black; color:white; font-weight:bold;">INICIAR IMPORTAÇÃO TOTAL</button>
+        
+        <h3 id="status" style="color:blue;">Aguardando...</h3>
+        <div id="log" style="text-align:left; background:#1e1e1e; color:#00ff00; padding:15px; font-size:12px; height:250px; overflow-y:auto; font-family:monospace; border-radius:5px;"></div>
+    </div>
 
     <script>
-        // Configurações do seu Firebase
         var firebaseConfig = {
             apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
             authDomain: "catalogo-abella-joias.firebaseapp.com",
@@ -35,46 +37,58 @@
 
             if (input.files.length === 0) return alert("Selecione os arquivos!");
 
-            status.innerText = "Processando...";
+            log.innerHTML = "Iniciando processamento pesado...<br>";
             var arquivos = Array.from(input.files);
             var totalGeral = 0;
 
             for (var f = 0; f < arquivos.length; f++) {
                 var file = arquivos[f];
                 var texto = await file.text();
-                var linhas = texto.split(/\r?\n/);
+                // Divide por quebra de linha e limpa espaços vazios
+                var linhas = texto.split(/\r?\n/).filter(line => line.trim() !== "");
                 var batch = {};
                 var itensNesteArquivo = 0;
 
+                log.innerHTML += "> Lendo " + file.name + "...<br>";
+
                 for (var i = 1; i < linhas.length; i++) {
-                    var colunas = linhas[i].split(';');
-                    if (colunas.length < 5) continue;
+                    try {
+                        var colunas = linhas[i].split(';');
+                        
+                        // Verifica se a linha tem as colunas básicas (nome, sku, categoria, preco)
+                        if (colunas.length < 4) continue;
 
-                    var sku = colunas[2].trim();
-                    if (!sku || sku.toLowerCase() === 'sku') continue;
+                        var sku = colunas[2] ? colunas[2].trim() : "";
+                        if (!sku || sku.toLowerCase() === 'sku') continue;
 
-                    // Criar a chave do produto (limpando pontos/símbolos)
-                    var chave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
+                        var chave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
 
-                    batch[chave] = {
-                        nome: colunas[1].trim(),
-                        sku: sku,
-                        categoria: colunas[3].trim(),
-                        preco: parseFloat(colunas[4].replace(',', '.')) || 0,
-                        peso: parseFloat(colunas[5].replace(',', '.')) || 0,
-                        imagem: ""
-                    };
-                    itensNesteArquivo++;
+                        batch[chave] = {
+                            nome: colunas[1] ? colunas[1].trim() : "Produto sem nome",
+                            sku: sku,
+                            categoria: colunas[3] ? colunas[3].trim() : "Geral",
+                            preco: colunas[4] ? parseFloat(colunas[4].replace(',', '.')) : 0,
+                            peso: colunas[5] ? parseFloat(colunas[5].replace(',', '.')) : 0,
+                            imagem: ""
+                        };
+                        itensNesteArquivo++;
+                    } catch (e) {
+                        console.log("Erro na linha " + i);
+                    }
                 }
 
-                // Envia para o Firebase sem apagar o que já existe
-                await db.ref('products').update(batch);
-                totalGeral += itensNesteArquivo;
-                log.innerHTML += "✅ " + file.name + " (" + itensNesteArquivo + " itens)<br>";
+                // Envio para o Firebase
+                if (Object.keys(batch).length > 0) {
+                    await db.ref('products').update(batch);
+                    totalGeral += itensNesteArquivo;
+                    log.innerHTML += "<span style='color:white;'>✅ " + file.name + " finalizado com " + itensNesteArquivo + " itens.</span><br>";
+                }
+                log.scrollTop = log.scrollHeight;
             }
 
-            status.innerText = "CONCLUÍDO! Total nesta importação: " + totalGeral;
-            alert("Sucesso! Verifique o seu Firebase.");
+            status.innerText = "IMPORTAÇÃO CONCLUÍDA!";
+            log.innerHTML += "<br>---<br>FIM: " + totalGeral + " produtos processados no total.";
+            alert("Sucesso! Total de " + totalGeral + " itens.");
         }
     </script>
 </body>
