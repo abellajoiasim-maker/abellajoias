@@ -105,5 +105,56 @@
     }
 </script>
 
+  // ... suas configurações do Firebase (firebase.initializeApp) já devem estar aqui ...
+  
+  const db = firebase.database();
+
+  // AQUI VOCÊ COLA O SCRIPT DE IMPORTAÇÃO
+  function processarCSV(csvData) {
+      const linhas = csvData.split('\n');
+      
+      linhas.forEach((linha, index) => {
+          if (index === 0 && linha.toLowerCase().includes('tipo')) return;
+          if (linha.trim() === '') return;
+
+          const colunas = linha.split(';');
+
+          // Esta estrutura garante que o JavaScript entenda a nova coluna "tipo"
+          const produto = {
+              tipo:      colunas[0] ? colunas[0].trim() : "simple",
+              nome:      colunas[1] ? colunas[1].trim() : "",
+              sku:       colunas[2] ? colunas[2].trim() : "",
+              categoria: colunas[3] ? colunas[3].trim() : "",
+              preco:     colunas[4] ? parseFloat(colunas[4].replace(',', '.')) : 0,
+              peso:      colunas[5] ? colunas[5].trim() : "0",
+              imagem:    colunas[6] ? colunas[6].trim() : "",
+              variacoes: colunas[7] ? colunas[7].trim().toUpperCase() === 'TRUE' : false
+          };
+
+          if (produto.sku) {
+              // Isso envia para o Realtime Database
+              db.ref('products').push(produto)
+                .then(() => console.log("Importado: " + produto.sku))
+                .catch((error) => console.error("Erro no SKU " + produto.sku, error));
+          }
+      });
+      alert("Importação concluída! Verifique o console.");
+  }
+
+  // Função que o seu botão de "Upload" deve chamar
+  function lerArquivo() {
+      const input = document.getElementById('seu-input-file-id');
+      const reader = new FileReader();
+      
+      reader.onload = function() {
+          processarCSV(reader.result);
+      };
+      
+      if (input.files[0]) {
+          reader.readAsText(input.files[0]);
+      }
+  }
+</script>
+    
 </body>
 </html>
