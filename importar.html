@@ -1,74 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>Importador Abella Joias</title>
+    <meta charset="UTF-8">
+    <title>Importador Abella Joias - Oficial</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
+        .container { max-width: 600px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #218838; }
+        #status { margin-top: 20px; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h2>Importar CSV para Firebase (Estrutura Corrigida)</h2>
-    <input type="file" id="csvFile" accept=".csv">
-    <button onclick="importar()">Enviar para o Banco</button>
-    <div id="status"></div>
 
-    <script>
-        // COLE AQUI AS CONFIGURAÇÕES DO SEU PROJETO (Firebase Config)
-        const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_PROJETO.firebaseapp.com",
-            databaseURL: "https://SEU_PROJETO.firebaseio.com",
-            projectId: "SEU_PROJETO",
-            storageBucket: "SEU_PROJETO.appspot.com",
-            messagingSenderId: "ID",
-            appId: "APP_ID"
+<div class="container">
+    <h2>Sistema de Importação - Abella Joias</h2>
+    <p>Selecione o arquivo CSV (Partes 1 a 10) para subir ao Firebase.</p>
+    
+    <input type="file" id="csvFile" accept=".csv" style="margin-bottom: 20px;"><br>
+    <button onclick="importar()">Enviar para o Firebase</button>
+    
+    <div id="status"></div>
+</div>
+
+<script>
+    // Suas configurações do Firebase inseridas automaticamente
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        authDomain: "catalogo-abella-joias.firebaseapp.com",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+        projectId: "catalogo-abella-joias"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function importar() {
+        const fileInput = document.getElementById('csvFile');
+        const statusDiv = document.getElementById('status');
+        
+        if (!fileInput.files[0]) {
+            alert("Por favor, selecione um arquivo CSV!");
+            return;
+        }
+
+        statusDiv.innerText = "Processando... aguarde.";
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const texto = e.target.result;
+            const linhas = texto.split('\n');
+            let contagemSucesso = 0;
+
+            linhas.forEach((linha, index) => {
+                // Pula o cabeçalho se existir ou se a linha estiver vazia
+                if (index === 0 && linha.toLowerCase().includes('tipo')) return;
+                if (!linha || linha.trim() === '') return;
+
+                // Divide as colunas pelo ponto e vírgula
+                const col = linha.split(';');
+
+                // MAPEAMENTO RIGOROSO DAS 8 COLUNAS
+                // tipo; nome; sku; categoria; preco; peso; imagem; variacoes
+                const produto = {
+                    tipo:      col[0] ? col[0].trim() : "simple",
+                    nome:      col[1] ? col[1].trim() : "Sem Nome",
+                    sku:       col[2] ? col[2].trim() : "",
+                    categoria: col[3] ? col[3].trim() : "Geral",
+                    // Converte vírgula em ponto para o preço ser um número válido
+                    preco:     col[4] ? parseFloat(col[4].replace(',', '.')) : 0.00,
+                    peso:      col[5] ? col[5].trim() : "0.00",
+                    imagem:    col[6] ? col[6].trim() : "",
+                    variacoes: col[7] ? col[7].trim().toUpperCase() === 'TRUE' : false
+                };
+
+                // Só envia se houver um SKU válido
+                if (produto.sku && produto.sku !== "") {
+                    // Usamos o SKU como chave ou geramos um ID único com push()
+                    db.ref('products').push(produto);
+                    contagemSucesso++;
+                }
+            });
+
+            statusDiv.innerHTML = `<span style="color: green;">✅ Sucesso! ${contagemSucesso} produtos importados.</span>`;
+            fileInput.value = ""; // Limpa o campo de arquivo
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        reader.onerror = function() {
+            statusDiv.innerHTML = `<span style="color: red;">❌ Erro ao ler o arquivo.</span>`;
+        };
 
-        function importar() {
-            const fileInput = document.getElementById('csvFile');
-            const status = document.getElementById('status');
-            
-            if (!fileInput.files[0]) {
-                alert("Selecione um arquivo CSV primeiro!");
-                return;
-            }
+        reader.readAsText(fileInput.files[0], 'UTF-8');
+    }
+</script>
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const texto = e.target.result;
-                const linhas = texto.split('\n');
-                let contagem = 0;
-
-                linhas.forEach((linha, index) => {
-                    // Ignora cabeçalho ou linhas vazias
-                    if (index === 0 && linha.toLowerCase().includes('tipo')) return;
-                    if (linha.trim() === '') return;
-
-                    const col = linha.split(';');
-
-                    // MAPEAMENTO CORRIGIDO (8 COLUNAS)
-                    const produto = {
-                        tipo:      col[0] ? col[0].trim() : "simple",
-                        nome:      col[1] ? col[1].trim() : "",
-                        sku:       col[2] ? col[2].trim() : "",
-                        categoria: col[3] ? col[3].trim() : "",
-                        preco:     col[4] ? parseFloat(col[4].replace(',', '.')) : 0,
-                        peso:      col[5] ? col[5].trim() : "0",
-                        imagem:    col[6] ? col[6].trim() : "",
-                        variacoes: col[7] ? col[7].trim().toUpperCase() === 'TRUE' : false
-                    };
-
-                    if (produto.sku) {
-                        db.ref('products').push(produto);
-                        contagem++;
-                    }
-                });
-                status.innerHTML = "✅ " + contagem + " produtos enviados com sucesso!";
-            };
-            reader.readAsText(fileInput.files[0]);
-        }
-    </script>
 </body>
 </html>
