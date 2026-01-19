@@ -69,7 +69,7 @@
             try {
                 // 1. Obtém a URL de download (Como a foto já está lá, ele só pega o link)
                 // Se você colocou em uma pasta, use: storage.ref(`NOME_DA_PASTA/${arquivo.name}`)
-                const storageRef = storage.ref(`produtos/${arquivo.name}`); 
+               const storageRef = storage.ref('images/produtos/' + arquivo.name);
                 const url = await storageRef.getDownloadURL();
 
                 // 2. Busca no Database o produto com esse SKU
