@@ -1,56 +1,81 @@
-<script>
-    // Variável para manter a contagem total da sessão
-    let contagemSessao = 0;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Importador Abella</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body style="font-family:sans-serif; text-align:center; padding:50px;">
 
-    async function importarTudo() {
-        const input = document.getElementById('csvFiles');
-        const status = document.getElementById('status');
-        const log = document.getElementById('log');
+    <h2>Importador Abella Joias</h2>
+    <input type="file" id="arquivoCsv" multiple accept=".csv">
+    <br><br>
+    <button onclick="importar()" style="padding:10px 20px; cursor:pointer;">IMPORTAR ARQUIVOS</button>
+    
+    <p id="status">Aguardando...</p>
+    <div id="log" style="text-align:left; max-width:500px; margin:auto; background:#eee; padding:10px; font-size:12px;"></div>
 
-        if (input.files.length === 0) return alert("Selecione o arquivo!");
+    <script>
+        // Configurações do seu Firebase
+        var firebaseConfig = {
+            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+            authDomain: "catalogo-abella-joias.firebaseapp.com",
+            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+            projectId: "catalogo-abella-joias"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.database();
 
-        try {
-            const arquivos = Array.from(input.files);
-            
-            for (const file of arquivos) {
-                status.innerText = `Processando: ${file.name}...`;
-                const texto = await file.text();
-                const linhas = texto.split(/\r?\n/);
-                const batch = {};
-                let itensNesteArquivo = 0;
+        async function importar() {
+            var input = document.getElementById('arquivoCsv');
+            var status = document.getElementById('status');
+            var log = document.getElementById('log');
 
-                for (let i = 1; i < linhas.length; i++) {
-                    const colunas = linhas[i].split(';');
+            if (input.files.length === 0) return alert("Selecione os arquivos!");
+
+            status.innerText = "Processando...";
+            var arquivos = Array.from(input.files);
+            var totalGeral = 0;
+
+            for (var f = 0; f < arquivos.length; f++) {
+                var file = arquivos[f];
+                var texto = await file.text();
+                var linhas = texto.split(/\r?\n/);
+                var batch = {};
+                var itensNesteArquivo = 0;
+
+                for (var i = 1; i < linhas.length; i++) {
+                    var colunas = linhas[i].split(';');
                     if (colunas.length < 5) continue;
 
-                    const sku = colunas[2]?.trim();
-                    if (!sku || sku.toLowerCase() === "sku") continue;
+                    var sku = colunas[2].trim();
+                    if (!sku || sku.toLowerCase() === 'sku') continue;
 
-                    const skuChave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
+                    // Criar a chave do produto (limpando pontos/símbolos)
+                    var chave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
 
-                    batch[skuChave] = {
-                        nome: colunas[1]?.trim(),
+                    batch[chave] = {
+                        nome: colunas[1].trim(),
                         sku: sku,
-                        categoria: colunas[3]?.trim(),
-                        preco: parseFloat(colunas[4]?.replace(',', '.')),
-                        peso: parseFloat(colunas[5]?.replace(',', '.') || 0),
-                        imagem: "" 
+                        categoria: colunas[3].trim(),
+                        preco: parseFloat(colunas[4].replace(',', '.')) || 0,
+                        peso: parseFloat(colunas[5].replace(',', '.')) || 0,
+                        imagem: ""
                     };
                     itensNesteArquivo++;
                 }
 
-                // .update() não apaga os anteriores, ele adiciona!
+                // Envia para o Firebase sem apagar o que já existe
                 await db.ref('products').update(batch);
-                
-                contagemSessao += itensNesteArquivo;
-                log.innerHTML += `<br>✅ ${file.name}: +${itensNesteArquivo} itens (Total no Banco: ~${contagemSessao})`;
-                log.scrollTop = log.scrollHeight;
+                totalGeral += itensNesteArquivo;
+                log.innerHTML += "✅ " + file.name + " (" + itensNesteArquivo + " itens)<br>";
             }
-            
-            status.innerHTML = `<b style="color:green">TOTAL PROCESSADO NESTA VEZ: ${contagemSessao}</b>`;
 
-        } catch (err) {
-            log.innerHTML += `<br>❌ Erro: ${err.message}`;
+            status.innerText = "CONCLUÍDO! Total nesta importação: " + totalGeral;
+            alert("Sucesso! Verifique o seu Firebase.");
         }
-    }
-</script>
+    </script>
+</body>
+</html>
