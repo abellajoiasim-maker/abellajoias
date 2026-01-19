@@ -4,62 +4,7 @@
 
     async function importarTudo() {
         const input = document.getElementById('csvFiles');
-        const status = document.getElementById('status');<script>
-    // Variável para manter a contagem total da sessão
-    let contagemSessao = 0;
-
-    async function importarTudo() {
-        const input = document.getElementById('csvFiles');
         const status = document.getElementById('status');
-        const log = document.getElementById('log');
-
-        if (input.files.length === 0) return alert("Selecione o arquivo!");
-
-        try {
-            const arquivos = Array.from(input.files);
-            
-            for (const file of arquivos) {
-                status.innerText = `Processando: ${file.name}...`;
-                const texto = await file.text();
-                const linhas = texto.split(/\r?\n/);
-                const batch = {};
-                let itensNesteArquivo = 0;
-
-                for (let i = 1; i < linhas.length; i++) {
-                    const colunas = linhas[i].split(';');
-                    if (colunas.length < 5) continue;
-
-                    const sku = colunas[2]?.trim();
-                    if (!sku || sku.toLowerCase() === "sku") continue;
-
-                    const skuChave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
-
-                    batch[skuChave] = {
-                        nome: colunas[1]?.trim(),
-                        sku: sku,
-                        categoria: colunas[3]?.trim(),
-                        preco: parseFloat(colunas[4]?.replace(',', '.')),
-                        peso: parseFloat(colunas[5]?.replace(',', '.') || 0),
-                        imagem: "" 
-                    };
-                    itensNesteArquivo++;
-                }
-
-                // .update() não apaga os anteriores, ele adiciona!
-                await db.ref('products').update(batch);
-                
-                contagemSessao += itensNesteArquivo;
-                log.innerHTML += `<br>✅ ${file.name}: +${itensNesteArquivo} itens (Total no Banco: ~${contagemSessao})`;
-                log.scrollTop = log.scrollHeight;
-            }
-            
-            status.innerHTML = `<b style="color:green">TOTAL PROCESSADO NESTA VEZ: ${contagemSessao}</b>`;
-
-        } catch (err) {
-            log.innerHTML += `<br>❌ Erro: ${err.message}`;
-        }
-    }
-</script>
         const log = document.getElementById('log');
 
         if (input.files.length === 0) return alert("Selecione o arquivo!");
