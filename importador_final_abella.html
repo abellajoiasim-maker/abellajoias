@@ -4,38 +4,30 @@
         const status = document.getElementById('status');
         const log = document.getElementById('log');
 
-        if (input.files.length === 0) return alert("Selecione os arquivos CSV!");
-        if (!confirm("Isso apagará os produtos atuais para evitar duplicados. Deseja continuar?")) return;
-
-        status.innerText = "Limpando banco de dados...";
-        await db.ref('products').remove();
-
-        let totalGeral = 0;
-
-        // Transformar a lista de arquivos em um Array para processar em ordem
-        const arquivos = Array.from(input.files);
-
-        for (const file of arquivos) {
-            status.innerText = `Lendo arquivo ${file.name}...`;
-            
+        if (input.files.length === 0) return alert("Selecione o arquivo!");
+        
+        status.innerHTML = "<span style='color:blue'>Tentando conectar ao Firebase...</span>";
+        
+        try {
+            const file = input.files[0];
             const texto = await file.text();
             const linhas = texto.split(/\r?\n/);
             const batch = {};
 
+            // TESTE DE CONEXÃO: Tenta gravar uma marca simples
+            await db.ref('conexao_teste').set(new Date().getTime());
+            log.innerHTML += "✅ Conexão com Firebase OK!<br>";
+
             for (let i = 1; i < linhas.length; i++) {
-                // Importante: Seus CSVs usam ponto e vírgula (;)
                 const colunas = linhas[i].split(';');
-                
-                // Pula se a linha for vazia ou se for o cabeçalho repetido
-                if (colunas.length < 5 || colunas[2] === "sku") continue;
+                if (colunas.length < 5) continue;
 
                 const sku = colunas[2]?.trim();
-                if (!sku) continue;
+                if (!sku || sku === "sku") continue;
 
-                // Aqui estava o erro: usei idUnico/idUnique misturado. Agora corrigido:
-                const novoId = db.ref('products').push().key;
-                
-                batch[novoId] = {
+                const skuLimpo = sku.replace(/[\.\#\$\/\[\]]/g, "_");
+
+                batch[skuLimpo] = {
                     nome: colunas[1]?.trim() || "Sem nome",
                     sku: sku,
                     categoria: colunas[3]?.trim() || "Geral",
@@ -43,15 +35,18 @@
                     peso: parseFloat(colunas[5]?.replace(',', '.') || 0),
                     imagem: "" 
                 };
-                totalGeral++;
             }
             
-            // Envia o bloco de produtos deste arquivo para o Firebase
+            status.innerText = "Enviando dados...";
             await db.ref('products').update(batch);
-            log.innerHTML += `✅ ${file.name} - ${Object.keys(batch).length} itens.<br>`;
-            log.scrollTop = log.scrollHeight;
-        }
+            
+            status.innerHTML = "<b style='color:green'>SUCESSO! Verifique seu Firebase agora.</b>";
+            log.innerHTML += `✅ Arquivo ${file.name} processado com ${Object.keys(batch).length} itens.`;
 
-        status.innerHTML = `<b style="color:green">SUCESSO! ${totalGeral} produtos importados.</b>`;
+        } catch (err) {
+            console.error(err);
+            status.innerHTML = "<b style='color:red'>ERRO DE CONEXÃO</b>";
+            log.innerHTML += `<br>❌ Erro detalhado: ${err.message}<br>Verifique as REGRAS (Rules) do seu Database no Firebase.`;
+        }
     }
 </script>
