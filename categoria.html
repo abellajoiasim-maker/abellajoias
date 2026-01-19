@@ -14,20 +14,35 @@ body{background:#F8F6F2}
 .gold{color:#A68966}
 .font-serif{font-family:'Cinzel',serif}
 .floating{position:fixed;bottom:20px;right:20px;z-index:50}
+
+/* Força a imagem a ser um quadrado perfeito 1:1 */
+.img-container {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 4px;
+}
+.img-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
 </style>
 </head>
 
 <body class="p-6">
 
-<h1 id="titulo" class="font-serif text-2xl gold text-center mb-6"></h1>
+<h1 id="titulo" class="font-serif text-2xl gold text-center mb-6 uppercase tracking-widest"></h1>
 
-<div id="produtos" class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto"></div>
+<div id="produtos-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto"></div>
 
-<!-- Botões flutuantes -->
 <div class="floating flex flex-col gap-3">
-  <button onclick="history.back()" class="bg-gray-700 text-white px-4 py-3 rounded-full text-sm">🔙 Voltar</button>
-  <a href="cart_checkout_premium.html" class="bg-black text-white px-4 py-3 rounded-full text-sm">🛒 Carrinho</a>
-  <a href="galvanicas.html" class="bg-gold text-white px-4 py-3 rounded-full text-sm" style="background:#A68966">✨ Galvânicas</a>
+  <button onclick="history.back()" class="bg-gray-800 text-white px-5 py-3 rounded-full text-xs font-bold shadow-lg">🔙 VOLTAR</button>
+  <a href="cart_checkout_premium.html" class="bg-black text-white px-5 py-3 rounded-full text-xs font-bold shadow-lg">🛒 CARRINHO</a>
 </div>
 
 <script>
@@ -37,48 +52,78 @@ firebase.initializeApp({
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
-const db=firebase.database();
+const db = firebase.database();
 
-const cat=new URLSearchParams(location.search).get('cat');
-titulo.textContent=cat;
+// Pega a categoria da URL
+const urlParams = new URLSearchParams(location.search);
+const catSelecionada = urlParams.get('cat');
+document.getElementById('titulo').textContent = catSelecionada;
 
-db.ref('settings').once('value').then(cfg=>{
-  const pix=cfg.val()?.pix||0;
-  const parcelas=cfg.val()?.parcelas||1;
+const grid = document.getElementById('produtos-grid');
 
-  db.ref('products').orderByChild('sku').on('value',snap=>{
-    produtos.innerHTML='';
-    snap.forEach(s=>{
-      const p=s.val();
-      if(p.category!==cat) return;
+db.ref('settings').once('value').then(cfg => {
+  const settings = cfg.val() || {};
+  const descPix = settings.pix || 0;
+  const numParcelas = settings.parcelas || 1;
 
-      const valorPix=(p.price*(1-pix/100)).toFixed(2);
+  // Busca produtos e ordena por SKU
+  db.ref('products').orderByChild('sku').on('value', snap => {
+    grid.innerHTML = '';
+    
+    if (!snap.exists()) {
+        grid.innerHTML = '<p class="col-span-full text-center text-gray-400">Nenhum produto nesta categoria.</p>';
+        return;
+    }
 
-      produtos.innerHTML+=`
-      <div class="bg-white border p-3">
-        <img src="${p.image}" class="w-full aspect-square object-contain mb-2">
-        <p class="text-sm font-semibold">${p.name}</p>
-        <p class="text-xs text-gray-500">SKU ${p.sku}</p>
+    snap.forEach(s => {
+      const p = s.val();
+      
+      // Filtro de Categoria (Atenção ao nome do campo no banco)
+      if (p.categoria !== catSelecionada && p.category !== catSelecionada) return;
 
-        <p class="mt-1">Valor: <strong>R$ ${p.price.toFixed(2)}</strong></p>
-        <p class="text-green-700 text-sm">Pix: R$ ${valorPix}</p>
-        <p class="text-xs">${parcelas}x sem acréscimo</p>
+      // Ajuste de nomes de campos (banco vs código)
+      const nome = p.nome || p.name || "Produto sem nome";
+      const sku = p.sku || "---";
+      const precoBase = parseFloat(p.preco || p.price || 0);
+      const imagemUrl = p.imagem || p.image || 'https://via.placeholder.com/400?text=Sem+Foto';
+      
+      const valorPix = (precoBase * (1 - descPix / 100)).toFixed(2);
 
-        <button onclick='addCart(${JSON.stringify(p)})'
-          class="mt-2 bg-black text-white w-full py-2 text-xs">
-          ADICIONAR AO CARRINHO
-        </button>
+      grid.innerHTML += `
+      <div class="bg-white border p-3 flex flex-col shadow-sm">
+        <div class="img-container mb-3">
+            <img src="${imagemUrl}" loading="lazy" alt="${nome}">
+        </div>
+        
+        <p class="text-[11px] text-gray-400 tracking-tighter">SKU ${sku}</p>
+        <p class="text-xs font-bold uppercase truncate mb-2">${nome}</p>
+
+        <div class="mt-auto">
+            <p class="text-xs text-gray-500">No bruto:</p>
+            <p class="text-sm"><strong>R$ ${precoBase.toFixed(2)}</strong></p>
+            <p class="text-green-700 text-[11px] font-bold">R$ ${valorPix} no PIX</p>
+            <p class="text-[10px] text-gray-400">${numParcelas}x sem acréscimo</p>
+
+            <button onclick='addCart(${JSON.stringify({sku, nome, preco: precoBase, imagem: imagemUrl})})'
+              class="mt-3 bg-black text-white w-full py-2 text-[10px] font-bold hover:bg-gray-800 transition uppercase">
+              Adicionar ao Carrinho
+            </button>
+        </div>
       </div>`;
     });
   });
 });
 
-function addCart(p){
-  let cart=JSON.parse(localStorage.getItem('cart')||'[]');
-  const i=cart.find(i=>i.sku===p.sku);
-  i ? i.qty++ : cart.push({...p,qty:1});
-  localStorage.setItem('cart',JSON.stringify(cart));
-  alert('Produto adicionado ao carrinho');
+function addCart(p) {
+  let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  const i = cart.find(item => item.sku === p.sku);
+  if (i) {
+    i.qty++;
+  } else {
+    cart.push({...p, qty: 1});
+  }
+  localStorage.setItem('cart', JSON.stringify(cart));
+  alert(`${p.nome} adicionado ao carrinho!`);
 }
 </script>
 
