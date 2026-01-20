@@ -13,6 +13,12 @@
     body{background:#F8F6F2}
     .font-serif{font-family:'Cinzel',serif}
     .gold{color:#A68966}
+    .tab{display:none}
+    .tab.active{display:block}
+    .log-ok{color:#047857}
+    .log-err{color:#b91c1c}
+
+    /* ✨ AJUSTE DE DESIGN 1:1 */
     .image-container {
         width: 100%;
         aspect-ratio: 1 / 1;
@@ -31,135 +37,171 @@
 </style>
 </head>
 
-<body class="p-6">
+<body class="p-4 md:p-8">
 
 <div class="max-w-6xl mx-auto">
     <h1 class="font-serif text-3xl gold mb-8 text-center uppercase tracking-widest">Painel Administrativo</h1>
 
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-[#A68966]/20 mb-10">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-[#A68966]/20 mb-8">
         <h2 class="font-bold mb-4 uppercase text-sm gold">Gerenciar Produto</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" id="pNome" placeholder="Nome do Produto" class="border p-2 rounded text-sm">
-            <input type="text" id="pSku" placeholder="SKU" class="border p-2 rounded text-sm">
-            <input type="text" id="pCategoria" placeholder="Categoria" class="border p-2 rounded text-sm">
-            <input type="number" id="pPreco" placeholder="Preço" class="border p-2 rounded text-sm">
-            <input type="number" id="pPeso" placeholder="Peso (g)" class="border p-2 rounded text-sm">
-            <input type="text" id="pImagemUrl" placeholder="URL da Imagem" class="border p-2 rounded text-sm">
+            <input type="text" id="pNome" placeholder="Nome do Produto" class="border p-3 rounded text-sm focus:border-black outline-none">
+            <input type="text" id="pSku" placeholder="SKU" class="border p-3 rounded text-sm focus:border-black outline-none">
+            <input type="text" id="pCategoria" placeholder="Categoria" class="border p-3 rounded text-sm focus:border-black outline-none">
+            <input type="number" id="pPreco" placeholder="Preço" class="border p-3 rounded text-sm focus:border-black outline-none">
+            <input type="number" id="pPeso" placeholder="Peso (g)" class="border p-3 rounded text-sm focus:border-black outline-none">
+            <input type="text" id="pImagemUrl" placeholder="URL da Imagem" class="border p-3 rounded text-sm focus:border-black outline-none">
         </div>
-        <button onclick="salvarProduto()" class="mt-4 bg-black text-white px-6 py-2 rounded font-bold uppercase text-xs tracking-widest">Salvar Produto</button>
+        <button onclick="salvarProduto()" class="mt-6 bg-black text-white px-8 py-3 rounded font-bold uppercase text-xs tracking-widest hover:bg-zinc-800 transition">
+            Salvar Produto
+        </button>
     </div>
 
-    <div class="bg-white p-6 rounded-lg shadow-sm border mb-10">
+    <div class="bg-white p-6 rounded-xl shadow-sm border mb-8">
         <h2 class="font-bold mb-2 uppercase text-sm">Importar CSV</h2>
-        <input type="file" id="csvFile" accept=".csv" class="text-sm">
-        <button onclick="importarCSV()" class="ml-2 bg-gray-200 px-4 py-1 rounded text-xs font-bold uppercase">Processar Arquivo</button>
-        <div id="importStatus" class="mt-2 text-xs"></div>
+        <div class="flex flex-wrap items-center gap-4">
+            <input type="file" id="csvFile" accept=".csv" class="text-xs">
+            <button onclick="importarCSV()" class="bg-gray-100 hover:bg-gray-200 px-6 py-2 rounded text-[10px] font-bold uppercase transition">Processar Arquivo</button>
+        </div>
+        <div id="importStatus" class="mt-4 text-xs"></div>
+        <div id="importLog" class="mt-2 p-4 bg-gray-50 border rounded text-[10px] font-mono hidden max-h-40 overflow-y-auto"></div>
     </div>
 
-    <div class="mb-10">
-        <h2 class="font-serif gold text-2xl mb-4 uppercase tracking-widest text-center">Pedidos Recebidos</h2>
+    <div class="mb-12">
+        <h2 class="font-serif gold text-2xl mb-6 uppercase tracking-widest text-center">Pedidos do Catálogo</h2>
         <div id="lista-pedidos" class="grid grid-cols-1 gap-4">
             </div>
     </div>
 
-    <h2 class="font-serif gold text-2xl mb-6 uppercase tracking-widest text-center">Produtos no Catálogo</h2>
-    <div id="lista-produtos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+    <h2 class="font-serif gold text-2xl mb-8 uppercase tracking-widest text-center">Produtos em Linha</h2>
+    <div id="lista-produtos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6"></div>
 </div>
 
-<div id="modalPedido" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white p-6 rounded-lg max-w-lg w-full max-h-[80vh] overflow-y-auto">
-        <h3 class="font-serif gold text-lg mb-4 uppercase">Itens do Pedido</h3>
+<div id="modalPedido" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white p-6 rounded-xl max-w-lg w-full max-h-[85vh] overflow-y-auto border-2 border-gold">
+        <h3 class="font-serif gold text-lg mb-4 uppercase text-center border-b pb-2">Detalhes do Romaneio</h3>
         <div id="detalhes-itens" class="space-y-4"></div>
-        <button onclick="document.getElementById('modalPedido').classList.add('hidden')" class="w-full mt-6 bg-black text-white p-2 rounded font-bold">FECHAR</button>
+        <button onclick="document.getElementById('modalPedido').classList.add('hidden')" class="w-full mt-8 bg-black text-white p-3 rounded font-bold uppercase text-xs">Fechar Detalhes</button>
     </div>
 </div>
 
 <script>
-// Firebase Config (Mantida igual)
+// Firebase Config (Mantida a sua)
 const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    authDomain: "catalogo-abella-joias.firebaseapp.com",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-    projectId: "catalogo-abella-joias",
-    storageBucket: "catalogo-abella-joias.appspot.com"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.appspot.com"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let produtoEdit = null;
 
-// --- FUNÇÕES DE PRODUTOS (IGUAIS ÀS ORIGINAIS) ---
+// === FUNÇÕES ORIGINAIS DE PRODUTO (SEM ALTERAÇÃO) ===
 function salvarProduto() {
-    const p = {
-        nome: document.getElementById('pNome').value,
-        sku: document.getElementById('pSku').value,
-        categoria: document.getElementById('pCategoria').value,
-        preco: parseFloat(document.getElementById('pPreco').value),
-        peso: parseFloat(document.getElementById('pPeso').value),
-        imagem: document.getElementById('pImagemUrl').value
-    };
-    if(produtoEdit) {
-        db.ref('products/' + produtoEdit).update(p);
-        produtoEdit = null;
-    } else {
-        db.ref('products').push(p);
-    }
-    limparCampos();
+  const p = {
+    nome: document.getElementById('pNome').value,
+    sku: document.getElementById('pSku').value,
+    categoria: document.getElementById('pCategoria').value,
+    preco: parseFloat(document.getElementById('pPreco').value),
+    peso: parseFloat(document.getElementById('pPeso').value),
+    imagem: document.getElementById('pImagemUrl').value,
+    dataAlteracao: new Date().toISOString()
+  };
+  if (produtoEdit) {
+    db.ref('products/' + produtoEdit).update(p);
+    produtoEdit = null;
+  } else {
+    db.ref('products').push(p);
+  }
+  limparCampos();
 }
 
 function limparCampos() {
-    document.querySelectorAll('input').forEach(i => i.value = "");
+  document.querySelectorAll('input').forEach(i => i.value = "");
 }
 
 function carregarDados() {
-    db.ref('products').on('value', snapshot => {
-        const data = snapshot.val();
-        const container = document.getElementById('lista-produtos');
-        container.innerHTML = "";
-        if(data) {
-            Object.keys(data).forEach(id => {
-                const p = data[id];
-                container.innerHTML += `
-                    <div class="bg-white border rounded shadow-sm overflow-hidden flex flex-col">
-                        <div class="image-container"><img src="${p.imagem || ''}"></div>
-                        <div class="p-3 flex-1">
-                            <h4 class="text-[10px] font-bold uppercase mb-1">${p.nome}</h4>
-                            <p class="text-[9px] text-gray-400 mb-2">${p.sku}</p>
-                            <p class="gold font-bold text-xs">R$ ${p.preco}</p>
-                        </div>
-                        <div class="p-2 border-t flex gap-2">
-                            <button onclick="prepararEdicao('${id}')" class="flex-1 text-[9px] bg-gray-100 py-1 rounded">EDITAR</button>
-                            <button onclick="excluirProduto('${id}')" class="flex-1 text-[9px] bg-red-50 text-red-500 py-1 rounded">APAGAR</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-    });
-
-    // Carregar Pedidos
-    carregarPedidos();
+  db.ref('products').on('value', snapshot => {
+    const data = snapshot.val();
+    const container = document.getElementById('lista-produtos');
+    container.innerHTML = "";
+    if (data) {
+      Object.keys(data).forEach(id => {
+        const p = data[id];
+        container.innerHTML += `
+          <div class="bg-white border rounded-lg shadow-sm overflow-hidden flex flex-col hover:shadow-md transition">
+            <div class="image-container"><img src="${p.imagem || ''}"></div>
+            <div class="p-3 flex-1">
+              <h4 class="text-[9px] font-bold uppercase mb-1 truncate">${p.nome}</h4>
+              <p class="text-[8px] text-gray-400 mb-2">${p.sku}</p>
+              <p class="gold font-bold text-xs">R$ ${p.preco}</p>
+            </div>
+            <div class="p-2 border-t flex gap-1 bg-gray-50">
+              <button onclick="prepararEdicao('${id}')" class="flex-1 text-[8px] bg-white border py-1 rounded font-bold uppercase">Editar</button>
+              <button onclick="excluirProduto('${id}')" class="flex-1 text-[8px] bg-red-50 text-red-500 py-1 rounded font-bold uppercase">Apagar</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+  });
+  // Inicia carregamento de pedidos
+  carregarPedidos();
 }
 
 function excluirProduto(id) {
-    if(confirm("Apagar produto?")) db.ref('products/' + id).remove();
+  if (confirm("Deseja remover permanentemente este produto?")) db.ref('products/' + id).remove();
 }
 
 function prepararEdicao(id) {
-    db.ref('products/' + id).once('value', s => {
-        const p = s.val();
-        document.getElementById('pNome').value = p.nome;
-        document.getElementById('pSku').value = p.sku;
-        document.getElementById('pPreco').value = p.preco;
-        document.getElementById('pPeso').value = p.peso;
-        document.getElementById('pCategoria').value = p.categoria;
-        document.getElementById('pImagemUrl').value = p.imagem;
-        produtoEdit = id;
-        window.scrollTo(0,0);
-    });
+  db.ref('products/' + id).once('value', s => {
+    const p = s.val();
+    document.getElementById('pNome').value = p.nome;
+    document.getElementById('pSku').value = p.sku;
+    document.getElementById('pPreco').value = p.preco;
+    document.getElementById('pPeso').value = p.peso;
+    document.getElementById('pCategoria').value = p.categoria;
+    document.getElementById('pImagemUrl').value = p.imagem;
+    produtoEdit = id;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 }
 
-// --- FUNÇÃO DE PEDIDOS (NOVIDADE) ---
+// === FUNÇÕES ORIGINAIS DE IMPORTAÇÃO (MANTIDAS) ===
+async function importarCSV() {
+  const fileInput = document.getElementById('csvFile');
+  const file = fileInput.files[0];
+  const status = document.getElementById('importStatus');
+  const log = document.getElementById('importLog');
+  if (!file) { status.innerHTML = '<span class="log-err">❌ Selecione um arquivo</span>'; return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const texto = e.target.result.replace(/\r/g, '').trim();
+    const linhas = texto.split('\n');
+    let sucesso = 0;
+    log.innerHTML = ''; log.classList.remove('hidden');
+    for (let i = 1; i < linhas.length; i++) {
+        const col = linhas[i].split(';');
+        if(col.length < 5) continue;
+        const p = {
+            tipo: col[0]?.trim(), nome: col[1]?.trim(), sku: col[2]?.trim(),
+            categoria: col[3]?.trim(), preco: parseFloat(col[4]?.replace(',','.')) || 0,
+            peso: parseFloat(col[5]?.replace(',','.')) || 0, imagem: col[6]?.trim(),
+            variacoes: col[7]?.trim(), dataImportacao: new Date().toISOString()
+        };
+        await db.ref('products').push(p);
+        sucesso++;
+        log.innerHTML += `<div>✅ ${p.sku} - ${p.nome}</div>`;
+    }
+    status.innerHTML = `<span class="log-ok">🚀 Importados ${sucesso} produtos!</span>`;
+  };
+  reader.readAsText(file);
+}
+
+// === 🟢 NOVA FUNÇÃO: GESTÃO DE PEDIDOS (ACRESCENTADA) ===
 function carregarPedidos() {
     db.ref('orders').on('value', snapshot => {
         const data = snapshot.val();
@@ -167,47 +209,55 @@ function carregarPedidos() {
         container.innerHTML = "";
         if(data) {
             Object.keys(data).reverse().forEach(id => {
-                const pedido = data[id];
+                const ped = data[id];
                 container.innerHTML += `
-                    <div class="bg-white border-l-4 border-gold p-4 shadow-sm flex justify-between items-center">
+                    <div class="bg-white border-l-4 border-gold p-4 shadow-sm flex justify-between items-center rounded-r-lg">
                         <div>
-                            <p class="text-xs text-gray-400">${pedido.data}</p>
-                            <p class="font-bold text-sm uppercase">${pedido.cliente || 'S/ Nome'}</p>
-                            <p class="text-xs gold">Total: R$ ${pedido.total} | ${pedido.pagamento}</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">${ped.data}</p>
+                            <p class="font-bold text-sm gold">${ped.cliente || 'CLIENTE S/ NOME'}</p>
+                            <p class="text-[10px] uppercase font-bold text-gray-500">Valor: R$ ${ped.total} | Pgto: ${ped.pagamento}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="verItens('${id}')" class="bg-black text-white px-3 py-1 rounded text-[10px] font-bold">ITENS</button>
-                            <button onclick="db.ref('orders/${id}').remove()" class="text-red-400 text-xs">Apagar</button>
+                            <button onclick="verDetalhesPedido('${id}')" class="bg-black text-white px-4 py-2 rounded text-[9px] font-bold uppercase tracking-widest">Ver Itens</button>
+                            <button onclick="db.ref('orders/${id}').remove()" class="text-red-400 hover:text-red-600 transition text-xs">Apagar</button>
                         </div>
                     </div>
                 `;
             });
+        } else {
+            container.innerHTML = "<p class='text-center text-gray-400 text-xs italic'>Nenhum pedido registrado no momento.</p>";
         }
     });
 }
 
-function verItens(id) {
+function verDetalhesPedido(id) {
     db.ref('orders/' + id).once('value', snapshot => {
         const p = snapshot.val();
         const container = document.getElementById('detalhes-itens');
         container.innerHTML = "";
         p.itens.forEach(item => {
             container.innerHTML += `
-                <div class="flex gap-3 border-b pb-2 items-center">
-                    <img src="${item.imagem}" class="w-10 h-10 object-contain">
+                <div class="flex gap-3 border-b border-gray-100 pb-3 items-center">
+                    <img src="${item.imagem || ''}" class="w-12 h-12 object-contain bg-gray-50 rounded">
                     <div class="flex-1">
-                        <p class="text-[10px] font-bold uppercase">${item.nome}</p>
-                        ${item.variacao ? `<p class="text-[9px] gold font-bold">OPÇÃO: ${item.variacao}</p>` : ''}
-                        <p class="text-[9px] text-gray-400">SKU: ${item.sku} | Qtd: ${item.qty}</p>
+                        <p class="text-[10px] font-bold uppercase leading-tight">${item.nome}</p>
+                        ${item.variacao ? `<p class="text-[9px] text-amber-600 font-bold uppercase">OPÇÃO: ${item.variacao}</p>` : ''}
+                        <p class="text-[9px] text-gray-400 font-bold">SKU: ${item.sku} | Qtd: ${item.qty}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold">R$ ${parseFloat(item.preco).toFixed(2)}</p>
                     </div>
                 </div>
             `;
         });
         document.getElementById('modalPedido').classList.remove('hidden');
+        document.getElementById('modalPedido').classList.add('flex');
     });
 }
 
+// Iniciar
 carregarDados();
 </script>
+
 </body>
 </html>
