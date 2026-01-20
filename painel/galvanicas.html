@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Galvânicas | Painel Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  body{background:#F8F6F2}
+  .font-serif{font-family:'Cinzel',serif}
+  .gold{color:#A68966}
+</style>
+</head>
+
+<body>
+
+<header class="bg-white border-b px-10 py-6 flex justify-between items-center">
+  <div>
+    <h1 class="font-serif text-xl tracking-widest gold">Galvânicas</h1>
+    <p class="text-xs text-gray-400 uppercase">Painel Administrativo</p>
+  </div>
+  <a href="index.html" class="text-xs uppercase tracking-widest text-gray-500">← Voltar</a>
+</header>
+
+<main class="max-w-6xl mx-auto px-8 py-10 grid md:grid-cols-2 gap-10">
+
+<!-- FORMULÁRIO -->
+<div class="bg-white border rounded-xl p-8 space-y-4">
+  <h2 class="font-serif gold text-xl mb-4">Cadastrar / Editar Galvânica</h2>
+
+  <input id="nome" placeholder="Nome da galvânica" class="w-full border p-3 rounded">
+  <input id="descricao" placeholder="Descrição curta" class="w-full border p-3 rounded">
+  <input id="endereco" placeholder="Endereço completo" class="w-full border p-3 rounded">
+  <input id="telefone" placeholder="Telefone fixo" class="w-full border p-3 rounded">
+  <input id="whatsapp" placeholder="WhatsApp (5519...)" class="w-full border p-3 rounded">
+  <input id="imagem" placeholder="URL da imagem / logo" class="w-full border p-3 rounded">
+
+  <!-- 🔥 SELO EDITÁVEL -->
+  <input id="selo" placeholder="Texto do selo (ex: ABELLA GOLD)" class="w-full border p-3 rounded">
+
+  <button onclick="salvarGalvanica()"
+    class="w-full bg-black text-white py-3 rounded uppercase tracking-widest font-bold">
+    Salvar Galvânica
+  </button>
+</div>
+
+<!-- LISTA -->
+<div>
+  <h2 class="font-serif gold text-xl mb-4">Galvânicas Cadastradas</h2>
+  <div id="listaGalvanicas" class="space-y-4"></div>
+</div>
+
+</main>
+
+<script>
+/* 🔥 FIREBASE */
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
+});
+const db = firebase.database();
+
+let editId = null;
+
+function salvarGalvanica(){
+  const dados = {
+    nome: nome.value,
+    descricao: descricao.value,
+    endereco: endereco.value,
+    telefone: telefone.value,
+    whatsapp: whatsapp.value,
+    imagem: imagem.value,
+    selo: selo.value || ""
+  };
+
+  if(editId){
+    db.ref('galvanicas/' + editId).set(dados);
+    editId = null;
+  } else {
+    db.ref('galvanicas').push(dados);
+  }
+
+  limparForm();
+}
+
+function limparForm(){
+  nome.value = "";
+  descricao.value = "";
+  endereco.value = "";
+  telefone.value = "";
+  whatsapp.value = "";
+  imagem.value = "";
+  selo.value = "";
+}
+
+db.ref('galvanicas').on('value', snap => {
+  listaGalvanicas.innerHTML = "";
+  snap.forEach(s => {
+    const g = s.val();
+    listaGalvanicas.innerHTML += `
+      <div class="bg-white border rounded-lg p-4 flex justify-between items-start gap-4">
+        <div class="flex-1">
+          <p class="font-bold">${g.nome}</p>
+          <p class="text-xs text-gray-500">${g.telefone || ""}</p>
+          ${g.selo ? `<span class="inline-block mt-1 text-[10px] bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-bold">${g.selo}</span>` : ""}
+        </div>
+        <div class="flex gap-3 text-xs uppercase">
+          <button onclick="editar('${s.key}')" class="text-blue-600">Editar</button>
+          <button onclick="if(confirm('Excluir galvânica?')) db.ref('galvanicas/${s.key}').remove()" class="text-red-600">Excluir</button>
+        </div>
+      </div>
+    `;
+  });
+});
+
+function editar(id){
+  db.ref('galvanicas/' + id).once('value').then(s => {
+    const g = s.val();
+    nome.value = g.nome || "";
+    descricao.value = g.descricao || "";
+    endereco.value = g.endereco || "";
+    telefone.value = g.telefone || "";
+    whatsapp.value = g.whatsapp || "";
+    imagem.value = g.imagem || "";
+    selo.value = g.selo || "";
+    editId = id;
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+}
+</script>
+
+</body>
+</html>
