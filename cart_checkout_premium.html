@@ -10,118 +10,139 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#f8f6f2}
-.gold{color:#A68966}
-.card{background:#fff;border:1px solid #eee}
+body { background:#f8f6f2 }
+.gold { color:#A68966 }
+.price-old { text-decoration: line-through; color:#999; font-size:12px }
 </style>
 </head>
 
-<body class="p-6">
+<body>
 
-<div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+<header class="bg-white border-b p-6 text-center">
+  <h1 class="text-xl font-bold gold uppercase">Checkout Premium</h1>
+</header>
 
-<!-- 🧾 DADOS DO CLIENTE -->
-<div class="card p-6 space-y-4 md:col-span-2">
-<h2 class="text-xl font-semibold gold">Dados do Cliente</h2>
+<main class="max-w-3xl mx-auto p-6 space-y-8">
 
-<input id="nome" class="border p-3 w-full" placeholder="Nome completo">
-<input id="whatsapp" class="border p-3 w-full" placeholder="WhatsApp com DDD">
+<!-- CLIENTE -->
+<section class="bg-white border p-6 space-y-4">
+<h2 class="font-bold uppercase gold">Dados do Cliente</h2>
+<input id="cNome" placeholder="Nome completo" class="border p-3 w-full">
+<input id="cWhatsapp" placeholder="WhatsApp" class="border p-3 w-full">
+</section>
 
-<h3 class="font-semibold mt-4">Entrega</h3>
-<input id="local" class="border p-3 w-full" placeholder="Nome do local">
-<input id="endereco" class="border p-3 w-full" placeholder="Endereço completo">
-<input id="cidade" class="border p-3 w-full" placeholder="Cidade">
-
-<h3 class="font-semibold mt-4">Pagamento</h3>
-<select id="pagamento" class="border p-3 w-full">
-<option>PIX</option>
-<option>Cartão</option>
+<!-- PAGAMENTO -->
+<section class="bg-white border p-6 space-y-4">
+<h2 class="font-bold uppercase gold">Pagamento</h2>
+<select id="pagamento" onchange="atualizarResumo()" class="border p-3 w-full">
+  <option value="pix">PIX</option>
+  <option value="cartao">Cartão</option>
 </select>
 
+<div id="parcelasBox" class="hidden">
+  <select id="parcelas" onchange="atualizarResumo()" class="border p-3 w-full mt-2"></select>
 </div>
+</section>
 
-<!-- 🛍️ RESUMO -->
-<div class="card p-6 space-y-4">
-<h2 class="text-xl font-semibold gold">Resumo do Pedido</h2>
-
-<div id="itens" class="space-y-2 text-sm"></div>
-
+<!-- RESUMO -->
+<section class="bg-white border p-6 space-y-3">
+<h2 class="font-bold uppercase gold">Resumo do Pedido</h2>
+<div id="listaCarrinho" class="text-sm space-y-1"></div>
 <hr>
+<p id="linhaPreco"></p>
+<p id="linhaDesconto"></p>
+<p id="linhaPix"></p>
+<p class="font-bold text-lg" id="linhaTotal"></p>
+</section>
 
-<div class="text-sm space-y-1">
-<div class="flex justify-between"><span>Peso total:</span><span id="peso">0 g</span></div>
-<div class="flex justify-between font-bold text-lg gold"><span>Total:</span><span id="total">R$ 0,00</span></div>
-</div>
-
-<button onclick="finalizar()" class="w-full mt-4 bg-black text-white py-3 text-sm tracking-widest">
+<button onclick="finalizar()" class="w-full bg-black text-white py-4 font-bold">
 FINALIZAR PEDIDO
 </button>
-</div>
 
-</div>
+</main>
 
 <script>
 /* 🔥 FIREBASE */
 firebase.initializeApp({
-apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
 });
-const db=firebase.database();
+const db = firebase.database();
 
-/* 🛒 CARRINHO (localStorage) */
-let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
-let pesoTotal=0,valorTotal=0;
+let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+let settings={}, selos={};
 
-carrinho.forEach(i=>{
-pesoTotal+=i.peso*i.qtd;
-valorTotal+=i.preco*i.qtd;
-itens.innerHTML+=`
-<div class="flex justify-between border-b pb-1">
-<span>${i.nome} (${i.qtd}x)</span>
-<span>R$ ${(i.preco*i.qtd).toFixed(2)}</span>
-</div>`;
+/* CONFIG */
+db.ref('settings').once('value').then(s=>settings=s.val()||{});
+db.ref('selos').once('value').then(s=>selos=s.val()||{});
+
+/* PARCELAS */
+db.ref('settings/parcelas').once('value').then(s=>{
+  const max=s.val()||1;
+  parcelas.innerHTML='';
+  for(let i=1;i<=max;i++) parcelas.innerHTML+=`<option>${i}x</option>`;
 });
 
-peso.innerText=pesoTotal.toFixed(2)+" g";
-total.innerText="R$ "+valorTotal.toFixed(2);
+/* RENDER */
+function atualizarResumo(){
+  let total=0, desconto=0;
+  listaCarrinho.innerHTML='';
+  carrinho.forEach(p=>{
+    let preco=p.preco;
+    if(p.selo && selos[p.selo]){
+      desconto+=preco*(selos[p.selo].desconto/100)*p.qtd;
+      preco=preco*(1-selos[p.selo].desconto/100);
+    }
+    total+=preco*p.qtd;
+    listaCarrinho.innerHTML+=`<div>${p.nome} (${p.qtd}x)</div>`;
+  });
 
-/* ✅ FINALIZAR */
+  linhaPreco.innerHTML=`Subtotal: R$ ${total.toFixed(2)}`;
+  linhaDesconto.innerHTML=desconto?`Desconto promoção: -R$ ${desconto.toFixed(2)}`:'';
+
+  let pixDesc=0;
+  if(pagamento.value==='pix'){
+    pixDesc=total*(settings.pix||0)/100;
+    linhaPix.innerHTML=`PIX (-${settings.pix}%): -R$ ${pixDesc.toFixed(2)}`;
+  } else linhaPix.innerHTML='';
+
+  linhaTotal.innerHTML=`Total: R$ ${(total-pixDesc).toFixed(2)}`;
+
+  parcelasBox.classList.toggle('hidden', pagamento.value!=='cartao');
+}
+atualizarResumo();
+
+/* FINALIZAR */
 function finalizar(){
-if(!nome.value||!whatsapp.value){alert("Preencha nome e WhatsApp");return;}
+  const nome=cNome.value, tel=cWhatsapp.value;
+  if(!nome||!tel){ alert('Preencha seus dados'); return; }
 
-const pedido={
-cliente:nome.value,
-whatsapp:whatsapp.value,
-local:local.value,
-endereco:endereco.value,
-cidade:cidade.value,
-pagamento:pagamento.value,
-itens:carrinho,
-total:valorTotal,
-peso:pesoTotal,
-status:"novo",
-data:new Date().toISOString()
-};
+  const total=linhaTotal.innerText.replace('Total: ','');
+  const forma=pagamento.value==='pix'?'PIX':'Cartão';
 
-const ref=db.ref('orders').push(pedido);
+  db.ref('pedidos').push({
+    cliente:nome,
+    whatsapp:tel,
+    total:total,
+    formaPagamento:forma,
+    itens:carrinho,
+    status:'novo',
+    data:new Date().toISOString()
+  });
 
-db.ref('settings').once('value').then(s=>{
-const cfg=s.val();
-const msg=encodeURIComponent(
-`Olá 😊
-Gostaria de confirmar um pedido que acabei de fazer no catálogo da ${cfg.name}.
+  const msg = `Olá 😊
+Gostaria de confirmar um pedido que acabei de fazer no catálogo da Abella Joias.
 
-Nome: ${nome.value}
-WhatsApp: ${whatsapp.value}
-Valor do pedido: R$ ${valorTotal.toFixed(2)}
-Forma de pagamento: ${pagamento.value}
+Nome: ${nome}
+WhatsApp: ${tel}
+Valor do pedido: ${total}
+Forma de pagamento: ${forma}
 
-Fico no aguardo das orientações para confirmação e pagamento. Obrigado(a)!`
-);
+Fico no aguardo das orientações para confirmação e pagamento. Obrigado(a)!`;
 
-window.location=`https://wa.me/55${cfg.whatsapp}?text=${msg}`;
-localStorage.removeItem('carrinho');
-});
+  window.location.href=`https://wa.me/55${settings.whatsapp}?text=${encodeURIComponent(msg)}`;
 }
 </script>
 
