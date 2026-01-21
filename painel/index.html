@@ -1,240 +1,150 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel Administrativo | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
-
-<style>
-body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.tab{display:none}
-.tab.active{display:block}
-
-.image-container{
-  aspect-ratio:1/1;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.image-container img{max-width:100%;max-height:100%;object-fit:contain}
-
-.categoria-titulo{
-  grid-column:1/-1;
-  border-left:4px solid #A68966;
-  padding:10px;
-  background:#fdfcfb;
-  font-family:'Cinzel',serif;
-  color:#A68966;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo | Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body{background:#F8F6F2}
+        .font-serif{font-family:'Cinzel',serif}
+        .gold{color:#A68966}
+        .tab{display:none}
+        .tab.active{display:block}
+        .image-container{ aspect-ratio:1/1; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .image-container img{max-width:100%; max-height:100%; object-fit:cover}
+    </style>
 </head>
-
 <body>
 
-<header class="bg-white border-b px-10 py-6 flex justify-between">
-  <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
-    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
-  </div>
-
-  <nav class="flex gap-6 text-xs tracking-widest uppercase">
-    <button onclick="openTab('empresa')" class="gold">Empresa</button>
-    <button onclick="openTab('categorias')">Categorias</button>
-    <button onclick="openTab('produtos')">Produtos</button>
-    <button onclick="openTab('galvanicas')">Galvânicas</button>
-    <button onclick="openTab('pedidos')">Pedidos</button>
-  </nav>
+<header class="bg-white border-b px-10 py-6 flex justify-between items-center">
+    <div>
+        <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
+        <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
+    </div>
+    <nav class="flex gap-6 text-xs tracking-widest uppercase font-bold">
+        <button onclick="openTab('empresa')" class="hover:text-[#A68966]">Empresa</button>
+        <button onclick="openTab('categorias')" class="hover:text-[#A68966]">Categorias</button>
+        <button onclick="openTab('produtos')" class="hover:text-[#A68966]">Produtos</button>
+    </nav>
 </header>
 
-<main class="max-w-7xl mx-auto p-8 space-y-16">
+<main class="max-w-7xl mx-auto p-8">
 
-<!-- EMPRESA -->
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-  <input id="empWhatsapp" placeholder="WhatsApp pedidos" class="border p-3">
-  <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" type="number" placeholder="Parcelas sem juros" class="border p-3">
-</div>
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR</button>
-</section>
+    <section id="empresa" class="tab active space-y-6">
+        <h2 class="font-serif text-2xl gold border-b pb-2">Configurações da Empresa</h2>
+        <div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
+            <div><label class="text-xs text-gray-400">Nome da Loja</label><input id="empNome" class="w-full border p-3"></div>
+            <div><label class="text-xs text-gray-400">WhatsApp (com DDD)</label><input id="empWhatsapp" class="w-full border p-3"></div>
+            <div><label class="text-xs text-gray-400">Desconto PIX (%)</label><input id="empPix" type="number" class="w-full border p-3"></div>
+            <div><label class="text-xs text-gray-400">Qtd Parcelas sem Juros</label><input id="empParcelas" type="number" class="w-full border p-3"></div>
+        </div>
+        <button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs tracking-widest">SALVAR CONFIGURAÇÕES</button>
+    </section>
 
-<!-- CATEGORIAS -->
-<section id="categorias" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
-<div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3">
-  <input id="catImagem" placeholder="URL imagem (1:1)" class="border p-3">
-  <button onclick="salvarCategoria()" class="bg-black text-white text-xs">SALVAR</button>
-</div>
-<div id="listaCategorias" class="grid md:grid-cols-3 gap-4"></div>
-</section>
+    <section id="categorias" class="tab space-y-6">
+        <h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
+        <div class="bg-white border p-6 grid md:grid-cols-3 gap-4 items-end">
+            <input id="catNome" placeholder="Nome da categoria" class="border p-3">
+            <input id="catImagem" placeholder="URL da Imagem (Capa)" class="border p-3">
+            <button onclick="salvarCategoria()" class="bg-black text-white p-3 text-xs">SALVAR CATEGORIA</button>
+        </div>
+        <div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6"></div>
+    </section>
 
-<!-- PRODUTOS -->
-<section id="produtos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
-  <input id="pNome" placeholder="Nome" class="border p-3">
-  <input id="pSku" placeholder="SKU" class="border p-3">
-  <input id="pPreco" type="number" step="0.01" placeholder="Preço cheio" class="border p-3">
-  <input id="pPromo" type="number" step="0.01" placeholder="Desconto promoção %" class="border p-3">
-  <input id="pPeso" type="number" step="0.01" placeholder="Peso (g)" class="border p-3">
-  <select id="pCategoria" class="border p-3">
-    <option value="">Selecione a categoria</option>
-  </select>
-  <input id="pImagemUrl" placeholder="URL da imagem" class="border p-3 md:col-span-3">
-</div>
-
-<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">
-SALVAR PRODUTO
-</button>
-
-<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6"></div>
-</section>
-
-<!-- GALVÂNICAS -->
-<section id="galvanicas" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Galvânicas</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
-  <input id="gNome" placeholder="Nome" class="border p-3">
-  <input id="gImagem" placeholder="Logo (URL)" class="border p-3">
-  <input id="gWhatsapp" placeholder="WhatsApp" class="border p-3">
-</div>
-<button onclick="salvarGalvanica()" class="bg-black text-white px-8 py-3 text-xs">SALVAR</button>
-
-<div id="listaGalvanicas" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-</section>
-
-<!-- PEDIDOS -->
-<section id="pedidos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
-<div id="listaPedidos">Pedidos aparecerão aqui</div>
-</section>
+    <section id="produtos" class="tab space-y-6">
+        <h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
+        <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+    </section>
 
 </main>
 
 <script>
-firebase.initializeApp({
-  apiKey:"SUA_API_KEY",
-  authDomain:"SEU_AUTH",
-  databaseURL:"SEU_DB",
-  projectId:"SEU_PROJECT"
-});
-const db=firebase.database();
+    firebase.initializeApp({
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    });
+    const db = firebase.database();
 
-function openTab(id){
-document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-}
+    function openTab(id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
 
-/* EMPRESA */
-function salvarEmpresa(){
-db.ref('settings').set({
-nome:empNome.value,
-whatsapp:empWhatsapp.value,
-pix:Number(empPix.value||0),
-parcelas:Number(empParcelas.value||1)
-});
-}
+    // GESTÃO EMPRESA
+    let config = { pix: 0, parcelas: 1 };
+    db.ref('settings').on('value', s => {
+        if(s.exists()){
+            config = s.val();
+            document.getElementById('empNome').value = config.nome || '';
+            document.getElementById('empWhatsapp').value = config.whatsapp || '';
+            document.getElementById('empPix').value = config.pix || 0;
+            document.getElementById('empParcelas').value = config.parcelas || 1;
+        }
+    });
 
-/* CATEGORIAS */
-let catEdit=null;
-function salvarCategoria(){
-const d={name:catNome.value,image:catImagem.value};
-catEdit?db.ref('categories/'+catEdit).set(d):db.ref('categories').push(d);
-catNome.value=catImagem.value='';catEdit=null;
-}
+    function salvarEmpresa(){
+        db.ref('settings').update({
+            nome: empNome.value,
+            whatsapp: empWhatsapp.value,
+            pix: Number(empPix.value),
+            parcelas: Number(empParcelas.value)
+        });
+        alert("Configurações atualizadas!");
+    }
 
-db.ref('categories').on('value',s=>{
-listaCategorias.innerHTML='';
-pCategoria.innerHTML='<option value="">Selecione a categoria</option>';
-s.forEach(c=>{
-const v=c.val();
-listaCategorias.innerHTML+=`
-<div class="bg-white border p-4">
-<img src="${v.image}" class="w-full aspect-square object-cover">
-<p class="mt-2 font-semibold">${v.name}</p>
-<button onclick="editarCategoria('${c.key}','${v.name}','${v.image}')" class="text-blue-600 text-xs">Editar</button>
-</div>`;
-pCategoria.innerHTML+=`<option value="${v.name}">${v.name}</option>`;
-});
-});
-function editarCategoria(id,n,i){catEdit=id;catNome.value=n;catImagem.value=i;}
+    // GESTÃO CATEGORIAS
+    db.ref('categories').on('value', s => {
+        const list = document.getElementById('listaCategorias');
+        list.innerHTML = '';
+        let cats = [];
+        s.forEach(c => { cats.push({id: c.key, ...c.val()}); });
+        cats.sort((a,b) => a.name.localeCompare(b.name));
 
-/* PRODUTOS */
-let produtoEdit=null;
-function salvarProduto(){
-const p={
-nome:pNome.value,sku:pSku.value,
-preco:Number(pPreco.value),
-promo:Number(pPromo.value),
-peso:Number(pPeso.value),
-categoria:pCategoria.value,
-imagem:pImagemUrl.value
-};
-produtoEdit?db.ref('products/'+produtoEdit).set(p):db.ref('products').push(p);
-produtoEdit=null;
-pNome.value=pSku.value=pPreco.value=pPromo.value=pPeso.value=pCategoria.value=pImagemUrl.value='';
-}
+        cats.forEach(v => {
+            list.innerHTML += `
+            <div class="bg-white border p-3 text-center">
+                <img src="${v.image || 'https://via.placeholder.com/150'}" class="w-full aspect-square object-cover mb-2">
+                <p class="font-bold text-xs uppercase">${v.name}</p>
+                <button onclick="excluirCat('${v.id}')" class="text-red-500 text-[10px] mt-2 block w-full">Excluir</button>
+            </div>`;
+        });
+    });
 
-function editarProduto(id){
-db.ref('products/'+id).once('value').then(s=>{
-const p=s.val();
-pNome.value=p.nome;pSku.value=p.sku;pPreco.value=p.preco;
-pPromo.value=p.promo;pPeso.value=p.peso;
-pCategoria.value=p.categoria;pImagemUrl.value=p.imagem;
-produtoEdit=id;window.scrollTo(0,0);
-});
-}
+    function salvarCategoria(){
+        const slug = catNome.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
+        db.ref('categories/' + slug).set({ name: catNome.value, image: catImagem.value, slug: slug });
+        catNome.value = catImagem.value = '';
+    }
 
-db.ref('products').on('value',s=>{
-listaProdutos.innerHTML='';
-s.forEach(p=>{
-const v=p.val();
-listaProdutos.innerHTML+=`
-<div class="bg-white border flex flex-col">
-<div class="image-container"><img src="${v.imagem}"></div>
-<div class="p-3">
-<p class="font-bold text-sm">${v.nome}</p>
-<p class="text-xs">${v.sku}</p>
-<p class="gold font-bold">R$ ${v.preco.toFixed(2)}</p>
-<button onclick="editarProduto('${p.key}')" class="text-blue-600 text-xs">Editar</button>
-</div></div>`;
-});
-});
+    // GESTÃO PRODUTOS (ORDEM SKU)
+    db.ref('products').on('value', s => {
+        const list = document.getElementById('listaProdutos');
+        list.innerHTML = '';
+        let prods = [];
+        s.forEach(p => { prods.push({id: p.key, ...p.val()}); });
+        prods.sort((a,b) => a.sku.localeCompare(b.sku));
 
-/* GALVÂNICAS */
-function salvarGalvanica(){
-db.ref('galvanicas').push({
-nome:gNome.value,imagem:gImagem.value,whatsapp:gWhatsapp.value
-});
-gNome.value=gImagem.value=gWhatsapp.value='';
-}
-db.ref('galvanicas').on('value',s=>{
-listaGalvanicas.innerHTML='';
-s.forEach(g=>{
-const v=g.val();
-listaGalvanicas.innerHTML+=`
-<div class="bg-white border p-4 text-center">
-<img src="${v.imagem}" class="h-20 mx-auto mb-2">
-<p class="font-semibold">${v.nome}</p>
-<p class="text-xs">${v.whatsapp}</p>
-</div>`;
-});
-});
+        prods.forEach(p => {
+            const vPix = p.price * (1 - (config.pix/100));
+            list.innerHTML += `
+            <div class="bg-white border rounded shadow-sm overflow-hidden">
+                <div class="image-container"><img src="${p.image || '../assets/img/produtos/'+p.sku+'.jpg'}" onerror="this.src='https://via.placeholder.com/300?text=Sem+Foto'"></div>
+                <div class="p-3 space-y-1">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase">${p.category}</p>
+                    <p class="text-[11px] font-medium h-8 overflow-hidden">${p.name}</p>
+                    <p class="text-[10px] bg-gray-100 inline-block px-1">SKU: ${p.sku}</p>
+                    <div class="pt-2">
+                        <p class="text-[10px] text-gray-400 line-through">De: R$ ${p.price.toFixed(2)}</p>
+                        <p class="gold font-bold text-sm">R$ ${vPix.toFixed(2)} <small class="text-gray-400 text-[9px]">(PIX)</small></p>
+                    </div>
+                </div>
+            </div>`;
+        });
+    });
 </script>
-
 </body>
 </html>
