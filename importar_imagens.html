@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Vincular Imagens | Abella Joias</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+
+<style>
+body{
+  font-family:Arial, sans-serif;
+  background:#fdfaf5;
+  padding:40px;
+}
+.box{
+  max-width:650px;
+  margin:auto;
+  background:#fff;
+  border:2px solid #A68966;
+  border-radius:16px;
+  padding:30px;
+}
+h1{color:#A68966}
+button{
+  width:100%;
+  padding:14px;
+  background:#1a1a1a;
+  color:#fff;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:15px;
+}
+#log{
+  background:#f4f4f4;
+  padding:15px;
+  margin-top:20px;
+  height:260px;
+  overflow:auto;
+  font-family:monospace;
+  font-size:12px;
+}
+.ok{color:green}
+.warn{color:#b45309}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h1>Vincular Imagens do Storage</h1>
+  <p>Este script conecta imagens do <b>Firebase Storage</b> aos produtos pelo <b>SKU</b>.</p>
+
+  <button onclick="processar()">BUSCAR IMAGENS E VINCULAR</button>
+
+  <div id="log">Aguardando ação…</div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.appspot.com"
+});
+
+const db = firebase.database();
+const storage = firebase.storage();
+const logBox = document.getElementById('log');
+
+function log(txt){
+  logBox.innerHTML += txt + "<br>";
+  logBox.scrollTop = 99999;
+}
+
+async function processar(){
+  logBox.innerHTML = "";
+  log("🔎 Buscando produtos…");
+
+  const produtosSnap = await db.ref('products').once('value');
+  const produtos = produtosSnap.val();
+  if(!produtos){
+    log("❌ Nenhum produto encontrado");
+    return;
+  }
+
+  log("📂 Listando imagens do Storage…");
+
+  const pasta = storage.ref('produtos');
+  const lista = await pasta.listAll();
+
+  let vinculados = 0;
+
+  for(const item of lista.items){
+    const nomeArquivo = item.name;
+    const skuExtraido = nomeArquivo.split('.')[0];
+
+    if(produtos[skuExtraido]){
+      const url = await item.getDownloadURL();
+      await db.ref('products/'+skuExtraido+'/imagem').set(url);
+      vinculados++;
+      log(`<span class="ok">✔ ${skuExtraido} → imagem vinculada</span>`);
+    }else{
+      log(`<span class="warn">⚠ ${skuExtraido} não encontrado no banco</span>`);
+    }
+  }
+
+  log(`✅ Processo finalizado — ${vinculados} imagens vinculadas`);
+}
+</script>
+
+</body>
+</html>
