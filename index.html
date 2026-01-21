@@ -2,161 +2,174 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Abella Joias | Catálogo Oficial</title>
+<title>Abella Joias | Atacado</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link rel="manifest" href="manifest.json">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#f7f5f2}
-.gold{color:#A68966}
-.card:hover{transform:translateY(-4px);transition:.3s}
+body{background:#f8f6f2;font-family:serif}
+.gold{color:#a88958}
+.gold-border{border-color:#a88958}
+.card{transition:.3s}
+.card:hover{transform:translateY(-6px)}
 </style>
 </head>
 
 <body>
 
-<!-- TOPO -->
-<header class="bg-white border-b p-4 sticky top-0 z-50 flex justify-between items-center">
-  <h1 class="font-serif text-xl gold">Abella Joias</h1>
-  <button onclick="abrirCarrinho()" class="text-sm">
-    🛒 Carrinho (<span id="qtdCarrinho">0</span>)
-  </button>
+<!-- HEADER -->
+<header class="bg-white border-b p-6 text-center sticky top-0 z-50">
+  <h1 class="text-2xl gold font-bold tracking-wide">Abella Joias</h1>
+  <p class="text-xs text-gray-500 tracking-widest mt-1">
+    ATACADO DE JOIAS NO BRUTO
+  </p>
+
+  <div class="flex justify-center gap-3 mt-4 text-xs">
+    <a href="galvanicas.html"
+       class="border gold-border px-4 py-2 rounded-full hover:bg-black hover:text-white">
+      GALVÂNICAS
+    </a>
+    <button onclick="abrirCarrinho()"
+       class="border gold-border px-4 py-2 rounded-full hover:bg-black hover:text-white">
+      CARRINHO (<span id="qtdCarrinho">0</span>)
+    </button>
+    <button onclick="history.back()"
+       class="border gold-border px-4 py-2 rounded-full hover:bg-black hover:text-white">
+      VOLTAR
+    </button>
+  </div>
 </header>
 
-<!-- FILTROS -->
-<section class="p-4 grid grid-cols-2 md:grid-cols-4 gap-3 bg-white border-b text-sm">
-  <select id="filtroCategoria" onchange="filtrar()" class="border p-2">
-    <option value="">Todas categorias</option>
-  </select>
-  <select id="filtroGalvanica" onchange="filtrar()" class="border p-2">
-    <option value="">Todas galvânicas</option>
-  </select>
-</section>
+<!-- CATEGORIAS -->
+<section id="categorias"
+ class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4"></section>
 
 <!-- PRODUTOS -->
-<main id="produtos" class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4"></main>
+<main id="produtos"
+ class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4"></main>
 
 <!-- CARRINHO -->
-<div id="carrinho" class="fixed inset-0 bg-black/60 hidden z-50">
+<div id="carrinho"
+ class="fixed inset-0 bg-black/60 hidden z-50">
   <div class="bg-white max-w-md ml-auto h-full p-5 flex flex-col">
+
     <div class="flex justify-between mb-4">
-      <h2 class="gold font-serif">Carrinho</h2>
+      <h2 class="gold text-lg">Carrinho</h2>
       <button onclick="fecharCarrinho()">✖</button>
     </div>
 
-    <div id="listaCarrinho" class="flex-1 overflow-auto space-y-3 text-sm"></div>
+    <div id="listaCarrinho"
+     class="flex-1 overflow-auto space-y-3 text-sm"></div>
+
+    <button onclick="fecharCarrinho()"
+     class="border mt-4 py-2 rounded-full text-sm">
+      ⬅ VOLTAR ÀS COMPRAS
+    </button>
 
     <a href="checkout_premium.html"
-       class="bg-black text-white text-center py-3 mt-4 rounded-full text-sm">
-      Finalizar Pedido
+     class="bg-black text-white text-center py-3 mt-3 rounded-full text-sm">
+      FINALIZAR PEDIDO
     </a>
   </div>
 </div>
 
 <script>
-/* FIREBASE */
 firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain:"catalogo-abella-joias.firebaseapp.com",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId:"catalogo-abella-joias"
 });
-const db = firebase.database();
+const db=firebase.database();
 
-/* ESTADO */
-let produtosDB=[], carrinho = JSON.parse(localStorage.getItem("carrinho")||"[]");
+let produtosDB=[], carrinho=JSON.parse(localStorage.getItem("carrinho")||"[]");
 
-/* LOAD */
+/* CATEGORIAS */
+db.ref("categorias").on("value",s=>{
+  categorias.innerHTML='';
+  s.forEach(c=>{
+    const cat={id:c.key,...c.val()};
+    categorias.innerHTML+=`
+    <div onclick="filtrarCategoria('${cat.nome}')"
+      class="relative cursor-pointer card">
+      <img src="${cat.imagem}"
+       class="w-full aspect-square object-cover rounded-xl">
+      <div class="absolute inset-0 bg-black/40 flex items-center
+       justify-center rounded-xl">
+        <span class="text-white text-sm font-bold">
+          ${cat.nome}
+        </span>
+      </div>
+    </div>`;
+  });
+});
+
+/* PRODUTOS */
 db.ref("produtos").on("value",snap=>{
   produtosDB=[];
   produtos.innerHTML='';
-  filtroCategoria.innerHTML='<option value="">Todas categorias</option>';
-  filtroGalvanica.innerHTML='<option value="">Todas galvânicas</option>';
-
   snap.forEach(s=>{
     const p={id:s.key,...s.val()};
     produtosDB.push(p);
-
-    if(p.categoria){
-      filtroCategoria.innerHTML+=`<option>${p.categoria}</option>`;
-    }
-    if(p.galvanica){
-      filtroGalvanica.innerHTML+=`<option>${p.galvanica}</option>`;
-    }
   });
-
   render(produtosDB);
 });
 
-/* RENDER */
 function render(lista){
   produtos.innerHTML='';
   lista.forEach(p=>{
     produtos.innerHTML+=`
-    <div class="bg-white border p-3 card">
-      <img src="${p.imagem}" class="w-full aspect-square object-cover mb-2">
-      <h3 class="text-sm font-semibold">${p.nome}</h3>
-      <p class="text-xs text-gray-500">${p.codigo||''}</p>
-      <p class="gold font-bold text-sm mt-1">R$ ${p.preco}</p>
+    <div class="bg-white p-3 border rounded-xl card">
+      <img src="${p.imagem}"
+       class="w-full aspect-square object-cover mb-2">
+      <h3 class="text-sm text-center">${p.nome}</h3>
+      <p class="gold text-center font-bold text-sm mt-1">
+        R$ ${p.preco}
+      </p>
       <button onclick='addCarrinho(${JSON.stringify(p)})'
-        class="mt-2 w-full border py-2 text-xs hover:bg-black hover:text-white">
-        Adicionar
+        class="w-full border mt-2 py-2 rounded-full text-xs
+         hover:bg-black hover:text-white">
+        ADICIONAR
       </button>
     </div>`;
   });
 }
 
-/* FILTRO */
-function filtrar(){
-  const c=filtroCategoria.value, g=filtroGalvanica.value;
-  render(produtosDB.filter(p=>
-    (!c||p.categoria==c)&&(!g||p.galvanica==g)
-  ));
+function filtrarCategoria(cat){
+  render(produtosDB.filter(p=>p.categoria==cat));
 }
 
 /* CARRINHO */
 function addCarrinho(p){
   const i=carrinho.find(x=>x.id==p.id);
-  if(i) i.qtd++; 
-  else carrinho.push({...p,qtd:1});
-  salvarCarrinho();
+  if(i)i.qtd++; else carrinho.push({...p,qtd:1});
+  salvar();
 }
-
-function salvarCarrinho(){
+function salvar(){
   localStorage.setItem("carrinho",JSON.stringify(carrinho));
-  atualizarCarrinho();
+  atualizar();
 }
-
-function atualizarCarrinho(){
+function atualizar(){
   listaCarrinho.innerHTML='';
-  let qtd=0;
+  let q=0;
   carrinho.forEach((i,idx)=>{
-    qtd+=i.qtd;
+    q+=i.qtd;
     listaCarrinho.innerHTML+=`
-    <div class="flex justify-between border-b pb-2">
+    <div class="flex justify-between border-b pb-1">
       <span>${i.nome} x${i.qtd}</span>
-      <button onclick="remover(${idx})" class="text-red-500">✖</button>
+      <button onclick="remover(${idx})">✖</button>
     </div>`;
   });
-  qtdCarrinho.innerText=qtd;
+  qtdCarrinho.innerText=q;
 }
-
-function remover(i){
-  carrinho.splice(i,1);
-  salvarCarrinho();
-}
-
-/* UI */
-function abrirCarrinho(){ carrinhoDiv().classList.remove("hidden"); }
-function fecharCarrinho(){ carrinhoDiv().classList.add("hidden"); }
-function carrinhoDiv(){ return document.getElementById("carrinho"); }
-
-atualizarCarrinho();
+function remover(i){carrinho.splice(i,1);salvar();}
+function abrirCarrinho(){carrinhoDiv().classList.remove("hidden");}
+function fecharCarrinho(){carrinhoDiv().classList.add("hidden");}
+function carrinhoDiv(){return document.getElementById("carrinho");}
+atualizar();
 </script>
 
 </body>
