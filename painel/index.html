@@ -167,8 +167,12 @@ db.ref('pedidos').on('value',snap=>{
           <option value="separado">Separado</option>
           <option value="faturado">Faturado</option>
         </select>
-        <button onclick="gerarRomaneio('${s.key}',false)" class="text-blue-600">Romaneio simples</button>
-        <button onclick="gerarRomaneio('${s.key}',true)" class="text-green-600">Romaneio completo</button>
+        <a href="romaneio.html?id=${s.key}"
+   target="_blank"
+   class="bg-black text-white px-4 py-2 rounded-full text-xs font-semibold hover:opacity-90 transition">
+   🧾 Gerar Romaneio
+</a>
+
       </div>
     </div>`;
   });
@@ -176,10 +180,6 @@ db.ref('pedidos').on('value',snap=>{
 
 function atualizarStatus(id,st){ db.ref('pedidos/'+id+'/status').set(st); }
 
-function gerarRomaneio(id,completo){
-  alert(completo
-    ? 'Romaneio COMPLETO será gerado (PDF)'
-    : 'Romaneio SIMPLES para expedição');
 }
 </script>
 
