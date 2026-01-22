@@ -11,7 +11,7 @@
     <style>
         body { background:#F8F9FA; font-family: 'Poppins', sans-serif; overflow-x: hidden; }
         .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
+        .tab-panel.active { display: block !important; }
         .nav-btn { flex:1; text-align:center; padding:15px 5px; cursor:pointer; font-weight:600; font-size:10px; color:#666; border-bottom:3px solid transparent; transition: 0.3s; }
         .nav-btn.active-btn { color:#A68966; border-bottom-color:#A68966; background:#fff; }
         
@@ -41,20 +41,20 @@
 <main class="p-4 max-w-5xl mx-auto">
     <div id="aba-empresa" class="tab-panel active">
         <div class="bg-white p-6 rounded-2xl shadow-sm">
-            <h2 class="font-bold mb-4 text-gray-800 uppercase text-sm">Configuração da Loja</h2>
-            <label class="text-[10px] font-bold text-gray-400 uppercase">Nome da Loja</label><input id="empNome">
-            <label class="text-[10px] font-bold text-gray-400 uppercase">WhatsApp</label><input id="empWhats">
+            <h2 class="font-bold mb-4 text-gray-800 uppercase text-xs">Configuração da Loja</h2>
+            <label class="text-[10px] font-bold text-gray-400">NOME DA LOJA</label><input id="empNome">
+            <label class="text-[10px] font-bold text-gray-400">WHATSAPP</label><input id="empWhats">
             <div class="grid grid-cols-2 gap-4">
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Desc. Pix (%)</label><input id="empPix" type="number"></div>
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Máx. Parcelas</label><input id="empParc" type="number"></div>
+                <div><label class="text-[10px] font-bold text-gray-400">DESC. PIX (%)</label><input id="empPix" type="number"></div>
+                <div><label class="text-[10px] font-bold text-gray-400">MÁX. PARCELAS</label><input id="empParc" type="number"></div>
             </div>
-            <button onclick="saveEmpresa()" class="w-full bg-[#A68966] text-white p-4 rounded-xl font-bold mt-4 shadow-md">SALVAR ALTERAÇÕES</button>
+            <button onclick="saveEmpresa()" class="w-full bg-[#A68966] text-white p-4 rounded-xl font-bold mt-4">SALVAR ALTERAÇÕES</button>
         </div>
     </div>
 
     <div id="aba-categorias" class="tab-panel">
         <div class="bg-white p-4 rounded-xl mb-4 border-2 border-dashed border-gray-200 text-center">
-            <button onclick="novoItem('categoria')" class="w-full py-2 font-bold text-gray-500 uppercase">+ Nova Categoria</button>
+            <button onclick="abrirNovoCategoria()" class="w-full py-2 font-bold text-gray-500 uppercase">+ Nova Categoria</button>
         </div>
         <div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
     </div>
@@ -62,7 +62,7 @@
     <div id="aba-produtos" class="tab-panel">
         <div class="flex gap-2 mb-4">
             <input type="text" id="busca" onkeyup="filtrar()" placeholder="🔍 SKU ou Nome..." class="flex-1 !mb-0 shadow-sm">
-            <button onclick="novoItem('produto')" class="bg-black text-white px-6 rounded-xl font-bold">+</button>
+            <button onclick="abrirNovoProduto()" class="bg-black text-white px-6 rounded-xl font-bold">+</button>
         </div>
         <div id="gridProds"></div>
     </div>
@@ -76,7 +76,6 @@
     </div>
 
     <div id="aba-pedidos" class="tab-panel">
-        <h2 class="font-bold mb-4 text-gray-800 uppercase text-xs">Pedidos Recentes</h2>
         <div id="listaPedidos" class="space-y-3"></div>
     </div>
 </main>
@@ -101,19 +100,20 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let listaDizeresMemoria = [];
+let pathAtual = '', idAtual = '';
 
-function switchTab(id, el) {
+function switchTab(abaId, el) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
-    document.getElementById(id).classList.add('active');
+    document.getElementById(abaId).classList.add('active');
     el.classList.add('active-btn');
-    if(id === 'aba-produtos') renderProdutos();
-    if(id === 'aba-pedidos') carregarPedidos();
+    if(abaId === 'aba-produtos') renderProdutos();
+    if(abaId === 'aba-pedidos') carregarPedidos();
 }
 
 function fecharModal() { document.getElementById('modalDetail').style.display = 'none'; }
 
-// CARREGAR DADOS INICIAIS
+// EMPRESA
 db.ref('settings').on('value', s => {
     const v = s.val() || {};
     document.getElementById('empNome').value = v.nome || '';
@@ -128,149 +128,127 @@ function saveEmpresa() {
         whatsapp: document.getElementById('empWhats').value,
         pix: Number(document.getElementById('empPix').value),
         parcelas: Number(document.getElementById('empParc').value)
-    }).then(() => alert("Loja Atualizada!"));
+    }).then(() => alert("Salvo!"));
 }
 
-// CARREGAR CATEGORIAS
+// CATEGORIAS & PROMOS
 db.ref('categories').on('value', s => {
     const grid = document.getElementById('gridCats');
     const lp = document.getElementById('listaPromos');
     grid.innerHTML = ''; lp.innerHTML = '';
     s.forEach(c => {
         const v = c.val();
-        grid.innerHTML += `
-            <div onclick="abrirEdicao('categories', '${v.slug}')" class="card-sku text-center">
-                <span class="dot ${v.image ? 'bg-green-500' : 'bg-red-500'}"></span>
-                <p class="text-[10px] font-bold uppercase truncate mt-1">${v.name}</p>
-            </div>`;
-        lp.innerHTML += `
-            <div class="bg-white p-3 rounded-xl flex justify-between items-center shadow-sm">
-                <span class="text-[10px] font-bold uppercase text-gray-500">${v.name}</span>
-                <input type="number" id="pr-${v.slug}" class="w-16 !mb-0 text-center font-bold text-red-600" placeholder="0%">
-            </div>`;
-    });
-    db.ref('promoRules').once('value', pr => {
-        const r = pr.val() || {};
-        Object.keys(r).forEach(k => { if(document.getElementById('pr-'+k)) document.getElementById('pr-'+k).value = r[k].percent || 0; });
+        grid.innerHTML += `<div onclick="abrirEdicao('categories', '${v.slug}')" class="card-sku text-center"><span class="dot ${v.image?'bg-green-500':'bg-red-500'}"></span><p class="text-[10px] font-bold uppercase truncate mt-1">${v.name}</p></div>`;
+        lp.innerHTML += `<div class="bg-white p-3 rounded-xl flex justify-between items-center shadow-sm"><span class="text-[10px] font-bold uppercase text-gray-500">${v.name}</span><input type="number" id="pr-${v.slug}" class="w-16 !mb-0 text-center font-bold text-red-600"></div>`;
     });
 });
 
-// RENDERIZAR PRODUTOS AGRUPADOS
+// PRODUTOS
 async function renderProdutos() {
     const catsSnap = await db.ref('categories').once('value');
     const prodsSnap = await db.ref('products').once('value');
     const grid = document.getElementById('gridProds');
-    grid.innerHTML = '<p class="text-center text-xs text-gray-400">Carregando estoque...</p>';
-
+    grid.innerHTML = '';
     const cats = []; catsSnap.forEach(c => cats.push(c.val()));
     const prods = []; prodsSnap.forEach(p => prods.push({...p.val(), key: p.key}));
 
-    grid.innerHTML = ''; // Limpa o carregando
-    cats.sort((a,b) => a.name.localeCompare(b.name)).forEach(cat => {
-        const itens = prods.filter(p => p.category === cat.slug)
-                           .sort((a,b) => String(a.sku).localeCompare(String(b.sku), undefined, {numeric: true}));
-        
+    cats.sort((a,b)=>a.name.localeCompare(b.name)).forEach(cat => {
+        const itens = prods.filter(p => p.category === cat.slug).sort((a,b) => String(a.sku).localeCompare(String(b.sku), undefined, {numeric: true}));
         if(itens.length > 0) {
-            let catHtml = `<section class="cat-section"><span class="cat-title">${cat.name}</span><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">`;
+            let html = `<section class="cat-section"><span class="cat-title">${cat.name}</span><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">`;
             itens.forEach(v => {
-                catHtml += `
-                    <div onclick="abrirEdicao('products', '${v.key}')" class="card-sku item-prod ${v.paused ? 'paused' : ''}">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[8px] font-mono text-gray-400">${v.sku || 'S/SKU'}</span>
-                            <span class="dot ${v.image ? 'bg-green-500' : 'bg-red-500'}"></span>
-                        </div>
-                        <p class="text-[9px] font-bold uppercase truncate text-gray-700">${v.name}</p>
-                        <p class="text-[8px] text-gray-400">Peso: ${v.weight || 0}g</p>
-                        <p class="text-[10px] text-[#A68966] font-bold mt-1">R$ ${Number(v.price).toFixed(2)}</p>
-                    </div>`;
+                html += `<div onclick="abrirEdicao('products', '${v.key}')" class="card-sku ${v.paused?'paused':''}"><div class="flex justify-between items-center mb-1"><span class="text-[8px] text-gray-400">${v.sku||'S/S'}</span><span class="dot ${v.image?'bg-green-500':'bg-red-500'}"></span></div><p class="text-[9px] font-bold uppercase truncate">${v.name}</p><p class="text-[10px] text-[#A68966] font-bold">R$ ${Number(v.price).toFixed(2)}</p></div>`;
             });
-            grid.innerHTML += catHtml + `</div></section>`;
+            grid.innerHTML += html + `</div></section>`;
         }
     });
 }
 
-// EDIÇÃO E VARIAÇÕES
+// MODAL EDIÇÃO
 async function abrirEdicao(path, id) {
+    pathAtual = path; idAtual = id;
     const snap = await db.ref(path + '/' + id).once('value');
     const v = snap.val() || {};
-    const container = document.getElementById('formContainer');
-    document.getElementById('modalTitle').innerText = path === 'products' ? 'Editar Produto' : 'Editar Categoria';
+    const cont = document.getElementById('formContainer');
     document.getElementById('btnExcluir').style.display = 'block';
-    
+
     if(path === 'products') {
         const cats = await db.ref('categories').once('value');
-        let options = '<option value="">Selecionar Categoria...</option>';
-        cats.forEach(c => options += `<option value="${c.val().slug}" ${v.category === c.val().slug ? 'selected' : ''}>${c.val().name}</option>`);
+        let opt = ''; cats.forEach(c => opt += `<option value="${c.val().slug}" ${v.category==c.val().slug?'selected':''}>${c.val().name}</option>`);
         listaDizeresMemoria = v.variations || [];
-
-        container.innerHTML = `
-            <img src="${v.image || ''}" class="w-full h-32 object-contain bg-gray-50 rounded-xl mb-4 border">
-            <input id="mNome" value="${v.name || ''}" placeholder="Nome do Produto">
-            <div class="grid grid-cols-2 gap-2">
-                <input id="mSku" value="${v.sku || ''}" placeholder="SKU">
-                <input id="mPeso" type="number" step="0.01" value="${v.weight || 0}" placeholder="Peso (g)">
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <input id="mPreco" type="number" step="0.01" value="${v.price || ''}" placeholder="Preço (R$)">
-                <select id="mCat" onchange="alternarCamposVariacao(this.value)">${options}</select>
-            </div>
-            <input id="mImg" value="${v.image || ''}" placeholder="URL da Foto">
-            <div id="areaVariacoes" class="mt-2 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300"></div>
-            <label class="flex items-center gap-2 mt-2 bg-gray-50 p-3 rounded-lg"><input type="checkbox" id="mPause" class="!w-5 !mb-0" ${v.paused ? 'checked' : ''}> <span class="text-xs font-bold uppercase">Pausado</span></label>
+        cont.innerHTML = `
+            <img src="${v.image||''}" class="w-full h-32 object-contain bg-gray-50 rounded-lg mb-4">
+            <input id="mNome" value="${v.name||''}" placeholder="Nome">
+            <div class="grid grid-cols-2 gap-2"><input id="mSku" value="${v.sku||''}" placeholder="SKU"><input id="mPeso" type="number" step="0.01" value="${v.weight||0}" placeholder="Peso"></div>
+            <div class="grid grid-cols-2 gap-2"><input id="mPreco" type="number" step="0.01" value="${v.price||''}" placeholder="Preço"><select id="mCat" onchange="alternarVars(this.value)">${opt}</select></div>
+            <input id="mImg" value="${v.image||''}" placeholder="URL Foto">
+            <div id="areaVars" class="p-3 bg-gray-50 rounded-lg border border-dashed"></div>
+            <label class="flex items-center gap-2 mt-2 text-xs font-bold uppercase"><input type="checkbox" id="mPause" ${v.paused?'checked':''} class="!w-4 !mb-0"> Pausar</label>
         `;
-        if(v.category) alternarCamposVariacao(v.category, v.variations);
+        alternarVars(v.category || '', v.variations);
     } else {
-        container.innerHTML = `
-            <input id="mNome" value="${v.name || ''}" placeholder="Nome Categoria">
-            <input id="mSlug" value="${v.slug || id}" disabled placeholder="ID da Categoria">
-            <input id="mImg" value="${v.image || ''}" placeholder="URL da Capa">
-        `;
+        cont.innerHTML = `<input id="mNome" value="${v.name||''}" placeholder="Nome Categ"><input id="mSlug" value="${v.slug||id}" disabled placeholder="ID"><input id="mImg" value="${v.image||''}" placeholder="URL Capa">`;
     }
     document.getElementById('modalDetail').style.display = 'flex';
-    document.getElementById('btnSalvar').onclick = () => salvarItem(path, id);
-    document.getElementById('btnExcluir').onclick = () => excluirItem(path, id);
+    document.getElementById('btnSalvar').onclick = salvarItem;
+    document.getElementById('btnExcluir').onclick = excluirItem;
 }
 
-function alternarCamposVariacao(slug, varsExistentes = null) {
-    const area = document.getElementById('areaVariacoes');
+function alternarVars(slug, existentes = null) {
+    const area = document.getElementById('areaVars');
     const s = slug.toLowerCase();
-    const vars = varsExistentes || listaDizeresMemoria;
-    if (s.includes('pingente') || s.includes('inicial')) {
+    const vars = existentes || listaDizeresMemoria;
+    if(s.includes('pingente') || s.includes('inicial')) {
         const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         if(vars.length === 0) listaDizeresMemoria = letras.map(l => ({ label: l, active: true }));
         else listaDizeresMemoria = vars;
-        let html = `<div class="grid grid-cols-6 gap-1">`;
+        let h = `<div class="grid grid-cols-6 gap-1">`;
         listaDizeresMemoria.forEach((item, i) => {
-            html += `<div class="flex flex-col items-center bg-white p-1 rounded border ${item.active?'':'opacity-40'}"><span class="text-[10px] font-bold">${item.label}</span><input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!mb-0 !w-3"></div>`;
+            h += `<div class="flex flex-col items-center bg-white p-1 rounded border"><span class="text-[9px] font-bold">${item.label}</span><input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!mb-0 !w-3"></div>`;
         });
-        area.innerHTML = html + `</div>`;
-    } else if (s.includes('bracelete') || s.includes('anel') || s.includes('aneis')) {
+        area.innerHTML = h + `</div>`;
+    } else if(s.includes('bracelete') || s.includes('anel') || s.includes('aneis')) {
         listaDizeresMemoria = vars;
-        let html = `<div id="listaDizeresCont" class="space-y-1">`;
+        let h = `<div class="space-y-1">`;
         listaDizeresMemoria.forEach((item, i) => {
-            html += `<div class="flex gap-1 items-center bg-white p-1 rounded border"><input value="${item.label}" onchange="listaDizeresMemoria[${i}].label=this.value" class="!mb-0 text-xs flex-1 border-none bg-transparent"><input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!w-4 !mb-0"><button onclick="removerVar(${i},'${slug}')" class="text-red-500 px-2">✕</button></div>`;
+            h += `<div class="flex gap-1 items-center bg-white p-1 rounded border"><input value="${item.label}" onchange="listaDizeresMemoria[${i}].label=this.value" class="!mb-0 text-xs flex-1"><button onclick="listaDizeresMemoria.splice(${i},1);alternarVars('${slug}')" class="text-red-500 px-1">✕</button></div>`;
         });
-        area.innerHTML = html + `</div><button onclick="addVar('${slug}')" class="w-full bg-blue-50 text-blue-600 text-[10px] font-bold p-2 mt-2 rounded border border-blue-100">+ ADICIONAR FRASE</button>`;
-    } else { area.innerHTML = `<p class="text-[10px] text-gray-400 text-center uppercase">Sem variações.</p>`; listaDizeresMemoria = []; }
+        area.innerHTML = h + `</div><button onclick="listaDizeresMemoria.push({label:'NOVA',active:true});alternarVars('${slug}')" class="w-full text-[10px] font-bold p-2 mt-2 bg-blue-50 text-blue-600">+ FRASE</button>`;
+    } else { area.innerHTML = `<p class="text-[10px] text-gray-400 text-center">Sem variações</p>`; listaDizeresMemoria = []; }
 }
-function addVar(slug) { listaDizeresMemoria.push({ label: 'NOVA', active: true }); alternarCamposVariacao(slug); }
-function removerVar(i, slug) { listaDizeresMemoria.splice(i, 1); alternarCamposVariacao(slug); }
 
-async function salvarItem(path, id) {
+async function salvarItem() {
     const nome = document.getElementById('mNome').value;
     if(!nome) return;
-    const finalId = id || (path === 'products' ? document.getElementById('mSku').value.replace(/[^a-zA-Z0-9]/g, "-") : nome.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
     const dados = { name: nome, image: document.getElementById('mImg').value };
-    if(path === 'products') {
+    if(pathAtual === 'products') {
         dados.sku = document.getElementById('mSku').value; dados.price = Number(document.getElementById('mPreco').value);
-        dados.weight = Number(document.getElementById('mPeso').value || 0); dados.category = document.getElementById('mCat').value;
+        dados.weight = Number(document.getElementById('mPeso').value); dados.category = document.getElementById('mCat').value;
         dados.paused = document.getElementById('mPause').checked; dados.variations = listaDizeresMemoria;
-    } else { dados.slug = finalId; }
-    await db.ref(path + '/' + finalId).update(dados);
+    } else { dados.slug = idAtual; }
+    await db.ref(pathAtual + '/' + idAtual).update(dados);
     fecharModal(); renderProdutos();
 }
 
-// PEDIDOS
 function carregarPedidos() {
     db.ref('orders').on('value', s => {
-        const lista
+        const lista = document.getElementById('listaPedidos'); lista.innerHTML = '';
+        s.forEach(o => {
+            const v = o.val();
+            lista.innerHTML += `<div class="order-card"><p class="font-bold text-xs uppercase">${v.customer?.name}</p><div class="text-[10px] text-gray-500">${v.items?.map(i => `• ${i.qty}x ${i.name}`).join('<br>')}</div><button onclick="db.ref('orders/${o.key}').remove()" class="text-red-400 text-[8px] mt-2 uppercase">Excluir</button></div>`;
+        });
+    });
+}
+
+function excluirItem() { if(confirm("Excluir?")) { db.ref(pathAtual+'/'+idAtual).remove(); fecharModal(); renderProdutos(); } }
+function abrirNovoProduto() { abrirEdicao('products', 'prod-' + Date.now()); document.getElementById('btnExcluir').style.display = 'none'; }
+function abrirNovoCategoria() { const s = prompt("ID da Categoria (ex: aneis):"); if(s) { abrirEdicao('categories', s); document.getElementById('btnExcluir').style.display = 'none'; } }
+function filtrar() {
+    const t = document.getElementById('busca').value.toLowerCase();
+    document.querySelectorAll('.item-prod').forEach(el => el.style.display = el.innerText.toLowerCase().includes(t) ? 'block' : 'none');
+}
+
+renderProdutos();
+</script>
+</body>
+</html>
