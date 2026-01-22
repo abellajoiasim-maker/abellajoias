@@ -6,49 +6,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0 }
-header { background:#000; color:#fff; padding:15px; text-align:center }
-section { padding:20px }
-.category { margin-bottom:25px }
-.product-card {
+body{margin:0;font-family:Arial,sans-serif;background:#f4f4f4}
+header{background:#000;color:#fff;padding:15px;text-align:center}
+section{padding:20px}
+h3{margin-top:30px}
+.product-card{
   background:#fff;
-  padding:10px 15px;
   border-radius:6px;
+  padding:10px 15px;
   margin:6px 0;
-  cursor:pointer;
   display:flex;
   justify-content:space-between;
+  cursor:pointer;
 }
-.product-card:hover { background:#eee }
-.modal {
-  position:fixed; inset:0;
-  background:rgba(0,0,0,.5);
+.product-card:hover{background:#eee}
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:10;
 }
-.modal-content {
+.modal-content{
   background:#fff;
   width:95%;
   max-width:520px;
   padding:20px;
-  border-radius:8px;
+  border-radius:10px;
 }
-input, select, button {
-  width:100%; padding:8px; margin-top:6px
+input,select,button{
+  width:100%;
+  padding:8px;
+  margin-top:8px;
 }
-.variation {
-  display:flex; gap:6px; margin-top:6px
+.variation{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
 }
-.variation button { width:auto }
-.close { background:red; color:#fff }
+.variation input{flex:1}
+.variation button{width:auto}
+button{cursor:pointer}
+.close{background:#c00;color:#fff}
+.delete{background:#000;color:#fff}
+.pause{background:#777;color:#fff}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>Painel Admin — Produtos</h2>
+  <h2>Painel Administrativo — Produtos</h2>
 </header>
 
 <section id="products"></section>
@@ -58,24 +67,25 @@ input, select, button {
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
 
-    <input id="name" placeholder="Nome do produto">
-    <input id="skuBase" placeholder="SKU Base (ex: P-0001)">
-    <input id="price" type="number" step="0.01" placeholder="Preço">
-    <input id="weight" type="number" step="0.01" placeholder="Peso (g)">
+    <input id="pNome" placeholder="Nome do produto">
+    <input id="pSku" placeholder="SKU Base (ex: P-0001)">
+    <input id="pPreco" type="number" step="0.01" placeholder="Preço">
+    <input id="pPeso" type="number" step="0.01" placeholder="Peso (g)">
 
-    <select id="category"></select>
+    <select id="pCategoria"></select>
 
-    <img id="image" style="width:100%; margin-top:10px">
+    <img id="pImagem" style="width:100%;margin-top:10px;display:none">
 
     <h4>Variações</h4>
-    <div id="variations"></div>
+    <div id="variacoes"></div>
 
-    <input id="newVar" placeholder="Nova variação (A, Jesus)">
-    <button onclick="addVariation()">Adicionar variação</button>
+    <input id="novaVar" placeholder="Nova variação (A, Jesus)">
+    <button onclick="addVariacao()">Adicionar variação</button>
 
-    <button onclick="saveProduct()">Salvar</button>
-    <button onclick="deleteProduct()">Excluir</button>
-    <button class="close" onclick="closeModal()">Fechar</button>
+    <button onclick="salvar()">Salvar</button>
+    <button class="pause" onclick="alternarAtivo()">Pausar / Ativar</button>
+    <button class="delete" onclick="excluir()">Excluir</button>
+    <button class="close" onclick="fechar()">Fechar</button>
   </div>
 </div>
 
@@ -84,6 +94,7 @@ input, select, button {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+/* 🔥 FIREBASE CONFIG — SEUS DADOS */
 const firebaseConfig = {
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
@@ -93,111 +104,143 @@ const firebaseConfig = {
   messagingSenderId: "727568435294",
   appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let productsData = {};
-let currentId = null;
+/* VARIÁVEIS */
+let produtos = {};
+let categorias = {};
+let atual = null;
 
-const productsEl = document.getElementById("products");
+const lista = document.getElementById("products");
 
-db.ref("products").on("value", snap => {
-  productsData = snap.val() || {};
+/* CATEGORIAS */
+db.ref("categorias").on("value", s=>{
+  categorias = s.val() || {};
+  pCategoria.innerHTML = "";
+  Object.keys(categorias).forEach(c=>{
+    const o=document.createElement("option");
+    o.value=c;
+    o.textContent=c;
+    pCategoria.appendChild(o);
+  });
+});
+
+/* PRODUTOS */
+db.ref("products").on("value", s=>{
+  produtos = s.val() || {};
   render();
 });
 
-function render() {
-  productsEl.innerHTML = "";
-  const grouped = {};
+function render(){
+  lista.innerHTML="";
+  const agrupado={};
 
-  Object.entries(productsData).forEach(([id,p])=>{
-    grouped[p.category] ??= [];
-    grouped[p.category].push({id,...p});
+  Object.entries(produtos).forEach(([id,p])=>{
+    if(!p.categoria)return;
+    agrupado[p.categoria]??=[];
+    agrupado[p.categoria].push({id,...p});
   });
 
-  Object.keys(grouped).forEach(cat=>{
-    const div = document.createElement("div");
-    div.className="category";
-    div.innerHTML = `<h3>${cat}</h3>`;
-    grouped[cat]
+  Object.keys(agrupado).forEach(cat=>{
+    const h=document.createElement("h3");
+    h.textContent=cat;
+    lista.appendChild(h);
+
+    agrupado[cat]
       .sort((a,b)=>a.skuBase.localeCompare(b.skuBase))
       .forEach(p=>{
-        const card = document.createElement("div");
-        card.className="product-card";
-        card.innerHTML = `<strong>${p.skuBase}</strong><span>${p.name}</span>`;
-        card.onclick=()=>openModal(p.id);
-        div.appendChild(card);
+        const d=document.createElement("div");
+        d.className="product-card";
+        d.innerHTML=`<strong>${p.skuBase}</strong><span>${p.nome}</span>`;
+        d.onclick=()=>abrir(p.id);
+        lista.appendChild(d);
       });
-    productsEl.appendChild(div);
   });
 }
 
-function openModal(id){
-  currentId=id;
-  const p=productsData[id];
+function abrir(id){
+  atual=id;
+  const p=produtos[id];
   modal.style.display="flex";
-  modalTitle.innerText=p.name;
-  name.value=p.name;
-  skuBase.value=p.skuBase;
-  price.value=p.price;
-  weight.value=p.weight;
-  category.value=p.category;
-  image.src=p.image||"";
-  renderVariations(p.variations||{});
+
+  modalTitle.textContent=p.nome;
+  pNome.value=p.nome||"";
+  pSku.value=p.skuBase||"";
+  pPreco.value=p.preco||0;
+  pPeso.value=p.peso||0;
+  pCategoria.value=p.categoria||"";
+
+  if(p.img){
+    pImagem.src=p.img;
+    pImagem.style.display="block";
+  }else{
+    pImagem.style.display="none";
+  }
+
+  renderVariacoes(p.variacoes||{});
 }
 
-function renderVariations(vars){
-  variations.innerHTML="";
-  Object.entries(vars).forEach(([k,v])=>{
-    const div=document.createElement("div");
-    div.className="variation";
-    div.innerHTML=`
+function renderVariacoes(v){
+  variacoes.innerHTML="";
+  Object.entries(v).forEach(([k,val])=>{
+    const d=document.createElement("div");
+    d.className="variation";
+    d.innerHTML=`
       <input value="${k}" disabled>
-      <button onclick="toggleVar('${k}')">${v.active?"Ativo":"Inativo"}</button>
-      <button onclick="removeVar('${k}')">🗑</button>`;
-    variations.appendChild(div);
+      <button onclick="toggleVar('${k}')">${val.ativo?"Ativo":"Inativo"}</button>
+      <button onclick="removerVar('${k}')">🗑</button>
+    `;
+    variacoes.appendChild(d);
   });
 }
 
-function addVariation(){
-  const v=newVar.value.trim();
+function addVariacao(){
+  const v=novaVar.value.trim();
   if(!v)return;
-  productsData[currentId].variations ??= {};
-  productsData[currentId].variations[v]={label:v,active:true};
-  newVar.value="";
-  renderVariations(productsData[currentId].variations);
+  produtos[atual].variacoes??={};
+  produtos[atual].variacoes[v]={ativo:true};
+  novaVar.value="";
+  renderVariacoes(produtos[atual].variacoes);
 }
 
 function toggleVar(k){
-  const v=productsData[currentId].variations[k];
-  v.active=!v.active;
-  renderVariations(productsData[currentId].variations);
+  produtos[atual].variacoes[k].ativo=!produtos[atual].variacoes[k].ativo;
+  renderVariacoes(produtos[atual].variacoes);
 }
 
-function removeVar(k){
-  delete productsData[currentId].variations[k];
-  renderVariations(productsData[currentId].variations);
+function removerVar(k){
+  delete produtos[atual].variacoes[k];
+  renderVariacoes(produtos[atual].variacoes);
 }
 
-function saveProduct(){
-  const p=productsData[currentId];
-  p.name=name.value;
-  p.skuBase=skuBase.value;
-  p.price=Number(price.value);
-  p.weight=Number(weight.value);
-  p.category=category.value;
-  db.ref("products/"+currentId).set(p);
-  closeModal();
+function salvar(){
+  const p=produtos[atual];
+  p.nome=pNome.value;
+  p.skuBase=pSku.value;
+  p.preco=Number(pPreco.value);
+  p.peso=Number(pPeso.value);
+  p.categoria=pCategoria.value;
+  p.ativo = p.ativo !== false;
+
+  db.ref("products/"+atual).set(p);
+  fechar();
 }
 
-function deleteProduct(){
+function alternarAtivo(){
+  produtos[atual].ativo=!produtos[atual].ativo;
+  salvar();
+}
+
+function excluir(){
   if(confirm("Excluir produto?")){
-    db.ref("products/"+currentId).remove();
-    closeModal();
+    db.ref("products/"+atual).remove();
+    fechar();
   }
 }
 
-function closeModal(){
+function fechar(){
   modal.style.display="none";
 }
 </script>
