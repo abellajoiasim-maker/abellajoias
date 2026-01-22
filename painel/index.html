@@ -2,90 +2,91 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Abella | Gestão Total</title>
+    <title>Painel Abella | Alta Performance</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { background:#F8F9FA; font-family: 'Poppins', sans-serif; }
+        body { background:#F8F9FA; font-family: 'Poppins', sans-serif; overflow-x: hidden; }
         .tab-panel { display: none; }
-        .tab-panel.active { display: block !important; }
-        .nav-container { display: flex; overflow-x: auto; background: white; white-space: nowrap; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .nav-btn { flex:none; padding:15px 20px; cursor:pointer; font-weight:600; font-size:10px; color:#666; border-bottom:3px solid transparent; }
-        .nav-btn.active-btn { color:#A68966; border-bottom-color:#A68966; }
+        .tab-panel.active { display: block; }
+        .nav-btn { flex:1; text-align:center; padding:15px 5px; cursor:pointer; font-weight:600; font-size:10px; color:#666; border-bottom:3px solid transparent; transition: 0.3s; }
+        .nav-btn.active-btn { color:#A68966; border-bottom-color:#A68966; background:#fff; }
         
-        /* Cards Estilo que você aprovou */
-        .card-painel { background:#fff; border-radius:12px; padding:12px; border:1px solid #eee; cursor:pointer; position:relative; }
-        .paused { opacity: 0.5; background: #f3f4f6; }
-        .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+        /* Modal */
+        #modalDetail { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; padding:15px; }
+        .modal-content { background:#fff; width:100%; max-width:500px; border-radius:20px; max-height:90vh; overflow-y:auto; position:relative; }
         
+        input, select { border: 1px solid #ddd; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 10px; font-size: 14px; }
+        .card-sku { background:#fff; border-radius:12px; padding:12px; border:1px solid #eee; cursor:pointer; transition: 0.2s; position:relative; }
+        .card-sku:hover { border-color:#A68966; transform: translateY(-2px); }
+        .dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
+        .paused { opacity: 0.6; background: #fef2f2; border-color: #fecaca; }
         .cat-section { margin-bottom: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
         .cat-title { background: #A68966; color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
-        
-        #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; padding:15px; }
-        .modal-box { background:#fff; border-radius:18px; padding:20px; width:100%; max-width:500px; max-height:90vh; overflow:auto; }
-        input, select { width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:8px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<nav class="nav-container">
+<nav class="flex bg-white shadow-sm sticky top-0 z-50">
     <div onclick="switchTab('aba-empresa', this)" class="nav-btn active-btn">EMPRESA</div>
     <div onclick="switchTab('aba-categorias', this)" class="nav-btn">CATEGORIAS</div>
     <div onclick="switchTab('aba-produtos', this)" class="nav-btn">PRODUTOS</div>
     <div onclick="switchTab('aba-promos', this)" class="nav-btn">PROMOS</div>
-    <div onclick="switchTab('aba-pedidos', this)" class="nav-btn">PEDIDOS</div>
 </nav>
 
-<main class="p-4 max-w-6xl mx-auto">
+<main class="p-4 max-w-5xl mx-auto">
+
     <div id="aba-empresa" class="tab-panel active">
         <div class="bg-white p-6 rounded-2xl shadow-sm">
-            <h2 class="font-bold mb-4 uppercase text-xs text-gray-400">Dados da Loja</h2>
-            <input id="empNome" placeholder="Nome da Loja">
-            <input id="empWhats" placeholder="WhatsApp">
-            <div class="grid grid-cols-2 gap-2">
-                <input id="empPix" type="number" placeholder="Desc. Pix (%)">
-                <input id="empParc" type="number" placeholder="Máx. Parcelas">
+            <h2 class="font-bold mb-4 text-gray-800 uppercase text-sm">Configuração da Loja</h2>
+            <label class="text-[10px] font-bold text-gray-400">NOME DA LOJA</label><input id="empNome">
+            <label class="text-[10px] font-bold text-gray-400">WHATSAPP</label><input id="empWhats">
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="text-[10px] font-bold text-gray-400">DESC. PIX (%)</label><input id="empPix" type="number"></div>
+                <div><label class="text-[10px] font-bold text-gray-400">MÁX. PARCELAS</label><input id="empParc" type="number"></div>
             </div>
-            <button onclick="saveEmpresa()" class="w-full bg-[#A68966] text-white p-4 rounded-xl font-bold mt-2">SALVAR</button>
+            <button onclick="saveEmpresa()" class="w-full bg-[#A68966] text-white p-4 rounded-xl font-bold mt-4">SALVAR ALTERAÇÕES</button>
         </div>
     </div>
 
     <div id="aba-categorias" class="tab-panel">
-        <button onclick="abrirNovoCategoria()" class="w-full border-2 border-dashed p-4 rounded-xl text-gray-400 font-bold mb-4">+ NOVA CATEGORIA</button>
+        <div class="bg-white p-4 rounded-xl mb-4 border-2 border-dashed border-gray-200 text-center">
+            <button onclick="novoItem('categoria')" class="w-full py-2 font-bold text-gray-500">+ NOVA CATEGORIA</button>
+        </div>
         <div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
     </div>
 
     <div id="aba-produtos" class="tab-panel">
-        <div class="flex gap-2 mb-6">
-            <input type="text" id="busca" onkeyup="filtrar()" placeholder="🔍 SKU ou Nome..." class="!mb-0 shadow-sm flex-1">
-            <button onclick="abrirNovoProduto()" class="bg-black text-white px-6 rounded-xl font-bold text-2xl">+</button>
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="busca" onkeyup="filtrar()" placeholder="🔍 SKU ou Nome..." class="flex-1 !mb-0 shadow-sm">
+            <button onclick="novoItem('produto')" class="bg-black text-white px-6 rounded-xl font-bold">+</button>
         </div>
-        <div id="containerProdutos"></div>
+        <div id="gridProds"></div>
     </div>
 
     <div id="aba-promos" class="tab-panel">
         <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
-            <h2 class="font-bold text-red-800 mb-4 uppercase text-xs">Descontos por Categoria</h2>
-            <div id="listaPromos" class="space-y-2"></div>
-            <button onclick="salvarPromos()" class="w-full bg-red-600 text-white p-4 rounded-xl font-bold mt-6">APLICAR</button>
+            <h2 class="font-bold text-red-800 mb-4 uppercase text-xs">Promoções por Categoria</h2>
+            <div id="listaPromos" class="space-y-3"></div>
+            <button onclick="salvarPromos()" class="w-full bg-red-600 text-white p-4 rounded-xl font-bold mt-6 shadow-lg">APLICAR DESCONTOS</button>
         </div>
     </div>
 
-    <div id="aba-pedidos" class="tab-panel">
-        <div id="listaPedidos" class="space-y-3"></div>
-    </div>
 </main>
 
-<div id="modal" onclick="if(event.target==this)fecharModal()">
-    <div class="modal-box">
-        <h3 id="modalTitle" class="font-bold mb-4 uppercase text-gray-600 text-sm">Editar</h3>
-        <div id="modalBody"></div>
-        <div class="flex gap-2 mt-6">
-            <button onclick="salvarGeral()" class="flex-1 bg-green-600 text-white py-4 rounded-xl font-bold">SALVAR</button>
-            <button onclick="excluirGeral()" class="bg-red-50 text-red-600 px-6 rounded-xl font-bold">EXCLUIR</button>
+<div id="modalDetail" onclick="if(event.target == this) fecharModal()">
+    <div class="modal-content p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="modalTitle" class="font-bold uppercase text-gray-700">Editar Item</h3>
+            <button onclick="fecharModal()" class="text-2xl text-gray-400">&times;</button>
+        </div>
+        <div id="formContainer"></div>
+        <div id="modalFooter" class="flex gap-2 mt-6">
+            <button id="btnSalvar" class="flex-1 bg-green-600 text-white py-4 rounded-xl font-bold shadow-md">SALVAR</button>
+            <button id="btnExcluir" class="bg-red-50 text-red-600 px-6 rounded-xl font-bold">EXCLUIR</button>
         </div>
     </div>
 </div>
@@ -95,163 +96,247 @@ const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", data
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let idAtual = null, pathAtual = '', listaDizeresMemoria = [];
+let listaDizeresMemoria = [];
 
 function switchTab(id, el) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
     document.getElementById(id).classList.add('active');
     el.classList.add('active-btn');
-    carregarDados();
-    if(id === 'aba-pedidos') carregarPedidos();
+    if(id === 'aba-produtos') renderProdutos();
 }
 
-function fecharModal() { document.getElementById('modal').style.display = 'none'; }
+function fecharModal() { document.getElementById('modalDetail').style.display = 'none'; }
 
-// CARREGAR TUDO
-function carregarDados() {
-    Promise.all([db.ref('categories').once('value'), db.ref('products').once('value'), db.ref('promoRules').once('value')]).then(([catSnap, prodSnap, promoSnap]) => {
-        // Render Categs na Aba Categorias
-        const gridCats = document.getElementById('gridCats');
-        const listaPromos = document.getElementById('listaPromos');
-        const promoData = promoSnap.val() || {};
-        gridCats.innerHTML = ''; listaPromos.innerHTML = '';
+// --- LOGICA EMPRESA ---
+db.ref('settings').on('value', s => {
+    const v = s.val() || {};
+    document.getElementById('empNome').value = v.nome || '';
+    document.getElementById('empWhats').value = v.whatsapp || '';
+    document.getElementById('empPix').value = v.pix || 0;
+    document.getElementById('empParc').value = v.parcelas || 1;
+});
+
+function saveEmpresa() {
+    db.ref('settings').update({
+        nome: document.getElementById('empNome').value,
+        whatsapp: document.getElementById('empWhats').value,
+        pix: Number(document.getElementById('empPix').value),
+        parcelas: Number(document.getElementById('empParc').value)
+    }).then(() => alert("Configurações atualizadas!"));
+}
+
+// --- LOGICA CATEGORIAS ---
+db.ref('categories').on('value', s => {
+    const grid = document.getElementById('gridCats');
+    const lp = document.getElementById('listaPromos');
+    grid.innerHTML = ''; lp.innerHTML = '';
+    s.forEach(c => {
+        const v = c.val();
+        grid.innerHTML += `
+            <div onclick="abrirEdicao('categories', '${v.slug}')" class="card-sku text-center">
+                <span class="dot ${v.image ? 'bg-green-500' : 'bg-red-500'}"></span>
+                <p class="text-[10px] font-bold uppercase truncate mt-1">${v.name}</p>
+            </div>`;
+        lp.innerHTML += `
+            <div class="bg-white p-3 rounded-xl flex justify-between items-center shadow-sm">
+                <span class="text-[10px] font-bold uppercase text-gray-500">${v.name}</span>
+                <input type="number" id="pr-${v.slug}" class="w-20 !mb-0 text-center font-bold text-red-600" placeholder="0%">
+            </div>`;
+    });
+    db.ref('promoRules').once('value', pr => {
+        const r = pr.val() || {};
+        Object.keys(r).forEach(k => { if(document.getElementById('pr-'+k)) document.getElementById('pr-'+k).value = r[k].percent || 0; });
+    });
+    renderProdutos();
+});
+
+// --- LOGICA PRODUTOS (AGRUPADOS E ORDENADOS) ---
+async function renderProdutos() {
+    const catsSnap = await db.ref('categories').once('value');
+    const prodsSnap = await db.ref('products').once('value');
+    const grid = document.getElementById('gridProds');
+    grid.innerHTML = '';
+
+    const cats = [];
+    catsSnap.forEach(c => cats.push(c.val()));
+    
+    const prods = [];
+    prodsSnap.forEach(p => prods.push({...p.val(), key: p.key}));
+
+    cats.forEach(cat => {
+        const itens = prods.filter(p => p.category === cat.slug)
+                           .sort((a,b) => String(a.sku).localeCompare(String(b.sku), undefined, {numeric: true}));
         
-        const cats = [];
-        catSnap.forEach(c => {
-            const v = c.val(); cats.push(v);
-            // Card de Categoria com BOLINHA de imagem
-            gridCats.innerHTML += `
-                <div onclick="abrirModal('categories', '${v.slug}')" class="card-painel text-center">
-                    <div class="flex justify-between items-center mb-1"><span></span><span class="dot ${v.image?'bg-green-500':'bg-red-500'}"></span></div>
-                    <span class="text-[10px] font-bold uppercase">${v.name}</span>
-                </div>`;
-            
-            listaPromos.innerHTML += `
-                <div class="bg-white p-3 rounded-xl flex justify-between items-center shadow-sm">
-                    <span class="text-[10px] font-bold uppercase">${v.name}</span>
-                    <input type="number" id="pr-${v.slug}" value="${promoData[v.slug]?.percent || 0}" class="w-16 !mb-0 text-center text-red-600">
-                </div>`;
-        });
-
-        // Render Produtos Agrupados
-        const container = document.getElementById('containerProdutos');
-        container.innerHTML = '';
-        const prods = [];
-        prodSnap.forEach(p => prods.push({...p.val(), id: p.key}));
-
-        cats.forEach(cat => {
-            const itens = prods.filter(p => p.category === cat.slug).sort((a,b) => String(a.sku).localeCompare(String(b.sku), undefined, {numeric: true}));
-            if(itens.length > 0) {
-                let html = `<section class="cat-section"><span class="cat-title">${cat.name}</span><div class="grid grid-cols-2 md:grid-cols-5 gap-3">`;
-                itens.forEach(p => {
-                    html += `
-                    <div onclick="abrirModal('products', '${p.id}')" class="card-painel item-prod ${p.paused?'paused':''}">
+        if(itens.length > 0) {
+            let catHtml = `<section class="cat-section"><span class="cat-title">${cat.name}</span><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">`;
+            itens.forEach(v => {
+                catHtml += `
+                    <div onclick="abrirEdicao('products', '${v.key}')" class="card-sku item-prod ${v.paused ? 'paused' : ''}">
                         <div class="flex justify-between items-center mb-1">
-                            <span class="text-[8px] font-mono text-gray-400">${p.sku || 'S/SKU'}</span>
-                            <span class="dot ${p.image?'bg-green-500':'bg-red-500'}"></span>
+                            <span class="text-[8px] font-mono text-gray-400">${v.sku || v.key}</span>
+                            <span class="dot ${v.image ? 'bg-green-500' : 'bg-red-500'}"></span>
                         </div>
-                        <p class="text-[10px] font-bold uppercase truncate">${p.name}</p>
-                        <p class="text-[9px] text-gray-400">${p.weight || 0}g</p>
-                        <p class="text-[10px] text-[#A68966] font-bold">R$ ${Number(p.price).toFixed(2)}</p>
+                        <p class="text-[9px] font-bold uppercase truncate text-gray-700">${v.name}</p>
+                        <p class="text-[8px] text-gray-400">Peso: ${v.weight || 0}g</p>
+                        <p class="text-[10px] text-[#A68966] font-bold mt-1">R$ ${Number(v.price).toFixed(2)}</p>
                     </div>`;
-                });
-                container.innerHTML += html + `</div></section>`;
-            }
-        });
+            });
+            grid.innerHTML += catHtml + `</div></section>`;
+        }
     });
 }
 
-// MODAL PARA PRODUTOS E CATEGORIAS
-async function abrirModal(path, id) {
-    pathAtual = path; idAtual = id;
-    const s = await db.ref(path + '/' + id).once('value');
-    const v = s.val() || {};
-    const body = document.getElementById('modalBody');
+// --- MODAL DE EDIÇÃO DINÂMICO ---
+async function abrirEdicao(path, id) {
+    const snap = await db.ref(path + '/' + id).once('value');
+    const v = snap.val();
+    const container = document.getElementById('formContainer');
+    document.getElementById('modalTitle').innerText = path === 'products' ? 'Editar Produto' : 'Editar Categoria';
+    document.getElementById('btnExcluir').style.display = 'block';
     
     if(path === 'products') {
-        const catSnap = await db.ref('categories').once('value');
-        let opt = '<option value="">Escolha Categ...</option>';
-        catSnap.forEach(c => opt += `<option value="${c.val().slug}" ${v.category==c.val().slug?'selected':''}>${c.val().name}</option>`);
+        const cats = await db.ref('categories').once('value');
+        let options = '';
+        cats.forEach(c => options += `<option value="${c.val().slug}" ${v.category === c.val().slug ? 'selected' : ''}>${c.val().name}</option>`);
         listaDizeresMemoria = v.variations || [];
-        body.innerHTML = `
-            <img src="${v.image || ''}" class="w-full h-32 object-contain bg-gray-50 rounded-lg mb-4 border">
-            <input id="fNome" value="${v.name||''}" placeholder="Nome">
-            <div class="grid grid-cols-2 gap-2"><input id="fSku" value="${v.sku||''}" placeholder="SKU"><input id="fPeso" type="number" step="0.01" value="${v.weight||0}" placeholder="Peso"></div>
-            <div class="grid grid-cols-2 gap-2"><input id="fPreco" type="number" step="0.01" value="${v.price||''}" placeholder="Preço"><select id="fCat" onchange="alternarCamposVariacao(this.value)">${opt}</select></div>
-            <input id="fImg" value="${v.image||''}" placeholder="Link da Foto">
-            <div id="areaVariacoes" class="mt-2 p-2 bg-gray-50 rounded border border-dashed"></div>
-            <label class="flex items-center gap-2 mt-4 text-xs font-bold"><input type="checkbox" id="fPause" ${v.paused?'checked':''} class="!w-4 !mb-0"> PAUSAR PRODUTO</label>
+
+        container.innerHTML = `
+            <img src="${v.image || ''}" class="w-full h-40 object-contain bg-gray-50 rounded-xl mb-4 border">
+            <label class="text-[10px] font-bold text-gray-400">NOME DO PRODUTO</label><input id="mNome" value="${v.name || ''}">
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] font-bold text-gray-400">SKU</label><input id="mSku" value="${v.sku || ''}"></div>
+                <div><label class="text-[10px] font-bold text-gray-400">PESO (g)</label><input id="mPeso" type="number" step="0.01" value="${v.weight || 0}"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] font-bold text-gray-400">PREÇO (R$)</label><input id="mPreco" type="number" step="0.01" value="${v.price || ''}"></div>
+                <div><label class="text-[10px] font-bold text-gray-400">CATEGORIA</label><select id="mCat" onchange="alternarCamposVariacao(this.value)">${options}</select></div>
+            </div>
+            <label class="text-[10px] font-bold text-gray-400">LINK DA FOTO</label><input id="mImg" value="${v.image || ''}">
+            <div id="areaVariacoes" class="mt-2 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300"></div>
+            <label class="flex items-center gap-2 mt-2 bg-gray-50 p-3 rounded-lg cursor-pointer">
+                <input type="checkbox" id="mPause" class="!w-5 !mb-0" ${v.paused ? 'checked' : ''}>
+                <span class="text-xs font-bold text-gray-600 uppercase">Pausar na Loja</span>
+            </label>
         `;
         if(v.category) alternarCamposVariacao(v.category, v.variations);
     } else {
-        body.innerHTML = `
-            <input id="fNome" value="${v.name||''}" placeholder="Nome Categoria">
-            <input id="fSlug" value="${id}" ${id?'disabled':''} placeholder="ID (slug)">
-            <input id="fImg" value="${v.image||''}" placeholder="Link da Imagem da Categoria">
+        container.innerHTML = `
+            <img src="${v.image || ''}" class="w-full h-40 object-cover rounded-xl mb-4 border">
+            <label class="text-[10px] font-bold text-gray-400">NOME DA CATEGORIA</label><input id="mNome" value="${v.name || ''}">
+            <label class="text-[10px] font-bold text-gray-400">ID (SLUG)</label><input id="mSlug" value="${v.slug || id}" disabled>
+            <label class="text-[10px] font-bold text-gray-400">LINK DA CAPA</label><input id="mImg" value="${v.image || ''}">
         `;
     }
-    document.getElementById('modal').style.display = 'flex';
+
+    document.getElementById('modalDetail').style.display = 'flex';
+    document.getElementById('btnSalvar').onclick = () => salvarItem(path, id);
+    document.getElementById('btnExcluir').onclick = () => excluirItem(path, id);
 }
 
-// LÓGICA DE VARIAÇÕES (A-Z E DIZERES)
+// --- LOGICA DE VARIACOES ---
 function alternarCamposVariacao(slug, varsExistentes = null) {
     const area = document.getElementById('areaVariacoes');
     const s = slug.toLowerCase();
     const vars = varsExistentes || listaDizeresMemoria;
+
     if (s.includes('pingente') || s.includes('inicial')) {
         const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         if(vars.length === 0) listaDizeresMemoria = letras.map(l => ({ label: l, active: true }));
         else listaDizeresMemoria = vars;
-        let html = `<div class="grid grid-cols-6 gap-1">`;
+
+        let html = `<h4 class="text-[10px] font-bold mb-2 text-blue-600 text-center uppercase">Letras Disponíveis</h4><div class="grid grid-cols-6 gap-1">`;
         listaDizeresMemoria.forEach((item, i) => {
-            html += `<div class="flex flex-col items-center bg-white p-1 rounded border ${item.active?'':'opacity-40'}"><span class="text-[10px] font-bold">${item.label}</span><input type="checkbox" onchange="atualizarStatusVar(${i}, this.checked)" ${item.active?'checked':''} class="!mb-0 !w-3"></div>`;
+            html += `<div class="flex flex-col items-center bg-white p-1 rounded border ${item.active?'':'opacity-40'}">
+                        <span class="text-[10px] font-bold">${item.label}</span>
+                        <input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!mb-0 !w-3">
+                     </div>`;
         });
         area.innerHTML = html + `</div>`;
     } else if (s.includes('bracelete') || s.includes('anel') || s.includes('aneis')) {
         listaDizeresMemoria = vars;
-        let html = `<div id="listaDizeresCont" class="space-y-1">`;
+        let html = `<h4 class="text-[10px] font-bold mb-2 text-blue-600 uppercase text-center">Dizeres Personalizados</h4><div id="listaDizeresCont" class="space-y-1">`;
         listaDizeresMemoria.forEach((item, i) => {
-            html += `<div class="flex gap-1 items-center bg-white p-1 rounded border"><input value="${item.label}" onchange="atualizarLabelVar(${i}, this.value)" class="!mb-0 text-xs flex-1 border-none bg-transparent"><input type="checkbox" onchange="atualizarStatusVar(${i}, this.checked)" ${item.active?'checked':''} class="!w-4 !mb-0"><button onclick="removerVar(${i})" class="text-red-500 px-2 font-bold">✕</button></div>`;
+            html += `<div class="flex gap-1 items-center bg-white p-1 rounded border">
+                        <input value="${item.label}" onchange="listaDizeresMemoria[${i}].label=this.value" class="!mb-0 text-xs flex-1 border-none bg-transparent">
+                        <input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!w-4 !mb-0">
+                        <button onclick="removerVar(${i},'${slug}')" class="text-red-500 px-2 font-bold">✕</button>
+                    </div>`;
         });
-        area.innerHTML = html + `</div><button onclick="addVar()" class="w-full text-[10px] font-bold p-2 mt-2 bg-blue-50 text-blue-600 rounded border border-blue-100">+ ADICIONAR FRASE</button>`;
-    } else { area.innerHTML = `<p class="text-[10px] text-gray-400 text-center uppercase">Sem variações nesta categoria</p>`; listaDizeresMemoria = []; }
+        area.innerHTML = html + `</div><button onclick="addVar('${slug}')" class="w-full bg-blue-50 text-blue-600 text-[10px] font-bold p-2 rounded mt-2 border border-blue-100">+ ADICIONAR FRASE</button>`;
+    } else {
+        area.innerHTML = `<p class="text-[10px] text-gray-400 text-center uppercase">Sem variações para esta categoria.</p>`;
+        listaDizeresMemoria = [];
+    }
+}
+function addVar(slug) { listaDizeresMemoria.push({ label: 'NOVA', active: true }); alternarCamposVariacao(slug); }
+function removerVar(i, slug) { listaDizeresMemoria.splice(i, 1); alternarCamposVariacao(slug); }
+
+function novoItem(tipo) {
+    const container = document.getElementById('formContainer');
+    document.getElementById('modalTitle').innerText = tipo === 'produto' ? 'Novo Produto' : 'Nova Categoria';
+    document.getElementById('btnExcluir').style.display = 'none';
+    listaDizeresMemoria = [];
+    
+    if(tipo === 'produto') {
+        container.innerHTML = `
+            <label class="text-[10px] font-bold">NOME</label><input id="mNome">
+            <div class="grid grid-cols-2 gap-2">
+                <input id="mSku" placeholder="SKU">
+                <input id="mPeso" type="number" placeholder="Peso (g)">
+            </div>
+            <input id="mPreco" type="number" placeholder="Preço">
+            <input id="mImg" placeholder="Link Foto">
+        `;
+    } else {
+        container.innerHTML = `
+            <label class="text-[10px] font-bold">NOME</label><input id="mNome">
+            <label class="text-[10px] font-bold">LINK CAPA</label><input id="mImg">
+        `;
+    }
+    document.getElementById('modalDetail').style.display = 'flex';
+    document.getElementById('btnSalvar').onclick = () => salvarItem(tipo === 'produto' ? 'products' : 'categories', null);
 }
 
-function atualizarStatusVar(i, status) { listaDizeresMemoria[i].active = status; }
-function atualizarLabelVar(i, val) { listaDizeresMemoria[i].label = val; }
-function addVar() { listaDizeresMemoria.push({ label: 'NOVA', active: true }); alternarCamposVariacao(document.getElementById('fCat').value); }
-function removerVar(i) { listaDizeresMemoria.splice(i, 1); alternarCamposVariacao(document.getElementById('fCat').value); }
+async function salvarItem(path, id) {
+    const nome = document.getElementById('mNome').value;
+    if(!nome) return alert("Preencha o nome!");
+    const finalId = id || (path === 'products' ? document.getElementById('mSku').value.replace(/[^a-zA-Z0-9]/g, "-") : nome.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+    const dados = { name: nome, image: document.getElementById('mImg').value };
 
-async function salvarGeral() {
-    const nome = document.getElementById('fNome').value;
-    if(!nome) return;
-    const dados = { name: nome, image: document.getElementById('fImg').value };
-    if(pathAtual === 'products') {
-        dados.sku = document.getElementById('fSku').value; 
-        dados.price = Number(document.getElementById('fPreco').value);
-        dados.weight = Number(document.getElementById('fPeso').value); 
-        dados.category = document.getElementById('fCat').value;
-        dados.paused = document.getElementById('fPause').checked;
+    if(path === 'products') {
+        dados.sku = document.getElementById('mSku').value;
+        dados.price = Number(document.getElementById('mPreco').value);
+        dados.weight = Number(document.getElementById('mPeso').value || 0);
+        dados.category = document.getElementById('mCat') ? document.getElementById('mCat').value : '';
+        dados.paused = document.getElementById('mPause')?.checked || false;
         dados.variations = listaDizeresMemoria;
     } else {
-        const slug = document.getElementById('fSlug').value || nome.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        idAtual = slug;
-        dados.slug = slug;
+        dados.slug = finalId;
     }
-    await db.ref(pathAtual + '/' + idAtual).update(dados);
-    fecharModal(); carregarDados();
+
+    await db.ref(path + '/' + finalId).update(dados);
+    fecharModal();
+    alert("Salvo!");
 }
 
-function excluirGeral() { if(confirm("Excluir definitivamente?")) db.ref(pathAtual+'/'+idAtual).remove().then(()=>{fecharModal(); carregarDados();}); }
-function abrirNovoProduto() { abrirModal('products', 'novo-' + Date.now()); }
-function abrirNovoCategoria() { abrirModal('categories', ''); }
+function excluirItem(path, id) { if(confirm("Deseja excluir?")) { db.ref(path+'/'+id).remove(); fecharModal(); } }
+
+function salvarPromos() {
+    const inputs = document.querySelectorAll('[id^="pr-"]');
+    inputs.forEach(i => {
+        const slug = i.id.replace('pr-', '');
+        db.ref('promoRules/' + slug).set({ percent: Number(i.value), active: Number(i.value) > 0 });
+    });
+    alert("Promos aplicadas!");
+}
+
 function filtrar() {
     const t = document.getElementById('busca').value.toLowerCase();
-    document.querySelectorAll('.item-prod').forEach(el => el.style.display = el.innerText.toLowerCase().includes(t) ? 'block' : 'none');
+    document.querySelectorAll('.item-prod').forEach(el => {
+        el.style.display = el.innerText.toLowerCase().includes(t) ? 'block' : 'none';
+    });
 }
-
-carregarDados();
 </script>
 </body>
 </html>
