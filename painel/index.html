@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Administrativo | Abella Joias</title>
+    <title>Painel Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -12,96 +12,82 @@
         body { background:#F8F6F2; font-family: sans-serif; }
         .serif { font-family: 'Cinzel', serif; }
         .gold { color: #A68966; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .nav-btn { font-size: 11px; font-weight: bold; letter-spacing: 0.1em; padding: 10px 15px; transition: 0.3s; border-bottom: 2px solid transparent; }
-        .nav-btn.active { color: #A68966; border-bottom-color: #A68966; }
-        
-        input, select, textarea { border: 1px solid #ddd; padding: 12px; border-radius: 6px; width: 100%; font-size: 14px; }
-        label { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        .btn-gold { background: #A68966; color: white; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        /* Garantia de que as abas começam escondidas */
+        .tab-panel { display: none; } 
+        .tab-panel.active { display: block !important; }
+        .nav-btn { padding: 12px 20px; font-size: 12px; font-weight: bold; border-bottom: 3px solid transparent; transition: 0.2s; cursor: pointer; }
+        .nav-btn.active { color: #A68966; border-bottom-color: #A68966; background: #fff; }
+        input, select { border: 1px solid #ddd; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<header class="bg-white border-b px-8 py-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-50 gap-4">
-    <div class="text-center md:text-left">
-        <h1 class="serif text-xl gold uppercase tracking-tighter">Abella Joias</h1>
-        <p class="text-[9px] uppercase tracking-widest text-gray-400">Painel de Controlo</p>
+<header class="bg-white border-b sticky top-0 z-[100] px-6">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center py-4">
+        <div class="mb-4 md:mb-0">
+            <h1 class="serif text-xl gold uppercase tracking-widest">Abella Joias</h1>
+            <p class="text-[9px] text-gray-400 font-bold">PAINEL ADMINISTRATIVO</p>
+        </div>
+        <nav class="flex gap-2">
+            <div onclick="switchTab('aba-empresa', this)" class="nav-btn active">EMPRESA</div>
+            <div onclick="switchTab('aba-categorias', this)" class="nav-btn">CATEGORIAS</div>
+            <div onclick="switchTab('aba-produtos', this)" class="nav-btn">PRODUTOS</div>
+            <div onclick="switchTab('aba-pedidos', this)" class="nav-btn">PEDIDOS</div>
+        </nav>
     </div>
-    <nav class="flex flex-wrap justify-center gap-2">
-        <button onclick="switchTab('tab-empresa', this)" class="nav-btn active">EMPRESA</button>
-        <button onclick="switchTab('tab-categorias', this)" class="nav-btn">CATEGORIAS</button>
-        <button onclick="switchTab('tab-produtos', this)" class="nav-btn">PRODUTOS</button>
-        <button onclick="switchTab('tab-pedidos', this)" class="nav-btn">PEDIDOS</button>
-    </nav>
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
 
-    <section id="tab-empresa" class="tab-content active space-y-6">
-        <h2 class="serif text-2xl gold">Dados da Empresa</h2>
-        <div class="bg-white p-6 rounded-xl shadow-sm grid md:grid-cols-2 gap-6">
-            <div><label>Nome Comercial</label><input id="empNome"></div>
-            <div><label>WhatsApp Pedidos (Ex: 5511999999999)</label><input id="empWhats"></div>
-            <div><label>Desconto PIX (%)</label><input id="empPix" type="number"></div>
-            <div><label>Parcelas sem Juros</label><input id="empParc" type="number"></div>
-            <div class="md:col-span-2">
-                <button onclick="saveEmpresa()" class="btn-gold w-full">SALVAR DADOS DA EMPRESA</button>
-            </div>
+    <div id="aba-empresa" class="tab-panel active">
+        <h2 class="serif text-2xl gold mb-6">Configurações da Loja</h2>
+        <div class="bg-white p-6 rounded-xl border grid md:grid-cols-2 gap-4">
+            <div><label class="text-xs font-bold text-gray-500 uppercase">Nome da Loja</label><input id="empNome"></div>
+            <div><label class="text-xs font-bold text-gray-500 uppercase">WhatsApp (Ex: 5511999999999)</label><input id="empWhats"></div>
+            <div><label class="text-xs font-bold text-gray-500 uppercase">Desconto PIX (%)</label><input id="empPix" type="number"></div>
+            <div><label class="text-xs font-bold text-gray-500 uppercase">Parcelas s/ Juros</label><input id="empParc" type="number"></div>
+            <button onclick="saveEmpresa()" class="md:col-span-2 bg-[#A68966] text-white py-4 rounded-lg font-bold">SALVAR CONFIGURAÇÕES</button>
         </div>
-    </section>
+    </div>
 
-    <section id="tab-categorias" class="tab-content space-y-6">
-        <h2 class="serif text-2xl gold">Categorias</h2>
-        <div class="bg-white p-6 rounded-xl shadow-sm grid md:grid-cols-3 gap-4 items-end">
+    <div id="aba-categorias" class="tab-panel">
+        <h2 class="serif text-2xl gold mb-6">Gerir Categorias</h2>
+        <div class="bg-white p-6 rounded-xl border flex flex-col md:flex-row gap-4 items-end mb-8">
             <input type="hidden" id="editCatId">
-            <div><label>Nome da Categoria</label><input id="catNome" placeholder="Ex: Brincos"></div>
-            <div><label>URL Imagem da Capa</label><input id="catImg" placeholder="Link da imagem"></div>
-            <button onclick="saveCategoria()" class="btn-gold">SALVAR CATEGORIA</button>
+            <div class="flex-1"><label class="text-xs font-bold text-gray-500">NOME</label><input id="catNome"></div>
+            <div class="flex-1"><label class="text-xs font-bold text-gray-500">URL IMAGEM</label><input id="catImg"></div>
+            <button onclick="saveCategoria()" class="bg-black text-white px-8 py-3.5 rounded-lg font-bold">SALVAR</button>
         </div>
-        <div id="gridCats" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
-    </section>
+        <div id="gridCats" class="grid grid-cols-2 md:grid-cols-6 gap-4"></div>
+    </div>
 
-    <section id="tab-produtos" class="tab-content space-y-6">
-        <div class="flex justify-between items-center">
-            <h2 class="serif text-2xl gold">Produtos</h2>
-            <button onclick="resetProdForm()" class="text-xs bg-gray-200 px-4 py-2 rounded">LIMPAR FORMULÁRIO</button>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl shadow-sm">
-            <input type="hidden" id="editProdId">
+    <div id="aba-produtos" class="tab-panel">
+        <h2 class="serif text-2xl gold mb-6">Gerir Produtos</h2>
+        <div class="bg-white p-6 rounded-xl border mb-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="md:col-span-2"><label>Nome do Produto</label><input id="pNome"></div>
-                <div><label>SKU</label><input id="pSku"></div>
-                <div><label>Categoria</label><select id="pCat"></select></div>
-                <div><label>Preço Bruto (R$)</label><input id="pPreco" type="number" step="0.01"></div>
-                <div><label>Peso (g)</label><input id="pPeso" type="number" step="0.01"></div>
-                <div class="md:col-span-2"><label>URL da Imagem</label><input id="pImg"></div>
-                <div class="flex items-center gap-2 pt-6">
-                    <input type="checkbox" id="pVariacao" style="width:20px;height:20px">
-                    <label class="mb-0">Possui Variações?</label>
-                </div>
+                <div class="md:col-span-2"><label class="text-xs font-bold text-gray-500">NOME DO PRODUTO</label><input id="pNome"></div>
+                <div><label class="text-xs font-bold text-gray-500">SKU</label><input id="pSku"></div>
+                <div><label class="text-xs font-bold text-gray-500">CATEGORIA</label><select id="pCat"></select></div>
+                <div><label class="text-xs font-bold text-gray-500">PREÇO BRUTO (R$)</label><input id="pPreco" type="number" step="0.01"></div>
+                <div><label class="text-xs font-bold text-gray-500">PESO (G)</label><input id="pPeso" type="number" step="0.01"></div>
+                <div class="md:col-span-2"><label class="text-xs font-bold text-gray-500">URL DA IMAGEM</label><input id="pImg"></div>
             </div>
-            <button onclick="saveProduto()" class="btn-gold w-full mt-6 uppercase">Salvar Produto</button>
+            <button onclick="saveProduto()" class="w-full bg-black text-white py-4 rounded-lg font-bold mt-4 uppercase">Salvar Produto</button>
         </div>
+        <div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+    </div>
 
-        <div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-6"></div>
-    </section>
-
-    <section id="tab-pedidos" class="tab-content space-y-6">
-        <h2 class="serif text-2xl gold">Pedidos Recebidos</h2>
-        <div id="listaPedidos" class="space-y-4">
-            <p class="text-gray-400 italic">Os pedidos feitos via site aparecerão aqui como histórico.</p>
+    <div id="aba-pedidos" class="tab-panel">
+        <h2 class="serif text-2xl gold mb-6">Histórico de Pedidos</h2>
+        <div id="listaPedidos" class="bg-white p-8 rounded-xl border text-center text-gray-400 italic">
+            Nenhum pedido registrado ainda.
         </div>
-    </section>
+    </div>
 
 </main>
 
 <script>
-// CONFIGURAÇÃO FIREBASE
+// --- CONEXÃO FIREBASE ---
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -109,16 +95,29 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// NAVEGAÇÃO ENTRE ABAS
-function switchTab(tabId, btn) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    
-    document.getElementById(tabId).classList.add('active');
-    btn.classList.add('active');
+// --- SISTEMA DE NAVEGAÇÃO (FIXED) ---
+function switchTab(abaId, elemento) {
+    // 1. Esconder todas as abas
+    const todasAbas = document.querySelectorAll('.tab-panel');
+    todasAbas.forEach(aba => {
+        aba.classList.remove('active');
+        aba.style.display = 'none';
+    });
+
+    // 2. Remover classe ativa dos botões
+    const todosBtns = document.querySelectorAll('.nav-btn');
+    todosBtns.forEach(btn => btn.classList.remove('active'));
+
+    // 3. Mostrar a aba clicada
+    const abaAtiva = document.getElementById(abaId);
+    abaAtiva.classList.add('active');
+    abaAtiva.style.display = 'block';
+
+    // 4. Ativar o botão
+    elemento.classList.add('active');
 }
 
-// --- LÓGICA EMPRESA ---
+// --- LOGICA EMPRESA ---
 db.ref('settings').on('value', s => {
     const d = s.val() || {};
     document.getElementById('empNome').value = d.nome || '';
@@ -126,112 +125,68 @@ db.ref('settings').on('value', s => {
     document.getElementById('empPix').value = d.pix || 0;
     document.getElementById('empParc').value = d.parcelas || 1;
 });
-
 function saveEmpresa() {
     db.ref('settings').update({
         nome: empNome.value, whatsapp: empWhats.value,
         pix: Number(empPix.value), parcelas: Number(empParc.value)
-    }).then(() => alert("Dados da empresa atualizados!"));
+    }).then(() => alert("Configurações salvas!"));
 }
 
-// --- LÓGICA CATEGORIAS ---
+// --- LOGICA CATEGORIAS ---
 function saveCategoria() {
-    const nome = document.getElementById('catNome').value;
-    const img = document.getElementById('catImg').value;
-    if(!nome) return alert("Digite o nome da categoria");
-    
+    const nome = catNome.value;
+    if(!nome) return alert("Preencha o nome");
     const id = document.getElementById('editCatId').value || nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
-    
-    db.ref('categories/' + id).update({ name: nome, image: img, slug: id })
-    .then(() => {
-        document.getElementById('catNome').value = '';
-        document.getElementById('catImg').value = '';
-        document.getElementById('editCatId').value = '';
-    });
+    db.ref('categories/' + id).update({ name: nome, image: catImg.value, slug: id });
+    catNome.value = catImg.value = document.getElementById('editCatId').value = '';
 }
-
 db.ref('categories').on('value', s => {
     const grid = document.getElementById('gridCats');
     const select = document.getElementById('pCat');
     grid.innerHTML = '';
     select.innerHTML = '<option value="">Selecione</option>';
-    
     s.forEach(c => {
         const v = c.val();
         select.innerHTML += `<option value="${v.slug}">${v.name}</option>`;
         grid.innerHTML += `
-            <div class="bg-white p-4 rounded shadow-sm text-center border">
+            <div class="bg-white p-3 border rounded-lg text-center">
                 <img src="${v.image || 'https://via.placeholder.com/100'}" class="w-full aspect-square object-cover rounded mb-2">
                 <p class="text-[10px] font-bold uppercase truncate">${v.name}</p>
-                <div class="flex gap-2 mt-2">
-                    <button onclick="editCat('${c.key}','${v.name}','${v.image}')" class="text-[9px] text-blue-500 font-bold">EDITAR</button>
-                    <button onclick="delCat('${c.key}')" class="text-[9px] text-red-500 font-bold">EXCLUIR</button>
-                </div>
+                <button onclick="delCat('${c.key}')" class="text-red-500 text-[9px] font-bold mt-2">EXCLUIR</button>
             </div>`;
     });
 });
-function editCat(id, n, i) { document.getElementById('editCatId').value = id; document.getElementById('catNome').value = n; document.getElementById('catImg').value = i; }
-function delCat(id) { if(confirm("Apagar categoria?")) db.ref('categories/'+id).remove(); }
+function delCat(id) { if(confirm("Excluir?")) db.ref('categories/'+id).remove(); }
 
-// --- LÓGICA PRODUTOS ---
+// --- LOGICA PRODUTOS ---
 function saveProduto() {
-    const sku = document.getElementById('pSku').value.trim();
+    const sku = pSku.value.trim();
     if(!sku) return alert("SKU é obrigatório");
     const id = sku.replace(/[\.\$#\[\]\/]/g, "-");
-
     db.ref('products/' + id).set({
         name: pNome.value, sku: sku, category: pCat.value,
-        price: Number(pPreco.value), weight: pPeso.value,
-        image: pImg.value, variacoes: pVariacao.checked
-    }).then(() => {
-        alert("Produto Salvo!");
-        resetProdForm();
-    });
+        price: Number(pPreco.value), weight: pPeso.value, image: pImg.value
+    }).then(() => { alert("Produto Salvo!"); pNome.value=pSku.value=pPreco.value=pPeso.value=pImg.value=''; });
 }
-
-function resetProdForm() {
-    pNome.value = pSku.value = pPreco.value = pPeso.value = pImg.value = '';
-    pVariacao.checked = false;
-    document.getElementById('editProdId').value = '';
-}
-
 db.ref('products').on('value', s => {
     const grid = document.getElementById('gridProds');
     grid.innerHTML = '';
-    let items = [];
-    s.forEach(p => { items.push({id: p.key, ...p.val()}) });
-    items.sort((a,b) => a.sku.localeCompare(b.sku));
-
-    items.forEach(p => {
+    let prods = [];
+    s.forEach(p => prods.push({id: p.key, ...p.val()}));
+    prods.sort((a,b) => a.sku.localeCompare(b.sku));
+    prods.forEach(p => {
         grid.innerHTML += `
-            <div class="bg-white border rounded-lg overflow-hidden flex flex-col shadow-sm">
-                <img src="${p.image || 'https://via.placeholder.com/150'}" class="w-full aspect-square object-contain bg-gray-50">
-                <div class="p-3 flex-1">
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">${p.category}</p>
-                    <p class="text-[11px] font-bold h-8 overflow-hidden">${p.name}</p>
-                    <p class="text-[10px] text-gray-500">SKU: ${p.sku}</p>
-                    <p class="gold font-bold text-sm">R$ ${p.price.toFixed(2)}</p>
-                </div>
-                <div class="grid grid-cols-2 border-t text-[10px] font-bold">
-                    <button onclick="editProd('${p.id}')" class="py-2 hover:bg-gray-100 text-blue-600">EDITAR</button>
-                    <button onclick="delProd('${p.id}')" class="py-2 hover:bg-gray-100 text-red-600 border-l">ELIMINAR</button>
+            <div class="bg-white border rounded shadow-sm">
+                <img src="${p.image || 'https://via.placeholder.com/100'}" class="w-full aspect-square object-contain">
+                <div class="p-2">
+                    <p class="text-[10px] font-bold truncate">${p.name}</p>
+                    <p class="text-[9px] text-gray-400">SKU: ${p.sku}</p>
+                    <button onclick="delProd('${p.id}')" class="text-red-500 text-[9px] font-bold mt-1">EXCLUIR</button>
                 </div>
             </div>`;
     });
 });
-
-function editProd(id) {
-    db.ref('products/'+id).once('value', s => {
-        const p = s.val();
-        pNome.value = p.name; pSku.value = p.sku; pCat.value = p.category;
-        pPreco.value = p.price; pPeso.value = p.weight; pImg.value = p.image || '';
-        pVariacao.checked = p.variacoes || false;
-        document.getElementById('editProdId').value = id;
-        window.scrollTo(0,0);
-    });
-}
-function delProd(id) { if(confirm("Eliminar este produto?")) db.ref('products/'+id).remove(); }
-
+function delProd(id) { if(confirm("Excluir?")) db.ref('products/'+id).remove(); }
 </script>
 </body>
 </html>
