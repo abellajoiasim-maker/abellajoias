@@ -20,11 +20,22 @@
 </head>
 <body>
 
-<header class="p-6 flex justify-between items-center border-b bg-white sticky top-0 z-50">
-    <a href="index.html" class="text-xs font-bold text-gray-400 hover:text-black transition">← VOLTAR</a>
-    <h1 class="serif gold text-lg uppercase tracking-widest" id="tituloCat">Carregando...</h1>
-    <button onclick="abrirCarrinho()" class="bg-black text-white px-5 py-2 rounded-full text-[10px] font-bold tracking-widest">CARRINHO (<span id="cartCount">0</span>)</button>
+<header class="p-6 flex flex-col md:flex-row justify-between items-center border-b bg-white sticky top-0 z-50 gap-4">
+    <div class="flex items-center gap-4">
+        <a href="index.html" class="text-xs font-bold text-gray-400 hover:text-black transition">← VOLTAR</a>
+        <h1 class="serif gold text-lg uppercase tracking-widest" id="tituloCat">Carregando...</h1>
+    </div>
+    
+    <div class="flex items-center gap-2">
+        <a href="galvanicas.html" class="border border-black text-black px-5 py-2 rounded-full text-[10px] font-bold tracking-widest hover:bg-gray-100 transition">
+            GALVÂNICAS
+        </a>
+        <button onclick="abrirCarrinho()" class="bg-black text-white px-5 py-2 rounded-full text-[10px] font-bold tracking-widest">
+            CARRINHO (<span id="cartCount">0</span>)
+        </button>
+    </div>
 </header>
+    
 
 <main class="max-w-6xl mx-auto p-6 grid grid-cols-2 md:grid-cols-4 gap-6" id="gridProdutos"></main>
 
