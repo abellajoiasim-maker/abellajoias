@@ -88,6 +88,11 @@
             </div>
             <button onclick="saveProduto()" class="w-full bg-black text-white py-3 rounded-lg font-bold mt-4 text-sm uppercase">Salvar Produto</button>
         </div>
+        <div class="mb-4">
+    <label>Buscar por SKU ou Nome</label>
+    <input type="text" id="buscaProduto" onkeyup="filtrarProdutos()" placeholder="Digite o SKU ou parte do nome..." class="bg-white border-gold/30 focus:border-gold outline-none">
+</div>
+        
         <div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-4 pb-20"></div>
     </div>
 
@@ -272,6 +277,21 @@ db.ref('orders').on('value', s => {
 });
 function marcarVendido(id) { db.ref('orders/' + id).update({ status: "Atendido" }); alert("Pedido atendido!"); }
 function excluirPedido(id) { if(confirm("Apagar pedido?")) db.ref('orders/' + id).remove(); }
+
+    function filtrarProdutos() {
+    const termo = document.getElementById('buscaProduto').value.toLowerCase();
+    const cards = document.querySelectorAll('#gridProds > div:not(.cat-group-title)');
+    const titulos = document.querySelectorAll('.cat-group-title');
+
+    cards.forEach(card => {
+        const texto = card.innerText.toLowerCase();
+        // Se o termo estiver no texto do card, mostra, senão esconde
+        card.style.display = texto.includes(termo) ? 'flex' : 'none';
+    });
+
+    // Esconde os títulos de categoria se não houver produtos visíveis nela (opcional)
+    if(termo === "") titulos.forEach(t => t.style.display = 'block');
+}
 </script>
 </body>
 </html>
