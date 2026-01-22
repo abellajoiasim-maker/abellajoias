@@ -48,6 +48,9 @@
         lista.sort((a,b) => a.name.localeCompare(b.name));
 
         lista.forEach(c => {
+            // FILTRO DE PAUSA
+            if(c.paused) return; 
+
             grid.innerHTML += `
             <a href="categoria.html?cat=${c.slug}" class="card-cat shadow-sm block group">
                 <div class="aspect-square bg-white flex items-center justify-center p-6">
