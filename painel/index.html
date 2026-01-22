@@ -2,93 +2,77 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Pro | Abella Joias</title>
+    <title>Painel Gestão | Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { background:#F8F6F2; font-family: 'Poppins', sans-serif; }
-        .serif { font-family: 'Cinzel', serif; }
-        .gold { color: #A68966; }
+        body { background:#F4F4F4; font-family: 'Poppins', sans-serif; }
         .tab-panel { display: none; } 
         .tab-panel.active { display: block !important; }
-        .nav-btn { padding: 12px 15px; font-size: 10px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; color: #999; }
-        .nav-btn.active { color: #A68966; border-bottom-color: #A68966; background: #fff; }
-        input, select { border: 1px solid #ddd; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 5px; font-size: 14px; outline: none; }
-        .paused { opacity: 0.5; filter: grayscale(1); border: 2px dashed red !important; }
+        .nav-btn { padding: 10px; font-size: 11px; font-weight: bold; cursor: pointer; color: #666; border-bottom: 2px solid transparent; }
+        .nav-btn.active { color: #A68966; border-bottom-color: #A68966; }
+        input, select { border: 1px solid #ccc; padding: 8px; border-radius: 5px; width: 100%; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-<header class="bg-white border-b sticky top-0 z-[100] shadow-sm">
-    <div class="max-w-7xl mx-auto flex justify-between items-center px-4 py-2">
-        <h1 class="serif text-lg gold uppercase">Abella Gestão</h1>
-        <nav class="flex gap-2 overflow-x-auto">
-            <div onclick="switchTab('aba-empresa', this)" class="nav-btn active">EMPRESA</div>
-            <div onclick="switchTab('aba-categorias', this)" class="nav-btn">CATEGORIAS</div>
-            <div onclick="switchTab('aba-promos', this)" class="nav-btn text-red-600">PROMOS</div>
-            <div onclick="switchTab('aba-produtos', this)" class="nav-btn">PRODUTOS</div>
-            <div onclick="switchTab('aba-pedidos', this)" class="nav-btn">PEDIDOS</div>
-        </nav>
-    </div>
+<header class="bg-white shadow-md sticky top-0 z-[100] p-2">
+    <nav class="flex justify-around items-center max-w-4xl mx-auto">
+        <div onclick="switchTab('aba-empresa', this)" class="nav-btn active">EMPRESA</div>
+        <div onclick="switchTab('aba-categorias', this)" class="nav-btn">CATEGORIAS</div>
+        <div onclick="switchTab('aba-produtos', this)" class="nav-btn">PRODUTOS</div>
+        <div onclick="switchTab('aba-promos', this)" class="nav-btn text-red-500">PROMOS</div>
+        <button onclick="window.location.reload()" class="bg-gray-200 p-2 rounded text-[10px]">RECARREGAR</button>
+    </nav>
 </header>
 
-<main class="max-w-7xl mx-auto p-4 md:p-6">
+<main class="max-w-5xl mx-auto p-4">
+
     <div id="aba-empresa" class="tab-panel active">
-        <h2 class="serif text-xl gold mb-4 uppercase">Configurações Gerais</h2>
-        <div class="bg-white p-6 rounded-2xl border grid md:grid-cols-2 gap-4">
-            <div><label>Nome da Loja</label><input id="empNome"></div>
-            <div><label>WhatsApp</label><input id="empWhats"></div>
-            <div><label>Pix (%)</label><input id="empPix" type="number"></div>
-            <div><label>Parcelas</label><input id="empParc" type="number"></div>
-            <button onclick="saveEmpresa()" class="md:col-span-2 bg-[#A68966] text-white py-4 rounded-xl font-bold uppercase text-xs">Salvar</button>
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="font-bold mb-4">Dados da Loja</h2>
+            <label>Nome</label><input id="empNome">
+            <label>WhatsApp</label><input id="empWhats">
+            <button onclick="saveEmpresa()" class="w-full bg-green-600 text-white p-3 rounded mt-4 font-bold">SALVAR DADOS</button>
         </div>
     </div>
 
     <div id="aba-categorias" class="tab-panel">
-        <h2 class="serif text-xl gold mb-4 uppercase italic">Categorias</h2>
-        <div class="bg-white p-6 rounded-2xl border flex flex-col md:flex-row gap-4 items-end mb-6 shadow-sm">
+        <div class="bg-white p-4 rounded shadow mb-4">
+            <h2 class="font-bold mb-2">Nova Categoria</h2>
             <input type="hidden" id="editCatId">
-            <div class="flex-1"><label>Nome</label><input id="catNome"></div>
-            <div class="flex-1"><label>Capa (URL)</label><input id="catImg"></div>
-            <button onclick="saveCategoria()" class="bg-black text-white px-10 py-3 rounded-xl font-bold text-xs uppercase">Salvar</button>
+            <input id="catNome" placeholder="Nome">
+            <input id="catImg" placeholder="URL da Imagem">
+            <button onclick="saveCategoria()" class="w-full bg-black text-white p-2 rounded mt-2">SALVAR CATEGORIA</button>
         </div>
-        <div id="gridCats" class="grid grid-cols-2 md:grid-cols-6 gap-4"></div>
-    </div>
-
-    <div id="aba-promos" class="tab-panel">
-        <div class="bg-red-50 p-6 rounded-2xl border border-red-100 mb-6 text-center">
-            <h2 class="serif text-xl text-red-800 mb-2 uppercase font-bold">Motor de Promoções %</h2>
-            <div id="listaPromoCats" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mt-6"></div>
-            <button onclick="salvarPromocoes()" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold mt-8 text-xs uppercase">Aplicar Descontos</button>
-        </div>
+        <div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
     </div>
 
     <div id="aba-produtos" class="tab-panel">
-        <h2 class="serif text-xl gold mb-4 uppercase italic">Produtos</h2>
-        <div class="bg-white p-6 rounded-2xl border mb-6 shadow-sm">
+        <div class="bg-white p-4 rounded shadow mb-4">
+            <h2 class="font-bold mb-2">Gerenciar Produto</h2>
             <input type="hidden" id="editProdId">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div class="md:col-span-2"><label>Nome</label><input id="pNome"></div>
-                <div><label>SKU</label><input id="pSku"></div>
-                <div><label>Categoria</label><select id="pCat"></select></div>
-                <div><label>Preço Base (R$)</label><input id="pPreco" type="number" step="0.01"></div>
-                <div><label>Peso (G)</label><input id="pPeso" type="number" step="0.01"></div>
-                <div><label>Tag</label><select id="pTag"><option value="">Nenhuma</option><option value="PROMO">PROMO</option></select></div>
-                <div><label>Imagem (URL)</label><input id="pImg"></div>
+            <div class="grid grid-cols-2 gap-2">
+                <input id="pNome" placeholder="Nome">
+                <input id="pSku" placeholder="SKU (ID único)">
+                <select id="pCat"><option value="">Categoria...</option></select>
+                <input id="pPreco" type="number" step="0.01" placeholder="Preço">
+                <input id="pImg" placeholder="URL Imagem">
+                <button onclick="saveProduto()" class="bg-blue-600 text-white p-2 rounded col-span-2">SALVAR PRODUTO</button>
             </div>
-            <button onclick="saveProduto()" class="w-full bg-black text-white py-4 rounded-xl font-bold mt-4 text-xs uppercase">Salvar Produto</button>
         </div>
-        <input type="text" id="buscaProduto" onkeyup="filtrarProdutos()" placeholder="Filtrar por SKU ou Nome..." class="mb-6 bg-white border p-4 rounded-xl w-full">
-        <div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+        <input type="text" id="busca" onkeyup="filtrar()" placeholder="Buscar..." class="mb-4 p-3 border-2 border-blue-200">
+        <div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-2"></div>
     </div>
 
-    <div id="aba-pedidos" class="tab-panel">
-        <h2 class="serif text-xl gold mb-4 uppercase italic">Pedidos</h2>
-        <div id="listaPedidos" class="grid gap-4"></div>
+    <div id="aba-promos" class="tab-panel">
+        <div id="listaPromos" class="bg-white p-4 rounded shadow space-y-2"></div>
+        <button onclick="salvarPromos()" class="w-full bg-red-600 text-white p-4 rounded mt-4 font-bold">APLICAR PROMOS</button>
     </div>
+
 </main>
 
 <script>
@@ -96,138 +80,139 @@ const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", data
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Função de troca de aba sem "congelar"
 function switchTab(id, el) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    el.classList.add('active');
+    if(el) el.classList.add('active');
 }
 
-// EMPRESA - Carrega uma vez só para não gerar loop
-db.ref('settings').once('value', s => {
-    const d = s.val() || {};
-    document.getElementById('empNome').value = d.nome || '';
-    document.getElementById('empWhats').value = d.whatsapp || '';
-    document.getElementById('empPix').value = d.pix || 0;
-    document.getElementById('empParc').value = d.parcelas || 1;
-});
+// CARREGAMENTO INICIAL UNIFICADO
+async function carregarTudo() {
+    console.log("Iniciando carregamento...");
+    try {
+        // Empresa
+        const sEmp = await db.ref('settings').get();
+        if(sEmp.exists()) {
+            document.getElementById('empNome').value = sEmp.val().nome || '';
+            document.getElementById('empWhats').value = sEmp.val().whatsapp || '';
+        }
 
-function saveEmpresa() {
-    db.ref('settings').update({
-        nome: document.getElementById('empNome').value,
-        whatsapp: document.getElementById('empWhats').value,
-        pix: Number(document.getElementById('empPix').value),
-        parcelas: Number(document.getElementById('empParc').value)
-    }).then(() => alert("Configurações salvas!"));
-}
-
-// CATEGORIAS E PROMOS - Separados para evitar o loop infinito
-db.ref('categories').on('value', s => {
-    const grid = document.getElementById('gridCats');
-    const select = document.getElementById('pCat');
-    const promoContainer = document.getElementById('listaPromoCats');
-    
-    grid.innerHTML = ''; 
-    select.innerHTML = '<option value="">Selecionar...</option>';
-    promoContainer.innerHTML = '';
-
-    s.forEach(c => {
-        const v = c.val();
-        select.innerHTML += `<option value="${v.slug}">${v.name}</option>`;
-        grid.innerHTML += `
-            <div class="bg-white p-2 border rounded-xl shadow-sm ${v.paused ? 'paused' : ''}">
-                <img src="${v.image}" class="w-full aspect-square object-cover rounded-lg mb-2 bg-gray-100" loading="lazy">
-                <p class="text-[9px] font-bold uppercase truncate">${v.name}</p>
-                <div class="flex gap-1 mt-2">
-                    <button onclick="editCat('${v.slug}','${v.name}','${v.image}')" class="bg-blue-50 text-blue-600 text-[8px] p-2 rounded flex-1">EDITAR</button>
-                    <button onclick="deleteCat('${v.slug}')" class="bg-red-50 text-red-600 text-[8px] p-2 rounded">X</button>
-                </div>
-            </div>`;
+        // Categorias
+        const sCat = await db.ref('categories').get();
+        const gridCats = document.getElementById('gridCats');
+        const selectCat = document.getElementById('pCat');
+        const listaPromos = document.getElementById('listaPromos');
         
-        // Renderiza o input de promoção (sem buscar de novo dentro do loop)
-        promoContainer.innerHTML += `
-            <div class="bg-white p-4 rounded-xl border flex justify-between items-center">
-                <span class="text-[10px] font-bold uppercase">${v.name}</span>
-                <input type="number" id="promo-${v.slug}" placeholder="0" class="w-16 p-2 border rounded-lg text-center font-bold text-red-600">
-            </div>`;
-    });
+        gridCats.innerHTML = '';
+        selectCat.innerHTML = '<option value="">Categoria...</option>';
+        listaPromos.innerHTML = '';
 
-    // Depois de carregar as categorias, buscamos os valores das promos uma única vez
-    db.ref('promoRules').once('value', pSnap => {
-        const promos = pSnap.val() || {};
-        Object.keys(promos).forEach(slug => {
-            const input = document.getElementById('promo-' + slug);
-            if(input) input.value = promos[slug].percent || 0;
-        });
-    });
-});
+        if(sCat.exists()) {
+            sCat.forEach(c => {
+                const v = c.val();
+                selectCat.innerHTML += `<option value="${v.slug}">${v.name}</option>`;
+                gridCats.innerHTML += `
+                    <div class="bg-white p-2 rounded border">
+                        <img src="${v.image}" class="h-20 w-full object-cover">
+                        <p class="text-[10px] font-bold truncate">${v.name}</p>
+                        <button onclick="deleteItem('categories/${v.slug}')" class="text-red-500 text-[9px]">EXCLUIR</button>
+                    </div>`;
+                listaPromos.innerHTML += `
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <span class="text-xs font-bold">${v.name}</span>
+                        <input type="number" id="pr-${v.slug}" class="w-20 mb-0" placeholder="%">
+                    </div>`;
+            });
+        }
 
-function saveCategoria() {
-    const nome = document.getElementById('catNome').value; if(!nome) return;
-    const id = document.getElementById('editCatId').value || nome.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    db.ref('categories/' + id).update({ name: nome, image: document.getElementById('catImg').value, slug: id });
-    document.getElementById('catNome').value = ''; document.getElementById('catImg').value = ''; document.getElementById('editCatId').value = '';
+        // Produtos
+        const sProd = await db.ref('products').get();
+        const gridProds = document.getElementById('gridProds');
+        gridProds.innerHTML = '';
+        if(sProd.exists()) {
+            sProd.forEach(p => {
+                const v = p.val();
+                gridProds.innerHTML += `
+                    <div class="bg-white p-2 rounded shadow item-prod">
+                        <img src="${v.image}" class="h-24 w-full object-contain">
+                        <p class="text-[9px] truncate font-bold">${v.name}</p>
+                        <p class="text-[10px] text-blue-600">R$ ${v.price}</p>
+                        <div class="flex gap-2">
+                            <button onclick="editProd('${p.key}')" class="text-blue-500 text-[9px]">EDITAR</button>
+                            <button onclick="deleteItem('products/${p.key}')" class="text-red-500 text-[9px]">X</button>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        // Carregar valores de promos
+        const sRules = await db.ref('promoRules').get();
+        if(sRules.exists()){
+            const rules = sRules.val();
+            Object.keys(rules).forEach(k => {
+                const input = document.getElementById('pr-'+k);
+                if(input) input.value = rules[k].percent || 0;
+            });
+        }
+
+    } catch (e) { console.error("Erro ao carregar:", e); }
 }
 
-function deleteCat(id) { if(confirm("Excluir categoria?")) db.ref('categories/' + id).remove(); }
-function editCat(id, n, i) { document.getElementById('editCatId').value = id; document.getElementById('catNome').value = n; document.getElementById('catImg').value = i; }
+// FUNÇÕES DE SALVAMENTO
+async function saveEmpresa() {
+    await db.ref('settings').update({ nome: document.getElementById('empNome').value, whatsapp: document.getElementById('empWhats').value });
+    alert("Salvo!"); carregarTudo();
+}
 
-// PRODUTOS
-db.ref('products').on('value', s => {
-    const grid = document.getElementById('gridProds'); grid.innerHTML = '';
-    s.forEach(p => {
-        const v = p.val();
-        grid.innerHTML += `
-            <div class="bg-white p-2 border rounded-xl shadow-sm ${v.paused?'paused':''}">
-                <img src="${v.image}" class="w-full aspect-square object-contain bg-gray-50 rounded-lg mb-2" loading="lazy">
-                <p class="text-[9px] font-bold truncate uppercase">${v.name}</p>
-                <p class="text-[10px] gold font-bold">R$ ${v.price.toFixed(2)}</p>
-                <div class="flex gap-1 mt-2">
-                    <button onclick="editProd('${p.key}')" class="bg-blue-50 text-blue-600 text-[8px] p-2 rounded flex-1">EDITAR</button>
-                    <button onclick="deleteProd('${p.key}')" class="bg-red-50 text-red-600 text-[8px] p-2 rounded">X</button>
-                </div>
-            </div>`;
-    });
-});
+async function saveCategoria() {
+    const nome = document.getElementById('catNome').value;
+    const slug = document.getElementById('editCatId').value || nome.toLowerCase().replace(/[^a-z0-9]/g, "-");
+    await db.ref('categories/' + slug).update({ name: nome, image: document.getElementById('catImg').value, slug: slug });
+    document.getElementById('catNome').value = ''; document.getElementById('catImg').value = '';
+    carregarTudo();
+}
 
-function saveProduto() {
-    const sku = document.getElementById('pSku').value.trim(); if(!sku) return;
+async function saveProduto() {
+    const sku = document.getElementById('pSku').value;
     const id = sku.replace(/[^a-zA-Z0-9]/g, "-");
-    db.ref('products/' + id).update({
+    await db.ref('products/' + id).update({
         name: document.getElementById('pNome').value, sku: sku,
         category: document.getElementById('pCat').value, price: Number(document.getElementById('pPreco').value),
-        weight: Number(document.getElementById('pPeso').value), image: document.getElementById('pImg').value, tag: document.getElementById('pTag').value
-    }).then(() => alert("Produto salvo!"));
+        image: document.getElementById('pImg').value
+    });
+    alert("Produto salvo!"); carregarTudo();
 }
 
-function deleteProd(id) { if(confirm("Excluir produto?")) db.ref('products/' + id).remove(); }
+async function deleteItem(path) { if(confirm("Certeza?")) { await db.ref(path).remove(); carregarTudo(); } }
 
-function editProd(id) {
-    db.ref('products/'+id).once('value', s => {
-        const v = s.val();
-        document.getElementById('pNome').value=v.name; document.getElementById('pSku').value=v.sku;
-        document.getElementById('pCat').value=v.category; document.getElementById('pPreco').value=v.price;
-        document.getElementById('pPeso').value=v.weight; document.getElementById('pImg').value=v.image;
-        document.getElementById('editProdId').value=id;
+async function editProd(id) {
+    const s = await db.ref('products/'+id).get();
+    const v = s.val();
+    document.getElementById('pNome').value = v.name; document.getElementById('pSku').value = v.sku;
+    document.getElementById('pCat').value = v.category; document.getElementById('pPreco').value = v.price;
+    document.getElementById('pImg').value = v.image; document.getElementById('editProdId').value = id;
+    window.scrollTo(0,0);
+}
+
+async function salvarPromos() {
+    const inputs = document.querySelectorAll('[id^="pr-"]');
+    for(let i of inputs) {
+        const slug = i.id.replace('pr-', '');
+        await db.ref('promoRules/' + slug).set({ percent: Number(i.value), active: Number(i.value) > 0 });
+    }
+    alert("Promos atualizadas!"); carregarTudo();
+}
+
+function filtrar() {
+    const t = document.getElementById('busca').value.toLowerCase();
+    document.querySelectorAll('.item-prod').forEach(el => {
+        el.style.display = el.innerText.toLowerCase().includes(t) ? 'block' : 'none';
     });
 }
 
-function filtrarProdutos() {
-    const t = document.getElementById('buscaProduto').value.toLowerCase();
-    document.querySelectorAll('#gridProds > div').forEach(c => {
-        c.style.display = c.innerText.toLowerCase().includes(t) ? 'block' : 'none';
-    });
-}
-
-function salvarPromocoes() {
-    const inputs = document.querySelectorAll('[id^="promo-"]');
-    inputs.forEach(input => {
-        const slug = input.id.replace('promo-', '');
-        db.ref('promoRules/' + slug).set({ percent: Number(input.value), active: Number(input.value) > 0 });
-    });
-    alert("Promos aplicadas!");
-}
+// Iniciar
+carregarTudo();
 </script>
 </body>
 </html>
