@@ -2,124 +2,238 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Variações • Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel Admin | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <style>
-body{font-family:Arial;background:#f5f5f5;margin:0}
-header{background:#111;color:#fff;padding:12px;font-weight:bold}
-.container{padding:12px;max-width:700px;margin:auto}
-select,input,button{padding:8px;margin-bottom:8px;width:100%}
-.card{background:#fff;padding:10px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-small{opacity:.6}
-.green{color:green;font-weight:bold}
-.red{color:red;font-weight:bold}
-button.del{background:#b91c1c;color:#fff;border:0}
-button.tiny{width:auto;padding:4px 8px}
+body{font-family:Arial;background:#f7f7f7;margin:0}
+header{background:#111;color:#fff;padding:15px;text-align:center}
+nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;background:#222;padding:10px}
+nav button{background:#d4af37;border:0;padding:10px 14px;border-radius:20px;cursor:pointer;font-weight:bold}
+section{display:none;padding:20px}
+section.active{display:block}
+.card{background:#fff;padding:10px;margin-bottom:6px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+.card small{color:#666}
+input,select{width:100%;padding:8px;margin:4px 0}
+button.action{background:#111;color:#fff;border:0;padding:6px 10px;border-radius:6px;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.modal-content{background:#fff;width:95%;max-width:420px;padding:20px;border-radius:12px;max-height:90vh;overflow:auto}
+.badge-ok{color:green;font-weight:bold}
+.badge-no{color:red;font-weight:bold}
 </style>
 </head>
+
 <body>
 
-<header>PAINEL • VARIAÇÕES</header>
+<header>
+<h2>PAINEL ADMIN — ABELLA JOIAS</h2>
+</header>
 
-<div class="container">
+<nav>
+<button onclick="show('empresa')">Empresa</button>
+<button onclick="show('categorias')">Categorias</button>
+<button onclick="show('produtos')">Produtos</button>
+<button onclick="show('promos')">Promoções</button>
+<button onclick="show('pedidos')">Pedidos</button>
+</nav>
 
-<select id="catSelect" onchange="carregarVariacoes()">
-<option value="">Selecione a Categoria</option>
-</select>
+<!-- EMPRESA -->
+<section id="empresa" class="active">
+<h3>Empresa</h3>
+<input id="empNome" placeholder="Nome da empresa">
+<input id="empWhatsapp" placeholder="WhatsApp">
+<input id="empPix" placeholder="Desconto PIX (%)">
+<button class="action" onclick="salvarEmpresa()">Salvar</button>
+</section>
 
-<input id="novaVar" placeholder="Nova variação (A, B, ABENÇOADA, DEUS)">
-<button onclick="criarVariacao()">Criar Variação</button>
+<!-- CATEGORIAS -->
+<section id="categorias">
+<h3>Categorias + Variações</h3>
+<input id="catNome" placeholder="Nome da categoria">
+<button class="action" onclick="addCategoria()">Adicionar</button>
+<div id="listaCategorias"></div>
+</section>
 
-<div id="lista"></div>
+<!-- PRODUTOS -->
+<section id="produtos">
+<h3>Produtos</h3>
+<select id="filtroCategoria" onchange="carregarProdutos()"></select>
+<div id="listaProdutos"></div>
+</section>
 
+<!-- PROMO -->
+<section id="promos">
+<h3>Promoções</h3>
+<p>(estrutura pronta para reativar sem pesar)</p>
+</section>
+
+<!-- PEDIDOS -->
+<section id="pedidos">
+<h3>Pedidos</h3>
+<p>✔ mantido estável</p>
+</section>
+
+<!-- MODAL PRODUTO -->
+<div class="modal" id="modalProduto">
+<div class="modal-content">
+<h3>Editar Produto</h3>
+<input id="pNome" placeholder="Nome">
+<input id="pSku" placeholder="SKU">
+<input id="pPeso" placeholder="Peso">
+<input id="pPreco" placeholder="Preço">
+<input id="pImg" placeholder="URL da imagem">
+<select id="pCategoria"></select>
+
+<h4>Variações</h4>
+<div id="variacoesBox"></div>
+<input id="novaVar" placeholder="Nova variação">
+<button class="action" onclick="addVariacao()">Adicionar variação</button>
+
+<br><br>
+<button class="action" onclick="salvarProduto()">Salvar</button>
+<button class="action" onclick="fecharModal()">Fechar</button>
+</div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
 <script>
+// 🔥 FIREBASE CONFIG — SEU PROJETO
 firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.firebasestorage.app",
-  messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ authDomain:"catalogo-abella-joias.firebaseapp.com",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId:"catalogo-abella-joias",
+ storageBucket:"catalogo-abella-joias.firebasestorage.app"
 });
+const db=firebase.database();
 
-const db = firebase.database();
+let produtoAtual=null;
 
-async function carregarCategorias(){
-  const sel = document.getElementById("catSelect");
-  const snap = await db.ref("categories").once("value");
-  snap.forEach(c=>{
-    sel.innerHTML += `<option value="${c.key}">${c.val().name}</option>`;
-  });
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ if(id==="categorias") carregarCategorias();
+ if(id==="produtos"){carregarCategoriasSelect();carregarProdutos();}
 }
 
-async function carregarVariacoes(){
-  const cat = catSelect.value;
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
+function salvarEmpresa(){
+ db.ref("empresa").set({
+  nome:empNome.value,
+  whatsapp:empWhatsapp.value,
+  pix:empPix.value
+ });
+ alert("Empresa salva");
+}
 
-  if(!cat) return;
+/* ================= CATEGORIAS ================= */
+function addCategoria(){
+ const ref=db.ref("categorias").push();
+ ref.set({nome:catNome.value,variacoes:{}});
+ catNome.value="";
+ carregarCategorias();
+}
 
-  const snap = await db.ref("categories/"+cat+"/variacoes").once("value");
-  snap.forEach(v=>{
-    const d = v.val();
-    lista.innerHTML += `
-    <div class="card">
-      <div>
-        <b>${v.key}</b> — ${d.nome}<br>
-        <small>Status: 
-          <span class="${d.ativo?'green':'red'}">
-            ${d.ativo?'ATIVA':'DESATIVADA'}
-          </span>
-        </small>
-      </div>
-      <div>
-        <button class="tiny" onclick="toggle('${v.key}',${d.ativo})">
-          ${d.ativo?'Desativar':'Ativar'}
-        </button>
-        <button class="tiny del" onclick="excluir('${v.key}')">X</button>
-      </div>
+function carregarCategorias(){
+ listaCategorias.innerHTML="";
+ db.ref("categorias").once("value").then(s=>{
+  s.forEach(c=>{
+   listaCategorias.innerHTML+=`
+   <div class="card">
+   <b>${c.val().nome}</b>
+   <small>${c.key}</small>
+   </div>`;
+  });
+ });
+}
+
+/* ================= PRODUTOS ================= */
+function carregarCategoriasSelect(){
+ filtroCategoria.innerHTML="<option value=''>Todas</option>";
+ pCategoria.innerHTML="";
+ db.ref("categorias").once("value").then(s=>{
+  s.forEach(c=>{
+   filtroCategoria.innerHTML+=`<option value="${c.key}">${c.val().nome}</option>`;
+   pCategoria.innerHTML+=`<option value="${c.key}">${c.val().nome}</option>`;
+  });
+ });
+}
+
+function carregarProdutos(){
+ listaProdutos.innerHTML="";
+ db.ref("produtos").once("value").then(s=>{
+  let arr=[];
+  s.forEach(p=>arr.push({id:p.key,...p.val()}));
+  arr.sort((a,b)=>(a.sku||"").localeCompare(b.sku||""));
+  arr.forEach(p=>{
+   if(filtroCategoria.value && p.categoria!==filtroCategoria.value) return;
+   listaProdutos.innerHTML+=`
+   <div class="card" onclick="abrirProduto('${p.id}')">
+    <div>
+     <b>${p.sku||'—'} | ${p.nome}</b><br>
+     <small>${p.img?'🟢 Com imagem':'🔴 Sem imagem'}</small>
     </div>
-    `;
+   </div>`;
   });
+ });
 }
 
-async function criarVariacao(){
-  const cat = catSelect.value;
-  let nome = novaVar.value.trim();
-  if(!cat || !nome) return alert("Selecione categoria e nome");
-
-  const chave = nome.toUpperCase().replace(/\s+/g,"-");
-
-  await db.ref(`categories/${cat}/variacoes/${chave}`).set({
-    nome,
-    ativo:true
-  });
-
-  novaVar.value="";
-  carregarVariacoes();
+function abrirProduto(id){
+ produtoAtual=id;
+ db.ref("produtos/"+id).once("value").then(s=>{
+  const p=s.val();
+  pNome.value=p.nome||"";
+  pSku.value=p.sku||"";
+  pPeso.value=p.peso||"";
+  pPreco.value=p.preco||"";
+  pImg.value=p.img||"";
+  pCategoria.value=p.categoria||"";
+  renderVariacoes(p.variacoes||{});
+  modalProduto.style.display="flex";
+ });
 }
 
-function toggle(id, atual){
-  const cat = catSelect.value;
-  db.ref(`categories/${cat}/variacoes/${id}/ativo`).set(!atual);
-  carregarVariacoes();
+function renderVariacoes(v){
+ variacoesBox.innerHTML="";
+ Object.keys(v).forEach(k=>{
+  variacoesBox.innerHTML+=`
+  <div class="card">
+   ${k}
+   <button onclick="remVar('${k}')">X</button>
+  </div>`;
+ });
 }
 
-function excluir(id){
-  const cat = catSelect.value;
-  if(!confirm("Excluir variação?")) return;
-  db.ref(`categories/${cat}/variacoes/${id}`).remove();
-  carregarVariacoes();
+function addVariacao(){
+ if(!novaVar.value)return;
+ db.ref("produtos/"+produtoAtual+"/variacoes/"+novaVar.value).set(true);
+ abrirProduto(produtoAtual);
+ novaVar.value="";
 }
 
-carregarCategorias();
+function remVar(v){
+ db.ref("produtos/"+produtoAtual+"/variacoes/"+v).remove();
+ abrirProduto(produtoAtual);
+}
+
+function salvarProduto(){
+ db.ref("produtos/"+produtoAtual).update({
+  nome:pNome.value,
+  sku:pSku.value,
+  peso:pPeso.value,
+  preco:pPreco.value,
+  img:pImg.value,
+  categoria:pCategoria.value
+ });
+ alert("Produto salvo");
+ fecharModal();
+ carregarProdutos();
+}
+
+function fecharModal(){modalProduto.style.display="none";}
 </script>
+
 </body>
 </html>
