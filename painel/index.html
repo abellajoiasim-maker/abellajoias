@@ -2,229 +2,176 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Gestão | Abella Joias</title>
+<title>Painel Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body { background:#F4F4F4; font-family: sans-serif; }
-.tab-panel { display:none }
-.tab-panel.active { display:block }
-.nav-btn { flex:1; padding:14px 6px; font-size:11px; font-weight:700; text-align:center; cursor:pointer; background:#eee; border-bottom:3px solid transparent }
-.nav-btn.active { background:#fff; color:#A68966; border-bottom-color:#A68966 }
-.card { background:#fff; padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer; position:relative }
-.dot { width:9px; height:9px; border-radius:50%; position:absolute; top:6px; right:6px }
-#modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; align-items:center; justify-content:center }
+body{font-family:Arial;background:#f5f5f5;margin:0}
+header{background:#111;color:#fff;padding:12px;font-weight:bold}
+nav{display:flex;gap:10px;padding:10px;background:#fff}
+nav button{padding:8px 12px;border:0;border-radius:6px;cursor:pointer}
+section{display:none;padding:12px}
+section.active{display:block}
+.card{background:#fff;padding:10px;margin-bottom:8px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+.badge{font-size:11px;padding:4px 6px;border-radius:4px}
+.green{background:#c6f6d5}
+.red{background:#fed7d7}
+button.small{font-size:12px;padding:4px 8px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-box{background:#fff;width:95%;max-width:420px;padding:14px;border-radius:10px}
+.modal-box input,.modal-box select{width:100%;margin-bottom:6px;padding:6px}
 </style>
 </head>
-
 <body>
 
-<header class="bg-white shadow sticky top-0 z-40">
-<nav class="flex max-w-6xl mx-auto">
-<div onclick="tab('empresa',this)" class="nav-btn active">EMPRESA</div>
-<div onclick="tab('categorias',this)" class="nav-btn">CATEGORIAS</div>
-<div onclick="tab('produtos',this)" class="nav-btn">PRODUTOS</div>
-<div onclick="tab('promos',this)" class="nav-btn">PROMOÇÕES</div>
-<div onclick="tab('pedidos',this)" class="nav-btn">PEDIDOS</div>
+<header>PAINEL • ABELLA JOIAS</header>
+
+<nav>
+<button onclick="openTab('produtos')">Produtos</button>
+<button onclick="openTab('categorias')">Categorias</button>
+<button onclick="openTab('pedidos')">Pedidos</button>
 </nav>
-</header>
 
-<main class="p-4 max-w-6xl mx-auto">
-
-<!-- EMPRESA -->
-<section id="empresa" class="tab-panel active bg-white p-4 rounded shadow">
-<h2 class="font-bold mb-3">Dados da Loja</h2>
-<input id="empNome" placeholder="Nome" class="w-full p-2 border mb-2">
-<input id="empWhats" placeholder="WhatsApp" class="w-full p-2 border mb-2">
-<input id="empPix" placeholder="Desconto Pix %" type="number" class="w-full p-2 border mb-2">
-<input id="empParc" placeholder="Parcelas" type="number" class="w-full p-2 border mb-4">
-<button onclick="salvarEmpresa()" class="w-full bg-green-600 text-white p-3 rounded font-bold">SALVAR</button>
+<!-- PRODUTOS -->
+<section id="produtos" class="active">
+<button onclick="novoProduto()">+ Novo Produto</button>
+<div id="listaProdutos"></div>
 </section>
 
 <!-- CATEGORIAS -->
-<section id="categorias" class="tab-panel">
-<button onclick="novaCategoria()" class="mb-3 bg-black text-white px-4 py-2 rounded">+ NOVA CATEGORIA</button>
-<div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+<section id="categorias">
+<button onclick="novaCategoria()">+ Nova Categoria</button>
+<div id="listaCategorias"></div>
 </section>
 
-<!-- PRODUTOS -->
-<section id="produtos" class="tab-panel">
-<div class="flex gap-2 mb-3">
-<input id="busca" onkeyup="filtrar()" placeholder="Buscar SKU..." class="flex-1 border p-2 rounded">
-<button onclick="novoProduto()" class="bg-black text-white px-4 rounded">+</button>
-</div>
-<div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-2"></div>
+<section id="pedidos">
+Pedidos mantidos como estão.
 </section>
-
-<!-- PROMOS -->
-<section id="promos" class="tab-panel bg-white p-4 rounded shadow">
-<h2 class="font-bold mb-3">Promoções por Produto</h2>
-<div id="listaPromos" class="space-y-2"></div>
-</section>
-
-<!-- PEDIDOS -->
-<section id="pedidos" class="tab-panel bg-white p-4 rounded shadow">
-<h2 class="font-bold mb-3">Pedidos</h2>
-<div id="listaPedidos" class="space-y-2 text-sm"></div>
-</section>
-
-</main>
 
 <!-- MODAL -->
-<div id="modal">
-<div class="bg-white p-4 rounded w-full max-w-md max-h-[90vh] overflow-y-auto">
-<h3 id="mTitulo" class="font-bold mb-3"></h3>
-<div id="mCampos" class="space-y-2"></div>
-<button onclick="salvarModal()" class="w-full mt-4 bg-green-600 text-white p-3 rounded">SALVAR</button>
-<button onclick="fecharModal()" class="w-full mt-2 bg-gray-200 p-2 rounded">FECHAR</button>
-<button id="btnExcluir" onclick="excluir()" class="w-full mt-2 text-red-500 text-xs">EXCLUIR</button>
+<div class="modal" id="modal">
+<div class="modal-box">
+<h3 id="mTitulo"></h3>
+
+<img id="mPreview" style="width:100%;height:120px;object-fit:contain;background:#eee;border-radius:6px">
+
+<input id="fNome" placeholder="Nome">
+<input id="fSkuBase" placeholder="SKU Base (P-0001)">
+<select id="fCategoria"></select>
+<select id="fVariacao"></select>
+<input id="fPeso" type="number" step="0.01" placeholder="Peso (g)">
+<input id="fPreco" type="number" step="0.01" placeholder="Preço">
+<input id="fImg" placeholder="URL da imagem">
+
+<label><input type="checkbox" id="fPause"> Pausar</label>
+
+<button onclick="salvar()">Salvar</button>
+<button onclick="fechar()">Cancelar</button>
 </div>
 </div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
 firebase.initializeApp({
-apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-authDomain:"catalogo-abella-joias.firebaseapp.com",
-databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-projectId:"catalogo-abella-joias",
-storageBucket:"catalogo-abella-joias.firebasestorage.app",
-messagingSenderId:"727568435294",
-appId:"1:727568435294:web:442c0179ecf0686dff4ccf"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.firebasestorage.app",
+  messagingSenderId: "727568435294",
+  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
 });
-const db=firebase.database();
-let ctx={path:"",id:""};
 
-/* UTIL */
-function tab(id,el){
-document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
-document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-document.getElementById(id).classList.add('active'); el.classList.add('active');
-}
-function fecharModal(){document.getElementById('modal').style.display='none'}
+const db = firebase.database();
+let editId = null;
 
-/* EMPRESA */
-db.ref('settings').on('value',s=>{
-let v=s.val()||{};
-empNome.value=v.nome||""; empWhats.value=v.whatsapp||"";
-empPix.value=v.pix||0; empParc.value=v.parcelas||1;
-});
-function salvarEmpresa(){
-db.ref('settings').update({
-nome:empNome.value, whatsapp:empWhats.value,
-pix:+empPix.value, parcelas:+empParc.value
-});
-alert("Salvo");
+function openTab(id){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-/* CATEGORIAS */
-db.ref('categories').on('value',s=>{
-gridCats.innerHTML="";
-s.forEach(c=>{
-let v=c.val();
-gridCats.innerHTML+=`
-<div class="card" onclick="editarCategoria('${c.key}')">
-<div class="dot ${v.image?'bg-green-500':'bg-red-500'}"></div>
-<p class="text-xs font-bold uppercase">${v.name}</p>
-<p class="text-[10px] text-gray-500">${Object.keys(v.variations||{}).join(", ")}</p>
-</div>`;
-});
-});
-function novaCategoria(){editarCategoria(null)}
-async function editarCategoria(id){
-ctx={path:"categories",id};
-let v={variations:{}};
-if(id){v=(await db.ref('categories/'+id).once('value')).val()}
-mTitulo.innerText=id?"Editar Categoria":"Nova Categoria";
-mCampos.innerHTML=`
-<input id="cNome" placeholder="Nome" value="${v.name||""}" class="border p-2 w-full">
-<input id="cImg" placeholder="Imagem" value="${v.image||""}" class="border p-2 w-full">
-<label class="text-xs">Variações</label>
-<label><input type="checkbox" id="vIni" ${v.variations?.Iniciais?"checked":""}> Iniciais</label>
-<label><input type="checkbox" id="vBrc" ${v.variations?.Braceletes?"checked":""}> Braceletes</label>
-<label><input type="checkbox" id="vAni" ${v.variations?.Aneis?"checked":""}> Anéis</label>`;
-btnExcluir.style.display=id?'block':'none';
-modal.style.display='flex';
+function fechar(){document.getElementById("modal").classList.remove("show");}
+
+async function carregarCategorias(select, atual){
+  const snap = await db.ref("categories").once("value");
+  select.innerHTML = '<option value="">Categoria</option>';
+  snap.forEach(c=>{
+    select.innerHTML += `<option value="${c.key}" ${c.key===atual?'selected':''}>${c.val().name}</option>`;
+  });
 }
 
-/* PRODUTOS */
-db.ref('products').on('value',s=>{
-gridProds.innerHTML="";
-s.forEach(p=>{
-let v=p.val();
-gridProds.innerHTML+=`
-<div class="card item-prod" onclick="editarProduto('${p.key}')">
-<div class="dot ${v.image?'bg-green-500':'bg-red-500'}"></div>
-<p class="text-[9px] font-mono">${v.sku}</p>
-<p class="text-[10px] font-bold uppercase">${v.name}</p>
-</div>`;
-});
-});
-function novoProduto(){editarProduto(null)}
-async function editarProduto(id){
-ctx={path:"products",id};
-let v={};
-if(id){v=(await db.ref('products/'+id).once('value')).val()}
-const cats=await db.ref('categories').once('value');
-let opts="";
-cats.forEach(c=>{
-let cv=c.val();
-Object.keys(cv.variations||{}).forEach(varn=>{
-opts+=`<option value="${c.key}|${varn}" ${v.category==c.key&&v.variation==varn?"selected":""}>${cv.name} - ${varn}</option>`;
-});
-});
-mTitulo.innerText=id?"Editar Produto":"Novo Produto";
-mCampos.innerHTML=`
-<input id="pNome" placeholder="Nome" value="${v.name||""}" class="border p-2 w-full">
-<input id="pSku" placeholder="SKU" value="${v.sku||""}" class="border p-2 w-full">
-<input id="pPeso" placeholder="Peso" type="number" step="0.01" value="${v.weight||""}" class="border p-2 w-full">
-<input id="pPreco" placeholder="Preço" type="number" step="0.01" value="${v.price||""}" class="border p-2 w-full">
-<select id="pCat" class="border p-2 w-full">${opts}</select>
-<input id="pImg" placeholder="Imagem" value="${v.image||""}" class="border p-2 w-full">
-<label class="text-xs"><input type="checkbox" id="pPause" ${v.paused?"checked":""}> Pausar</label>`;
-btnExcluir.style.display=id?'block':'none';
-modal.style.display='flex';
+async function carregarVariacoes(cat, select, atual){
+  select.innerHTML='<option value="">Variação</option>';
+  if(!cat) return;
+  const snap = await db.ref("categories/"+cat+"/variacoes").once("value");
+  snap.forEach(v=>{
+    if(v.val().ativo){
+      select.innerHTML+=`<option value="${v.key}" ${v.key===atual?'selected':''}>${v.val().nome}</option>`;
+    }
+  });
 }
 
-/* SALVAR */
-async function salvarModal(){
-if(ctx.path=="categories"){
-let id=ctx.id||cNome.value.toLowerCase().replace(/[^a-z0-9]/g,"-");
-await db.ref('categories/'+id).set({
-name:cNome.value,image:cImg.value,
-variations:{
-Iniciais:vIni.checked,Braceletes:vBrc.checked,Aneis:vAni.checked
-}});
-}
-if(ctx.path=="products"){
-let [cat,varn]=pCat.value.split("|");
-let id=ctx.id||pSku.value.replace(/[^A-Z0-9]/gi,"-");
-await db.ref('products/'+id).set({
-name:pNome.value, sku:pSku.value, weight:+pPeso.value,
-price:+pPreco.value, category:cat, variation:varn,
-image:pImg.value, paused:pPause.checked
-});
-}
-fecharModal();
+function novoProduto(){
+  editId=null;
+  mTitulo.innerText="Novo Produto";
+  modal.classList.add("show");
+  carregarCategorias(fCategoria);
 }
 
-/* EXCLUIR */
-function excluir(){
-if(confirm("Excluir definitivamente?")){
-db.ref(ctx.path+'/'+ctx.id).remove();
-fecharModal();
-}
+function salvar(){
+  const skuBase=fSkuBase.value.trim();
+  const variacao=fVariacao.value;
+  if(!skuBase||!variacao){alert("SKU e variação obrigatórios");return;}
+
+  const sku=skuBase+"/"+variacao;
+  const id=sku.replace(/[^\w\-\/]/g,"-");
+
+  db.ref("products/"+id).set({
+    name:fNome.value,
+    skuBase,
+    sku,
+    category:fCategoria.value,
+    variation:variacao,
+    weight:Number(fPeso.value),
+    price:Number(fPreco.value),
+    image:fImg.value,
+    paused:fPause.checked
+  });
+
+  fechar();listarProdutos();
 }
 
-/* FILTRO */
-function filtrar(){
-let t=busca.value.toLowerCase();
-document.querySelectorAll('.item-prod').forEach(e=>{
-e.style.display=e.innerText.toLowerCase().includes(t)?"block":"none";
-});
+async function listarProdutos(){
+  const el=document.getElementById("listaProdutos");
+  el.innerHTML="";
+  const snap=await db.ref("products").once("value");
+  const produtos=[];
+  snap.forEach(p=>produtos.push(p.val()));
+  produtos.sort((a,b)=>a.sku.localeCompare(b.sku));
+
+  produtos.forEach(p=>{
+    el.innerHTML+=`
+    <div class="card">
+      <div>
+        <b>${p.sku}</b><br>
+        ${p.name}
+      </div>
+      <span class="badge ${p.image?'green':'red'}">${p.image?'IMG':'SEM IMG'}</span>
+    </div>`;
+  });
 }
+
+async function novaCategoria(){
+  const nome=prompt("Nome da categoria");
+  if(!nome)return;
+  const slug=nome.toLowerCase().replace(/\s+/g,"-");
+  await db.ref("categories/"+slug).set({name:nome});
+}
+
+listarProdutos();
 </script>
 </body>
 </html>
