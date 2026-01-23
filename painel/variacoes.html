@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Variações • Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:Arial;background:#f5f5f5;margin:0}
+header{background:#111;color:#fff;padding:12px;font-weight:bold}
+.container{padding:12px;max-width:700px;margin:auto}
+select,input,button{padding:8px;margin-bottom:8px;width:100%}
+.card{background:#fff;padding:10px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+small{opacity:.6}
+.green{color:green;font-weight:bold}
+.red{color:red;font-weight:bold}
+button.del{background:#b91c1c;color:#fff;border:0}
+button.tiny{width:auto;padding:4px 8px}
+</style>
+</head>
+<body>
+
+<header>PAINEL • VARIAÇÕES</header>
+
+<div class="container">
+
+<select id="catSelect" onchange="carregarVariacoes()">
+<option value="">Selecione a Categoria</option>
+</select>
+
+<input id="novaVar" placeholder="Nova variação (A, B, ABENÇOADA, DEUS)">
+<button onclick="criarVariacao()">Criar Variação</button>
+
+<div id="lista"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.firebasestorage.app",
+  messagingSenderId: "727568435294",
+  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+});
+
+const db = firebase.database();
+
+async function carregarCategorias(){
+  const sel = document.getElementById("catSelect");
+  const snap = await db.ref("categories").once("value");
+  snap.forEach(c=>{
+    sel.innerHTML += `<option value="${c.key}">${c.val().name}</option>`;
+  });
+}
+
+async function carregarVariacoes(){
+  const cat = catSelect.value;
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  if(!cat) return;
+
+  const snap = await db.ref("categories/"+cat+"/variacoes").once("value");
+  snap.forEach(v=>{
+    const d = v.val();
+    lista.innerHTML += `
+    <div class="card">
+      <div>
+        <b>${v.key}</b> — ${d.nome}<br>
+        <small>Status: 
+          <span class="${d.ativo?'green':'red'}">
+            ${d.ativo?'ATIVA':'DESATIVADA'}
+          </span>
+        </small>
+      </div>
+      <div>
+        <button class="tiny" onclick="toggle('${v.key}',${d.ativo})">
+          ${d.ativo?'Desativar':'Ativar'}
+        </button>
+        <button class="tiny del" onclick="excluir('${v.key}')">X</button>
+      </div>
+    </div>
+    `;
+  });
+}
+
+async function criarVariacao(){
+  const cat = catSelect.value;
+  let nome = novaVar.value.trim();
+  if(!cat || !nome) return alert("Selecione categoria e nome");
+
+  const chave = nome.toUpperCase().replace(/\s+/g,"-");
+
+  await db.ref(`categories/${cat}/variacoes/${chave}`).set({
+    nome,
+    ativo:true
+  });
+
+  novaVar.value="";
+  carregarVariacoes();
+}
+
+function toggle(id, atual){
+  const cat = catSelect.value;
+  db.ref(`categories/${cat}/variacoes/${id}/ativo`).set(!atual);
+  carregarVariacoes();
+}
+
+function excluir(id){
+  const cat = catSelect.value;
+  if(!confirm("Excluir variação?")) return;
+  db.ref(`categories/${cat}/variacoes/${id}`).remove();
+  carregarVariacoes();
+}
+
+carregarCategorias();
+</script>
+</body>
+</html>
