@@ -2,238 +2,216 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Admin | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Abella | Sistema Inteligente</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#f7f7f7;margin:0}
-header{background:#111;color:#fff;padding:15px;text-align:center}
-nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;background:#222;padding:10px}
-nav button{background:#d4af37;border:0;padding:10px 14px;border-radius:20px;cursor:pointer;font-weight:bold}
-section{display:none;padding:20px}
-section.active{display:block}
-.card{background:#fff;padding:10px;margin-bottom:6px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
-.card small{color:#666}
-input,select{width:100%;padding:8px;margin:4px 0}
-button.action{background:#111;color:#fff;border:0;padding:6px 10px;border-radius:6px;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
-.modal-content{background:#fff;width:95%;max-width:420px;padding:20px;border-radius:12px;max-height:90vh;overflow:auto}
-.badge-ok{color:green;font-weight:bold}
-.badge-no{color:red;font-weight:bold}
+body { background:#f4f4f4; font-family: sans-serif; }
+.tab { display:none }
+.tab.active { display:block }
+.card { background:white; border-radius:10px; padding:10px; border:1px solid #ddd; cursor:pointer }
+.dot { width:8px; height:8px; border-radius:50%; display:inline-block }
 </style>
 </head>
 
 <body>
 
-<header>
-<h2>PAINEL ADMIN — ABELLA JOIAS</h2>
-</header>
-
-<nav>
-<button onclick="show('empresa')">Empresa</button>
-<button onclick="show('categorias')">Categorias</button>
-<button onclick="show('produtos')">Produtos</button>
-<button onclick="show('promos')">Promoções</button>
-<button onclick="show('pedidos')">Pedidos</button>
+<!-- NAV -->
+<nav class="flex bg-white shadow sticky top-0 z-50">
+  <button class="flex-1 p-3 font-bold" onclick="tab('empresa')">EMPRESA</button>
+  <button class="flex-1 p-3 font-bold" onclick="tab('categorias')">CATEGORIAS</button>
+  <button class="flex-1 p-3 font-bold" onclick="tab('produtos')">PRODUTOS</button>
+  <button class="flex-1 p-3 font-bold" onclick="tab('promos')">PROMOÇÕES</button>
+  <button class="flex-1 p-3 font-bold" onclick="tab('pedidos')">PEDIDOS</button>
 </nav>
 
+<main class="p-4 max-w-6xl mx-auto">
+
 <!-- EMPRESA -->
-<section id="empresa" class="active">
-<h3>Empresa</h3>
-<input id="empNome" placeholder="Nome da empresa">
-<input id="empWhatsapp" placeholder="WhatsApp">
-<input id="empPix" placeholder="Desconto PIX (%)">
-<button class="action" onclick="salvarEmpresa()">Salvar</button>
-</section>
+<div id="empresa" class="tab active bg-white p-4 rounded">
+<h2 class="font-bold mb-3">Empresa</h2>
+<input id="empNome" placeholder="Nome" class="input">
+<input id="empWhats" placeholder="WhatsApp" class="input">
+<input id="empPix" type="number" placeholder="Desconto PIX %" class="input">
+<input id="empParc" type="number" placeholder="Parcelas" class="input">
+<button onclick="saveEmpresa()" class="btn-green">Salvar</button>
+</div>
 
 <!-- CATEGORIAS -->
-<section id="categorias">
-<h3>Categorias + Variações</h3>
-<input id="catNome" placeholder="Nome da categoria">
-<button class="action" onclick="addCategoria()">Adicionar</button>
-<div id="listaCategorias"></div>
-</section>
+<div id="categorias" class="tab">
+<button onclick="novaCategoria()" class="mb-3 btn-black">+ Nova Categoria</button>
+<div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+</div>
 
 <!-- PRODUTOS -->
-<section id="produtos">
-<h3>Produtos</h3>
-<select id="filtroCategoria" onchange="carregarProdutos()"></select>
-<div id="listaProdutos"></div>
-</section>
+<div id="produtos" class="tab">
+<button onclick="novoProduto()" class="mb-3 btn-black">+ Novo Produto</button>
+<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-5 gap-2"></div>
+</div>
 
-<!-- PROMO -->
-<section id="promos">
-<h3>Promoções</h3>
-<p>(estrutura pronta para reativar sem pesar)</p>
-</section>
+<!-- PROMOS -->
+<div id="promos" class="tab bg-white p-4 rounded">
+<h2 class="font-bold mb-3">Promoções por Categoria</h2>
+<div id="listaPromos"></div>
+<button onclick="salvarPromos()" class="btn-green mt-4">Salvar Promoções</button>
+</div>
 
 <!-- PEDIDOS -->
-<section id="pedidos">
-<h3>Pedidos</h3>
-<p>✔ mantido estável</p>
-</section>
+<div id="pedidos" class="tab bg-white p-4 rounded">
+<h2 class="font-bold mb-3">Pedidos</h2>
+<div id="listaPedidos"></div>
+</div>
 
-<!-- MODAL PRODUTO -->
-<div class="modal" id="modalProduto">
-<div class="modal-content">
-<h3>Editar Produto</h3>
-<input id="pNome" placeholder="Nome">
-<input id="pSku" placeholder="SKU">
-<input id="pPeso" placeholder="Peso">
-<input id="pPreco" placeholder="Preço">
-<input id="pImg" placeholder="URL da imagem">
-<select id="pCategoria"></select>
+</main>
 
-<h4>Variações</h4>
-<div id="variacoesBox"></div>
-<input id="novaVar" placeholder="Nova variação">
-<button class="action" onclick="addVariacao()">Adicionar variação</button>
-
-<br><br>
-<button class="action" onclick="salvarProduto()">Salvar</button>
-<button class="action" onclick="fecharModal()">Fechar</button>
+<!-- MODAL -->
+<div id="modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4">
+<div class="bg-white p-4 rounded max-w-md w-full max-h-[90vh] overflow-y-auto">
+<h2 id="mTitle" class="font-bold mb-2"></h2>
+<div id="mBody"></div>
+<button onclick="salvarModal()" class="btn-green mt-4">Salvar</button>
+<button onclick="fechar()" class="btn-gray mt-2">Fechar</button>
 </div>
 </div>
 
 <script>
-// 🔥 FIREBASE CONFIG — SEU PROJETO
+// 🔥 FIREBASE
 firebase.initializeApp({
- apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- authDomain:"catalogo-abella-joias.firebaseapp.com",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
- projectId:"catalogo-abella-joias",
- storageBucket:"catalogo-abella-joias.firebasestorage.app"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.firebasestorage.app",
+  messagingSenderId: "727568435294",
+  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
 });
-const db=firebase.database();
+const db = firebase.database();
 
-let produtoAtual=null;
+let ctx = {};
 
-function show(id){
- document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
- document.getElementById(id).classList.add("active");
- if(id==="categorias") carregarCategorias();
- if(id==="produtos"){carregarCategoriasSelect();carregarProdutos();}
+// UTIL
+function tab(id){
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
 }
+function abrir(){ modal.classList.remove('hidden'); }
+function fechar(){ modal.classList.add('hidden'); }
 
-function salvarEmpresa(){
- db.ref("empresa").set({
+// EMPRESA
+db.ref('settings').on('value',s=>{
+ const v=s.val()||{};
+ empNome.value=v.nome||'';
+ empWhats.value=v.whatsapp||'';
+ empPix.value=v.pix||0;
+ empParc.value=v.parcelas||1;
+});
+function saveEmpresa(){
+ db.ref('settings').update({
   nome:empNome.value,
-  whatsapp:empWhatsapp.value,
-  pix:empPix.value
+  whatsapp:empWhats.value,
+  pix:+empPix.value,
+  parcelas:+empParc.value
  });
- alert("Empresa salva");
+ alert('Salvo');
 }
 
-/* ================= CATEGORIAS ================= */
-function addCategoria(){
- const ref=db.ref("categorias").push();
- ref.set({nome:catNome.value,variacoes:{}});
- catNome.value="";
- carregarCategorias();
-}
-
-function carregarCategorias(){
- listaCategorias.innerHTML="";
- db.ref("categorias").once("value").then(s=>{
-  s.forEach(c=>{
-   listaCategorias.innerHTML+=`
-   <div class="card">
-   <b>${c.val().nome}</b>
-   <small>${c.key}</small>
-   </div>`;
-  });
- });
-}
-
-/* ================= PRODUTOS ================= */
-function carregarCategoriasSelect(){
- filtroCategoria.innerHTML="<option value=''>Todas</option>";
- pCategoria.innerHTML="";
- db.ref("categorias").once("value").then(s=>{
-  s.forEach(c=>{
-   filtroCategoria.innerHTML+=`<option value="${c.key}">${c.val().nome}</option>`;
-   pCategoria.innerHTML+=`<option value="${c.key}">${c.val().nome}</option>`;
-  });
- });
-}
-
-function carregarProdutos(){
- listaProdutos.innerHTML="";
- db.ref("produtos").once("value").then(s=>{
-  let arr=[];
-  s.forEach(p=>arr.push({id:p.key,...p.val()}));
-  arr.sort((a,b)=>(a.sku||"").localeCompare(b.sku||""));
-  arr.forEach(p=>{
-   if(filtroCategoria.value && p.categoria!==filtroCategoria.value) return;
-   listaProdutos.innerHTML+=`
-   <div class="card" onclick="abrirProduto('${p.id}')">
-    <div>
-     <b>${p.sku||'—'} | ${p.nome}</b><br>
-     <small>${p.img?'🟢 Com imagem':'🔴 Sem imagem'}</small>
-    </div>
-   </div>`;
-  });
- });
-}
-
-function abrirProduto(id){
- produtoAtual=id;
- db.ref("produtos/"+id).once("value").then(s=>{
-  const p=s.val();
-  pNome.value=p.nome||"";
-  pSku.value=p.sku||"";
-  pPeso.value=p.peso||"";
-  pPreco.value=p.preco||"";
-  pImg.value=p.img||"";
-  pCategoria.value=p.categoria||"";
-  renderVariacoes(p.variacoes||{});
-  modalProduto.style.display="flex";
- });
-}
-
-function renderVariacoes(v){
- variacoesBox.innerHTML="";
- Object.keys(v).forEach(k=>{
-  variacoesBox.innerHTML+=`
-  <div class="card">
-   ${k}
-   <button onclick="remVar('${k}')">X</button>
+// CATEGORIAS + VARIAÇÕES
+db.ref('categories').on('value',s=>{
+ listaCategorias.innerHTML='';
+ listaPromos.innerHTML='';
+ s.forEach(c=>{
+  const v=c.val();
+  listaCategorias.innerHTML+=`
+  <div class="card" onclick="editarCategoria('${c.key}')">
+   <b>${v.name}</b>
+   <div class="text-xs">${Object.keys(v.variacoes||{}).length} variações</div>
   </div>`;
+  listaPromos.innerHTML+=`
+   <div class="flex justify-between mb-2">
+    <span>${v.name}</span>
+    <input id="promo-${c.key}" type="number" class="border w-20 text-center">
+   </div>`;
+ });
+});
+
+// MODAL CATEGORIA
+function editarCategoria(id){
+ ctx={type:'cat',id};
+ db.ref('categories/'+id).once('value').then(s=>{
+  const v=s.val();
+  mTitle.innerText='Editar Categoria';
+  let vars='';
+  Object.entries(v.variacoes||{}).forEach(([k,x])=>{
+   vars+=`
+   <div class="flex gap-2 mb-1">
+    <input value="${x.label}" onchange="updVar('${id}','${k}','label',this.value)">
+    <input type="number" value="${x.precoExtra||0}" onchange="updVar('${id}','${k}','precoExtra',this.value)">
+    <input type="number" value="${x.pesoExtra||0}" onchange="updVar('${id}','${k}','pesoExtra',this.value)">
+    <input type="checkbox" ${x.ativo?'checked':''} onchange="updVar('${id}','${k}','ativo',this.checked)">
+   </div>`;
+  });
+  mBody.innerHTML=`
+   <input id="catNome" value="${v.name}">
+   <h3 class="font-bold mt-3">Variações</h3>
+   ${vars}
+   <button onclick="novaVar('${id}')">+ Nova Variação</button>`;
+  abrir();
  });
 }
-
-function addVariacao(){
- if(!novaVar.value)return;
- db.ref("produtos/"+produtoAtual+"/variacoes/"+novaVar.value).set(true);
- abrirProduto(produtoAtual);
- novaVar.value="";
+function updVar(cat,key,field,val){
+ db.ref(`categories/${cat}/variacoes/${key}/${field}`).set(val);
+}
+function novaVar(cat){
+ const k=prompt('Chave da variação (ex: A, DEUS)');
+ if(!k)return;
+ db.ref(`categories/${cat}/variacoes/${k}`).set({label:k,ativo:true});
 }
 
-function remVar(v){
- db.ref("produtos/"+produtoAtual+"/variacoes/"+v).remove();
- abrirProduto(produtoAtual);
-}
-
-function salvarProduto(){
- db.ref("produtos/"+produtoAtual).update({
-  nome:pNome.value,
-  sku:pSku.value,
-  peso:pPeso.value,
-  preco:pPreco.value,
-  img:pImg.value,
-  categoria:pCategoria.value
+// PRODUTOS
+db.ref('products').on('value',s=>{
+ listaProdutos.innerHTML='';
+ s.forEach(p=>{
+  const v=p.val();
+  listaProdutos.innerHTML+=`
+   <div class="card">
+    <b>${v.name}</b>
+    <div class="text-xs">${v.skuBase}</div>
+   </div>`;
  });
- alert("Produto salvo");
- fecharModal();
- carregarProdutos();
+});
+
+// PROMOS
+function salvarPromos(){
+ document.querySelectorAll('[id^=promo-]').forEach(i=>{
+  const k=i.id.replace('promo-','');
+  db.ref('promoRules/'+k).set({percent:+i.value});
+ });
+ alert('Promoções salvas');
 }
 
-function fecharModal(){modalProduto.style.display="none";}
+// PEDIDOS
+db.ref('orders').on('value',s=>{
+ listaPedidos.innerHTML='';
+ s.forEach(o=>{
+  const v=o.val();
+  listaPedidos.innerHTML+=`
+   <div class="border-b p-2 text-xs">
+    ${v.sku} - R$ ${v.preco}
+   </div>`;
+ });
+});
 </script>
+
+<style>
+.input{width:100%;padding:10px;border:1px solid #ccc;margin-bottom:5px}
+.btn-green{background:#16a34a;color:white;padding:10px;width:100%;border-radius:6px}
+.btn-black{background:black;color:white;padding:8px 12px;border-radius:6px}
+.btn-gray{background:#ddd;padding:8px;width:100%;border-radius:6px}
+</style>
 
 </body>
 </html>
