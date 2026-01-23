@@ -17,7 +17,12 @@ nav button{flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;padding:10
 nav button.active{border-color:#caa85c;color:#caa85c}
 section{display:none;padding:20px}
 section.active{display:block}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+
+/* Grid ajustada para 6 colunas no desktop */
+.grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:12px}
+@media(min-width: 768px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+@media(min-width: 1200px) { .grid { grid-template-columns: repeat(6, 1fr); } }
+
 .card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
 .tag{font-size:11px;padding:3px 8px;border-radius:999px}
@@ -26,7 +31,15 @@ section.active{display:block}
 .btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
 .btn.pause{border-color:#caa85c;color:#caa85c}
 .btn.danger{border-color:#c33;color:#f77}
-input{background:#111;border:1px solid #333;color:#fff;padding:6px;border-radius:6px;width:100%}
+input, select{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%;margin-bottom:8px}
+
+/* Modal de Edição */
+#modalEdit { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding:15px; }
+.modal-content { background:#141414; border:1px solid #333; width:100%; max-width:500px; border-radius:20px; padding:20px; max-height:90vh; overflow-y:auto; }
+.modal-img { width:100%; height:180px; object-fit:contain; background:#000; border-radius:10px; margin-bottom:15px; border:1px solid #222; }
+
+/* Título da Categoria na Aba de Produtos */
+.cat-divider { margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #222; color: #caa85c; font-weight: bold; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
 </style>
 </head>
 
@@ -73,6 +86,17 @@ input{background:#111;border:1px solid #333;color:#fff;padding:6px;border-radius
   <div id="listaPedidos"></div>
 </section>
 
+<div id="modalEdit">
+    <div class="modal-content">
+        <div class="row mb-4">
+            <h3 id="modalTitle" class="font-bold">Editar Item</h3>
+            <button class="btn" onclick="closeModal()">✕</button>
+        </div>
+        <div id="modalBody"></div>
+        <button class="btn w-full py-3 mt-4 !bg-[#caa85c] !text-black font-bold" id="btnSalvarModal">SALVAR ALTERAÇÕES</button>
+    </div>
+</div>
+
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -89,8 +113,10 @@ function show(id){
  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
  document.getElementById(id).classList.add('active');
  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
- event.target.classList.add('active');
+ if(event) event.target.classList.add('active');
 }
+
+function closeModal() { document.getElementById('modalEdit').style.display = 'none'; }
 
 // EMPRESA
 db.ref('settings').on('value',s=>{
@@ -110,7 +136,7 @@ function salvarEmpresa(){
  alert('Salvo');
 }
 
-// CATEGORIAS + VARIAÇÕES
+// CATEGORIAS
 db.ref('categories').on('value',snap=>{
  listaCategorias.innerHTML='';
  snap.forEach(c=>{
@@ -123,7 +149,7 @@ db.ref('categories').on('value',snap=>{
     </div>
     <div class="text-xs opacity-70 mb-2">${Object.keys(d.variacoes||{}).length} variações</div>
     <div class="row">
-     <button class="btn">Editar</button>
+     <button class="btn" onclick="editarItem('categories', '${c.key}')">Editar</button>
      <button class="btn pause">Pausar</button>
      <button class="btn danger">Excluir</button>
     </div>
@@ -131,38 +157,99 @@ db.ref('categories').on('value',snap=>{
  });
 });
 
-// PRODUTOS AGRUPADOS POR CATEGORIA + SKU
+// PRODUTOS AGRUPADOS POR CATEGORIA + GRID DE 6
 db.ref('products').on('value',snap=>{
  const map={};
  snap.forEach(p=>{
-  const v=p.val();
+  const v=p.val(); v.id = p.key;
   if(!map[v.category]) map[v.category]=[];
   map[v.category].push(v);
  });
+ 
  produtosPorCategoria.innerHTML='';
- Object.keys(map).sort().forEach(cat=>{
-  const lista=map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||''));
-  let html=`<h3 class="mt-6 mb-2 font-bold">${cat}</h3><div class="grid">`;
+ 
+ // Ordena as categorias alfabeticamente
+ Object.keys(map).sort().forEach(catName=>{
+  const container = document.createElement('div');
+  container.innerHTML = `<div class="cat-divider">${catName}</div>`;
+  
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  
+  // Ordena produtos por SKU dentro da categoria
+  const lista=map[catName].sort((a,b)=>(a.sku||'').localeCompare(b.sku||'', undefined, {numeric: true}));
+  
   lista.forEach(p=>{
-   html+=`
+   grid.innerHTML+=`
     <div class="card">
      <div class="row">
-      <strong>${p.sku}</strong>
+      <strong>${p.sku || 'S/SKU'}</strong>
       <span class="tag ${p.image?'ok':'no'}">IMG</span>
      </div>
-     <div class="text-sm">${p.name}</div>
-     <div class="text-xs opacity-70">Peso: ${p.weight||'-'}</div>
+     <div class="text-sm truncate mt-1">${p.name}</div>
+     <div class="text-[10px] opacity-50">R$ ${p.price||'0'} | ${p.weight||'0'}g</div>
      <div class="row mt-2">
-      <button class="btn">Editar</button>
-      <button class="btn pause">Pausar</button>
-      <button class="btn danger">Excluir</button>
+      <button class="btn" onclick="editarItem('products', '${p.id}')">Editar</button>
+      <button class="btn danger" onclick="if(confirm('Excluir?')) db.ref('products/${p.id}').remove()">✕</button>
      </div>
     </div>`;
   });
-  html+='</div>';
-  produtosPorCategoria.innerHTML+=html;
+  
+  container.appendChild(grid);
+  produtosPorCategoria.appendChild(container);
  });
 });
+
+// FUNÇÃO DE EDIÇÃO (JANELA/MODAL)
+async function editarItem(path, id) {
+    const snap = await db.ref(path + '/' + id).once('value');
+    const v = snap.val();
+    const modal = document.getElementById('modalEdit');
+    const body = document.getElementById('modalBody');
+    const title = document.getElementById('modalTitle');
+    
+    title.innerText = path === 'products' ? 'Editar Produto' : 'Editar Categoria';
+    
+    let html = `<img src="${v.image || ''}" class="modal-img" onerror="this.src='https://placehold.co/400x400/111/fff?text=Sem+Foto'">`;
+    
+    if(path === 'products') {
+        html += `
+            <label class="text-xs opacity-50">NOME DO PRODUTO</label><input id="editNome" value="${v.name || ''}">
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-xs opacity-50">SKU</label><input id="editSku" value="${v.sku || ''}"></div>
+                <div><label class="text-xs opacity-50">PESO (g)</label><input id="editPeso" value="${v.weight || ''}"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-xs opacity-50">PREÇO (R$)</label><input id="editPreco" value="${v.price || ''}"></div>
+                <div><label class="text-xs opacity-50">CATEGORIA</label><input id="editCat" value="${v.category || ''}"></div>
+            </div>
+            <label class="text-xs opacity-50">URL DA IMAGEM</label><input id="editImg" value="${v.image || ''}">
+        `;
+    } else {
+        html += `
+            <label class="text-xs opacity-50">NOME DA CATEGORIA</label><input id="editNome" value="${v.name || ''}">
+            <label class="text-xs opacity-50">URL DA IMAGEM</label><input id="editImg" value="${v.image || ''}">
+        `;
+    }
+
+    body.innerHTML = html;
+    modal.style.display = 'flex';
+
+    document.getElementById('btnSalvarModal').onclick = async () => {
+        const updates = {
+            name: document.getElementById('editNome').value,
+            image: document.getElementById('editImg').value
+        };
+        if(path === 'products') {
+            updates.sku = document.getElementById('editSku').value;
+            updates.weight = document.getElementById('editPeso').value;
+            updates.price = document.getElementById('editPreco').value;
+            updates.category = document.getElementById('editCat').value;
+        }
+        await db.ref(path + '/' + id).update(updates);
+        closeModal();
+    };
+}
 
 // PEDIDOS
 db.ref('orders').on('value',s=>{
