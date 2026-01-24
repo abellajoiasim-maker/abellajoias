@@ -1,113 +1,57 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Abella Joias | Catálogo Atacado</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
-
-<style>
-body { font-family:'Poppins',sans-serif; background:#f8f6f2; }
-.serif { font-family:'Cinzel',serif; }
-.gold { color:#A68966; }
-
-.card-cat{
-  background:#fff;
-  border-radius:16px;
-  border:1px solid #eee;
-  transition:.3s;
-  overflow:hidden;
-}
-.card-cat:hover{
-  transform:translateY(-5px);
-  border-color:#A68966;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Abella Joias | Catálogo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f8f6f2; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold { color: #A68966; }
+        .card-cat { background: white; border-radius: 15px; overflow: hidden; transition: 0.3s; border: 1px solid #eee; }
+        .card-cat:hover { transform: translateY(-5px); border-color: #A68966; }
+    </style>
 </head>
-
 <body>
 
-<!-- HEADER -->
-<header class="bg-white border-b sticky top-0 z-50">
-  <div class="text-center py-8 space-y-4">
+<header class="text-center py-10 bg-white border-b sticky top-0 z-50">
     <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
-    <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
-    <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium">
-      Atacado de Joias no Bruto
-    </p>
-
-    <div class="flex justify-center gap-2 mt-4 px-4">
-      <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest">
-        CATEGORIAS
-      </a>
-      <a href="galvanicas.html" class="bg-white border border-gray-200 text-gray-600 px-6 py-2 rounded-full text-[10px] font-bold tracking-widest">
-        GALVÂNICAS
-      </a>
-      <a href="carrinho.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest">
-        CARRINHO
-      </a>
-    </div>
-  </div>
+    <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase">Atacado de Joias no Bruto</p>
 </header>
-
-<!-- CONTEÚDO -->
-<main class="max-w-7xl mx-auto p-6">
-  <h2 class="serif text-xl text-center mb-10 text-gray-700">
-    Escolha uma Categoria
-  </h2>
-
-  <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
+    
+<main class="max-w-6xl mx-auto p-6">
+    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
 <script>
-/* Firebase */
-const firebaseConfig = {
-  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-/* Categorias */
-db.ref('categories').on('value', snap=>{
-  const grid = document.getElementById('gridCategorias');
-  grid.innerHTML = '';
-
-  let categorias = [];
-  snap.forEach(c=>{
-    const d = c.val();
-    if(d.paused) return;
-    categorias.push({
-      name: d.name,
-      image: d.image || '',
-      slug: d.slug || d.name.toLowerCase().replace(/[^a-z0-9]/g,'-')
+    firebase.initializeApp({
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
     });
-  });
+    const db = firebase.database();
 
-  categorias.sort((a,b)=>a.name.localeCompare(b.name));
-
-  categorias.forEach(c=>{
-    grid.innerHTML += `
-      <a href="categoria.html?cat=${c.slug}" class="card-cat block shadow-sm">
-        <div class="aspect-square bg-white flex items-center justify-center p-6">
-          <img src="${c.image || 'https://via.placeholder.com/400'}"
-               class="max-h-full object-contain">
-        </div>
-        <div class="p-4 text-center border-t">
-          <span class="text-xs font-bold uppercase tracking-widest">
-            ${c.name}
-          </span>
-        </div>
-      </a>
-    `;
-  });
-});
+    db.ref('categories').on('value', snap => {
+        const grid = document.getElementById('gridCategorias'); 
+        grid.innerHTML = '';
+        snap.forEach(s => {
+            const c = s.val();
+            const id = s.key;
+            if(c.paused) return; 
+            grid.innerHTML += `
+            <a href="categoria.html?cat=${id}" class="card-cat shadow-sm block group">
+                <div class="aspect-square bg-white flex items-center justify-center p-6">
+                    <img src="${c.image || 'https://via.placeholder.com/400'}" class="max-h-full object-contain transition group-hover:scale-110">
+                </div>
+                <div class="p-5 text-center border-t border-gray-50">
+                    <span class="text-xs font-bold tracking-widest text-gray-800 uppercase">${c.name}</span>
+                </div>
+            </a>`;
+        });
+    });
 </script>
-
 </body>
 </html>
