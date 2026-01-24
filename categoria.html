@@ -1,79 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Categoria | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+body{font-family:'Poppins',sans-serif;background:#f8f6f2}
+.serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+.card{background:#fff;border-radius:16px;border:1px solid #eee;transition:.3s}
+.card:hover{transform:translateY(-4px);border-color:#A68966}
+</style>
+</head>
+
+<body>
+
+<header class="bg-white border-b sticky top-0 z-40">
+  <div class="text-center py-8">
+    <h1 class="serif text-3xl gold">Abella Joias</h1>
+    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">Catálogo Atacado</p>
+  </div>
+
+  <div class="flex justify-center gap-2 pb-4">
+    <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">CATEGORIAS</a>
+    <a href="galvanicas.html" class="bg-white border px-6 py-2 rounded-full text-[10px] font-bold text-gray-500">GALVÂNICAS</a>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto p-6">
+  <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700"></h2>
+  <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
+</main>
+
 <script>
-const db = firebase.database();
-const params = new URLSearchParams(location.search);
-const catKey = params.get("cat");
+/* Firebase */
+const firebaseConfig = {
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+}
+firebase.initializeApp(firebaseConfig)
+const db=firebase.database()
 
-let VARIACOES = {};
+/* Lê categoria da URL */
+const params=new URLSearchParams(window.location.search)
+const slug=params.get('cat')
 
-db.ref("categories/"+catKey).once("value").then(snap=>{
-  VARIACOES = snap.val().variacoes || {};
-  document.getElementById("tituloCat").innerText = snap.val().name;
-});
-
-db.ref("products").orderByChild("category").equalTo(catKey).on("value", snap=>{
-  const grid = document.getElementById("gridProdutos");
-  grid.innerHTML = "";
-
-  const produtos = [];
-  snap.forEach(p=>produtos.push({...p.val(), id:p.key}));
-
-  produtos.sort((a,b)=>a.sku.localeCompare(b.sku));
-
-  produtos.forEach(p=>{
-    if(p.paused) return;
-
-    grid.innerHTML += `
-      <div class="produto-card">
-        <img src="${p.image || 'placeholder.jpg'}">
-        <h4>${p.name}</h4>
-        <p>SKU ${p.sku}</p>
-        <strong>R$ ${p.price.toFixed(2)}</strong>
-        <button onclick="abrirProduto('${p.id}')">Comprar</button>
-      </div>
-    `;
-  });
-});
-
-function abrirProduto(id){
-  db.ref("products/"+id).once("value").then(snap=>{
-    const p = snap.val();
-    window.PROD_ATUAL = {...p, id};
-
-    const sel = document.getElementById("selectVariacao");
-    sel.innerHTML = "";
-
-    Object.values(VARIACOES).forEach(v=>{
-      if(v.active){
-        sel.innerHTML += `<option value="${v.name}">${v.name}</option>`;
-      }
-    });
-
-    document.getElementById("modalProduto").style.display="flex";
-    document.getElementById("mNome").innerText=p.name;
-    document.getElementById("mImg").src=p.image || "placeholder.jpg";
-    document.getElementById("mPreco").innerText="R$ "+p.price.toFixed(2);
-  });
+if(!slug){
+ document.body.innerHTML='<p style="padding:40px;text-align:center">Categoria não encontrada</p>'
+ throw new Error('Categoria ausente')
 }
 
-function addCarrinho(){
-  const v = document.getElementById("selectVariacao").value;
-  const q = Number(document.getElementById("qtd").value);
+/* Carrega produtos */
+db.ref('products')
+.orderByChild('categorySlug')
+.equalTo(slug)
+.on('value',snap=>{
+ const grid=document.getElementById('gridProdutos')
+ grid.innerHTML=''
 
-  let cart = JSON.parse(localStorage.getItem("cart")||"[]");
+ let produtos=[]
+ snap.forEach(s=>produtos.push(s.val()))
 
-  cart.push({
-    id: PROD_ATUAL.id,
-    name: PROD_ATUAL.name,
-    sku: PROD_ATUAL.sku,
-    price: PROD_ATUAL.price,
-    weight: PROD_ATUAL.weight,
-    category: PROD_ATUAL.category,
-    variacao: v,
-    qtd: q
-  });
+ document.getElementById('tituloCategoria').innerText =
+   produtos[0]?.categoryName || 'Categoria'
 
-  localStorage.setItem("cart",JSON.stringify(cart));
-  alert("Adicionado ao carrinho");
-  fecharModal();
-}
+ produtos.forEach(p=>{
+  if(p.paused) return
+  grid.innerHTML+=`
+  <div class="card p-4 shadow-sm">
+    <div class="aspect-square flex items-center justify-center mb-4">
+      <img src="${p.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full">
+    </div>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest mb-1">${p.name}</h3>
+    <p class="text-[11px] text-gray-500 mb-2">SKU: ${p.sku}</p>
+
+    <p class="text-sm font-semibold mb-1">R$ ${p.price}</p>
+    <p class="text-[11px] text-gray-500 mb-3">${p.weight || ''}</p>
+
+    <button onclick="abrirModalQuantidade('${p.sku}','${p.name}')"
+     class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
+     ADICIONAR
+    </button>
+  </div>`
+ })
+})
 </script>
+
+</body>
+</html>
