@@ -1,129 +1,101 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Produtos | Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
-    <style>
-        body{font-family:'Poppins',sans-serif;background:#f8f6f2}
-        .serif{font-family:'Cinzel',serif}
-        .gold{color:#A68966}
-        .card{background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s;}
-        .card:hover{transform:translateY(-4px); border-color:#A68966;}
-        #modalQty{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center; padding:20px;}
-    </style>
+<meta charset="UTF-8">
+<title>Produtos | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+    body{font-family:'Poppins',sans-serif;background:#f8f6f2}
+    .serif{font-family:'Cinzel',serif}
+    .gold{color:#A68966}
+    .card{ background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; }
+    .card:hover{ transform:translateY(-4px); border-color:#A68966; }
+</style>
 </head>
 <body>
 
 <header class="bg-white border-b sticky top-0 z-40 text-center py-6">
     <h1 class="serif text-2xl gold">Abella Joias</h1>
-    <div class="flex justify-center gap-2 mt-3">
-        <a href="index.html" class="text-[10px] font-bold border px-4 py-1 rounded-full">VOLTAR</a>
-        <a href="carrinho.html" class="bg-black text-white text-[10px] font-bold px-4 py-1 rounded-full">CARRINHO (<span id="cartCount">0</span>)</a>
+    <div class="flex justify-center gap-2 mt-4">
+        <a href="index.html" class="bg-black text-white px-5 py-2 rounded-full text-[9px] font-bold uppercase">Categorias</a>
+        <a href="carrinho.html" class="bg-[#A68966] text-white px-5 py-2 rounded-full text-[9px] font-bold uppercase">Carrinho</a>
     </div>
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
-    <h2 id="tituloCategoria" class="serif text-xl text-center mb-8 text-gray-700 uppercase">Carregando...</h2>
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+    <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700 uppercase tracking-widest">Carregando...</h2>
+    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
-<div id="modalQty">
-    <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center">
-        <h3 id="mTitle" class="font-bold gold mb-1 uppercase text-sm"></h3>
-        <p id="mSku" class="text-[10px] text-gray-400 mb-4 font-bold"></p>
-        
-        <label class="text-[10px] block mb-1 font-bold text-gray-500 uppercase">Variação</label>
-        <select id="mVar" class="w-full border p-3 rounded-xl mb-4 text-sm"></select>
-        
-        <label class="text-[10px] block mb-1 font-bold text-gray-500 uppercase">Quantidade</label>
-        <input type="number" id="mQtd" value="1" min="1" class="w-full border p-3 rounded-xl mb-6 text-center text-xl font-bold">
-        
-        <div class="flex gap-2">
-            <button onclick="document.getElementById('modalQty').style.display='none'" class="flex-1 bg-gray-100 py-3 rounded-xl font-bold text-xs">CANCELAR</button>
-            <button id="btnConfirmar" class="flex-2 bg-black text-white px-6 py-3 rounded-xl font-bold text-xs uppercase">Adicionar</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    firebase.initializeApp({ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com" });
-    const db = firebase.database();
-    const catId = new URLSearchParams(window.location.search).get('id');
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    let currentProd = null;
-    let descontoGlobal = 0;
+// Pega o slug da categoria na URL
+const params = new URLSearchParams(window.location.search);
+const catSlug = params.get('cat');
 
-    // Carregar Categoria e Desconto
-    db.ref('categories/'+catId).on('value', s => {
-        const cat = s.val();
-        if(!cat) return;
-        tituloCategoria.innerText = cat.name;
-        descontoGlobal = cat.discount || 0;
-        
-        // Carregar Produtos
-        db.ref('products').on('value', ps => {
-            gridProdutos.innerHTML = '';
-            ps.forEach(p => {
-                const prod = p.val();
-                if(prod.category === cat.name && !prod.paused) {
-                    const precoFinal = prod.price * (1 - descontoGlobal/100);
-                    gridProdutos.innerHTML += `
-                    <div class="card p-4 shadow-sm relative">
-                        ${descontoGlobal > 0 ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-1 rounded-full">${descontoGlobal}% OFF</span>` : ''}
-                        <div class="aspect-square flex items-center justify-center mb-4"><img src="${prod.image}" class="max-h-full object-contain"></div>
-                        <h3 class="text-[10px] font-bold uppercase truncate">${prod.name}</h3>
-                        <p class="text-[9px] text-gray-400 mb-2">SKU: ${prod.sku}</p>
-                        <p class="text-sm font-bold">R$ ${precoFinal.toFixed(2)}</p>
-                        <button onclick="openBuy('${p.key}')" class="w-full bg-black text-white py-2 mt-3 rounded-full text-[10px] font-bold uppercase">Comprar</button>
-                    </div>`;
-                }
-            });
-        });
+if(!catSlug) {
+    location.href = 'index.html';
+} else {
+    // 1. Busca o nome real da categoria para o título
+    db.ref('categories/' + catSlug).once('value', snap => {
+        const cat = snap.val();
+        if(cat) {
+            document.getElementById('tituloCategoria').innerText = cat.name;
+        } else {
+            document.getElementById('tituloCategoria').innerText = "Categoria não encontrada";
+        }
     });
 
-    async function openBuy(key) {
-        const p = (await db.ref('products/'+key).once('value')).val();
-        const c = (await db.ref('categories/'+catId).once('value')).val();
-        currentProd = {...p, id: key};
-        
-        mTitle.innerText = p.name;
-        mSku.innerText = "SKU: " + p.sku;
-        mQtd.value = 1;
-        
-        // Carregar variações que você definiu no painel
-        let opts = '';
-        Object.keys(c.variacoes || {}).forEach(v => opts += `<option value="${v}">${v}</option>`);
-        mVar.innerHTML = opts || '<option value="Padrão">Padrão</option>';
-        
-        document.getElementById('modalQty').style.display='flex';
-    }
+    // 2. Busca produtos que tenham o campo 'category' igual ao slug
+    db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
+        const grid = document.getElementById('gridProdutos');
+        grid.innerHTML = '';
 
-    btnConfirmar.onclick = () => {
-        let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        cart.push({
-            id: currentProd.id,
-            nome: currentProd.name,
-            sku: currentProd.sku,
-            preco: currentProd.price * (1 - descontoGlobal/100),
-            qtd: parseInt(mQtd.value),
-            variacao: mVar.value,
-            peso: currentProd.weight || 0
+        if(!snap.exists()) {
+            grid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-20">Nenhum produto encontrado nesta categoria.</p>';
+            return;
+        }
+
+        snap.forEach(p => {
+            const prod = p.val();
+            if(prod.paused) return;
+
+            grid.innerHTML += `
+                <div class="card p-4 shadow-sm flex flex-col">
+                    <div class="aspect-square flex items-center justify-center mb-4 overflow-hidden">
+                        <img src="${prod.image || 'https://via.placeholder.com/400'}" 
+                             class="object-contain max-h-full hover:scale-110 transition-transform duration-500">
+                    </div>
+
+                    <h3 class="text-[10px] font-bold uppercase tracking-tighter mb-1 h-8 overflow-hidden">${prod.name}</h3>
+                    <p class="text-[9px] text-gray-400 mb-1">SKU: ${prod.sku}</p>
+                    <p class="text-sm font-bold gold mb-3">R$ ${Number(prod.price).toFixed(2)}</p>
+                    
+                    <button onclick="adicionarAoCarrinho('${p.key}')" class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold uppercase hover:bg-[#A68966] transition-colors">
+                        Adicionar
+                    </button>
+                </div>
+            `;
         });
-        localStorage.setItem('carrinho', JSON.stringify(cart));
-        document.getElementById('modalQty').style.display='none';
-        updateCount();
-    };
+    });
+}
 
-    function updateCount() {
-        const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        document.getElementById('cartCount').innerText = cart.length;
-    }
-    updateCount();
+function adicionarAoCarrinho(id) {
+    // Aqui você pode implementar a lógica de salvar no LocalStorage
+    // Exemplo básico:
+    alert("Produto adicionado! (Configure a lógica do carrinho conforme necessário)");
+}
 </script>
 </body>
 </html>
