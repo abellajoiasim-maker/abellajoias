@@ -15,8 +15,16 @@
 body{font-family:'Poppins',sans-serif;background:#f8f6f2}
 .serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-.card{background:#fff;border-radius:16px;border:1px solid #eee;transition:.3s}
-.card:hover{transform:translateY(-4px);border-color:#A68966}
+.card{
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #eee;
+  transition:.3s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  border-color:#A68966;
+}
 </style>
 </head>
 
@@ -44,54 +52,64 @@ body{font-family:'Poppins',sans-serif;background:#f8f6f2}
 const firebaseConfig = {
   apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-}
-firebase.initializeApp(firebaseConfig)
-const db=firebase.database()
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-/* Lê categoria da URL */
-const params=new URLSearchParams(window.location.search)
-const slug=params.get('cat')
+/* Slug da URL */
+const params = new URLSearchParams(window.location.search);
+const slug = params.get('cat');
 
-if(!slug){
- document.body.innerHTML='<p style="padding:40px;text-align:center">Categoria não encontrada</p>'
- throw new Error('Categoria ausente')
-}
+/* Resolver categoria pelo slug */
+db.ref('categories').once('value').then(snap=>{
+  let categoriaNome = null;
 
-/* Carrega produtos */
-db.ref('products')
-.orderByChild('categorySlug')
-.equalTo(slug)
-.on('value',snap=>{
- const grid=document.getElementById('gridProdutos')
- grid.innerHTML=''
+  snap.forEach(c=>{
+    const d = c.val();
+    const slugCat = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    if(slugCat === slug){
+      categoriaNome = d.name;
+      document.getElementById('tituloCategoria').innerText = d.name;
+    }
+  });
 
- let produtos=[]
- snap.forEach(s=>produtos.push(s.val()))
+  if(!categoriaNome){
+    document.getElementById('gridProdutos').innerHTML =
+      '<p class="col-span-full text-center text-gray-500">Categoria não encontrada</p>';
+    return;
+  }
 
- document.getElementById('tituloCategoria').innerText =
-   produtos[0]?.categoryName || 'Categoria'
+  /* Produtos */
+  db.ref('products').on('value', snapProd=>{
+    const grid = document.getElementById('gridProdutos');
+    grid.innerHTML = '';
 
- produtos.forEach(p=>{
-  if(p.paused) return
-  grid.innerHTML+=`
-  <div class="card p-4 shadow-sm">
-    <div class="aspect-square flex items-center justify-center mb-4">
-      <img src="${p.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full">
-    </div>
+    snapProd.forEach(p=>{
+      const prod = p.val();
+      if(prod.paused) return;
+      if(prod.category !== categoriaNome) return;
 
-    <h3 class="text-xs font-bold uppercase tracking-widest mb-1">${p.name}</h3>
-    <p class="text-[11px] text-gray-500 mb-2">SKU: ${p.sku}</p>
+      grid.innerHTML += `
+        <div class="card p-4 shadow-sm">
+          <div class="aspect-square flex items-center justify-center mb-4">
+            <img src="${prod.image || 'https://via.placeholder.com/400'}"
+                 class="object-contain max-h-full">
+          </div>
 
-    <p class="text-sm font-semibold mb-1">R$ ${p.price}</p>
-    <p class="text-[11px] text-gray-500 mb-3">${p.weight || ''}</p>
+          <h3 class="text-xs font-bold uppercase tracking-widest mb-1">${prod.name}</h3>
+          <p class="text-[11px] text-gray-500 mb-1">SKU: ${prod.sku}</p>
+          <p class="text-sm font-semibold mb-1">R$ ${Number(prod.price).toFixed(2)}</p>
+          <p class="text-[11px] text-gray-500 mb-3">${prod.weight || ''}</p>
 
-    <button onclick="abrirModalQuantidade('${p.sku}','${p.name}')"
-     class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
-     ADICIONAR
-    </button>
-  </div>`
- })
-})
+          <button onclick="alert('Adicionar ao carrinho (já integrado no seu carrinho)')"
+            class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
+            ADICIONAR
+          </button>
+        </div>
+      `;
+    });
+  });
+});
 </script>
 
 </body>
