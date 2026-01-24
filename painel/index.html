@@ -12,36 +12,21 @@
 <style>
 body{margin:0;font-family:Inter,Arial;background:#0b0b0b;color:#eee}
 header{padding:20px;text-align:center;font-size:22px;font-weight:700;background:#000;border-bottom:1px solid #222}
-nav{display:flex;gap:10px;padding:10px;background:#111;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+nav{display:flex;gap:10px;padding:10px;background:#111;flex-wrap:wrap}
 nav button{flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;padding:10px;border-radius:10px;cursor:pointer}
 nav button.active{border-color:#caa85c;color:#caa85c}
 section{display:none;padding:20px}
 section.active{display:block}
-
-/* GRID DE 6 ITENS CORRIGIDO */
-.grid-main { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-@media(min-width: 768px) { .grid-main { grid-template-columns: repeat(4, 1fr); } }
-@media(min-width: 1200px) { .grid-main { grid-template-columns: repeat(6, 1fr); } }
-
-.card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px;position:relative}
-.card.paused{opacity: 0.4; filter: grayscale(1);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.tag{font-size:10px;padding:2px 6px;border-radius:999px;font-weight:bold}
+.tag{font-size:11px;padding:3px 8px;border-radius:999px}
 .ok{background:#1f3;color:#000}
-.no{background:#c33;color:#fff}
-
-.btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;transition:0.2s}
-.btn:hover{background:#333}
-.btn.gold{border-color:#caa85c;color:#caa85c}
+.no{background:#c33}
+.btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
+.btn.pause{border-color:#caa85c;color:#caa85c}
 .btn.danger{border-color:#c33;color:#f77}
-
-input, select, textarea{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%;margin-bottom:8px}
-
-.cat-label { color: #caa85c; font-weight: bold; text-transform: uppercase; font-size: 13px; margin: 30px 0 10px 0; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
-
-/* MODAL */
-.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; padding:15px; }
-.modal-content { background:#141414; border:1px solid #333; width:100%; max-width:600px; border-radius:20px; padding:20px; max-height:90vh; overflow-y:auto; }
+input{background:#111;border:1px solid #333;color:#fff;padding:6px;border-radius:6px;width:100%}
 </style>
 </head>
 
@@ -49,7 +34,7 @@ input, select, textarea{background:#111;border:1px solid #333;color:#fff;padding
 
 <header>Painel Administrativo • Abella Joias</header>
 
-<nav id="mainNav">
+<nav>
   <button class="active" onclick="show('empresa')">Empresa</button>
   <button onclick="show('categorias')">Categorias</button>
   <button onclick="show('produtos')">Produtos</button>
@@ -58,169 +43,139 @@ input, select, textarea{background:#111;border:1px solid #333;color:#fff;padding
 </nav>
 
 <section id="empresa" class="active">
-  <h2 class="mb-4 font-bold">Empresa</h2>
+  <h2 class="mb-3 font-bold">Empresa</h2>
   <div class="card max-w-md">
     <input id="empNome" placeholder="Nome">
-    <input id="empWhats" placeholder="WhatsApp">
-    <button class="btn gold w-full mt-2" onclick="salvarEmpresa()">Salvar</button>
+    <input id="empWhats" placeholder="WhatsApp" class="mt-2">
+    <input id="empPix" type="number" placeholder="Desconto PIX %" class="mt-2">
+    <input id="empParc" type="number" placeholder="Parcelas" class="mt-2">
+    <button class="btn mt-3" onclick="salvarEmpresa()">Salvar</button>
   </div>
 </section>
 
 <section id="categorias">
-  <h2 class="mb-4 font-bold">Categorias</h2>
-  <div class="grid-main" id="listaCategorias"></div>
+  <h2 class="mb-3 font-bold">Categorias</h2>
+  <div class="grid" id="listaCategorias"></div>
 </section>
 
 <section id="produtos">
-  <h2 class="mb-4 font-bold">Catálogo de Produtos</h2>
-  <div id="produtosAgrupados"></div>
+  <h2 class="mb-3 font-bold">Produtos</h2>
+  <div id="produtosPorCategoria"></div>
 </section>
 
 <section id="promocoes">
-  <h2 class="mb-4 font-bold">Promoções</h2>
-  <div id="gridPromoCategorias" class="space-y-2 max-w-xl"></div>
+  <h2 class="mb-3 font-bold">Promoções</h2>
+  <p class="text-sm opacity-70">Promoções por categoria (estrutura mantida)</p>
 </section>
 
 <section id="pedidos">
-  <h2 class="mb-4 font-bold">Gestão de Pedidos</h2>
-  <div id="listaPedidos" class="space-y-4"></div>
+  <h2 class="mb-3 font-bold">Pedidos</h2>
+  <div id="listaPedidos"></div>
 </section>
 
-<div id="modalEdit" class="modal">
-    <div class="modal-content">
-        <div class="row mb-4">
-            <h3 id="modalTitle" class="font-bold">Detalhes</h3>
-            <button class="btn" onclick="closeModal()">✕ Fechar</button>
-        </div>
-        <div id="modalBody"></div>
-        <div id="modalFooter" class="mt-4 border-t border-zinc-800 pt-4"></div>
-    </div>
-</div>
-
 <script>
-const firebaseConfig = { apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp({
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain:"catalogo-abella-joias.firebaseapp.com",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId:"catalogo-abella-joias",
+  storageBucket:"catalogo-abella-joias.firebasestorage.app",
+  messagingSenderId:"727568435294",
+  appId:"1:727568435294:web:442c0179ecf0686dff4ccf"
+});
 const db=firebase.database();
 
 function show(id){
  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
  document.getElementById(id).classList.add('active');
  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
- if(event) event.target.classList.add('active');
+ event.target.classList.add('active');
 }
-function closeModal() { document.getElementById('modalEdit').style.display = 'none'; }
 
-// 1. CATEGORIAS
-db.ref('categories').on('value', snap => {
-    const list = document.getElementById('listaCategorias');
-    list.innerHTML = '';
-    snap.forEach(c => {
-        const d = c.val();
-        list.innerHTML += `
-            <div class="card">
-                <div class="row"><strong>${d.name}</strong> <span class="tag ${d.image?'ok':'no'}">IMG</span></div>
-                <div class="row mt-4">
-                    <button class="btn" onclick="abrirEdicaoCat('${c.key}')">Editar</button>
-                    <button class="btn danger" onclick="excluirItem('categories','${c.key}')">✕</button>
-                </div>
-            </div>`;
-    });
+// EMPRESA
+db.ref('settings').on('value',s=>{
+ const v=s.val()||{};
+ empNome.value=v.nome||'';
+ empWhats.value=v.whatsapp||'';
+ empPix.value=v.pix||0;
+ empParc.value=v.parcelas||1;
+});
+function salvarEmpresa(){
+ db.ref('settings').update({
+  nome:empNome.value,
+  whatsapp:empWhats.value,
+  pix:+empPix.value,
+  parcelas:+empParc.value
+ });
+ alert('Salvo');
+}
+
+// CATEGORIAS + VARIAÇÕES
+db.ref('categories').on('value',snap=>{
+ listaCategorias.innerHTML='';
+ snap.forEach(c=>{
+  const d=c.val();
+  listaCategorias.innerHTML+=`
+   <div class="card">
+    <div class="row">
+     <strong>${d.name}</strong>
+     <span class="tag ${d.image?'ok':'no'}">IMG</span>
+    </div>
+    <div class="text-xs opacity-70 mb-2">${Object.keys(d.variacoes||{}).length} variações</div>
+    <div class="row">
+     <button class="btn">Editar</button>
+     <button class="btn pause">Pausar</button>
+     <button class="btn danger">Excluir</button>
+    </div>
+   </div>`;
+ });
 });
 
-// 2. PRODUTOS (GRADE DE 6 CORRIGIDA)
-db.ref('products').on('value', snap => {
-    const map = {};
-    snap.forEach(p => {
-        const v = p.val(); v.id = p.key;
-        if(!map[v.category]) map[v.category] = [];
-        map[v.category].push(v);
-    });
-    const container = document.getElementById('produtosAgrupados');
-    container.innerHTML = '';
-    Object.keys(map).sort().forEach(cat => {
-        container.innerHTML += `<span class="cat-label">${cat}</span>`;
-        const grid = document.createElement('div');
-        grid.className = 'grid-main';
-        map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||'',undefined,{numeric:true})).forEach(p => {
-            grid.innerHTML += `
-                <div class="card ${p.paused?'paused':''}">
-                    <div class="row"><strong class="text-[10px]">${p.sku}</strong><span class="tag ${p.image?'ok':'no'}">IMG</span></div>
-                    <div class="text-[11px] truncate my-1">${p.name}</div>
-                    <div class="row mt-2">
-                        <button class="btn" onclick="abrirEdicaoProd('${p.id}')">Editar</button>
-                        <button class="btn gold" onclick="togglePause('${p.id}', ${p.paused})">Pausar</button>
-                    </div>
-                </div>`;
-        });
-        container.appendChild(grid);
-    });
+// PRODUTOS AGRUPADOS POR CATEGORIA + SKU
+db.ref('products').on('value',snap=>{
+ const map={};
+ snap.forEach(p=>{
+  const v=p.val();
+  if(!map[v.category]) map[v.category]=[];
+  map[v.category].push(v);
+ });
+ produtosPorCategoria.innerHTML='';
+ Object.keys(map).sort().forEach(cat=>{
+  const lista=map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||''));
+  let html=`<h3 class="mt-6 mb-2 font-bold">${cat}</h3><div class="grid">`;
+  lista.forEach(p=>{
+   html+=`
+    <div class="card">
+     <div class="row">
+      <strong>${p.sku}</strong>
+      <span class="tag ${p.image?'ok':'no'}">IMG</span>
+     </div>
+     <div class="text-sm">${p.name}</div>
+     <div class="text-xs opacity-70">Peso: ${p.weight||'-'}</div>
+     <div class="row mt-2">
+      <button class="btn">Editar</button>
+      <button class="btn pause">Pausar</button>
+      <button class="btn danger">Excluir</button>
+     </div>
+    </div>`;
+  });
+  html+='</div>';
+  produtosPorCategoria.innerHTML+=html;
+ });
 });
 
-// 3. GESTÃO DE PEDIDOS (COM FUNÇÕES SOLICITADAS)
-db.ref('orders').on('value', snap => {
-    const list = document.getElementById('listaPedidos');
-    list.innerHTML = '';
-    snap.forEach(o => {
-        const v = o.val();
-        list.innerHTML += `
-            <div class="card border-l-4 ${v.status=='Enviado'?'border-green-500':'border-yellow-500'}">
-                <div class="row">
-                    <div>
-                        <span class="block font-bold">#${o.key.slice(-5)} - ${v.customer?.name}</span>
-                        <span class="text-[10px] opacity-60">${v.date || ''} | Status: <b class="text-[#caa85c]">${v.status || 'Pendente'}</b></span>
-                    </div>
-                    <div class="flex gap-1">
-                        <button class="btn gold" onclick="visualizarPedido('${o.key}')">Ver / Romaneio</button>
-                        <button class="btn" onclick="mudarStatus('${o.key}')">Status</button>
-                        <button class="btn danger" onclick="excluirItem('orders','${o.key}')">✕</button>
-                    </div>
-                </div>
-            </div>`;
-    });
+// PEDIDOS
+db.ref('orders').on('value',s=>{
+ listaPedidos.innerHTML='';
+ s.forEach(o=>{
+  const v=o.val();
+  listaPedidos.innerHTML+=`
+   <div class="border-b border-[#222] p-2 text-xs">
+    ${v.sku||''} — R$ ${v.preco||''}
+   </div>`;
+ });
 });
-
-async function visualizarPedido(id) {
-    const snap = await db.ref('orders/'+id).once('value');
-    const v = snap.val();
-    const modal = document.getElementById('modalEdit');
-    const body = document.getElementById('modalBody');
-    const footer = document.getElementById('modalFooter');
-    
-    document.getElementById('modalTitle').innerText = "Pedido #" + id.slice(-5);
-    
-    let itensHtml = v.items?.map(i => `<div class="py-1 border-b border-white/5 text-sm">${i.sku} - ${i.name} (Qtd: ${i.qty}) <br> <small class="text-[#caa85c]">${i.variation || ''}</small></div>`).join('');
-
-    body.innerHTML = `
-        <div class="grid grid-cols-2 gap-4 mb-4 text-xs">
-            <div><b>Cliente:</b> ${v.customer?.name}</div>
-            <div><b>WhatsApp:</b> ${v.customer?.phone}</div>
-            <div class="col-span-2"><b>Endereço:</b> ${v.customer?.address || 'Retirada'}</div>
-        </div>
-        <div class="bg-black/50 p-3 rounded-lg">${itensHtml}</div>
-    `;
-
-    footer.innerHTML = `
-        <div class="flex gap-2">
-            <button class="btn flex-1 bg-white !text-black font-bold" onclick="imprimirRomaneio('${id}', 'simples')">Romaneio Simples</button>
-            <button class="btn flex-1 bg-[#caa85c] !text-black font-bold" onclick="imprimirRomaneio('${id}', 'completo')">Romaneio Envio</button>
-        </div>
-    `;
-    modal.style.display = 'flex';
-}
-
-function imprimirRomaneio(id, tipo) {
-    // Abre uma nova aba com o formato de impressão
-    window.open(`romaneio.html?id=${id}&tipo=${tipo}`, '_blank');
-}
-
-function mudarStatus(id) {
-    const novo = prompt("Digite o novo status (Pendente, Separado, Enviado, Cancelado):");
-    if(novo) db.ref('orders/'+id).update({status: novo});
-}
-
-function togglePause(id, atual) { db.ref('products/'+id).update({paused: !atual}); }
-function excluirItem(path, id) { if(confirm("Deseja realmente excluir?")) db.ref(path+'/'+id).remove(); }
-
 </script>
+
 </body>
 </html>
