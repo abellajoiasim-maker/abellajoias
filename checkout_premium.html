@@ -102,24 +102,24 @@ const db = firebase.database();
 
 let configEmpresa = { whatsapp: "", nome: "", desconto_pix: 0, parcelas: 1 };
 let formaPagamento = "";
-let valorFinalGlobal = 0;
 
-// BUSCA DADOS DO PAINEL ADMINISTRATIVO (NÓ EMPRESA)
-db.ref('empresa').once('value', snap => {
+// BUSCA DADOS DO PAINEL (USANDO .ON PARA MUDAR NA HORA QUE VOCÊ SALVAR NO PAINEL)
+db.ref('empresa').on('value', snap => {
     if(snap.exists()){
         const d = snap.val();
         configEmpresa.whatsapp = d.whatsapp?.replace(/\D/g, '') || "";
         configEmpresa.nome = d.nome_fantasia || d.nome || "Abella Joias";
+        
+        // CORREÇÃO DOS CAMPOS: Garantindo que pegue os valores do seu painel
         configEmpresa.desconto_pix = parseFloat(d.desconto_pix) || 0;
         configEmpresa.parcelas = parseInt(d.parcelas_sem_juros) || 1;
         
-        // Atualiza UI com dados reais do painel
+        // Atualiza UI
         document.getElementById('nomeLojaHead').innerText = configEmpresa.nome;
         document.getElementById('labelDescontoPixResumo').innerText = `Desconto PIX (${configEmpresa.desconto_pix}%):`;
         document.getElementById('labelPixBotao').innerText = `${configEmpresa.desconto_pix}% de desconto`;
         document.getElementById('labelParcelasBotao').innerText = `${configEmpresa.parcelas}x sem acréscimo`;
         
-        // Agora que temos os dados da empresa, carregamos o carrinho
         carregarCarrinho();
         
         const btn = document.getElementById('btnFinalizar');
@@ -171,11 +171,10 @@ function carregarCarrinho() {
 
     const vDescontoPix = totalBruto * (configEmpresa.desconto_pix / 100);
     const totalComDesconto = totalBruto - vDescontoPix;
-    valorFinalGlobal = totalBruto; // Padrão é o bruto
 
     document.getElementById('subtotalBruto').innerText = `R$ ${totalBruto.toFixed(2)}`;
     document.getElementById('valorDescontoPix').innerText = `- R$ ${vDescontoPix.toFixed(2)}`;
-    document.getElementById('valorTotalFinal').innerText = `R$ ${totalBruto.toFixed(2)}`;
+    document.getElementById('valorTotalFinal').innerText = (formaPagamento === 'Pix') ? `R$ ${totalComDesconto.toFixed(2)}` : `R$ ${totalBruto.toFixed(2)}`;
     document.getElementById('totalNoPix').innerText = `R$ ${totalComDesconto.toFixed(2)}`;
     document.getElementById('valorParcelaRef').innerText = `${configEmpresa.parcelas}x de R$ ${(totalBruto / configEmpresa.parcelas).toFixed(2)}`;
     document.getElementById('pesoTotal').innerText = totalPeso.toFixed(2);
@@ -183,21 +182,10 @@ function carregarCarrinho() {
 
 function setPagamento(tipo) {
     formaPagamento = tipo;
-    const totalBruto = parseFloat(document.getElementById('subtotalBruto').innerText.replace('R$ ', ''));
-    const vDescontoPix = totalBruto * (configEmpresa.desconto_pix / 100);
-    
-    document.getElementById('optPix').classList.remove('active');
-    document.getElementById('optCartao').classList.remove('active');
-    
-    if(tipo === 'Pix') {
-        document.getElementById('optPix').classList.add('active');
-        document.getElementById('pagamentoSelecionado').innerText = "PIX (Com Desconto)";
-        document.getElementById('valorTotalFinal').innerText = `R$ ${(totalBruto - vDescontoPix).toFixed(2)}`;
-    } else {
-        document.getElementById('optCartao').classList.add('active');
-        document.getElementById('pagamentoSelecionado').innerText = `${configEmpresa.parcelas}x no Cartão`;
-        document.getElementById('valorTotalFinal').innerText = `R$ ${totalBruto.toFixed(2)}`;
-    }
+    document.getElementById('optPix').classList.toggle('active', tipo === 'Pix');
+    document.getElementById('optCartao').classList.toggle('active', tipo === 'Cartão');
+    carregarCarrinho(); // Recarrega para aplicar o valor final correto no resumo
+    document.getElementById('pagamentoSelecionado').innerText = (tipo === 'Pix') ? "PIX (Com Desconto)" : `${configEmpresa.parcelas}x no Cartão`;
 }
 
 function remover(idx) {
@@ -213,18 +201,18 @@ function enviarWhatsApp() {
     const totalTxt = document.getElementById('valorTotalFinal').innerText;
 
     if (!nome || !contato || !formaPagamento) {
-        alert("Por favor, preencha Nome, WhatsApp e selecione o Pagamento.");
+        alert("Preencha Nome, WhatsApp e selecione o Pagamento.");
         return;
     }
 
     let msg = `Olá *${configEmpresa.nome}*, acabei de escolher meus produtos no catálogo!\n\n`;
-    msg += `Estou passando para avisar que *finalizei minha compra* e estou aguardando o contato para confirmar o pagamento e o envio.\n\n`;
+    msg += `Estou passando para avisar que *finalizei minha compra*.\n\n`;
     msg += `*DADOS DO CLIENTE:*\n`;
     msg += `• Nome: ${nome}\n`;
     msg += `• Contato: ${contato}\n`;
     msg += `• Pagamento: ${formaPagamento}\n`;
     msg += `• Valor Final: ${totalTxt}\n\n`;
-    msg += `_Fico no aguardo do retorno de vocês!_`;
+    msg += `_Aguardando seu retorno!_`;
 
     const encoded = encodeURIComponent(msg);
     localStorage.removeItem('carrinho');
