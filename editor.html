@@ -7,73 +7,89 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background: #0b0b0b; color: #eee; font-family: 'Inter', sans-serif; }
-        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 5px; border-radius: 4px; width: 100%; font-size: 11px; }
-        .input-dark:focus { border-color: #caa85c; outline: none; background: #222; }
+        body { background: #0b0b0b; color: #eee; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 6px; border-radius: 6px; width: 100%; font-size: 11px; transition: 0.2s; }
+        .input-dark:focus { border-color: #caa85c; outline: none; background: #222; box-shadow: 0 0 5px rgba(202, 168, 92, 0.3); }
         
-        /* Estilo para Linha Pausada */
-        tr.is-paused { opacity: 0.5; background: #2a1010 !important; }
-        
-        .btn-status { font-size: 9px; font-weight: bold; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
+        tr.is-paused { opacity: 0.4; background: #2a1010 !important; }
+        tr:hover { background: #141414; }
+
+        .btn-status { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 5px 10px; border-radius: 5px; cursor: pointer; transition: 0.3s; width: 75px; text-align: center; }
         .status-on { background: #15803d; color: white; }
         .status-off { background: #b91c1c; color: white; }
 
-        .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 10px; }
-        .img-preview { width: 40px; height: 40px; object-fit: contain; background: #000; border-radius: 4px; border: 1px solid #333; }
+        .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 12px; }
+        .img-preview { width: 45px; height: 45px; object-fit: contain; background: #000; border-radius: 6px; border: 1px solid #333; transition: transform 0.2s; }
+        .img-preview:hover { transform: scale(2.5); z-index: 50; position: relative; }
         
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0b0b0b; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .style-scroll { scrollbar-width: thin; scrollbar-color: #333 #0b0b0b; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-6">
 
     <div class="max-w-[98%] mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a]">
+        <header class="flex flex-col xl:flex-row justify-between items-center mb-6 gap-6 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a] shadow-xl">
             <div>
-                <h1 class="text-xl font-bold text-[#caa85c]">Editor Full Master</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Controle de Estoque e Status</p>
+                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Sincronização Inteligente & Gestão de Estoque</p>
             </div>
             
-            <div class="flex gap-2 w-full md:w-auto">
-                <input id="filtroSku" placeholder="Filtrar SKU (ex: BC-5)" class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-lg text-sm w-full md:w-64" onkeyup="if(event.key === 'Enter') carregarProdutos()">
-                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-lg text-sm hover:bg-[#b8964d]">FILTRAR</button>
+            <div class="flex flex-wrap gap-3 w-full xl:w-auto">
+                <input id="filtroSku" placeholder="Prefixo SKU (ex: BC-5)" class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-48 focus:border-[#caa85c] outline-none" onkeyup="if(event.key === 'Enter') carregarProdutos()">
+                
+                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:bg-[#b8964d] transition-all flex-grow md:flex-grow-0">
+                    🔍 FILTRAR
+                </button>
+                
+                <button onclick="sincronizarFotosComStorage()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700 transition-all flex-grow md:flex-grow-0">
+                    🔄 SYNC FOTOS
+                </button>
             </div>
         </header>
 
         <div class="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto overflow-y-auto" style="max-height: 70vh;">
+            <div class="overflow-x-auto overflow-y-auto style-scroll" style="max-height: 72vh;">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead class="sticky-header">
                         <tr class="text-[#caa85c] uppercase text-[9px] tracking-wider">
-                            <th class="w-16">Status</th>
-                            <th class="w-12">Foto</th>
-                            <th class="w-24">SKU</th>
+                            <th class="w-20">Status</th>
+                            <th class="w-16">Preview</th>
+                            <th class="w-28">SKU</th>
                             <th>Nome do Produto</th>
-                            <th class="w-32">Variação</th>
-                            <th class="w-24">Preço (R$)</th>
-                            <th class="w-16">Peso</th>
-                            <th>Link da Imagem</th>
+                            <th class="w-40">Variação</th>
+                            <th class="w-32">Preço (R$)</th>
+                            <th class="w-20">Peso (g)</th>
+                            <th>URL da Imagem (Storage)</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo">
                         <tr>
-                            <td colspan="8" class="p-20 text-center text-gray-500 italic text-sm">Use o filtro acima para carregar os produtos...</td>
+                            <td colspan="8" class="p-32 text-center text-gray-500">
+                                <p class="text-lg">Pronto para começar?</p>
+                                <p class="text-sm">Digite um prefixo de SKU acima e clique em filtrar.</p>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="mt-6 flex justify-between items-center bg-[#141414] p-4 rounded-xl border border-[#2a2a2a]">
-            <div id="statusInfo" class="text-xs text-gray-500"></div>
-            <button id="btnSalvar" onclick="salvarAlteracoes()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-12 py-3 rounded-lg shadow-lg hidden">
-                SALVAR ALTERAÇÕES
-            </button>
+        <div class="mt-6 flex flex-col md:flex-row justify-between items-center bg-[#141414] p-5 rounded-2xl border border-[#2a2a2a] gap-4">
+            <div id="statusInfo" class="text-xs text-gray-400 font-medium"></div>
+            
+            <div class="flex gap-4 w-full md:w-auto">
+                <button id="btnSalvar" onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-16 py-4 rounded-xl shadow-lg transition-all hidden uppercase tracking-widest text-sm">
+                    💾 Salvar Tudo no Banco
+                </button>
+            </div>
         </div>
     </div>
 
 <script>
+// CONFIGURAÇÃO FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -83,17 +99,18 @@ const db = firebase.database();
 
 let categoriasCache = {};
 
+// 1. CARREGAR VARIAÇÕES DAS CATEGORIAS
 async function carregarCacheCategorias() {
     const snap = await db.ref('categories').once('value');
     categoriasCache = snap.val() || {};
 }
 
-// Função para alternar visualmente o status antes de salvar
+// 2. ALTERNAR STATUS (PAUSADO/ATIVO)
 function toggleStatus(btn) {
     const tr = btn.closest('tr');
-    const isPaused = btn.classList.contains('status-on');
+    const isActive = btn.classList.contains('status-on');
     
-    if (isPaused) {
+    if (isActive) {
         btn.classList.replace('status-on', 'status-off');
         btn.innerText = 'Pausado';
         tr.classList.add('is-paused');
@@ -104,13 +121,14 @@ function toggleStatus(btn) {
     }
 }
 
+// 3. CARREGAR PRODUTOS COM FILTRO
 async function carregarProdutos() {
     await carregarCacheCategorias();
     const prefixo = document.getElementById('filtroSku').value.trim().toUpperCase();
     const corpo = document.getElementById('tabelaCorpo');
     const btnSalvar = document.getElementById('btnSalvar');
 
-    corpo.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-sm">Carregando...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-sm">Sincronizando dados...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
@@ -124,7 +142,7 @@ async function carregarProdutos() {
                 contador++;
                 
                 const varsDaCat = categoriasCache[p.category]?.variacoes || {};
-                let options = `<option value="">Nenhuma</option>`;
+                let options = `<option value="">Sem Variação</option>`;
                 Object.entries(varsDaCat).forEach(([key, val]) => {
                     options += `<option value="${key}" ${p.variacao === key ? 'selected' : ''}>${val.label || key}</option>`;
                 });
@@ -134,41 +152,68 @@ async function carregarProdutos() {
                 const rowClass = p.paused ? 'is-paused' : '';
 
                 html += `
-                <tr data-id="${child.key}" class="border-b border-[#222] ${rowClass}">
-                    <td class="p-2">
+                <tr data-id="${child.key}" class="border-b border-[#222] ${rowClass} transition-colors">
+                    <td class="p-3 text-center">
                         <button class="btn-status ${statusClass}" onclick="toggleStatus(this)">${statusText}</button>
                     </td>
-                    <td class="p-2"><img src="${p.image}" class="img-preview"></td>
-                    <td class="p-2 font-mono text-[#caa85c] font-bold text-[10px]">${p.sku || '---'}</td>
+                    <td class="p-2">
+                        <img src="${p.image}" class="img-preview" onerror="this.src='https://via.placeholder.com/45?text=OFF'">
+                    </td>
+                    <td class="p-2 font-mono text-[#caa85c] font-bold text-[11px]">${p.sku || '---'}</td>
                     <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
-                    <td class="p-1"><select class="input-dark edit-var">${options}</select></td>
+                    <td class="p-1"><select class="input-dark edit-var text-[10px]">${options}</select></td>
                     <td class="p-1"><input class="input-dark edit-price text-green-500 font-bold" type="number" step="0.01" value="${p.price || 0}"></td>
                     <td class="p-1"><input class="input-dark edit-weight" value="${p.weight || 0}"></td>
-                    <td class="p-1"><input class="input-dark edit-img" value="${p.image || ''}"></td>
+                    <td class="p-1"><input class="input-dark edit-img" value="${p.image || ''}" onchange="this.closest('tr').querySelector('.img-preview').src=this.value"></td>
                 </tr>`;
             }
         });
 
-        corpo.innerHTML = contador > 0 ? html : '<tr><td colspan="8" class="p-20 text-center text-red-500">Nenhum item encontrado.</td></tr>';
+        corpo.innerHTML = contador > 0 ? html : '<tr><td colspan="8" class="p-20 text-center text-red-500 font-bold">Nenhum produto encontrado com este SKU.</td></tr>';
         if(contador > 0) btnSalvar.classList.remove('hidden');
-        document.getElementById('statusInfo').innerText = `${contador} itens encontrados.`;
+        document.getElementById('statusInfo').innerText = `${contador} itens carregados para edição.`;
     });
 }
 
+// 4. SINCRONIZAR FOTOS COM STORAGE (PELO SKU)
+function sincronizarFotosComStorage() {
+    const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
+    if (linhas.length === 0) return alert("Filtre os produtos primeiro!");
+
+    if (!confirm("Isso preencherá os campos de imagem vazios usando o SKU.jpg. Continuar?")) return;
+
+    let syncCount = 0;
+    linhas.forEach(tr => {
+        const sku = tr.querySelector('.font-mono').innerText;
+        const inputImg = tr.querySelector('.edit-img');
+        const preview = tr.querySelector('.img-preview');
+
+        // SÓ ATUALIZA SE ESTIVER VAZIO OU COM PLACEHOLDER
+        if (sku !== '---' && (inputImg.value === "" || inputImg.value.includes("via.placeholder"))) {
+            const bucket = "catalogo-abella-joias.appspot.com";
+            const pasta = "produtos"; // Nome da pasta no Storage
+            const urlFinal = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${pasta}%2F${sku}.jpg?alt=media`;
+            
+            inputImg.value = urlFinal;
+            preview.src = urlFinal;
+            syncCount++;
+        }
+    });
+    alert(`Mágica feita! ${syncCount} links gerados. Não esqueça de SALVAR TUDO.`);
+}
+
+// 5. SALVAR NO FIREBASE (UPDATE - NÃO APAGA DADOS EXISTENTES)
 function salvarAlteracoes() {
     const btn = document.getElementById('btnSalvar');
-    const linhas = document.querySelectorAll('#tabelaCorpo tr');
+    const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
     const updates = {};
 
-    btn.innerText = "SALVANDO...";
+    btn.innerText = "⏳ PROCESSANDO...";
     btn.disabled = true;
 
     linhas.forEach(tr => {
         const id = tr.dataset.id;
-        if(!id) return;
-        
-        const statusBtn = tr.querySelector('.btn-status');
-        const isPaused = statusBtn.classList.contains('status-off');
+        const isPaused = tr.querySelector('.btn-status').classList.contains('status-off');
 
         updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
         updates[`/products/${id}/variacao`] = tr.querySelector('.edit-var').value;
@@ -179,8 +224,11 @@ function salvarAlteracoes() {
     });
 
     db.ref().update(updates).then(() => {
-        alert("✅ Banco de dados atualizado!");
-        btn.innerText = "SALVAR ALTERAÇÕES";
+        alert("✅ SUCESSO! Todos os produtos foram atualizados.");
+        btn.innerText = "💾 Salvar Tudo no Banco";
+        btn.disabled = false;
+    }).catch(e => {
+        alert("❌ Erro ao salvar: " + e.message);
         btn.disabled = false;
     });
 }
