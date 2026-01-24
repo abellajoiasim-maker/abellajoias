@@ -1,119 +1,159 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Categoria | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
-
-<style>
-body{font-family:'Poppins',sans-serif;background:#f8f6f2}
-.serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.card{
-  background:#fff;
-  border-radius:16px;
-  border:1px solid #eee;
-  transition:.3s;
-}
-.card:hover{
-  transform:translateY(-4px);
-  border-color:#A68966;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Produtos | Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f8f6f2; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold { color: #A68966; }
+        .card-prod { background: white; border-radius: 15px; border: 1px solid #eee; transition: 0.3s; height: 100%; display: flex; flex-direction: column; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
 </head>
-
 <body>
 
-<header class="bg-white border-b sticky top-0 z-40">
-  <div class="text-center py-8">
-    <h1 class="serif text-3xl gold">Abella Joias</h1>
-    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">Catálogo Atacado</p>
-  </div>
-
-  <div class="flex justify-center gap-2 pb-4">
-    <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">
-      CATEGORIAS
-    </a>
-    <a href="galvanicas.html" class="bg-white border px-6 py-2 rounded-full text-[10px] font-bold text-gray-500">
-      GALVÂNICAS
-    </a>
-  </div>
+<header class="text-center py-8 bg-white border-b sticky top-0 z-50 shadow-sm">
+    <h1 class="serif text-3xl gold tracking-widest">Abella Joias</h1>
+    <div class="flex justify-center gap-2 mt-4 px-4">
+        <a href="index.html" class="bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-[10px] font-bold uppercase">Categorias</a>
+        <a href="carrinho.html" class="bg-black text-white px-5 py-2 rounded-full text-[10px] font-bold uppercase">Carrinho (<span id="cartCount">0</span>)</a>
+    </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-6">
-  <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700"></h2>
-  <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
+<main class="max-w-7xl mx-auto p-4 md:p-8">
+    <h2 id="categoryTitle" class="serif text-center text-2xl mb-10 text-gray-800 uppercase tracking-widest">Carregando...</h2>
+    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"></div>
 </main>
 
-<script>
-/* FIREBASE */
-const firebaseConfig = {
-  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+<div id="customModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+    <div style="background:#fff; padding:30px; border-radius:20px; width:90%; max-width:360px; text-align:center;">
+        <h3 id="modalProductName" class="serif gold" style="font-size:16px; font-weight:700;">-</h3>
+        <p id="modalSKU" style="font-size:10px; color:#999; margin-bottom:15px;"></p>
+        
+        <label class="block text-[10px] text-gray-400 uppercase mb-1">Selecione a Variação</label>
+        <select id="modalVarInput" class="w-full p-2 border mb-4 rounded-lg text-sm"></select>
 
-/* SLUG DA URL */
-const params = new URLSearchParams(window.location.search);
-const slug = params.get('cat');
-
-/* BUSCAR CATEGORIA PELO SLUG */
-db.ref('categories').once('value').then(catSnap=>{
-  let nomeCategoria = null;
-
-  catSnap.forEach(c=>{
-    const d = c.val();
-    const slugCat = (d.slug || d.name.toLowerCase().replace(/[^a-z0-9]/g,'-'));
-    if(slugCat === slug){
-      nomeCategoria = d.name;
-      tituloCategoria.innerText = d.name;
-    }
-  });
-
-  if(!nomeCategoria){
-    gridProdutos.innerHTML =
-      '<p class="col-span-full text-center text-gray-500">Categoria não encontrada</p>';
-    return;
-  }
-
-  /* CARREGAR PRODUTOS DA CATEGORIA */
-  db.ref('products').on('value', snap=>{
-    gridProdutos.innerHTML = '';
-
-    snap.forEach(p=>{
-      const prod = p.val();
-
-      if(prod.paused) return;
-      if(prod.category !== nomeCategoria) return;
-
-      gridProdutos.innerHTML += `
-        <div class="card p-4 shadow-sm">
-          <div class="aspect-square flex items-center justify-center mb-4">
-            <img src="${prod.image || 'https://via.placeholder.com/400'}"
-                 class="object-contain max-h-full">
-          </div>
-
-          <h3 class="text-xs font-bold uppercase tracking-widest mb-1">${prod.name}</h3>
-          <p class="text-[11px] text-gray-500 mb-1">SKU: ${prod.sku}</p>
-          <p class="text-sm font-semibold mb-1">R$ ${Number(prod.price).toFixed(2)}</p>
-          <p class="text-[11px] text-gray-500 mb-3">${prod.weight || ''}</p>
-
-          <button class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
-            ADICIONAR
-          </button>
+        <label class="block text-[10px] text-gray-400 uppercase mb-1">Quantidade</label>
+        <input type="number" id="modalQtyInput" value="1" min="1" style="width:100px; padding:10px; border:2px solid #A68966; border-radius:12px; text-align:center; font-size:20px; font-weight:700; margin-bottom:20px;">
+        
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeModal()" style="flex:1; padding:12px; background:#f5f5f5; border-radius:10px; font-size:11px; font-weight:bold;">VOLTAR</button>
+            <button id="confirmBtn" style="flex:2; padding:12px; background:#000; color:#fff; border-radius:10px; font-size:11px; font-weight:bold;">ADICIONAR</button>
         </div>
-      `;
-    });
-  });
-});
-</script>
+    </div>
+</div>
 
+<script>
+    firebase.initializeApp({ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" });
+    const db = firebase.database();
+    const urlParams = new URLSearchParams(window.location.search);
+    const catId = urlParams.get('cat');
+
+    let currentProdData = null;
+    let settings = {};
+
+    function atualizarBadge() {
+        const cart = JSON.parse(localStorage.getItem("carrinho") || "[]");
+        document.getElementById('cartCount').innerText = cart.length;
+    }
+
+    db.ref('settings').once('value', s => { 
+        settings = s.val() || { pix: 5, parcelas: 1 };
+        if(catId) carregarProdutos();
+    });
+
+    function carregarProdutos() {
+        // Pega desconto da categoria
+        db.ref('categories/' + catId).on('value', sCat => {
+            const catData = sCat.val();
+            document.getElementById('categoryTitle').innerText = catData.name;
+            const descPercent = catData.discount || 0;
+
+            // Filtra produtos por categoria
+            db.ref('products').on('value', snap => {
+                const grid = document.getElementById('gridProdutos');
+                grid.innerHTML = '';
+                
+                snap.forEach(sProd => {
+                    const p = sProd.val();
+                    if(p.category !== catData.name || p.paused) return;
+
+                    const precoBase = parseFloat(p.price) || 0;
+                    const precoFinal = precoBase * (1 - (descPercent / 100));
+                    const precoPix = (precoFinal * (1 - (settings.pix/100))).toFixed(2);
+
+                    grid.innerHTML += `
+                    <div class="card-prod p-4 relative">
+                        ${descPercent > 0 ? `<div class="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-1 rounded-full z-10">${descPercent}% OFF</div>` : ''}
+                        <div class="aspect-square mb-4 bg-white flex items-center justify-center overflow-hidden rounded-lg">
+                            <img src="${p.image}" class="max-h-full object-contain p-2">
+                        </div>
+                        <p class="text-[9px] text-gray-400 font-bold">SKU: ${p.sku}</p>
+                        <h4 class="text-[11px] font-semibold text-gray-800 uppercase h-8 overflow-hidden">${p.name}</h4>
+                        <div class="my-2">
+                            <p class="text-sm font-extrabold text-black">R$ ${precoFinal.toFixed(2)}</p>
+                            <p class="text-[10px] text-green-600 font-bold">R$ ${precoPix} no PIX</p>
+                        </div>
+                        <button onclick="openModal('${sProd.key}')" class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-bold uppercase">ADICIONAR</button>
+                    </div>`;
+                });
+            });
+        });
+    }
+
+    async function openModal(key) {
+        const pSnap = await db.ref('products/'+key).once('value');
+        const p = pSnap.val();
+        currentProdData = { ...p, key };
+
+        document.getElementById('modalProductName').innerText = p.name;
+        document.getElementById('modalSKU').innerText = "SKU: " + p.sku;
+        
+        // Carrega variações da categoria do produto
+        const cSnap = await db.ref('categories').once('value');
+        let varHtml = '';
+        cSnap.forEach(c => {
+            if(c.val().name === p.category) {
+                Object.keys(c.val().variacoes || {}).forEach(v => {
+                    varHtml += `<option value="${v}">${v}</option>`;
+                });
+            }
+        });
+        document.getElementById('modalVarInput').innerHTML = varHtml || '<option value="Padrão">Padrão</option>';
+        
+        document.getElementById('customModal').style.display = 'flex';
+    }
+
+    document.getElementById('confirmBtn').onclick = () => {
+        const qty = parseInt(document.getElementById('modalQtyInput').value);
+        const variacao = document.getElementById('modalVarInput').value;
+        
+        if(qty > 0) {
+            let cart = JSON.parse(localStorage.getItem("carrinho") || "[]");
+            cart.push({
+                sku: currentProdData.sku,
+                nome: currentProdData.name,
+                preco: currentProdData.price,
+                peso: currentProdData.weight,
+                qtd: qty,
+                variacao: variacao,
+                category: currentProdData.category
+            });
+            localStorage.setItem("carrinho", JSON.stringify(cart));
+            closeModal();
+            atualizarBadge();
+            alert("Adicionado!");
+        }
+    };
+
+    function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+    atualizarBadge();
+</script>
 </body>
 </html>
