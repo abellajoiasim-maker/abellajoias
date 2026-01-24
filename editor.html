@@ -171,22 +171,26 @@ async function carregarProdutos() {
 }
 
 function sincronizarFotosComStorage() {
-    // Usando o domínio novo que você forneceu
+    // AJUSTADO PARA O SEU NOVO DOMÍNIO
     const dominio = "catalogo-abella-joias.firebasestorage.app";
     const pasta = "produtos"; 
     
     let syncCount = 0;
     const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
 
-    if (linhas.length === 0) return alert("Filtre os produtos primeiro!");
+    if (linhas.length === 0) return alert("Por favor, filtre os produtos primeiro!");
+
+    if (!confirm("Deseja gerar os links novos (.firebasestorage.app) para os campos vazios?")) return;
 
     linhas.forEach(tr => {
         const sku = tr.querySelector('.font-mono').innerText.trim();
         const inputImg = tr.querySelector('.edit-img');
         const preview = tr.querySelector('.img-preview');
 
-        if (sku !== '---' && (inputImg.value === "" || inputImg.value.includes("placeholder"))) {
-            // Montamos o link SEM o token (que funcionará após o Passo 1)
+        // Só preenche se estiver vazio ou se for o link antigo quebrado (.appspot)
+        if (sku !== '---' && (inputImg.value === "" || inputImg.value.includes("appspot.com") || inputImg.value.includes("placeholder"))) {
+            
+            // Montagem exata do link que você testou e funcionou
             const urlFinal = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/${pasta}%2F${sku}.jpg?alt=media`;
             
             inputImg.value = urlFinal;
@@ -194,6 +198,9 @@ function sincronizarFotosComStorage() {
             syncCount++;
         }
     });
+
+    alert(`✅ ${syncCount} links atualizados para o novo domínio! Clique em "SALVAR ALTERAÇÕES" para gravar no banco.`);
+}
 
     alert(`✅ ${syncCount} links gerados! Se as imagens não aparecerem, verifique se as Regras do Storage foram alteradas.`);
 }
