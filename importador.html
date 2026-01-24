@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Importador Abella Joias</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #fdfaf5; padding: 40px; color: #333; }
+        .box { max-width: 700px; margin: auto; background: #fff; padding: 30px; border: 2px solid #A68966; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        button { background: #A68966; color: #fff; padding: 14px; width: 100%; margin-top: 15px; font-weight: bold; border: none; cursor: pointer; border-radius: 8px; }
+        #log { margin-top: 20px; background: #1e1e1e; color: #adadad; padding: 15px; font-size: 11px; height: 350px; overflow: auto; border-radius: 8px; font-family: monospace; }
+        .success { color: #4caf50; } .warn { color: #ff9800; } .error { color: #f44336; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2 style="color:#A68966; text-align: center;">Super Importador Abella</h2>
+    <p style="font-size: 13px; text-align: center;">Vínculo Automático: <b>CSV + Banco de Dados + Storage</b></p>
+    
+    <label style="font-size: 12px; font-weight: bold;">Arquivo CSV:</label>
+    <input type="file" id="csv" accept=".csv" style="display: block; margin-top: 5px;">
+    
+    <button id="btn" onclick="importarTudo()">LIMPAR TUDO E IMPORTAR</button>
+    <div id="log">Aguardando início...</div>
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+    storageBucket: "catalogo-abella-joias.firebasestorage.app"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const storage = firebase.storage();
+
+function gerarSlug(txt) {
+    if(!txt) return "geral";
+    return txt.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+}
+
+async function buscarFoto(sku) {
+    const extensoes = ['.jpg', '.png', '.jpeg', '.JPG', '.PNG'];
+    for (const ext of extensoes) {
+        try {
+            // Tenta buscar na pasta /produtos/ dentro do Storage
+            const ref = storage.ref().child('produtos/' + sku + ext);
+            return await ref.getDownloadURL();
+        } catch (e) { continue; }
+    }
+    return "";
+}
+
+async function importarTudo() {
+    const file = document.getElementById('csv').files[0];
+    if(!file) return alert("Selecione o arquivo CSV");
+    if(!confirm("Isso irá sobrescrever os dados existentes. Continuar?")) return;
+
+    const log = document.getElementById('log');
+    const btn = document.getElementById('btn');
+    btn.disabled = true;
+    log.innerHTML = "🚀 Iniciando Processamento Total...<br>";
+
+    const text = await file.text();
+    const linhas = text.trim().replace(/^\uFEFF/, '').split(/\r?\n/);
+    
+    let totalProd = 0;
+    let categorias = new Set();
+
+    for(let i = 1; i < linhas.length; i++) {
+        // Tenta separar por vírgula ou ponto e vírgula
+        let col = linhas[i].split(';');
+        if (col.length < 2) col = linhas[i].split(',');
+        if (!col[0] || !col[1]) continue;
+
+        const nome = col[0].replace(/"/g, '').trim();
+        const skuOriginal = col[1].replace(/"/g, '').trim();
+        const skuID = skuOriginal.replace(/[\.\$#\[\]\/]/g, "-");
+        const nomeCategoria = col[2] ? col[2].replace(/"/g, '').trim() : "Geral";
+        const catSlug = gerarSlug(nomeCategoria);
+        const preco = parseFloat(col[3].replace(',', '.')) || 0;
+        const peso = col[4] ? col[4].replace(/"/g, '').trim() : "0";
+
+        log.innerHTML += `> Processando SKU: ${skuOriginal}... `;
+
+        // 1. Busca Foto
+        const urlImagem = await buscarFoto(skuOriginal);
+
+        try {
+            // 2. Garante a Categoria
+            await db.ref('categories/' + catSlug).update({
+                name: nomeCategoria,
+                slug: catSlug,
+                paused: false
+            });
+            categorias.add(nomeCategoria);
+
+            // 3. Salva Produto Alinhado ao Projeto 2
+            await db.ref('products/' + skuID).set({
+                name: nome,
+                sku: skuOriginal,
+                category: catSlug, // IMPORTANTE: Agora usamos o SLUG aqui
+                price: preco,
+                weight: peso,
+                image: urlImagem,
+                paused: false,
+                promo: 0
+            });
+
+            log.innerHTML += `<span class="success">Sucesso ${urlImagem ? '(com foto)' : '(sem foto)'}</span><br>`;
+            totalProd++;
+        } catch (e) {
+            log.innerHTML += `<span class="error">ERRO: ${e.message}</span><br>`;
+        }
+        log.scrollTop = log.scrollHeight;
+    }
+
+    btn.disabled = false;
+    log.innerHTML += `<br>✅ <b>FINALIZADO!</b><br>Produtos: ${totalProd}<br>Categorias: ${categorias.size}`;
+    alert("Importação Concluída!");
+}
+</script>
+</body>
+</html>
