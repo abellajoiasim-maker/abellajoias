@@ -216,6 +216,130 @@ function abrirModal(){modal.classList.remove('hidden')}
 /* UTIL */
 function pausar(path,id){db.ref(path+'/'+id+'/paused').set(true)}
 function excluir(path,id){if(confirm('Excluir?')) db.ref(path+'/'+id).remove()}
+
+  /* =========================
+   MODAL CONTROLLER
+========================= */
+function abrirModal(titulo, bodyHTML, ctx){
+  MODAL_CTX = ctx || {};
+  modalTitulo.innerText = titulo;
+  modalBody.innerHTML = bodyHTML;
+  modal.classList.remove('hidden');
+}
+function fecharModal(){
+  modal.classList.add('hidden');
+  MODAL_CTX = {};
+}
+
+/* =========================
+   CATEGORIAS
+========================= */
+function novaCategoria(){
+  abrirModal(
+    'Nova Categoria',
+    `
+      <input id="catName" placeholder="Nome da categoria" class="w-full mb-2 p-2 bg-black border">
+      <input id="catImg" placeholder="URL da imagem" class="w-full p-2 bg-black border">
+    `,
+    { type:'novaCategoria' }
+  );
+}
+
+function editarCategoria(id){
+  db.ref('categories/'+id).once('value').then(s=>{
+    const d = s.val() || {};
+    abrirModal(
+      'Editar Categoria',
+      `
+        <input id="catName" value="${d.name||''}" class="w-full mb-2 p-2 bg-black border">
+        <input id="catImg" value="${d.image||''}" class="w-full mb-4 p-2 bg-black border">
+
+        <h4 class="font-bold mb-2 text-[#caa85c]">Variações</h4>
+        <div id="varsBox"></div>
+        <button class="btn-gold mt-3" onclick="addVariacao('${id}')">+ Nova Variação</button>
+      `,
+      { type:'editarCategoria', id }
+    );
+
+    const box = document.getElementById('varsBox');
+    Object.entries(d.variacoes||{}).forEach(([k,v])=>{
+      box.innerHTML += `
+        <div class="flex gap-2 mb-2 text-[10px]">
+          <input value="${v.label||k}" onchange="updVar('${id}','${k}','label',this.value)" class="bg-black border p-1 w-full">
+          <input type="number" value="${v.precoExtra||0}" onchange="updVar('${id}','${k}','precoExtra',this.value)" class="bg-black border p-1 w-20">
+          <input type="checkbox" ${v.ativo!==false?'checked':''} onchange="updVar('${id}','${k}','ativo',this.checked)">
+        </div>
+      `;
+    });
+  });
+}
+
+function addVariacao(cat){
+  const key = prompt('Chave da variação (ex: P, G, DEUS)');
+  if(!key) return;
+  db.ref(`categories/${cat}/variacoes/${key}`).set({
+    label:key,
+    ativo:true,
+    precoExtra:0
+  });
+}
+
+function updVar(cat,key,field,val){
+  db.ref(`categories/${cat}/variacoes/${key}/${field}`).set(val);
+}
+
+/* =========================
+   SALVAR MODAL
+========================= */
+function salvarModal(){
+  if(MODAL_CTX.type === 'novaCategoria'){
+    const id = document.getElementById('catName').value.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    db.ref('categories/'+id).set({
+      name: catName.value,
+      image: catImg.value || '',
+      active:true
+    });
+  }
+
+  if(MODAL_CTX.type === 'editarCategoria'){
+    db.ref('categories/'+MODAL_CTX.id).update({
+      name: catName.value,
+      image: catImg.value || ''
+    });
+  }
+
+  fecharModal();
+}
+
+/* =========================
+   PRODUTOS
+========================= */
+function editarProduto(id){
+  db.ref('products/'+id).once('value').then(s=>{
+    const p=s.val()||{};
+    abrirModal(
+      'Editar Produto',
+      `
+        <input id="pName" value="${p.name||''}" class="w-full mb-2 p-2 bg-black border">
+        <input id="pSku" value="${p.sku||''}" class="w-full mb-2 p-2 bg-black border">
+        <input id="pImg" value="${p.image||''}" class="w-full mb-2 p-2 bg-black border">
+      `,
+      {type:'editarProduto',id}
+    );
+  });
+}
+
+function salvarProduto(){
+  if(MODAL_CTX.type==='editarProduto'){
+    db.ref('products/'+MODAL_CTX.id).update({
+      name:pName.value,
+      sku:pSku.value,
+      image:pImg.value
+    });
+  }
+  fecharModal();
+}
+
 </script>
 
 </body>
