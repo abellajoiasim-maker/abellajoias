@@ -37,8 +37,12 @@ body{font-family:'Poppins',sans-serif;background:#f8f6f2}
   </div>
 
   <div class="flex justify-center gap-2 pb-4">
-    <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">CATEGORIAS</a>
-    <a href="galvanicas.html" class="bg-white border px-6 py-2 rounded-full text-[10px] font-bold text-gray-500">GALVÂNICAS</a>
+    <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">
+      CATEGORIAS
+    </a>
+    <a href="galvanicas.html" class="bg-white border px-6 py-2 rounded-full text-[10px] font-bold text-gray-500">
+      GALVÂNICAS
+    </a>
   </div>
 </header>
 
@@ -48,7 +52,7 @@ body{font-family:'Poppins',sans-serif;background:#f8f6f2}
 </main>
 
 <script>
-/* Firebase */
+/* FIREBASE */
 const firebaseConfig = {
   apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -56,40 +60,40 @@ const firebaseConfig = {
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* Slug da URL */
+/* SLUG DA URL */
 const params = new URLSearchParams(window.location.search);
 const slug = params.get('cat');
 
-/* Resolver categoria pelo slug */
-db.ref('categories').once('value').then(snap=>{
-  let categoriaNome = null;
+/* BUSCAR CATEGORIA PELO SLUG */
+db.ref('categories').once('value').then(catSnap=>{
+  let nomeCategoria = null;
 
-  snap.forEach(c=>{
+  catSnap.forEach(c=>{
     const d = c.val();
-    const slugCat = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    const slugCat = (d.slug || d.name.toLowerCase().replace(/[^a-z0-9]/g,'-'));
     if(slugCat === slug){
-      categoriaNome = d.name;
-      document.getElementById('tituloCategoria').innerText = d.name;
+      nomeCategoria = d.name;
+      tituloCategoria.innerText = d.name;
     }
   });
 
-  if(!categoriaNome){
-    document.getElementById('gridProdutos').innerHTML =
+  if(!nomeCategoria){
+    gridProdutos.innerHTML =
       '<p class="col-span-full text-center text-gray-500">Categoria não encontrada</p>';
     return;
   }
 
-  /* Produtos */
-  db.ref('products').on('value', snapProd=>{
-    const grid = document.getElementById('gridProdutos');
-    grid.innerHTML = '';
+  /* CARREGAR PRODUTOS DA CATEGORIA */
+  db.ref('products').on('value', snap=>{
+    gridProdutos.innerHTML = '';
 
-    snapProd.forEach(p=>{
+    snap.forEach(p=>{
       const prod = p.val();
-      if(prod.paused) return;
-      if(prod.category !== categoriaNome) return;
 
-      grid.innerHTML += `
+      if(prod.paused) return;
+      if(prod.category !== nomeCategoria) return;
+
+      gridProdutos.innerHTML += `
         <div class="card p-4 shadow-sm">
           <div class="aspect-square flex items-center justify-center mb-4">
             <img src="${prod.image || 'https://via.placeholder.com/400'}"
@@ -101,8 +105,7 @@ db.ref('categories').once('value').then(snap=>{
           <p class="text-sm font-semibold mb-1">R$ ${Number(prod.price).toFixed(2)}</p>
           <p class="text-[11px] text-gray-500 mb-3">${prod.weight || ''}</p>
 
-          <button onclick="alert('Adicionar ao carrinho (já integrado no seu carrinho)')"
-            class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
+          <button class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
             ADICIONAR
           </button>
         </div>
