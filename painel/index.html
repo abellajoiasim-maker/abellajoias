@@ -4,35 +4,38 @@
 <meta charset="UTF-8">
 <title>Painel Admin • Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
+body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;margin:0}
 header{padding:20px;text-align:center;font-size:22px;font-weight:700;background:#000;border-bottom:1px solid #222}
 nav{display:flex;gap:10px;padding:10px;background:#111;flex-wrap:wrap}
 nav button{flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;padding:10px;border-radius:10px}
 nav button.active{border-color:#caa85c;color:#caa85c}
 section{display:none;padding:20px}
 section.active{display:block}
+
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 @media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
 @media(min-width:1200px){.grid{grid-template-columns:repeat(6,1fr)}}
+
 .card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px}
-.row{display:flex;justify-content:space-between;align-items:center}
+.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
 .tag{font-size:11px;padding:3px 8px;border-radius:999px}
 .ok{background:#1f3;color:#000}
 .no{background:#c33}
 .btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px}
-.pause{border-color:#caa85c;color:#caa85c}
-.danger{border-color:#c33;color:#f77}
-input,select{width:100%;background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;margin-bottom:8px}
+.btn.pause{border-color:#caa85c;color:#caa85c}
+.btn.danger{border-color:#c33;color:#f77}
+input,select{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%;margin-bottom:6px}
 
-#modalEdit{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center}
-.modal-content{background:#141414;border:1px solid #333;width:100%;max-width:520px;border-radius:20px;padding:20px}
-.modal-img{width:100%;height:180px;object-fit:contain;background:#000;border-radius:10px;margin-bottom:15px}
-.cat-divider{margin:25px 0 10px;border-bottom:1px solid #222;color:#caa85c;font-size:13px}
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99;align-items:center;justify-content:center;padding:10px}
+.modal-box{background:#141414;border-radius:16px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+.modal-img{width:100%;height:180px;object-fit:contain;background:#000;border-radius:10px;margin-bottom:10px}
+.cat-divider{margin:30px 0 15px;border-bottom:1px solid #222;color:#caa85c;font-weight:bold}
 </style>
 </head>
 
@@ -41,58 +44,180 @@ input,select{width:100%;background:#111;border:1px solid #333;color:#fff;padding
 <header>Painel Administrativo • Abella Joias</header>
 
 <nav>
-<button class="active" onclick="show('empresa',this)">Empresa</button>
-<button onclick="show('categorias',this)">Categorias</button>
-<button onclick="show('produtos',this)">Produtos</button>
-<button onclick="show('promocoes',this)">Promoções</button>
-<button onclick="show('pedidos',this)">Pedidos</button>
+<button class="active" onclick="showTab('empresa',this)">Empresa</button>
+<button onclick="showTab('categorias',this)">Categorias</button>
+<button onclick="showTab('produtos',this)">Produtos</button>
+<button onclick="showTab('promocoes',this)">Promoções</button>
+<button onclick="showTab('pedidos',this)">Pedidos</button>
 </nav>
 
 <section id="empresa" class="active">
-<h2 class="font-bold mb-3">Empresa</h2>
 <div class="card max-w-md">
 <input id="empNome" placeholder="Nome">
 <input id="empWhats" placeholder="WhatsApp">
-<input id="empPix" placeholder="Desconto PIX">
-<input id="empParc" placeholder="Parcelas">
-<button class="btn w-full mt-2" onclick="salvarEmpresa()">Salvar</button>
+<input id="empPix" type="number" placeholder="Desconto PIX %">
+<input id="empParc" type="number" placeholder="Parcelas">
+<button class="btn mt-2" onclick="salvarEmpresa()">Salvar</button>
 </div>
 </section>
 
 <section id="categorias">
-<h2 class="font-bold mb-3">Categorias</h2>
 <div class="grid" id="listaCategorias"></div>
 </section>
 
 <section id="produtos">
-<h2 class="font-bold mb-3">Produtos</h2>
 <div id="produtosPorCategoria"></div>
 </section>
 
 <section id="promocoes">
-<h2 class="font-bold mb-3">Promoções</h2>
-<p class="opacity-60 text-sm">Promoções por categoria (estrutura pronta)</p>
+<div id="listaPromos" class="card max-w-lg"></div>
+<button class="btn mt-3" onclick="salvarPromos()">Salvar Promoções</button>
 </section>
 
 <section id="pedidos">
-<h2 class="font-bold mb-3">Pedidos</h2>
 <div id="listaPedidos"></div>
 </section>
 
-<div id="modalEdit">
-<div class="modal-content">
-<div class="row mb-3">
-<strong id="modalTitle"></strong>
-<button class="btn" onclick="modalEdit.style.display='none'">✕</button>
-</div>
+<div id="modal">
+<div class="modal-box">
+<h3 id="modalTitle" class="font-bold mb-2"></h3>
 <div id="modalBody"></div>
-<button id="btnSalvarModal" class="btn w-full !bg-[#caa85c] !text-black font-bold mt-2">Salvar</button>
+<button class="btn mt-3 w-full" onclick="salvarModal()">Salvar</button>
+<button class="btn mt-2 w-full" onclick="closeModal()">Fechar</button>
 </div>
 </div>
 
 <script>
-/* 🔥 SCRIPT INTEGRADO COMPLETO (funcional) */
-/* — tudo que você pediu já está aqui — */
+firebase.initializeApp({
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ authDomain:"catalogo-abella-joias.firebaseapp.com",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId:"catalogo-abella-joias"
+});
+const db=firebase.database();
+let MODAL={};
+
+function showTab(id,b){
+ document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');
+}
+function closeModal(){modal.style.display='none'}
+function openModal(t,b,c){modalTitle.innerText=t;modalBody.innerHTML=b;MODAL=c||{};modal.style.display='flex'}
+
+db.ref('settings').on('value',s=>{
+ const v=s.val()||{};
+ empNome.value=v.nome||'';empWhats.value=v.whatsapp||'';empPix.value=v.pix||0;empParc.value=v.parcelas||1;
+});
+function salvarEmpresa(){
+ db.ref('settings').update({nome:empNome.value,whatsapp:empWhats.value,pix:+empPix.value,parcelas:+empParc.value});
+}
+
+db.ref('categories').on('value',s=>{
+ listaCategorias.innerHTML='';listaPromos.innerHTML='';
+ s.forEach(c=>{
+  const d=c.val();
+  listaCategorias.innerHTML+=`
+  <div class="card">
+   <div class="row"><strong>${d.name}</strong><span class="tag ${d.image?'ok':'no'}">IMG</span></div>
+   <div class="text-xs">${Object.keys(d.variacoes||{}).length} variações</div>
+   <div class="row mt-2">
+    <button class="btn" onclick="editarCategoria('${c.key}')">Editar</button>
+    <button class="btn danger" onclick="db.ref('categories/${c.key}').remove()">Excluir</button>
+   </div>
+  </div>`;
+  listaPromos.innerHTML+=`
+  <div class="row mb-2">
+   <span>${d.name}</span>
+   <input type="number" id="promo-${c.key}" value="${d.discount||0}">
+  </div>`;
+ });
+});
+
+function editarCategoria(id){
+ db.ref('categories/'+id).once('value').then(s=>{
+  const d=s.val()||{};
+  let vars='';
+  Object.entries(d.variacoes||{}).forEach(([k,v])=>{
+   vars+=`<div class="row"><input value="${v.label}" onchange="updVar('${id}','${k}',this.value)">
+   <button class="btn danger" onclick="db.ref('categories/${id}/variacoes/${k}').remove()">X</button></div>`;
+  });
+  openModal('Editar Categoria',`
+   <img class="modal-img" src="${d.image||''}">
+   <input id="cNome" value="${d.name||''}">
+   <input id="cImg" value="${d.image||''}">
+   <h4 class="mt-2">Variações</h4>${vars}
+   <button class="btn mt-2" onclick="addVar('${id}')">+ Variação</button>
+  `,{type:'cat',id});
+ });
+}
+function addVar(id){
+ const k=prompt('Nome'); if(!k)return;
+ db.ref(`categories/${id}/variacoes/${k}`).set({label:k});
+}
+function updVar(c,k,v){db.ref(`categories/${c}/variacoes/${k}/label`).set(v)}
+
+db.ref('products').on('value',s=>{
+ const map={};s.forEach(p=>{const v=p.val();v.id=p.key;if(!map[v.category])map[v.category]=[];map[v.category].push(v)});
+ produtosPorCategoria.innerHTML='';
+ Object.keys(map).sort().forEach(cat=>{
+  const b=document.createElement('div');
+  b.innerHTML=`<div class="cat-divider">${cat}</div><div class="grid"></div>`;
+  const g=b.querySelector('.grid');
+  map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||'',undefined,{numeric:true}))
+  .forEach(p=>{
+   g.innerHTML+=`
+   <div class="card">
+    <div class="row"><strong>${p.sku||'S/SKU'}</strong><span class="tag ${p.image?'ok':'no'}">IMG</span></div>
+    <div>${p.name}</div>
+    <div class="row mt-2">
+     <button class="btn" onclick="editarProduto('${p.id}')">Editar</button>
+     <button class="btn danger" onclick="db.ref('products/${p.id}').remove()">Excluir</button>
+    </div>
+   </div>`;
+  });
+  produtosPorCategoria.appendChild(b);
+ });
+});
+
+function editarProduto(id){
+ Promise.all([
+  db.ref('products/'+id).once('value'),
+  db.ref('categories').once('value')
+ ]).then(([ps,cs])=>{
+  const p=ps.val();let opts='';
+  cs.forEach(c=>{
+   Object.values(c.val().variacoes||{}).forEach(v=>{
+    opts+=`<option ${p.variacao===v.label?'selected':''}>${v.label}</option>`;
+   });
+  });
+  openModal('Editar Produto',`
+   <img class="modal-img" src="${p.image||''}">
+   <input id="pNome" value="${p.name||''}">
+   <input id="pSku" value="${p.sku||''}">
+   <input id="pImg" value="${p.image||''}">
+   <select id="pVar">${opts}</select>
+  `,{type:'prod',id});
+ });
+}
+
+function salvarModal(){
+ if(MODAL.type==='cat'){
+  db.ref('categories/'+MODAL.id).update({name:cNome.value,image:cImg.value});
+ }
+ if(MODAL.type==='prod'){
+  db.ref('products/'+MODAL.id).update({name:pNome.value,sku:pSku.value,image:pImg.value,variacao:pVar.value});
+ }
+ closeModal();
+}
+
+function salvarPromos(){
+ document.querySelectorAll('[id^=promo-]').forEach(i=>{
+  db.ref('categories/'+i.id.replace('promo-','')).update({discount:+i.value});
+ });
+ alert('Promoções salvas');
+}
 </script>
 
 </body>
