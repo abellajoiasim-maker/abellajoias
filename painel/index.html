@@ -2,266 +2,263 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Admin • Abella Joias</title>
+<title>Painel Admin | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#0b0b0b;color:#eee}
-.card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px}
-.btn{padding:6px 10px;border-radius:8px;font-size:12px}
-.btn-gold{background:#caa85c;color:#000;font-weight:700}
-.btn-dark{background:#222;border:1px solid #444}
-.tag{font-size:10px;padding:3px 7px;border-radius:999px}
-.ok{background:#1f3;color:#000}
-.no{background:#c33}
+body{background:#0e0e0e;color:#fff}
+.nav-btn{flex:1;padding:14px;font-size:11px;font-weight:800;text-align:center;cursor:pointer;background:#141414}
+.nav-btn.active{background:#000;color:#caa85c;border-bottom:3px solid #caa85c}
+.card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px;position:relative}
+.dot{width:10px;height:10px;border-radius:50%;position:absolute;top:8px;right:8px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center}
 </style>
 </head>
+
 <body>
 
-<header class="p-4 text-center font-bold text-xl bg-black border-b border-[#222]">
-Painel Administrativo • Abella Joias
+<header class="sticky top-0 z-50">
+<nav class="flex">
+<div class="nav-btn active" onclick="tab('empresa',this)">EMPRESA</div>
+<div class="nav-btn" onclick="tab('categorias',this)">CATEGORIAS</div>
+<div class="nav-btn" onclick="tab('produtos',this)">PRODUTOS</div>
+<div class="nav-btn" onclick="tab('promocoes',this)">PROMOÇÕES</div>
+<div class="nav-btn" onclick="tab('pedidos',this)">PEDIDOS</div>
+</nav>
 </header>
 
-<nav class="flex flex-wrap gap-2 p-3 bg-[#111] justify-center">
-<button onclick="show('empresa')" class="btn btn-dark">Empresa</button>
-<button onclick="show('categorias')" class="btn btn-dark">Categorias</button>
-<button onclick="show('produtos')" class="btn btn-dark">Produtos</button>
-<button onclick="show('promocoes')" class="btn btn-dark">Promoções</button>
-<button onclick="show('pedidos')" class="btn btn-dark">Pedidos</button>
-</nav>
-
-<main class="p-4 max-w-7xl mx-auto">
+<main class="p-4 max-w-7xl mx-auto space-y-8">
 
 <!-- EMPRESA -->
 <section id="empresa">
-<div class="card max-w-md">
-<h2 class="font-bold mb-3">Empresa</h2>
-<input id="empNome" class="w-full mb-2 p-2 bg-black border" placeholder="Nome">
-<input id="empWhats" class="w-full mb-2 p-2 bg-black border" placeholder="WhatsApp">
-<input id="empPix" type="number" class="w-full mb-2 p-2 bg-black border" placeholder="Desconto PIX %">
-<button class="btn btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
+<div class="card max-w-xl">
+<h2 class="font-bold mb-4 text-[#caa85c]">Dados da Empresa</h2>
+<input id="empNome" class="w-full p-2 mb-2 bg-black border" placeholder="Nome">
+<input id="empWhats" class="w-full p-2 mb-2 bg-black border" placeholder="WhatsApp">
+<input id="empPix" type="number" class="w-full p-2 mb-2 bg-black border" placeholder="Desconto Pix %">
+<input id="empParc" type="number" class="w-full p-2 mb-4 bg-black border" placeholder="Parcelas">
+<button onclick="salvarEmpresa()" class="w-full bg-[#caa85c] text-black font-bold py-3 rounded-xl">SALVAR</button>
 </div>
 </section>
 
 <!-- CATEGORIAS -->
 <section id="categorias" class="hidden">
-<button class="btn btn-gold mb-4" onclick="novaCategoria()">+ Nova Categoria</button>
-<div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+<div class="flex justify-between mb-4">
+<h2 class="font-bold text-[#caa85c]">Categorias</h2>
+<button onclick="novaCategoria()" class="bg-[#caa85c] text-black px-4 rounded">+</button>
+</div>
+<div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
 </section>
 
 <!-- PRODUTOS -->
 <section id="produtos" class="hidden">
-<div id="produtosPorCategoria" class="space-y-6"></div>
+<h2 class="font-bold text-[#caa85c] mb-4">Produtos</h2>
+<div id="produtosPorCategoria" class="space-y-10"></div>
 </section>
 
 <!-- PROMOÇÕES -->
 <section id="promocoes" class="hidden">
 <h2 class="mb-4 font-bold text-xl text-[#caa85c]">Promoções por Categoria</h2>
-<div class="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 max-w-2xl">
+<div class="bg-[#141414] border rounded-2xl p-6 max-w-2xl">
 <div id="listaPromos" class="space-y-3"></div>
-<button class="w-full mt-6 bg-[#caa85c] text-black font-bold py-3 rounded-xl" onclick="salvarPromos()">APLICAR DESCONTOS</button>
+<button onclick="salvarPromos()" class="w-full mt-6 bg-[#caa85c] text-black font-bold py-3 rounded-xl">APLICAR</button>
 </div>
 </section>
 
 <!-- PEDIDOS -->
 <section id="pedidos" class="hidden">
-<h2 class="mb-4 font-bold">Gestão de Pedidos</h2>
+<h2 class="mb-4 font-bold text-[#caa85c]">Pedidos</h2>
 <div id="containerPedidos" class="space-y-4"></div>
 </section>
 
 </main>
 
 <!-- MODAL -->
-<div id="modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4">
-<div class="bg-[#111] p-4 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-<h2 id="mTitle" class="font-bold mb-3"></h2>
-<div id="mBody"></div>
-<button class="btn btn-gold w-full mt-4" onclick="salvarModal()">Salvar</button>
-<button class="btn btn-dark w-full mt-2" onclick="fechar()">Fechar</button>
+<div id="modal" class="modal">
+<div class="bg-[#141414] p-6 rounded-2xl w-full max-w-md">
+<h2 id="modalTitulo" class="font-bold mb-4"></h2>
+<div id="modalConteudo" class="space-y-3"></div>
+<div class="flex gap-2 mt-6">
+<button onclick="salvarModal()" class="flex-1 bg-green-600 py-2 rounded">Salvar</button>
+<button onclick="fecharModal()" class="flex-1 bg-gray-700 py-2 rounded">Cancelar</button>
+</div>
+<button id="btnExcluir" class="mt-4 w-full text-red-500 text-xs">EXCLUIR</button>
 </div>
 </div>
 
 <script>
-// 🔥 FIREBASE
-firebase.initializeApp({
- apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- authDomain:"catalogo-abella-joias.firebaseapp.com",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
- projectId:"catalogo-abella-joias"
-});
-const db=firebase.database();
-let ctx={};
+const firebaseConfig={
+apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+}
+firebase.initializeApp(firebaseConfig)
+const db=firebase.database()
 
-// NAV
-function show(id){
- document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
- document.getElementById(id).classList.remove('hidden');
+let MODAL_PATH='',MODAL_ID=''
+
+function tab(id,el){
+document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'))
+document.getElementById(id).classList.remove('hidden')
+document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'))
+el.classList.add('active')
 }
 
-// MODAL
-function abrir(){modal.classList.remove('hidden')}
-function fechar(){modal.classList.add('hidden')}
-
-// EMPRESA
+/* EMPRESA */
 db.ref('settings').on('value',s=>{
- const v=s.val()||{};
- empNome.value=v.nome||'';
- empWhats.value=v.whatsapp||'';
- empPix.value=v.pix||0;
-});
+const v=s.val()||{}
+empNome.value=v.nome||''
+empWhats.value=v.whatsapp||''
+empPix.value=v.pix||0
+empParc.value=v.parcelas||1
+})
 function salvarEmpresa(){
- db.ref('settings').update({
-  nome:empNome.value,
-  whatsapp:empWhats.value,
-  pix:+empPix.value
- });
- alert('Empresa salva');
+db.ref('settings').update({
+nome:empNome.value,whatsapp:empWhats.value,
+pix:Number(empPix.value),parcelas:Number(empParc.value)
+})
+alert('Salvo')
 }
 
-// CATEGORIAS
-function novaCategoria(){
- ctx={type:'cat',id:null};
- mTitle.innerText='Nova Categoria';
- mBody.innerHTML=`<input id="catNome" class="w-full p-2 bg-black border" placeholder="Nome da Categoria">`;
- abrir();
-}
-
+/* CATEGORIAS */
 db.ref('categories').on('value',snap=>{
- listaCategorias.innerHTML='';
- listaPromos.innerHTML='';
- snap.forEach(c=>{
-  const d=c.val();
-  listaCategorias.innerHTML+=`
-  <div class="card">
-   <div class="flex justify-between items-center">
-    <strong>${d.name}</strong>
-    <span class="tag ${d.image?'ok':'no'}">IMG</span>
-   </div>
-   <div class="text-xs mt-1">${Object.keys(d.variations||{}).length} variações</div>
-   <div class="flex gap-2 mt-2">
-    <button class="btn btn-dark" onclick="editarCategoria('${c.key}')">Editar</button>
-    <button class="btn btn-dark" onclick="excluir('categories','${c.key}')">Excluir</button>
-   </div>
-  </div>`;
+listaCategorias.innerHTML=''
+snap.forEach(c=>{
+const v=c.val()
+listaCategorias.innerHTML+=`
+<div class="card">
+<div class="dot ${v.image?'bg-green-500':'bg-red-500'}"></div>
+<img src="${v.image||''}" class="w-full h-24 object-contain bg-black mb-2">
+<p class="text-xs font-bold uppercase">${v.name}</p>
+<div class="flex gap-2 mt-2 text-[10px]">
+<button onclick="editarCategoria('${c.key}')" class="bg-[#caa85c] text-black px-2 rounded">EDITAR</button>
+<button onclick="pausar('categories','${c.key}')" class="bg-gray-600 px-2 rounded">PAUSAR</button>
+<button onclick="excluir('categories','${c.key}')" class="bg-red-600 px-2 rounded">EXCLUIR</button>
+</div>
+</div>`
+})
+})
 
-  listaPromos.innerHTML+=`
-  <div class="flex justify-between items-center bg-[#111] p-3 rounded-lg border border-[#222]">
-   <span class="text-xs font-bold">${d.name}</span>
-   <input id="inputPromo-${c.key}" type="number" class="w-16 bg-black border text-center" value="${d.discount||0}">
-  </div>`;
- });
-});
-
-// EDITAR CATEGORIA + VARIAÇÕES
+function novaCategoria(){editarCategoria(null)}
 function editarCategoria(id){
- ctx={type:'cat',id};
- db.ref('categories/'+id).once('value').then(s=>{
-  const v=s.val();
-  let vars='';
-  Object.entries(v.variations||{}).forEach(([k,x])=>{
-   vars+=`
-   <div class="flex gap-2 mb-1">
-    <input value="${x.name}" onchange="updVar('${id}','${k}',this.value)">
-    <input type="checkbox" ${x.active?'checked':''} onchange="toggleVar('${id}','${k}',this.checked)">
-    <button onclick="delVar('${id}','${k}')">🗑</button>
-   </div>`;
-  });
-  mTitle.innerText='Editar Categoria';
-  mBody.innerHTML=`
-   <input id="catNome" class="w-full p-2 bg-black border mb-2" value="${v.name}">
-   <h3 class="font-bold mt-2">Variações</h3>
-   ${vars}
-   <button onclick="novaVar('${id}')" class="btn btn-gold mt-2">+ Nova Variação</button>`;
-  abrir();
- });
+MODAL_PATH='categories';MODAL_ID=id
+modal.style.display='flex'
+modalTitulo.innerText=id?'Editar Categoria':'Nova Categoria'
+db.ref('categories/'+id).once('value',s=>{
+const v=s.val()||{}
+modalConteudo.innerHTML=`
+<input id="fNome" class="w-full bg-black border p-2" placeholder="Nome" value="${v.name||''}">
+<input id="fImg" class="w-full bg-black border p-2" placeholder="URL Imagem" value="${v.image||''}">
+<h3 class="text-xs mt-3 text-[#caa85c]">Variações</h3>
+<div id="listaVariacoes"></div>
+<button onclick="novaVariacao()" class="text-xs text-green-400 mt-2">+ Nova Variação</button>
+`
+if(v.variations){
+Object.entries(v.variations).forEach(([k,val])=>{
+listaVariacoes.innerHTML+=`
+<div class="flex gap-2 text-xs">
+<input value="${val.name}" onchange="updVar('${k}',this.value)" class="flex-1 bg-black border p-1">
+<button onclick="delVar('${k}')" class="text-red-500">X</button>
+</div>`
+})
+}
+})
+btnExcluir.onclick=()=>{excluir('categories',id)}
 }
 
-function salvarModal(){
- if(ctx.type==='cat'){
-  const nome=document.getElementById('catNome').value;
-  if(ctx.id){
-   db.ref('categories/'+ctx.id+'/name').set(nome);
-  }else{
-   db.ref('categories').push({name:nome,variations:{}});
-  }
- }
- fechar();
-}
+/* PRODUTOS POR CATEGORIA */
+db.ref('categories').on('value',snap=>{
+produtosPorCategoria.innerHTML=''
+snap.forEach(cat=>{
+const c=cat.val()
+produtosPorCategoria.innerHTML+=`
+<div>
+<h3 class="font-bold text-[#caa85c] mb-3">${c.name}</h3>
+<div id="cat-${cat.key}" class="grid grid-cols-2 md:grid-cols-6 gap-3"></div>
+</div>`
+db.ref('products').orderByChild('category').equalTo(cat.key).once('value',ps=>{
+const arr=[]
+ps.forEach(p=>arr.push({id:p.key,...p.val()}))
+arr.sort((a,b)=>a.sku.localeCompare(b.sku))
+arr.forEach(p=>{
+document.getElementById(`cat-${cat.key}`).innerHTML+=`
+<div class="card">
+<div class="dot ${p.image?'bg-green-500':'bg-red-500'}"></div>
+<p class="text-[9px] font-mono">${p.sku}</p>
+<p class="text-[10px] font-bold uppercase">${p.name}</p>
+<div class="flex gap-1 text-[9px] mt-1">
+<button onclick="editarProduto('${p.id}')" class="bg-[#caa85c] text-black px-1 rounded">E</button>
+<button onclick="pausar('products','${p.id}')" class="bg-gray-600 px-1 rounded">P</button>
+<button onclick="excluir('products','${p.id}')" class="bg-red-600 px-1 rounded">X</button>
+</div>
+</div>`
+})
+})
+})
+})
 
-function novaVar(cat){
- const k=prompt('Nome da variação (ex: A, DEUS)');
- if(!k)return;
- db.ref(`categories/${cat}/variations/${k}`).set({name:k,active:true});
-}
-function updVar(cat,key,val){
- db.ref(`categories/${cat}/variations/${key}/name`).set(val);
-}
-function toggleVar(cat,key,val){
- db.ref(`categories/${cat}/variations/${key}/active`).set(val);
-}
-function delVar(cat,key){
- if(confirm('Excluir variação?'))
- db.ref(`categories/${cat}/variations/${key}`).remove();
-}
-
-function excluir(path,id){
- if(confirm('Excluir item?')) db.ref(path+'/'+id).remove();
-}
-
-// PRODUTOS
-db.ref('products').on('value',snap=>{
- const map={};
- snap.forEach(p=>{
-  const v=p.val();
-  if(!map[v.category]) map[v.category]=[];
-  map[v.category].push(v);
- });
- produtosPorCategoria.innerHTML='';
- Object.keys(map).sort().forEach(cat=>{
-  const lista=map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||''));
-  let html=`<h3 class="font-bold mt-4">${cat}</h3>
-  <div class="grid grid-cols-2 md:grid-cols-6 gap-3">`;
-  lista.forEach(p=>{
-   html+=`
-   <div class="card">
-    <div class="flex justify-between">
-     <strong>${p.sku}</strong>
-     <span class="tag ${p.image?'ok':'no'}">IMG</span>
-    </div>
-    <div class="text-xs">${p.name}</div>
-   </div>`;
-  });
-  html+='</div>';
-  produtosPorCategoria.innerHTML+=html;
- });
-});
-
-// PROMOS
+/* PROMOÇÕES */
+db.ref('categories').on('value',snap=>{
+listaPromos.innerHTML=''
+snap.forEach(c=>{
+const d=c.val()
+listaPromos.innerHTML+=`
+<div class="flex justify-between bg-black p-2 rounded">
+<span class="text-xs">${d.name}</span>
+<input id="promo-${c.key}" type="number" value="${d.discount||0}" class="w-16 bg-black border text-center">
+</div>`
+})
+})
 function salvarPromos(){
- document.querySelectorAll('[id^="inputPromo-"]').forEach(i=>{
-  const id=i.id.replace('inputPromo-','');
-  db.ref('categories/'+id).update({discount:Number(i.value)});
- });
- alert('Promoções atualizadas');
+document.querySelectorAll('[id^=promo-]').forEach(i=>{
+db.ref('categories/'+i.id.replace('promo-','')).update({discount:Number(i.value)})
+})
+alert('Promoções salvas')
 }
 
-// PEDIDOS
+/* PEDIDOS */
 db.ref('orders').on('value',snap=>{
- containerPedidos.innerHTML='';
- snap.forEach(o=>{
-  const v=o.val();
-  containerPedidos.innerHTML+=`
-  <div class="card">
-   <div class="text-xs opacity-50">#${o.key.slice(-5)}</div>
-   <div>${v.customer?.name||''}</div>
-   <div class="text-xs">${v.status||'Pendente'}</div>
-  </div>`;
- });
-});
+containerPedidos.innerHTML=''
+snap.forEach(o=>{
+const v=o.val()
+containerPedidos.innerHTML+=`
+<div class="card">
+<p class="text-xs opacity-60">Pedido #${o.key.slice(-5)}</p>
+<p class="font-bold">${v.customer?.name||''}</p>
+<p class="text-xs">${v.status||'Pendente'}</p>
+<div class="flex gap-2 mt-2 text-xs">
+<button onclick="alert(JSON.stringify(v,null,2))" class="bg-[#caa85c] text-black px-2 rounded">ROMANEIO</button>
+<button onclick="statusPedido('${o.key}')" class="bg-gray-600 px-2 rounded">STATUS</button>
+<button onclick="excluir('orders','${o.key}')" class="bg-red-600 px-2 rounded">EXCLUIR</button>
+</div>
+</div>`
+})
+})
+
+function statusPedido(id){
+const s=prompt('Novo status:')
+if(s)db.ref('orders/'+id).update({status:s})
+}
+
+function pausar(path,id){
+db.ref(path+'/'+id+'/paused').set(true)
+alert('Pausado')
+}
+function excluir(path,id){
+if(confirm('Excluir?'))db.ref(path+'/'+id).remove()
+}
+function fecharModal(){modal.style.display='none'}
+function salvarModal(){
+const id=MODAL_ID||fNome.value.toLowerCase().replace(/[^a-z0-9]/g,'-')
+db.ref(MODAL_PATH+'/'+id).update({
+name:fNome.value,image:fImg.value
+})
+fecharModal()
+}
 </script>
+
 </body>
 </html>
