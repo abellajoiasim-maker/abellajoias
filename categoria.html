@@ -76,12 +76,17 @@ let configEmpresa = { desconto_pix: 5, parcelas: 6 };
 
 if(!catSlug) location.href = 'index.html';
 
-// BUSCAR REGRAS DA EMPRESA
-db.ref('empresa').once('value', s => {
+// BUSCAR REGRAS DA EMPRESA (Sincronizado com a ordem da sua Foto 1)
+db.ref('empresa').on('value', s => {
     if(s.exists()){
         const d = s.val();
-        configEmpresa.desconto_pix = parseFloat(d.desconto_pix) || 5;
-        configEmpresa.parcelas = parseInt(d.parcelas_sem_juros) || 6;
+        // Na sua foto, o desconto parece ser o 3º campo e parcelas o 4º
+        // Vamos garantir que ele pegue os nomes corretos salvos pelo seu painel
+        configEmpresa.desconto_pix = parseFloat(d.desconto_pix) || 0;
+        configEmpresa.parcelas = parseInt(d.parcelas_sem_juros) || 1;
+        
+        // Forçar atualização da vitrine se os produtos já carregaram
+        if(itemSelecionado === null) carregarProdutos(); 
     }
 });
 
