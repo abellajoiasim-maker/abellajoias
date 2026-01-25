@@ -266,9 +266,19 @@ function verDetalhesPedido(id) {
     db.ref('orders/' + id).once('value').then(s => {
         const p = s.val();
         const e = p.endereco_detalhado || {};
+        
+        // Cálculos Financeiros
+        const subtotalItens = Object.values(p.itens||{}).reduce((acc, i) => acc + (i.preco * i.qtd), 0);
+        const descPromo = parseFloat(p.descontoPromocional || 0);
+        const descPix = parseFloat(p.descontoPix || 0);
+        const totalFinal = parseFloat(p.total || 0);
+
         let itensHtml = '';
         Object.values(p.itens||{}).forEach(i => {
-            itensHtml += `<div class="flex justify-between text-[11px] border-b border-[#222] py-1"><span>${i.qtd}x ${i.nome}</span><span>R$ ${(i.preco*i.qtd).toFixed(2)}</span></div>`;
+            itensHtml += `<div class="flex justify-between text-[11px] border-b border-[#222] py-1">
+                <span>${i.qtd}x ${i.nome}</span>
+                <span>R$ ${(i.preco * i.qtd).toFixed(2)}</span>
+            </div>`;
         });
         abrirModal('Detalhes do Pedido', `
             <div class="text-[11px] space-y-2">
