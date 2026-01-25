@@ -432,29 +432,93 @@ function gerarRomaneio(id, tipo) {
     });
 }
 
+/* PEDIDOS COM EDIÇÃO DE ITENS E SOMA AUTOMÁTICA */
 function editarPedido(id) {
     db.ref('orders/' + id).once('value').then(s => {
         const p = s.val();
-        abrirModal('Editar Dados do Pedido', `
-            <label class="text-[10px] opacity-50 uppercase">Nome do Cliente</label>
-            <input id="editCli" value="${p.cliente || ''}">
-            <label class="text-[10px] opacity-50 uppercase">WhatsApp</label>
-            <input id="editWhats" value="${p.whatsapp || ''}">
-            <label class="text-[10px] opacity-50 uppercase">Endereço</label>
-            <input id="editEnd" value="${p.endereco || ''}">
-            <label class="text-[10px] opacity-50 uppercase">Valor Total (R$)</label>
-            <input id="editTotal" type="number" step="0.01" value="${parseFloat(p.total) || 0}">
+        if (!p) return;
+
+        // Criamos uma estrutura para os itens editáveis
+        let itensEditHtml = '';
+        const itensIds = Object.keys(p.itens || {});
+        
+        itensIds.forEach(itemId => {
+            const item = p.itens[itemId];
+            itensEditHtml += `
+            <div class="item-edit-row border-b border-[#222] py-2 mb-2" data-id="${itemId}">
+                <div class="text-[10px] font-bold text-[#caa85c] mb-1">${item.nome}</div>
+                <div class="flex gap-2">
+                    <div class="w-20">
+                        <label class="text-[9px] opacity-50 uppercase">Qtd</label>
+                        <input type="number" class="edit-qtd" value="${item.qtd}" 
+                            oninput="recalcularTotalEdicao()" 
+                            data-preco="${item.preco}" 
+                            style="margin-bottom:0">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-[9px] opacity-50 uppercase">Preço Unit.</label>
+                        <input type="number" class="edit-preco" value="${item.preco}" readonly 
+                            style="margin-bottom:0; opacity:0.6">
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        abrirModal('Editar Pedido', `
+            <div class="space-y-3">
+                <label class="text-[10px] uppercase opacity-50">Nome do Cliente</label>
+                <input id="editCli" value="${p.cliente || ''}">
+                
+                <label class="text-[10px] uppercase opacity-50">Endereço de Entrega</label>
+                <input id="editEnd" value="${p.endereco || ''}">
+
+                <h4 class="text-[#caa85c] font-bold uppercase text-[10px] mt-4 border-b border-[#333] pb-1">Itens e Quantidades</h4>
+                <div id="containerItensEdit" class="max-h-[200px] overflow-y-auto pr-2">
+                    ${itensEditHtml}
+                </div>
+
+                <div class="bg-[#1a1a1a] p-3 rounded-lg mt-4">
+                    <label class="text-[10px] uppercase opacity-50 text-green-500 font-bold">Valor Total Final (Editável)</label>
+                    <input id="editTotal" type="number" step="0.01" value="${parseFloat(p.total) || 0}" 
+                        style="font-size:18px; font-weight:bold; color:#22c55e;">
+                    <p class="text-[9px] opacity-50 italic">* O total recalcula ao mudar a Qtd, mas você pode ajustar manualmente se quiser.</p>
+                </div>
+            </div>
         `, () => {
+            // SALVAR AS ALTERAÇÕES
+            const novosItens = { ...p.itens };
+            document.querySelectorAll('.item-edit-row').forEach(row => {
+                const itemId = row.getAttribute('data-id');
+                const novaQtd = parseInt(row.querySelector('.edit-qtd').value) || 0;
+                if (novaQtd > 0) {
+                    novosItens[itemId].qtd = novaQtd;
+                } else {
+                    delete novosItens[itemId]; // Se a qtd for 0, remove o item
+                }
+            });
+
             db.ref('orders/' + id).update({
                 cliente: document.getElementById('editCli').value,
-                whatsapp: document.getElementById('editWhats').value,
                 endereco: document.getElementById('editEnd').value,
-                total: parseFloat(document.getElementById('editTotal').value) || 0
-            });
+                total: parseFloat(document.getElementById('editTotal').value) || 0,
+                itens: novosItens
+            }).then(() => alert("Pedido atualizado!"));
         });
     });
 }
 
+// Função auxiliar que soma tudo em tempo real enquanto você digita no modal
+function recalcularTotalEdicao() {
+    let novaSoma = 0;
+    document.querySelectorAll('.item-edit-row').forEach(row => {
+        const qtd = parseInt(row.querySelector('.edit-qtd').value) || 0;
+        const preco = parseFloat(row.querySelector('.edit-qtd').getAttribute('data-preco')) || 0;
+        novaSoma += (qtd * preco);
+    });
+    
+    // Atualiza o campo de valor total automaticamente
+    document.getElementById('editTotal').value = novaSoma.toFixed(2);
+}
 function abrirModal(t, b, cb) {
     modal.style.display = 'flex';
     modalTitle.innerText = t;
