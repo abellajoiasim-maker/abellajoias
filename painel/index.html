@@ -297,7 +297,7 @@ function salvarPromos(){
  alert('Promoções atualizadas');
 }
 
-/* PEDIDOS - GESTÃO COMPLETA (VER, EDITAR, IMPRIMIR, EXCLUIR) */
+/* PEDIDOS - GESTÃO COMPLETA (ATUALIZADO: DETALHES TÉCNICOS E FINANCEIROS) */
 db.ref('orders').on('value', s => {
     const lista = document.getElementById('listaPedidos');
     lista.innerHTML = '';
@@ -308,7 +308,6 @@ db.ref('orders').on('value', s => {
     s.forEach(o => {
         const pedido = o.val();
         const id = o.key;
-        // Correção do NaN: Garante que o total seja tratado como número
         const totalNum = parseFloat(pedido.total) || 0;
 
         lista.innerHTML += `
@@ -334,41 +333,102 @@ function verDetalhesPedido(id) {
         let itensHtml = '';
         if(p.itens) {
             Object.values(p.itens).forEach(item => {
+                const sub = (parseFloat(item.preco || 0) * item.qtd).toFixed(2);
                 itensHtml += `
-                <div class="flex justify-between border-b border-[#222] py-2 text-xs">
-                    <span>${item.qtd}x ${item.nome} ${item.variacao ? '- '+item.variacao : ''}</span>
-                    <span class="font-mono">R$ ${(parseFloat(item.preco || 0) * item.qtd).toFixed(2)}</span>
+                <div class="border-b border-[#222] py-2 text-[11px]">
+                    <div class="flex justify-between">
+                        <span class="font-bold">${item.qtd}x ${item.nome}</span>
+                        <span class="text-[#caa85c]">R$ ${sub}</span>
+                    </div>
+                    <div class="opacity-50 text-[9px]">SKU: ${item.sku || 'N/A'} | Peso: ${item.peso || 0}g</div>
                 </div>`;
             });
         }
         
-        const totalP = parseFloat(p.total) || 0;
-
         abrirModal('Detalhes do Pedido', `
             <div id="romaneio-area">
-                <div class="mb-4">
-                    <h4 class="text-[#caa85c] font-bold uppercase text-[10px]">Cliente</h4>
-                    <p class="text-lg font-bold">${p.cliente || 'N/A'}</p>
-                    <p class="text-xs opacity-60">WhatsApp: ${p.whatsapp || 'N/A'}</p>
-                    <h4 class="text-[#caa85c] font-bold uppercase text-[10px] mt-2">Endereço</h4>
-                    <p class="text-xs opacity-60 italic">${p.endereco || 'Retirada / Não informado'}</p>
+                <div class="grid grid-cols-2 gap-4 mb-4 text-[11px]">
+                    <div>
+                        <h4 class="text-[#caa85c] font-bold uppercase text-[9px]">Cliente</h4>
+                        <p class="font-bold">${p.cliente || 'N/A'}</p>
+                        <p class="opacity-60">${p.whatsapp || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-[#caa85c] font-bold uppercase text-[9px]">Pagamento</h4>
+                        <p>${p.pagamento || 'N/A'}</p>
+                        <p class="text-green-500">Desconto: R$ ${parseFloat(p.descontoPix || 0).toFixed(2)}</p>
+                    </div>
                 </div>
                 <div class="mb-4">
-                    <h4 class="text-[#caa85c] font-bold uppercase text-[10px] mb-1">Itens</h4>
+                    <h4 class="text-[#caa85c] font-bold uppercase text-[9px] mb-1">Itens do Pedido</h4>
                     ${itensHtml}
                 </div>
-                <div class="bg-[#1a1a1a] p-3 rounded-lg flex justify-between mb-4">
-                    <span class="font-bold">TOTAL DO PEDIDO:</span>
-                    <span class="font-bold text-green-500">R$ ${totalP.toFixed(2)}</span>
+                <div class="bg-[#1a1a1a] p-3 rounded-lg flex justify-between items-center mb-4">
+                    <span class="font-bold text-xs">VALOR FINAL:</span>
+                    <span class="font-bold text-lg text-green-500">R$ ${(parseFloat(p.total) || 0).toFixed(2)}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 no-print">
                     <button onclick="gerarRomaneio('${id}', 'completo')" class="btn bg-blue-600 text-white border-none">🖨️ Romaneio Completo</button>
                     <button onclick="gerarRomaneio('${id}', 'simples')" class="btn bg-gray-700 text-white border-none">📄 Romaneio Simples</button>
                 </div>
             </div>
-        `, null); // null porque não precisamos do botão salvar aqui
-        
+        `, null);
         document.getElementById('btnSalvar').style.display = 'none';
+    });
+}
+
+function gerarRomaneio(id, tipo) {
+    db.ref('orders/' + id).once('value').then(s => {
+        const p = s.val();
+        const dataAtual = new Date().toLocaleString('pt-BR');
+        let pesoTotal = 0;
+        let subtotalProdutos = 0;
+
+        let romaneioHtml = `<div id="romaneio-print" style="font-family:sans-serif;color:#000;background:#fff;padding:10px;">
+            <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;">
+                <h2 style="margin:0">ABELLA JOIAS</h2>
+                <p style="margin:0;font-size:11px;">Pedido: ${id.toUpperCase()} | Data: ${dataAtual}</p>
+            </div>`;
+
+        if (tipo === 'completo') {
+            romaneioHtml += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;font-size:11px;border:1px solid #eee;padding:8px;">
+                <div><strong>CLIENTE:</strong> ${p.cliente}<br><strong>WHATSAPP:</strong> ${p.whatsapp}<br><strong>ENDEREÇO:</strong> ${p.endereco || 'Retirada'}</div>
+                <div><strong>PAGAMENTO:</strong> ${p.pagamento}<br><strong>DESCONTO APLICADO:</strong> R$ ${parseFloat(p.descontoPix || 0).toFixed(2)}</div>
+            </div>`;
+        }
+
+        romaneioHtml += `<table style="width:100%;border-collapse:collapse;font-size:10px;">
+            <thead><tr style="border-bottom:1px solid #000;text-align:left;">
+                <th>SKU</th><th>Produto</th><th>Qtd</th>${tipo==='completo'?'<th>Peso U.</th><th>Preço U.</th>':''}<th>Subtotal</th>
+            </tr></thead><tbody>`;
+
+        Object.values(p.itens || {}).forEach(item => {
+            const vUnit = parseFloat(item.preco || 0);
+            const pUnit = parseFloat(item.peso || 0);
+            const sub = vUnit * item.qtd;
+            pesoTotal += pUnit * item.qtd;
+            subtotalProdutos += sub;
+
+            romaneioHtml += `<tr style="border-bottom:1px solid #eee;">
+                <td style="padding:4px 0;">${item.sku || '-'}</td>
+                <td>${item.nome} ${item.variacao ? '('+item.variacao+')' : ''}</td>
+                <td>${item.qtd}</td>
+                ${tipo==='completo'?`<td>${pUnit}g</td><td>R$ ${vUnit.toFixed(2)}</td>`:''}
+                <td style="text-align:right;">R$ ${sub.toFixed(2)}</td>
+            </tr>`;
+        });
+
+        romaneioHtml += `</tbody></table>
+        <div style="margin-top:15px; border-top:1px solid #000; padding-top:10px; font-size:11px; text-align:right;">
+            ${tipo==='completo'?`<p style="margin:2px 0;">Peso Total do Pedido: <strong>${pesoTotal.toFixed(2)}g</strong></p>`:''}
+            <p style="margin:2px 0; font-size:14px;"><strong>TOTAL FINAL: R$ ${(parseFloat(p.total) || 0).toFixed(2)}</strong></p>
+        </div></div>`;
+
+        const divTemp = document.createElement('div');
+        divTemp.innerHTML = romaneioHtml;
+        document.body.appendChild(divTemp);
+        window.print();
+        document.body.removeChild(divTemp);
     });
 }
 
@@ -380,71 +440,25 @@ function editarPedido(id) {
             <input id="editCli" value="${p.cliente || ''}">
             <label class="text-[10px] opacity-50 uppercase">WhatsApp</label>
             <input id="editWhats" value="${p.whatsapp || ''}">
-            <label class="text-[10px] opacity-50 uppercase">Endereço de Entrega</label>
+            <label class="text-[10px] opacity-50 uppercase">Endereço</label>
             <input id="editEnd" value="${p.endereco || ''}">
             <label class="text-[10px] opacity-50 uppercase">Valor Total (R$)</label>
             <input id="editTotal" type="number" step="0.01" value="${parseFloat(p.total) || 0}">
-            <p class="text-[9px] text-yellow-500 mt-2 italic">* A edição manual do total permite aplicar descontos ou taxas extras combinadas no Zap.</p>
         `, () => {
             db.ref('orders/' + id).update({
                 cliente: document.getElementById('editCli').value,
                 whatsapp: document.getElementById('editWhats').value,
                 endereco: document.getElementById('editEnd').value,
                 total: parseFloat(document.getElementById('editTotal').value) || 0
-            }).then(() => alert("Pedido atualizado!"));
+            });
         });
     });
 }
 
-function gerarRomaneio(id, tipo) {
-    db.ref('orders/' + id).once('value').then(s => {
-        const p = s.val();
-        const dataAtual = new Date().toLocaleString('pt-BR');
-        const totalR = parseFloat(p.total) || 0;
-
-        let romaneioHtml = `<div id="romaneio-print" style="font-family:sans-serif;color:#000;background:#fff;">
-            <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:20px;">
-                <h2 style="margin:0">ABELLA JOIAS</h2>
-                <p style="margin:0;font-size:12px;">Pedido: ${id.toUpperCase()}</p>
-                <p style="margin:0;font-size:10px;">Data: ${dataAtual}</p>
-            </div>`;
-
-        if (tipo === 'completo') {
-            romaneioHtml += `<div style="margin-bottom:20px;border:1px solid #ccc;padding:10px;font-size:12px;">
-                <strong>CLIENTE:</strong> ${p.cliente}<br><strong>WHATSAPP:</strong> ${p.whatsapp}<br>
-                <strong>ENDEREÇO:</strong> ${p.endereco || 'Retirada'}<br><strong>PAGAMENTO:</strong> ${p.pagamento || '-'}
-            </div>`;
-        }
-
-        romaneioHtml += `<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px;">
-            <thead><tr style="border-bottom:1px solid #000;text-align:left;"><th>Qtd</th><th>Produto</th><th style="text-align:right;">Subtotal</th></tr></thead><tbody>`;
-        
-        if(p.itens) {
-            Object.values(p.itens).forEach(item => {
-                romaneioHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:5px 0;">${item.qtd}</td>
-                    <td style="padding:5px 0;">${item.nome} ${item.variacao ? '('+item.variacao+')' : ''}</td>
-                    <td style="padding:5px 0;text-align:right;">R$ ${(parseFloat(item.preco || 0) * item.qtd).toFixed(2)}</td></tr>`;
-            });
-        }
-
-        romaneioHtml += `</tbody></table><div style="text-align:right;font-size:16px;"><strong>TOTAL: R$ ${totalR.toFixed(2)}</strong></div></div>`;
-        
-        const divTemp = document.createElement('div');
-        divTemp.innerHTML = romaneioHtml;
-        document.body.appendChild(divTemp);
-        window.print();
-        document.body.removeChild(divTemp);
-    });
-}
-
-/* UTIL */
 function abrirModal(t, b, cb) {
-    const modal = document.getElementById('modal');
-    const btnSalvar = document.getElementById('btnSalvar');
     modal.style.display = 'flex';
-    document.getElementById('modalTitle').innerText = t;
-    document.getElementById('modalBody').innerHTML = b;
-    
+    modalTitle.innerText = t;
+    modalBody.innerHTML = b;
     if (cb) {
         btnSalvar.style.display = 'block';
         btnSalvar.onclick = () => { cb(); fecharModal(); };
@@ -452,9 +466,8 @@ function abrirModal(t, b, cb) {
         btnSalvar.style.display = 'none';
     }
 }
-
-function fecharModal() { document.getElementById('modal').style.display = 'none'; }
-function excluir(p, id) { if (confirm('Tem certeza que deseja excluir permanentemente?')) db.ref(p + '/' + id).remove(); }
+function fecharModal() { modal.style.display = 'none'; }
+function excluir(p, id) { if (confirm('Excluir permanentemente?')) db.ref(p + '/' + id).remove(); }
 function togglePause(p, id) { db.ref(p + '/' + id + '/paused').transaction(v => !v); }
 </script>
 </body>
