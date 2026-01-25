@@ -377,58 +377,111 @@ function verDetalhesPedido(id) {
     });
 }
 
+/* GERADOR DE ROMANEIOS: SIMPLES, COMPLETO E CLIENTE (COM FOTO) */
 function gerarRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value').then(s => {
         const p = s.val();
-        const dataAtual = new Date().toLocaleString('pt-BR');
-        let pesoTotal = 0;
-        let subtotalProdutos = 0;
+        if(!p) return;
+        const e = p.endereco_detalhado || {};
+        const data = new Date().toLocaleString('pt-BR');
+        
+        // Coleta configurações da empresa para calcular parcelas
+        db.ref('settings').once('value').then(set => {
+            const config = set.val() || { parcelas: 1 };
+            const valorTotal = parseFloat(p.total) || 0;
+            const valorParcela = valorTotal / config.parcelas;
 
-        let romaneioHtml = `<div id="romaneio-print" style="font-family:sans-serif;color:#000;background:#fff;padding:10px;">
-            <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;">
-                <h2 style="margin:0">ABELLA JOIAS</h2>
-                <p style="margin:0;font-size:11px;">Pedido: ${id.toUpperCase()} | Data: ${dataAtual}</p>
-            </div>`;
+            let romaneioHtml = `
+            <html>
+            <head>
+                <title>Abella Joias - Romaneio</title>
+                <style>
+                    body { font-family: sans-serif; color: #000; margin: 0; padding: 20px; font-size: 12px; }
+                    .header { text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; padding-bottom: 10px; }
+                    .info-box { display: flex; justify-content: space-between; margin-bottom: 15px; border: 1px solid #eee; padding: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th { background: #f2f2f2; border-bottom: 1px solid #000; padding: 8px; text-align: left; }
+                    td { border-bottom: 1px solid #eee; padding: 8px; vertical-align: middle; }
+                    .img-prod { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+                    .total-box { text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
+                    .footer-info { margin-top: 10px; font-size: 10px; color: #444; }
+                    @media print { .no-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1 style="margin:0;">ABELLA JOIAS</h1>
+                    <p style="margin:0;">Pedido: ${id.toUpperCase()} | Data: ${data}</p>
+                </div>
 
-        if (tipo === 'completo') {
-            romaneioHtml += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;font-size:11px;border:1px solid #eee;padding:8px;">
-                <div><strong>CLIENTE:</strong> ${p.cliente}<br><strong>WHATSAPP:</strong> ${p.whatsapp}<br><strong>ENDEREÇO:</strong> ${p.endereco || 'Retirada'}</div>
-                <div><strong>PAGAMENTO:</strong> ${p.pagamento}<br><strong>DESCONTO APLICADO:</strong> R$ ${parseFloat(p.descontoPix || 0).toFixed(2)}</div>
-            </div>`;
-        }
+                <div class="info-box">
+                    <div>
+                        <strong>CLIENTE:</strong> ${p.cliente} <br>
+                        <strong>CONTATO:</strong> ${p.whatsapp || 'N/A'} <br>
+                        <strong>ENTREGA:</strong> ${e.rua || 'A retirar'}, ${e.num || ''} <br>
+                        ${e.bairro ? e.bairro + ' - ' + e.cidade : ''}
+                    </div>
+                    <div style="text-align: right;">
+                        <strong>TIPO:</strong> ${tipo.toUpperCase()} <br>
+                        <strong>FORMA:</strong> ${p.pagamento || 'A definir'} <br>
+                        <strong>LOCAL:</strong> ${e.local || 'N/A'}
+                    </div>
+                </div>
 
-        romaneioHtml += `<table style="width:100%;border-collapse:collapse;font-size:10px;">
-            <thead><tr style="border-bottom:1px solid #000;text-align:left;">
-                <th>SKU</th><th>Produto</th><th>Qtd</th>${tipo==='completo'?'<th>Peso U.</th><th>Preço U.</th>':''}<th>Subtotal</th>
-            </tr></thead><tbody>`;
+                <table>
+                    <thead>
+                        <tr>
+                            ${tipo === 'cliente' ? '<th>Foto</th>' : ''}
+                            <th>SKU</th>
+                            <th>Produto</th>
+                            <th style="text-align:center;">Qtd</th>
+                            ${tipo !== 'simples' ? '<th>Peso U.</th><th>Valor U.</th>' : ''}
+                            <th style="text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
 
-        Object.values(p.itens || {}).forEach(item => {
-            const vUnit = parseFloat(item.preco || 0);
-            const pUnit = parseFloat(item.peso || 0);
-            const sub = vUnit * item.qtd;
-            pesoTotal += pUnit * item.qtd;
-            subtotalProdutos += sub;
+            Object.values(p.itens || {}).forEach(item => {
+                const vUnit = parseFloat(item.preco) || 0;
+                const qtd = parseInt(item.qtd) || 0;
+                const peso = item.peso || '0';
+                
+                romaneioHtml += `
+                <tr>
+                    ${tipo === 'cliente' ? `<td><img src="${item.image || ''}" class="img-prod" onerror="this.src='https://via.placeholder.com/50'"></td>` : ''}
+                    <td>${item.sku || '-'}</td>
+                    <td>${item.nome} ${item.variacao ? '('+item.variacao+')' : ''}</td>
+                    <td style="text-align:center;">${qtd}</td>
+                    ${tipo !== 'simples' ? `<td>${peso}g</td><td>R$ ${vUnit.toFixed(2)}</td>` : ''}
+                    <td style="text-align:right;">R$ ${(vUnit * qtd).toFixed(2)}</td>
+                </tr>`;
+            });
 
-            romaneioHtml += `<tr style="border-bottom:1px solid #eee;">
-                <td style="padding:4px 0;">${item.sku || '-'}</td>
-                <td>${item.nome} ${item.variacao ? '('+item.variacao+')' : ''}</td>
-                <td>${item.qtd}</td>
-                ${tipo==='completo'?`<td>${pUnit}g</td><td>R$ ${vUnit.toFixed(2)}</td>`:''}
-                <td style="text-align:right;">R$ ${sub.toFixed(2)}</td>
-            </tr>`;
+            romaneioHtml += `
+                    </tbody>
+                </table>
+
+                <div class="total-box">
+                    ${tipo === 'cliente' ? `
+                        <p style="margin:2px 0;">Subtotal: R$ ${(valorTotal + (parseFloat(p.descontoPix) || 0)).toFixed(2)}</p>
+                        <p style="margin:2px 0; color: green;">Desconto/Promo: R$ ${parseFloat(p.descontoPix || 0).toFixed(2)}</p>
+                    ` : ''}
+                    <h2 style="margin:5px 0;">TOTAL FINAL: R$ ${valorTotal.toFixed(2)}</h2>
+                    ${tipo === 'cliente' ? `<p><b>OPÇÕES DE PAGAMENTO:</b> À vista ou em até ${config.parcelas}x de R$ ${valorParcela.toFixed(2)}</p>` : ''}
+                </div>
+
+                <div class="footer-info">
+                    <p>* Este documento serve como conferência de pedido e garantia das peças descritas.</p>
+                </div>
+                
+                <script>window.onload = function() { window.print(); window.close(); }</script>
+            </body>
+            </html>`;
+
+            const win = window.open('', '_blank');
+            win.document.write(romaneioHtml);
+            win.document.close();
         });
-
-        romaneioHtml += `</tbody></table>
-        <div style="margin-top:15px; border-top:1px solid #000; padding-top:10px; font-size:11px; text-align:right;">
-            ${tipo==='completo'?`<p style="margin:2px 0;">Peso Total do Pedido: <strong>${pesoTotal.toFixed(2)}g</strong></p>`:''}
-            <p style="margin:2px 0; font-size:14px;"><strong>TOTAL FINAL: R$ ${(parseFloat(p.total) || 0).toFixed(2)}</strong></p>
-        </div></div>`;
-
-        const divTemp = document.createElement('div');
-        divTemp.innerHTML = romaneioHtml;
-        document.body.appendChild(divTemp);
-        window.print();
-        document.body.removeChild(divTemp);
     });
 }
 
