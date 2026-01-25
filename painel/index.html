@@ -432,82 +432,141 @@ function gerarRomaneio(id, tipo) {
     });
 }
 
-/* PEDIDOS COM EDIÇÃO DE ITENS E SOMA AUTOMÁTICA */
-function editarPedido(id) {
+/* PEDIDOS - GESTÃO COMPLETA COM ENDEREÇO E SOMA AUTOMÁTICA */
+db.ref('orders').on('value', s => {
+    const lista = document.getElementById('listaPedidos');
+    lista.innerHTML = '';
+    if (!s.exists()) {
+        lista.innerHTML = '<div class="p-10 text-center opacity-50">Nenhum pedido recebido.</div>';
+        return;
+    }
+    s.forEach(o => {
+        const p = o.val();
+        const id = o.key;
+        const totalNum = parseFloat(p.total) || 0;
+
+        lista.innerHTML += `
+        <div class="card flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div>
+                <div class="text-[10px] opacity-40 font-mono">${id}</div>
+                <div class="font-bold text-[#caa85c]">${p.cliente || 'Cliente'}</div>
+                <div class="text-[11px]">Total: R$ ${totalNum.toFixed(2)}</div>
+            </div>
+            <div class="flex gap-1">
+                <button class="btn" onclick="verDetalhesPedido('${id}')">Ver / Imprimir</button>
+                <button class="btn btn-gold" onclick="editarPedido('${id}')">Editar</button>
+                <button class="btn btn-red" onclick="excluir('orders','${id}')">Excluir</button>
+            </div>
+        </div>`;
+    });
+});
+
+function verDetalhesPedido(id) {
     db.ref('orders/' + id).once('value').then(s => {
         const p = s.val();
-        if (!p) return;
-
-        // Criamos uma estrutura para os itens editáveis
-        let itensEditHtml = '';
-        const itensIds = Object.keys(p.itens || {});
+        if(!p) return;
+        const e = p.endereco_detalhado || {};
         
-        itensIds.forEach(itemId => {
-            const item = p.itens[itemId];
+        let itensHtml = '';
+        if(p.itens) {
+            Object.values(p.itens).forEach(item => {
+                itensHtml += `
+                <div class="flex justify-between border-b border-[#222] py-2 text-[11px]">
+                    <span>${item.qtd}x ${item.nome}</span>
+                    <span>R$ ${(parseFloat(item.preco) * item.qtd).toFixed(2)}</span>
+                </div>`;
+            });
+        }
+
+        abrirModal('Detalhes do Pedido', `
+            <div id="romaneio-area">
+                <div class="mb-4 text-[11px]">
+                    <h4 class="text-[#caa85c] font-bold uppercase text-[9px]">Cliente</h4>
+                    <p><b>${p.cliente}</b> - ${p.whatsapp}</p>
+                    <h4 class="text-[#caa85c] font-bold uppercase text-[9px] mt-2">Endereço de Entrega</h4>
+                    <p>${e.local ? '<b>'+e.local+'</b><br>' : ''} ${e.rua || 'N/A'}, ${e.num || 'S/N'}<br>${e.bairro || 'N/A'} - ${e.cidade || 'N/A'}</p>
+                </div>
+                <div class="mb-4">${itensHtml}</div>
+                <div class="bg-[#1a1a1a] p-3 rounded-lg flex justify-between items-center mb-4">
+                    <span class="font-bold text-xs">TOTAL:</span>
+                    <span class="font-bold text-lg text-green-500">R$ ${parseFloat(p.total).toFixed(2)}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 no-print">
+                    <button onclick="gerarRomaneio('${id}', 'completo')" class="btn bg-blue-600 text-white border-none">🖨️ Romaneio Completo</button>
+                    <button onclick="gerarRomaneio('${id}', 'simples')" class="btn bg-gray-700 text-white border-none">📄 Romaneio Simples</button>
+                </div>
+            </div>
+        `, null);
+        document.getElementById('btnSalvar').style.display = 'none';
+    });
+}
+
+function editarPedido(id) {
+    db.ref('orders/' + id).once('value').then(s => {
+        const p = s.val() || {};
+        const end = p.endereco_detalhado || {local:'', rua:'', num:'', bairro:'', cidade:''};
+        
+        let itensEditHtml = '';
+        Object.entries(p.itens || {}).forEach(([itemId, item]) => {
             itensEditHtml += `
             <div class="item-edit-row border-b border-[#222] py-2 mb-2" data-id="${itemId}">
                 <div class="text-[10px] font-bold text-[#caa85c] mb-1">${item.nome}</div>
                 <div class="flex gap-2">
-                    <div class="w-20">
-                        <label class="text-[9px] opacity-50 uppercase">Qtd</label>
-                        <input type="number" class="edit-qtd" value="${item.qtd}" 
-                            oninput="recalcularTotalEdicao()" 
-                            data-preco="${item.preco}" 
-                            style="margin-bottom:0">
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-[9px] opacity-50 uppercase">Preço Unit.</label>
-                        <input type="number" class="edit-preco" value="${item.preco}" readonly 
-                            style="margin-bottom:0; opacity:0.6">
-                    </div>
+                    <input type="number" class="edit-qtd w-16" value="${item.qtd}" oninput="recalcularTotalEdicao()" data-preco="${item.preco}">
+                    <input type="number" class="w-full opacity-50" value="${item.preco}" readonly>
                 </div>
             </div>`;
         });
 
         abrirModal('Editar Pedido', `
-            <div class="space-y-3">
-                <label class="text-[10px] uppercase opacity-50">Nome do Cliente</label>
-                <input id="editCli" value="${p.cliente || ''}">
-                
-                <label class="text-[10px] uppercase opacity-50">Endereço de Entrega</label>
-                <input id="editEnd" value="${p.endereco || ''}">
-
-                <h4 class="text-[#caa85c] font-bold uppercase text-[10px] mt-4 border-b border-[#333] pb-1">Itens e Quantidades</h4>
-                <div id="containerItensEdit" class="max-h-[200px] overflow-y-auto pr-2">
-                    ${itensEditHtml}
+            <div class="space-y-2 text-left">
+                <label class="text-[10px] uppercase opacity-50">Cliente / WhatsApp</label>
+                <div class="flex gap-2">
+                    <input id="editCli" value="${p.cliente || ''}" placeholder="Nome">
+                    <input id="editWhats" value="${p.whatsapp || ''}" placeholder="Zap">
                 </div>
-
+                <h4 class="text-[#caa85c] font-bold uppercase text-[10px] mt-3">Local de Entrega</h4>
+                <input id="endLocal" value="${end.local || ''}" placeholder="Nome do Local (Ex: Casa, Trabalho)">
+                <div class="flex gap-2">
+                    <input id="endRua" class="flex-1" value="${end.rua || ''}" placeholder="Rua">
+                    <input id="endNum" class="w-20" value="${end.num || ''}" placeholder="Nº">
+                </div>
+                <div class="flex gap-2">
+                    <input id="endBairro" value="${end.bairro || ''}" placeholder="Bairro">
+                    <input id="endCidade" value="${end.cidade || ''}" placeholder="Cidade">
+                </div>
+                <h4 class="text-[#caa85c] font-bold uppercase text-[10px] mt-4 border-b border-[#333] pb-1">Itens</h4>
+                <div id="containerItensEdit" class="max-h-[150px] overflow-y-auto">${itensEditHtml}</div>
                 <div class="bg-[#1a1a1a] p-3 rounded-lg mt-4">
-                    <label class="text-[10px] uppercase opacity-50 text-green-500 font-bold">Valor Total Final (Editável)</label>
-                    <input id="editTotal" type="number" step="0.01" value="${parseFloat(p.total) || 0}" 
-                        style="font-size:18px; font-weight:bold; color:#22c55e;">
-                    <p class="text-[9px] opacity-50 italic">* O total recalcula ao mudar a Qtd, mas você pode ajustar manualmente se quiser.</p>
+                    <label class="text-[10px] uppercase opacity-50 text-green-500 font-bold">Total Final (R$)</label>
+                    <input id="editTotal" type="number" step="0.01" value="${parseFloat(p.total) || 0}" style="font-size:18px; font-weight:bold; color:#22c55e;">
                 </div>
             </div>
         `, () => {
-            // SALVAR AS ALTERAÇÕES
             const novosItens = { ...p.itens };
             document.querySelectorAll('.item-edit-row').forEach(row => {
                 const itemId = row.getAttribute('data-id');
                 const novaQtd = parseInt(row.querySelector('.edit-qtd').value) || 0;
-                if (novaQtd > 0) {
-                    novosItens[itemId].qtd = novaQtd;
-                } else {
-                    delete novosItens[itemId]; // Se a qtd for 0, remove o item
-                }
+                if (novaQtd > 0) novosItens[itemId].qtd = novaQtd;
+                else delete novosItens[itemId];
             });
-
             db.ref('orders/' + id).update({
                 cliente: document.getElementById('editCli').value,
-                endereco: document.getElementById('editEnd').value,
+                whatsapp: document.getElementById('editWhats').value,
                 total: parseFloat(document.getElementById('editTotal').value) || 0,
-                itens: novosItens
+                itens: novosItens,
+                endereco_detalhado: {
+                    local: document.getElementById('endLocal').value,
+                    rua: document.getElementById('endRua').value,
+                    num: document.getElementById('endNum').value,
+                    bairro: document.getElementById('endBairro').value,
+                    cidade: document.getElementById('endCidade').value
+                }
             }).then(() => alert("Pedido atualizado!"));
         });
     });
 }
 
-// Função auxiliar que soma tudo em tempo real enquanto você digita no modal
 function recalcularTotalEdicao() {
     let novaSoma = 0;
     document.querySelectorAll('.item-edit-row').forEach(row => {
@@ -515,14 +574,48 @@ function recalcularTotalEdicao() {
         const preco = parseFloat(row.querySelector('.edit-qtd').getAttribute('data-preco')) || 0;
         novaSoma += (qtd * preco);
     });
-    
-    // Atualiza o campo de valor total automaticamente
     document.getElementById('editTotal').value = novaSoma.toFixed(2);
 }
+
+function gerarRomaneio(id, tipo) {
+    db.ref('orders/' + id).once('value').then(s => {
+        const p = s.val();
+        const e = p.endereco_detalhado || {};
+        const data = new Date().toLocaleString('pt-BR');
+        let romaneioHtml = `<div id="romaneio-print" style="font-family:sans-serif;color:#000;background:#fff;padding:20px;">
+            <div style="text-align:center;border-bottom:2px solid #000;margin-bottom:15px;padding-bottom:10px;">
+                <h1 style="margin:0;">ABELLA JOIAS</h1>
+                <p style="margin:0;font-size:12px;">Pedido: ${id.toUpperCase()} | Data: ${data}</p>
+            </div>
+            <div style="margin-bottom:15px; font-size:13px;">
+                <strong>CLIENTE:</strong> ${p.cliente} <br>
+                <strong>ENTREGA:</strong> ${e.local || ''} - ${e.rua || 'N/A'}, ${e.num || ''} | ${e.bairro || ''} - ${e.cidade || ''} <br>
+                ${tipo === 'completo' ? '<strong>ZAP:</strong> ' + p.whatsapp : ''}
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead><tr style="background:#eee;border-bottom:1px solid #000;"><th style="text-align:left;padding:5px;">Produto</th><th style="padding:5px;">Qtd</th><th style="text-align:right;padding:5px;">Subtotal</th></tr></thead>
+                <tbody>`;
+        Object.values(p.itens || {}).forEach(item => {
+            const unit = parseFloat(item.preco) || 0;
+            const qtd = parseInt(item.qtd) || 0;
+            romaneioHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:5px;">${item.nome}</td><td style="text-align:center;">${qtd}</td><td style="text-align:right;padding:5px;">R$ ${(unit*qtd).toFixed(2)}</td></tr>`;
+        });
+        romaneioHtml += `</tbody></table>
+            <h3 style="text-align:right;margin-top:20px;">TOTAL FINAL: R$ ${parseFloat(p.total).toFixed(2)}</h3>
+        </div>`;
+        const win = window.open('', '_blank');
+        win.document.write(romaneioHtml);
+        win.print();
+    });
+}
+
+/* UTILITÁRIOS */
 function abrirModal(t, b, cb) {
+    const modal = document.getElementById('modal');
+    const btnSalvar = document.getElementById('btnSalvar');
     modal.style.display = 'flex';
-    modalTitle.innerText = t;
-    modalBody.innerHTML = b;
+    document.getElementById('modalTitle').innerText = t;
+    document.getElementById('modalBody').innerHTML = b;
     if (cb) {
         btnSalvar.style.display = 'block';
         btnSalvar.onclick = () => { cb(); fecharModal(); };
@@ -530,7 +623,7 @@ function abrirModal(t, b, cb) {
         btnSalvar.style.display = 'none';
     }
 }
-function fecharModal() { modal.style.display = 'none'; }
+function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 function excluir(p, id) { if (confirm('Excluir permanentemente?')) db.ref(p + '/' + id).remove(); }
 function togglePause(p, id) { db.ref(p + '/' + id + '/paused').transaction(v => !v); }
 </script>
