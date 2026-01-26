@@ -12,11 +12,9 @@
         body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; }
         .serif { font-family: 'Cinzel', serif; }
         .gold { color: #caa85c; }
-        .bg-gold { background: #caa85c; }
-        input { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; }
+        input, select, textarea { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; }
         .card-cat { background: #141414; border: 1px solid #222; transition: 0.3s; }
-        .card-cat:hover { border-color: #caa85c; }
-        #modalEdit { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; }
+        #modalEdit { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; overflow-y: auto; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -24,46 +22,58 @@
     <div class="max-w-5xl mx-auto">
         <header class="text-center mb-10">
             <h1 class="serif text-3xl gold uppercase tracking-widest">Painel de Categorias</h1>
-            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] mt-2">Abella Joias - Gestão de Catálogo</p>
+            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] mt-2">Gestão de Itens Personalizados e Iniciais</p>
         </header>
 
         <div class="card-cat rounded-3xl p-6 mb-10 shadow-2xl">
-            <h2 class="gold font-bold uppercase text-xs mb-4 tracking-wider">Criar Nova Categoria</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" id="newCatName" placeholder="Nome (Ex: Anéis)" class="p-3 rounded-xl text-sm outline-none">
-                <input type="number" id="newCatDisc" placeholder="Desconto % (Opcional)" class="p-3 rounded-xl text-sm outline-none">
+            <h2 class="gold font-bold uppercase text-xs mb-4 tracking-wider">Criar Nova Categoria (Iniciais ou Dizeres)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="newCatName" placeholder="Nome (Ex: Iniciais A-Z ou Anéis com Dizeres)" class="p-3 rounded-xl text-sm outline-none">
+                <input type="number" id="newCatDisc" placeholder="Desconto %" class="p-3 rounded-xl text-sm outline-none">
+                
+                <select id="newCatVar" class="p-3 rounded-xl text-sm outline-none" onchange="toggleLista('new')">
+                    <option value="">Sem Variação</option>
+                    <option value="Aro">Habilitar Aro (Anéis)</option>
+                    <option value="Tamanho">Habilitar Tamanho</option>
+                    <option value="Lista">Lista Personalizada (Iniciais/Dizeres)</option>
+                </select>
+
                 <input type="text" id="newCatImg" placeholder="URL da Imagem" class="p-3 rounded-xl text-sm outline-none">
             </div>
-            <button onclick="salvarNovaCategoria()" class="w-full bg-gold text-black font-bold py-3 rounded-xl mt-4 uppercase text-xs hover:opacity-80 transition-all">
-                + Adicionar Categoria
+
+            <div id="boxListaNew" class="hidden mt-4">
+                <label class="text-[10px] text-zinc-500 uppercase font-bold">Digite as Opções (Separe por vírgula):</label>
+                <textarea id="newCatListaOpcoes" placeholder="A, B, C, D... ou Fé, Jesus, Gratidão, Abençoada..." class="w-full p-3 rounded-xl text-sm outline-none mt-1 h-20"></textarea>
+            </div>
+
+            <button onclick="salvarNovaCategoria()" class="w-full bg-[#caa85c] text-black font-bold py-3 rounded-xl mt-4 uppercase text-xs hover:opacity-80 transition-all">
+                + Salvar Categoria
             </button>
         </div>
 
-        <h2 class="serif gold text-center mb-6 uppercase tracking-widest text-sm">Categorias Ativas</h2>
-        <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+        <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
 
     <div id="modalEdit">
-        <div class="bg-[#141414] border border-[#333] p-8 rounded-3xl w-full max-w-md shadow-2xl">
+        <div class="bg-[#141414] border border-[#333] p-8 rounded-3xl w-full max-w-md my-10">
             <h3 class="serif gold text-xl mb-6 text-center uppercase">Editar Categoria</h3>
             <input type="hidden" id="editId">
             <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold ml-1">Nome</label>
-                    <input type="text" id="editName" class="w-full p-3 rounded-xl text-sm outline-none mt-1">
+                <input type="text" id="editName" class="w-full p-3 rounded-xl text-sm outline-none">
+                <input type="number" id="editDisc" class="w-full p-3 rounded-xl text-sm outline-none">
+                <select id="editVar" class="w-full p-3 rounded-xl text-sm outline-none" onchange="toggleLista('edit')">
+                    <option value="">Sem Variação</option>
+                    <option value="Aro">Habilitar Aro</option>
+                    <option value="Tamanho">Habilitar Tamanho</option>
+                    <option value="Lista">Lista Personalizada (Iniciais/Dizeres)</option>
+                </select>
+                <div id="boxListaEdit" class="hidden">
+                    <textarea id="editCatListaOpcoes" class="w-full p-3 rounded-xl text-sm outline-none h-24"></textarea>
                 </div>
-                <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold ml-1">Desconto %</label>
-                    <input type="number" id="editDisc" class="w-full p-3 rounded-xl text-sm outline-none mt-1">
-                </div>
-                <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold ml-1">URL da Imagem</label>
-                    <input type="text" id="editImg" class="w-full p-3 rounded-xl text-sm outline-none mt-1">
-                </div>
+                <input type="text" id="editImg" class="w-full p-3 rounded-xl text-sm outline-none">
             </div>
             <div class="flex gap-2 mt-8">
-                <button onclick="confirmarEdicao()" class="flex-1 bg-gold text-black font-bold py-3 rounded-xl uppercase text-[10px]">Salvar</button>
+                <button onclick="confirmarEdicao()" class="flex-1 bg-[#caa85c] text-black font-bold py-3 rounded-xl uppercase text-[10px]">Salvar</button>
                 <button onclick="fecharModal()" class="flex-1 bg-zinc-800 text-white font-bold py-3 rounded-xl uppercase text-[10px]">Cancelar</button>
             </div>
         </div>
@@ -77,59 +87,55 @@
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. CARREGAR CATEGORIAS
+    function toggleLista(tipo) {
+        const val = tipo === 'new' ? document.getElementById('newCatVar').value : document.getElementById('editVar').value;
+        const box = tipo === 'new' ? document.getElementById('boxListaNew') : document.getElementById('boxListaEdit');
+        if(val === 'Lista') box.classList.remove('hidden'); else box.classList.add('hidden');
+    }
+
     db.ref('categories').on('value', snap => {
         const grid = document.getElementById('listaCategorias');
         grid.innerHTML = '';
         snap.forEach(c => {
             const d = c.val();
-            const id = c.key;
             grid.innerHTML += `
                 <div class="card-cat p-4 rounded-2xl flex items-center gap-4">
-                    <img src="${d.image || 'https://via.placeholder.com/100'}" class="w-16 h-16 object-cover rounded-xl bg-black border border-[#333]">
+                    <img src="${d.image || 'https://via.placeholder.com/100'}" class="w-16 h-16 object-cover rounded-xl border border-[#333]">
                     <div class="flex-1">
                         <h4 class="font-bold text-sm text-white">${d.name}</h4>
-                        <p class="text-[10px] text-green-500 font-bold uppercase">${d.discount || 0}% de Desconto</p>
+                        <p class="text-[9px] text-zinc-500 uppercase">${d.variacaoTipo === 'Lista' ? 'Personalizada' : d.variacaoTipo || 'Padrão'}</p>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <button onclick="abrirModal('${id}', '${d.name}', ${d.discount || 0}, '${d.image || ''}')" class="text-xs bg-zinc-800 p-2 rounded-lg hover:bg-gold hover:text-black transition-all">✏️</button>
-                        <button onclick="excluirCategoria('${id}')" class="text-xs bg-zinc-800 p-2 rounded-lg hover:bg-red-600 transition-all">🗑️</button>
+                        <button onclick="abrirModal('${c.key}', '${d.name}', ${d.discount || 0}, '${d.image || ''}', '${d.variacaoTipo || ''}', '${d.opcoesPersonalizadas || ''}')" class="bg-zinc-800 p-2 rounded-lg hover:bg-[#caa85c]">✏️</button>
+                        <button onclick="excluirCategoria('${c.key}')" class="bg-zinc-800 p-2 rounded-lg hover:bg-red-600">🗑️</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     });
 
-    // 2. SALVAR NOVA
     function salvarNovaCategoria() {
         const name = document.getElementById('newCatName').value;
-        const disc = document.getElementById('newCatDisc').value || 0;
-        const img = document.getElementById('newCatImg').value;
-
-        if(!name) return alert("Digite o nome da categoria!");
-
-        // Gera slug simples (ex: "Anéis de Ouro" -> "aneis-de-ouro")
+        if(!name) return alert("Digite o nome!");
         const slug = name.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
         db.ref('categories/' + slug).set({
             name: name,
             slug: slug,
-            discount: parseInt(disc),
-            image: img
-        }).then(() => {
-            document.getElementById('newCatName').value = '';
-            document.getElementById('newCatDisc').value = '';
-            document.getElementById('newCatImg').value = '';
-            alert("Categoria criada!");
-        });
+            discount: parseInt(document.getElementById('newCatDisc').value) || 0,
+            image: document.getElementById('newCatImg').value,
+            variacaoTipo: document.getElementById('newCatVar').value,
+            opcoesPersonalizadas: document.getElementById('newCatListaOpcoes').value
+        }).then(() => { alert("Categoria salva!"); location.reload(); });
     }
 
-    // 3. MODAL DE EDIÇÃO
-    function abrirModal(id, nome, desc, img) {
+    function abrirModal(id, nome, desc, img, vTipo, lista) {
         document.getElementById('editId').value = id;
         document.getElementById('editName').value = nome;
         document.getElementById('editDisc').value = desc;
         document.getElementById('editImg').value = img;
+        document.getElementById('editVar').value = vTipo;
+        document.getElementById('editCatListaOpcoes').value = lista;
+        toggleLista('edit');
         document.getElementById('modalEdit').style.display = 'flex';
     }
 
@@ -140,21 +146,14 @@
         const updates = {
             name: document.getElementById('editName').value,
             discount: parseInt(document.getElementById('editDisc').value) || 0,
-            image: document.getElementById('editImg').value
+            image: document.getElementById('editImg').value,
+            variacaoTipo: document.getElementById('editVar').value,
+            opcoesPersonalizadas: document.getElementById('editCatListaOpcoes').value
         };
-
-        db.ref('categories/' + id).update(updates).then(() => {
-            fecharModal();
-            alert("Categoria atualizada!");
-        });
+        db.ref('categories/' + id).update(updates).then(() => { fecharModal(); alert("Atualizado!"); });
     }
 
-    // 4. EXCLUIR
-    function excluirCategoria(id) {
-        if(confirm("Deseja realmente excluir esta categoria?")) {
-            db.ref('categories/' + id).remove();
-        }
-    }
+    function excluirCategoria(id) { if(confirm("Excluir categoria?")) db.ref('categories/' + id).remove(); }
     </script>
 </body>
 </html>
