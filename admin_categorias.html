@@ -2,46 +2,74 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Editor de Categorias | Abella Joias</title>
+    <title>Gerenciar Categorias | Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; background: #f4f4f4; }
-        .card-img { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; background: #000; }
+        body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold { color: #caa85c; }
+        .bg-gold { background: #caa85c; }
+        input { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; }
+        .card-cat { background: #141414; border: 1px solid #222; transition: 0.3s; }
+        .card-cat:hover { border-color: #caa85c; }
+        #modalEdit { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
-        <div class="bg-black p-6 text-center">
-            <h1 class="text-white font-bold uppercase tracking-widest">Gerenciar Categorias</h1>
-            <p class="text-gray-400 text-xs mt-1">Abella Joias - Painel Master</p>
-        </div>
+    <div class="max-w-5xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="serif text-3xl gold uppercase tracking-widest">Painel de Categorias</h1>
+            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] mt-2">Abella Joias - Gestão de Catálogo</p>
+        </header>
 
-        <div class="p-6 border-b bg-gray-50">
-            <h2 class="font-bold text-sm uppercase mb-4">Nova Categoria</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="text" id="newCatName" placeholder="Nome (Ex: Brincos)" class="p-3 border rounded-xl outline-none focus:border-[#A68966]">
-                <input type="number" id="newCatDisc" placeholder="% Desconto" class="p-3 border rounded-xl outline-none focus:border-[#A68966]">
-                <input type="text" id="newCatImg" placeholder="Link da Imagem (URL)" class="p-3 border rounded-xl outline-none focus:border-[#A68966]">
+        <div class="card-cat rounded-3xl p-6 mb-10 shadow-2xl">
+            <h2 class="gold font-bold uppercase text-xs mb-4 tracking-wider">Criar Nova Categoria</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text" id="newCatName" placeholder="Nome (Ex: Anéis)" class="p-3 rounded-xl text-sm outline-none">
+                <input type="number" id="newCatDisc" placeholder="Desconto % (Opcional)" class="p-3 rounded-xl text-sm outline-none">
+                <input type="text" id="newCatImg" placeholder="URL da Imagem" class="p-3 rounded-xl text-sm outline-none">
             </div>
-            <button onclick="salvarCategoria()" class="w-full mt-3 bg-[#A68966] text-white px-6 py-3 rounded-xl font-bold uppercase text-xs hover:bg-black transition-all">Criar Categoria</button>
+            <button onclick="salvarNovaCategoria()" class="w-full bg-gold text-black font-bold py-3 rounded-xl mt-4 uppercase text-xs hover:opacity-80 transition-all">
+                + Adicionar Categoria
+            </button>
         </div>
 
-        <div class="p-6">
-            <h2 class="font-bold text-sm uppercase mb-4 text-gray-400">Categorias Atuais</h2>
-            <div id="listaCategorias" class="space-y-3">
+        <h2 class="serif gold text-center mb-6 uppercase tracking-widest text-sm">Categorias Ativas</h2>
+        <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </div>
+
+    <div id="modalEdit">
+        <div class="bg-[#141414] border border-[#333] p-8 rounded-3xl w-full max-w-md shadow-2xl">
+            <h3 class="serif gold text-xl mb-6 text-center uppercase">Editar Categoria</h3>
+            <input type="hidden" id="editId">
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold ml-1">Nome</label>
+                    <input type="text" id="editName" class="w-full p-3 rounded-xl text-sm outline-none mt-1">
                 </div>
-        </div>
-        
-        <div class="p-6 text-center">
-            <a href="index.html" class="text-gray-400 text-xs underline">Voltar para o Catálogo</a>
+                <div>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold ml-1">Desconto %</label>
+                    <input type="number" id="editDisc" class="w-full p-3 rounded-xl text-sm outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold ml-1">URL da Imagem</label>
+                    <input type="text" id="editImg" class="w-full p-3 rounded-xl text-sm outline-none mt-1">
+                </div>
+            </div>
+            <div class="flex gap-2 mt-8">
+                <button onclick="confirmarEdicao()" class="flex-1 bg-gold text-black font-bold py-3 rounded-xl uppercase text-[10px]">Salvar</button>
+                <button onclick="fecharModal()" class="flex-1 bg-zinc-800 text-white font-bold py-3 rounded-xl uppercase text-[10px]">Cancelar</button>
+            </div>
         </div>
     </div>
 
-<script>
+    <script>
     const firebaseConfig = { 
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
@@ -49,86 +77,84 @@
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. CARREGAR E EXIBIR CATEGORIAS
-    function carregarCategorias() {
-        db.ref('categories').on('value', snap => {
-            const lista = document.getElementById('listaCategorias');
-            lista.innerHTML = '';
-            
-            snap.forEach(cat => {
-                const data = cat.val();
-                const id = cat.key;
-                // Fallback para imagem caso não exista
-                const imgUrl = data.image || 'https://via.placeholder.com/150?text=Sem+Foto';
-                
-                lista.innerHTML += `
-                    <div class="flex items-center justify-between bg-white border p-4 rounded-2xl hover:border-[#A68966] transition-all">
-                        <div class="flex items-center gap-4">
-                            <img src="${imgUrl}" class="card-img border border-gray-100" onerror="this.src='https://via.placeholder.com/150?text=Erro+Link'">
-                            <div>
-                                <span class="font-bold text-gray-800 block">${data.name}</span>
-                                <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold">${data.discount || 0}% OFF</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="editarCategoria('${id}', '${data.name}', ${data.discount || 0}, '${data.image || ''}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="Editar">✏️</button>
-                            <button onclick="excluirCategoria('${id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Excluir">🗑️</button>
-                        </div>
+    // 1. CARREGAR CATEGORIAS
+    db.ref('categories').on('value', snap => {
+        const grid = document.getElementById('listaCategorias');
+        grid.innerHTML = '';
+        snap.forEach(c => {
+            const d = c.val();
+            const id = c.key;
+            grid.innerHTML += `
+                <div class="card-cat p-4 rounded-2xl flex items-center gap-4">
+                    <img src="${d.image || 'https://via.placeholder.com/100'}" class="w-16 h-16 object-cover rounded-xl bg-black border border-[#333]">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-sm text-white">${d.name}</h4>
+                        <p class="text-[10px] text-green-500 font-bold uppercase">${d.discount || 0}% de Desconto</p>
                     </div>
-                `;
-            });
+                    <div class="flex flex-col gap-2">
+                        <button onclick="abrirModal('${id}', '${d.name}', ${d.discount || 0}, '${d.image || ''}')" class="text-xs bg-zinc-800 p-2 rounded-lg hover:bg-gold hover:text-black transition-all">✏️</button>
+                        <button onclick="excluirCategoria('${id}')" class="text-xs bg-zinc-800 p-2 rounded-lg hover:bg-red-600 transition-all">🗑️</button>
+                    </div>
+                </div>
+            `;
         });
-    }
+    });
 
-    // 2. SALVAR/CRIAR
-    function salvarCategoria() {
+    // 2. SALVAR NOVA
+    function salvarNovaCategoria() {
         const name = document.getElementById('newCatName').value;
         const disc = document.getElementById('newCatDisc').value || 0;
-        const img = document.getElementById('newCatImg').value.trim();
-        
+        const img = document.getElementById('newCatImg').value;
+
         if(!name) return alert("Digite o nome da categoria!");
 
-        // Gerar ID limpo (slug)
-        const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
+        // Gera slug simples (ex: "Anéis de Ouro" -> "aneis-de-ouro")
+        const slug = name.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
         db.ref('categories/' + slug).set({
             name: name,
+            slug: slug,
             discount: parseInt(disc),
             image: img
         }).then(() => {
             document.getElementById('newCatName').value = '';
             document.getElementById('newCatDisc').value = '';
             document.getElementById('newCatImg').value = '';
-            alert("Categoria salva com sucesso!");
+            alert("Categoria criada!");
         });
     }
 
-    // 3. EDITAR COMPLETO (NOME, DESCONTO E IMAGEM)
-    function editarCategoria(id, nomeAtual, descAtual, imgAtual) {
-        const novoNome = prompt("Novo nome da categoria:", nomeAtual);
-        if (novoNome === null) return; // Cancelou
+    // 3. MODAL DE EDIÇÃO
+    function abrirModal(id, nome, desc, img) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editName').value = nome;
+        document.getElementById('editDisc').value = desc;
+        document.getElementById('editImg').value = img;
+        document.getElementById('modalEdit').style.display = 'flex';
+    }
 
-        const novoDesc = prompt("Novo desconto %:", descAtual);
-        if (novoDesc === null) return;
+    function fecharModal() { document.getElementById('modalEdit').style.display = 'none'; }
 
-        const novaImg = prompt("Novo Link da Imagem (URL):", imgAtual);
-        if (novaImg === null) return;
-        
-        db.ref('categories/' + id).update({
-            name: novoNome,
-            discount: parseInt(novoDesc) || 0,
-            image: novaImg.trim()
-        }).then(() => alert("Categoria atualizada!"));
+    function confirmarEdicao() {
+        const id = document.getElementById('editId').value;
+        const updates = {
+            name: document.getElementById('editName').value,
+            discount: parseInt(document.getElementById('editDisc').value) || 0,
+            image: document.getElementById('editImg').value
+        };
+
+        db.ref('categories/' + id).update(updates).then(() => {
+            fecharModal();
+            alert("Categoria atualizada!");
+        });
     }
 
     // 4. EXCLUIR
     function excluirCategoria(id) {
-        if (confirm("Tem certeza? Isso pode fazer os produtos desta categoria sumirem do catálogo!")) {
+        if(confirm("Deseja realmente excluir esta categoria?")) {
             db.ref('categories/' + id).remove();
         }
     }
-
-    carregarCategorias();
-</script>
+    </script>
 </body>
 </html>
