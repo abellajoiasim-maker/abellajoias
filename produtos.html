@@ -4,77 +4,90 @@
 <meta charset="UTF-8">
 <title>Produtos | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
+
 <style>
     body{font-family:'Poppins',sans-serif;background:#f8f6f2;color:#333}
     .serif{font-family:'Cinzel',serif}
     .gold{color:#A68966}
     .card{ background:#fff; border-radius:20px; border:1px solid #eee; transition:0.3s; position:relative; overflow:hidden; display: flex; flex-direction: column; }
     .card:hover{ transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    #modalCompra { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(5px); }
+    .btn-nav{background:white;border:1px solid #eee;padding:8px 15px;border-radius:50px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;transition:0.3s}
+    .btn-nav:hover{border-color:#A68966;color:#A68966}
 </style>
 </head>
-<body class="pb-24">
 
-<header class="p-6 bg-white border-b border-gray-100 sticky top-0 z-50 flex justify-between items-center text-center">
-    <button onclick="history.back()" class="p-2 bg-gray-50 rounded-full">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <h1 id="tituloCategoria" class="serif text-lg gold tracking-widest uppercase">Carregando...</h1>
-    <div class="w-10"></div>
+<body>
+
+<header class="bg-white border-b sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 pt-4 flex justify-between items-center">
+        <a href="index.html" class="btn-nav">← Categorias</a>
+        <a href="checkout_premium.html" class="btn-nav flex items-center gap-2">
+            🛒 Carrinho <span id="cartCount" class="bg-black text-white px-2 py-0.5 rounded-full text-[8px]">0</span>
+        </a>
+    </div>
+
+    <div class="text-center py-8 space-y-4">
+        <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
+        <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
+        <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium">Atacado de Joias no Bruto</p>
+    </div>
 </header>
 
-<main class="p-4 max-w-7xl mx-auto">
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        </div>
+<main class="max-w-7xl mx-auto p-4 md:p-8">
+    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"></div>
 </main>
 
-<div id="modalCompra">
-    <div class="bg-white p-6 rounded-3xl w-full max-w-sm text-center relative shadow-2xl">
-        <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-400 text-2xl">&times;</button>
-        <img id="mFoto" class="w-32 h-32 mx-auto object-cover rounded-xl mb-4" src="">
-        <h3 id="mNome" class="serif text-sm gold mb-1 uppercase font-bold"></h3>
-        <p id="mSku" class="text-[10px] text-gray-400 mb-6 font-bold"></p>
+<div id="modalCompra" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+        <div class="w-full aspect-square mb-4 rounded-2xl overflow-hidden bg-gray-50">
+            <img id="mFoto" src="" class="w-full h-full object-cover">
+        </div>
+        <h2 id="mNome" class="serif text-lg text-gray-800 mb-1 leading-tight"></h2>
+        <p id="mSku" class="text-[10px] text-gray-400 mb-4 font-bold tracking-widest uppercase"></p>
         
-        <label class="text-[10px] block mb-2 font-bold text-gray-400 uppercase tracking-widest">Quantidade</label>
-        <input type="number" id="mQtd" value="1" min="1" class="w-20 text-center text-2xl font-bold border-b-2 border-black mb-8 outline-none">
+        <div class="flex items-center justify-between mb-6 bg-gray-50 p-3 rounded-2xl">
+            <label class="text-[10px] font-bold uppercase text-gray-500">Quantidade</label>
+            <input type="number" id="mQtd" value="1" min="1" class="w-16 bg-transparent text-center font-bold text-lg outline-none">
+        </div>
         
-        <button id="btnConfirmar" class="w-full bg-black text-white py-4 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95">
-            Adicionar ao Pedido
+        <button id="btnConfirmar" class="w-full bg-black text-white py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-gold transition-all shadow-lg">
+            Adicionar ao Carrinho
         </button>
+        <button onclick="fecharModal()" class="w-full text-gray-400 text-[9px] mt-4 uppercase font-bold tracking-widest">Fechar</button>
     </div>
 </div>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-firebase.initializeApp(firebaseConfig);
+const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const urlParams = new URLSearchParams(window.location.search);
 const slugCat = urlParams.get('cat');
-let itemSelecionado = null;
+
 let categoriasDados = {};
-let promoGlobal = { ativa: false, porcentagem: 0 };
+let promoGlobal = {};
+let itemSelecionado = null;
 
-async function inicializar() {
-    const [snapCats, snapPromo] = await Promise.all([
-        db.ref('categories').once('value'),
-        db.ref('settings/promocao').once('value')
-    ]);
-    
-    categoriasDados = snapCats.val() || {};
-    promoGlobal = snapPromo.val() || { ativa: false, porcentagem: 0 };
-    
-    const catAtual = Object.values(categoriasDados).find(c => c.slug === slugCat);
-    if(catAtual) document.getElementById('tituloCategoria').innerText = catAtual.name;
+// Sincronização Inicial
+function inicializar() {
+    db.ref('settings/promocao').on('value', s => { promoGlobal = s.val() || {}; });
+    db.ref('categories').on('value', s => { 
+        s.forEach(c => { categoriasDados[c.key] = c.val(); });
+        carregarProdutos();
+    });
+    atualizarContador();
+}
 
-    carregarProdutos();
+function atualizarContador() {
+    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    document.getElementById('cartCount').innerText = carrinho.length;
 }
 
 function carregarProdutos() {
@@ -87,7 +100,6 @@ function carregarProdutos() {
             p.id = sp.key;
             if(p.paused) return;
 
-            // Lógica de Sincronização de Descontos
             const dProd = parseInt(p.discount || 0);
             const dCat = parseInt(categoriasDados[p.category]?.discount || 0);
             const dGlob = (promoGlobal && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem) : 0;
@@ -95,26 +107,28 @@ function carregarProdutos() {
 
             const pOriginal = parseFloat(p.price || 0);
             const pFinal = melhorDesc > 0 ? pOriginal * (1 - melhorDesc/100) : pOriginal;
-            const pPix = pFinal * 0.95; 
-            const parcela = pFinal / 3;
+            const pPix = pFinal * 0.95;
+            const pParcela = pFinal / 3;
 
             grid.innerHTML += `
-                <div class="card p-3 relative" onclick="abrirModalCompra('${p.id}')">
-                    ${melhorDesc > 0 ? `
-                        <div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg z-10 animate-pulse">
-                            ${melhorDesc}% OFF
-                        </div>
-                    ` : ''}
+                <div class="card p-3" onclick="abrirModalCompra('${p.id}')">
+                    ${melhorDesc > 0 ? `<div class="absolute top-3 right-3 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-bold z-10 animate-pulse">${melhorDesc}% OFF</div>` : ''}
                     <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">REF: ${p.sku || '---'}</span>
-                    <h3 class="font-bold text-[11px] leading-tight mb-2 h-7 overflow-hidden text-gray-700">${p.name}</h3>
-                    <div class="mt-auto border-t border-gray-50 pt-2">
-                        <div class="flex items-center gap-1">
-                            <span class="gold font-bold text-sm">R$ ${pFinal.toFixed(2)}</span>
-                            ${melhorDesc > 0 ? `<span class="text-gray-400 line-through text-[9px]">R$ ${pOriginal.toFixed(2)}</span>` : ''}
+                    <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">REF: ${p.sku}</span>
+                    <h3 class="text-[11px] font-bold text-gray-800 leading-tight mb-2 h-7 overflow-hidden">${p.name}</h3>
+                    
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[9px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md font-medium">${p.weight || '---'}</span>
+                        <span class="text-[8px] text-gold font-bold uppercase italic">No Bruto</span>
+                    </div>
+
+                    <div class="mt-auto border-t pt-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold gold">R$ ${pFinal.toFixed(2)}</span>
+                            ${melhorDesc > 0 ? `<span class="text-[9px] text-gray-300 line-through">R$ ${pOriginal.toFixed(2)}</span>` : ''}
                         </div>
-                        <p class="text-[10px] text-green-600 font-bold mt-1">R$ ${pPix.toFixed(2)} <span class="text-[7px] uppercase italic">no PIX</span></p>
-                        <p class="text-[9px] text-gray-400">ou 3x de R$ ${parcela.toFixed(2)}</p>
+                        <p class="text-[9px] text-green-600 font-bold mt-1">R$ ${pPix.toFixed(2)} <span class="text-[7px] text-gray-400 font-normal uppercase">no PIX</span></p>
+                        <p class="text-[8px] text-gray-400 mt-1 uppercase italic">3x de R$ ${pParcela.toFixed(2)}</p>
                     </div>
                 </div>`;
         });
@@ -122,9 +136,9 @@ function carregarProdutos() {
 }
 
 function abrirModalCompra(id) {
-    db.ref('products/' + id).once('value').then(snap => {
-        itemSelecionado = snap.val();
-        itemSelecionado.id = snap.key;
+    db.ref('products/' + id).once('value', s => {
+        itemSelecionado = s.val();
+        itemSelecionado.id = s.key;
         document.getElementById('mFoto').src = itemSelecionado.image;
         document.getElementById('mNome').innerText = itemSelecionado.name;
         document.getElementById('mSku').innerText = 'REF: ' + (itemSelecionado.sku || '---');
@@ -138,7 +152,6 @@ document.getElementById('btnConfirmar').onclick = () => {
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
     const qtd = parseInt(document.getElementById('mQtd').value);
     
-    // Cálculo de desconto para o carrinho
     const dProd = parseInt(itemSelecionado.discount || 0);
     const dCat = parseInt(categoriasDados[itemSelecionado.category]?.discount || 0);
     const dGlob = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem) : 0;
@@ -148,19 +161,20 @@ document.getElementById('btnConfirmar').onclick = () => {
     carrinho.push({
         id: itemSelecionado.id,
         nome: itemSelecionado.name,
-        sku: itemSelecionado.sku || "S/N",
+        sku: itemSelecionado.sku,
         preco: precoFinal,
         qtd: qtd,
         image: itemSelecionado.image,
-        peso: itemSelecionado.weight || 0
+        peso: itemSelecionado.weight || '---'
     });
 
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    atualizarContador();
     fecharModal();
-    alert("Produto adicionado!");
 };
 
 inicializar();
 </script>
+
 </body>
 </html>
