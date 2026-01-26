@@ -183,33 +183,37 @@ function salvarEmpresa(){
    LÓGICA DE EDIÇÃO E RENDERIZAÇÃO (CATEGORIAS & PRODUTOS)
    ============================================================ */
 
-// 1. GESTÃO DE CATEGORIAS (Listagem, Fotos e Edição)
+// 1. GESTÃO DE CATEGORIAS (Ajustado para forçar exibição da imagem)
 db.ref('categories').on('value', s => {
     const listaCategorias = document.getElementById('listaCategorias');
-    const listaPromocoes = document.getElementById('listaPromocoes');
-    if (!listaCategorias || !listaPromocoes) return;
-
+    if (!listaCategorias) return;
     listaCategorias.innerHTML = ''; 
-    listaPromocoes.innerHTML = '';
 
     s.forEach(c => {
         const d = c.val();
         const id = c.key;
-        const fotoCat = d.image || 'https://via.placeholder.com/150?text=Sem+Foto';
+        // Se não tiver imagem, usa um placeholder cinza
+        const fotoCat = (d.image && d.image.includes('http')) ? d.image : 'https://via.placeholder.com/150?text=Sem+Foto';
 
-        // Renderiza na lista de gestão com miniatura
         listaCategorias.innerHTML += `
-            <div class="card p-3 mb-2 flex items-center gap-3">
-                <img src="${fotoCat}" class="w-10 h-10 rounded object-cover bg-black border border-white/10">
+            <div class="card p-3 mb-2 flex items-center gap-3 bg-[#1a1a1a] border border-white/10 rounded-xl">
+                <div class="w-12 h-12 rounded-lg overflow-hidden bg-black flex-shrink-0 border border-white/20">
+                    <img src="${fotoCat}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=Erro+Link'">
+                </div>
                 <div class="flex-1">
-                    <b class="text-[10px] uppercase">${d.name}</b>
+                    <b class="text-[10px] uppercase text-white">${d.name}</b>
                     <div class="flex gap-1 mt-1">
-                        <button class="btn text-[8px] py-1 px-2 bg-blue-600" onclick="editarCategoria('${id}')">Editar/Foto</button>
-                        <button class="btn btn-red text-[8px] py-1 px-2" onclick="excluir('categories','${id}')">Excluir</button>
+                        <button class="btn text-[8px] py-1 px-2 bg-blue-600 hover:bg-blue-700" onclick="editarCategoria('${id}')">Editar/Foto</button>
+                        <button class="btn btn-red text-[8px] py-1 px-2" onclick="excluir('categories','${id}')">✕</button>
                     </div>
                 </div>
             </div>`;
+    });
+});
 
+// 2. GESTÃO DE PRODUTOS (Com correção de erro de imagem)
+// No loop do map[catID].forEach(p => { ... }), certifique-se que a tag img esteja assim:
+// <img src="${p.image}" class="w-full h-32 object-cover rounded-lg mb-2" onerror="this.src='https://via.placeholder.com/150?text=Link+Invalido'">
         // Renderiza na lista de descontos/promoções
         listaPromocoes.innerHTML += `
             <div class="card flex justify-between items-center p-3 mb-2">
