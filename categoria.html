@@ -35,19 +35,27 @@
         position: absolute;
         top: 10px;
         right: 10px;
-        background: #A68966;
+        background: linear-gradient(135deg, #A68966 0%, #d4bc9c 100%);
         color: #fff;
         font-size: 10px;
         padding: 3px 10px;
         border-radius: 99px;
-        font-weight: bold;
+        font-weight: 800;
         z-index: 10;
+    }
+    .tag-tecnica {
+        background: #f4f4f4;
+        color: #888;
+        font-size: 9px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        text-transform: uppercase;
     }
     .riscado { text-decoration: line-through; color: #bbb; font-size: 11px; }
     .preco-principal { color: #333; font-size: 16px; font-weight: 700; }
     .preco-pix { color: #15803d; font-size: 13px; font-weight: 700; }
 
-    /* Estilo do Modal de Quantidade */
     #modalQtde { backdrop-filter: blur(4px); }
 </style>
 </head>
@@ -70,8 +78,7 @@
 </header>
 
 <main class="max-w-7xl mx-auto p-4 md:p-10">
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        </div>
+    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div>
 </main>
 
 <div id="modalQtde" class="fixed inset-0 bg-black/70 z-[100] hidden flex items-center justify-center p-4">
@@ -83,17 +90,17 @@
             <h3 id="modalNome" class="serif text-lg gold mb-1 uppercase"></h3>
             <p id="modalPreco" class="text-gray-900 font-bold mb-6"></p>
             
-            <label class="text-[10px] uppercase font-black text-gray-400 block mb-2">Selecione a Quantidade</label>
+            <label class="text-[10px] uppercase font-black text-gray-400 block mb-2 tracking-widest">Quantidade Atacado</label>
             <div class="flex items-center justify-center gap-6 mb-8">
-                <button onclick="alterarQtde(-1)" class="w-10 h-10 rounded-full border border-gray-200 text-xl font-bold">-</button>
-                <span id="displayQtde" class="text-2xl font-black w-8 text-black">1</span>
-                <button onclick="alterarQtde(1)" class="w-10 h-10 rounded-full border-2 border-[#A68966] text-[#A68966] text-xl font-bold">+</button>
+                <button onclick="alterarQtde(-1)" class="w-10 h-10 rounded-full border border-gray-200 text-xl font-bold hover:bg-gray-50">-</button>
+                <input type="number" id="displayQtde" value="1" min="1" class="text-2xl font-black w-16 text-center bg-transparent border-none outline-none">
+                <button onclick="alterarQtde(1)" class="w-10 h-10 rounded-full border-2 border-[#A68966] text-[#A68966] text-xl font-bold hover:bg-[#A68966] hover:text-white transition-all">+</button>
             </div>
 
             <button id="btnConfirmarAdd" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-[#A68966] transition-all">
                 Confirmar no Carrinho
             </button>
-            <button onclick="fecharModal()" class="mt-4 text-gray-400 text-[9px] font-bold uppercase tracking-widest">Cancelar</button>
+            <button onclick="fecharModal()" class="mt-4 text-gray-400 text-[9px] font-bold uppercase tracking-widest hover:text-red-500">Cancelar</button>
         </div>
     </div>
 </div>
@@ -110,7 +117,6 @@ const urlParams = new URLSearchParams(window.location.search);
 const catId = urlParams.get('cat');
 
 let produtoAtual = null;
-let qtdeSelecionada = 1;
 
 function atualizarContadorCarrinho() {
     const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
@@ -134,7 +140,6 @@ function renderizarProdutos(catData) {
       const p = s.val();
       if (p.category !== catId || p.paused) return;
 
-      // MANTENDO TODA A LÓGICA ORIGINAL DE PREÇOS E DESCONTOS
       const precoOriginal = Number(p.price || 0);
       const maiorDesc = Math.max(Number(p.discount || 0), Number(catData.discount || 0));
       const precoComDesconto = precoOriginal * (1 - maiorDesc / 100);
@@ -145,11 +150,16 @@ function renderizarProdutos(catData) {
         <div class="card-produto">
           ${maiorDesc > 0 ? `<div class="badge-promo">-${maiorDesc}%</div>` : ''}
           
-          <div class="aspect-square mb-4 bg-white flex items-center justify-center">
-            <img src="${p.image}" class="max-h-full object-contain">
+          <div class="aspect-square mb-4 bg-white flex items-center justify-center border border-gray-50 rounded-xl overflow-hidden">
+            <img src="${p.image || 'https://via.placeholder.com/400'}" class="max-h-full object-contain">
           </div>
 
-          <h3 class="text-[11px] font-medium uppercase tracking-tight text-gray-600 mb-2 h-8 overflow-hidden">
+          <div class="flex flex-wrap gap-1 mb-2">
+            <span class="tag-tecnica">SKU: ${p.sku || '---'}</span>
+            ${p.weight ? `<span class="tag-tecnica">${p.weight}G</span>` : ''}
+          </div>
+
+          <h3 class="text-[11px] font-bold uppercase tracking-tight text-gray-800 mb-2 h-8 overflow-hidden leading-tight">
             ${p.name}
           </h3>
 
@@ -178,12 +188,11 @@ function prepararAdicao(id, precoVenda) {
   db.ref('products/' + id).once('value').then(s => {
     const p = s.val();
     produtoAtual = { ...p, id: id, precoVenda: precoVenda };
-    qtdeSelecionada = 1;
-
-    document.getElementById('modalImg').src = p.image;
+    
+    document.getElementById('modalImg').src = p.image || 'https://via.placeholder.com/400';
     document.getElementById('modalNome').innerText = p.name;
     document.getElementById('modalPreco').innerText = 'R$ ' + precoVenda.toFixed(2);
-    document.getElementById('displayQtde').innerText = qtdeSelecionada;
+    document.getElementById('displayQtde').value = 1;
     
     document.getElementById('modalQtde').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -191,8 +200,9 @@ function prepararAdicao(id, precoVenda) {
 }
 
 function alterarQtde(val) {
-    qtdeSelecionada = Math.max(1, qtdeSelecionada + val);
-    document.getElementById('displayQtde').innerText = qtdeSelecionada;
+    const input = document.getElementById('displayQtde');
+    let novaQtde = parseInt(input.value) + val;
+    input.value = novaQtde < 1 ? 1 : novaQtde;
 }
 
 function fecharModal() {
@@ -202,6 +212,7 @@ function fecharModal() {
 
 function finalizarAdicao() {
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+  const qtde = parseInt(document.getElementById('displayQtde').value);
 
   carrinho.push({
     sku: produtoAtual.sku || '---',
@@ -209,13 +220,13 @@ function finalizarAdicao() {
     preco: produtoAtual.precoVenda,
     peso: produtoAtual.weight || 0,
     image: produtoAtual.image || '',
-    qtd: qtdeSelecionada 
+    qtd: qtde
   });
 
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
   atualizarContadorCarrinho();
   fecharModal();
-  alert('Produto adicionado ao carrinho!');
+  alert('✅ ' + qtde + 'x ' + produtoAtual.name + ' adicionado!');
 }
 
 document.getElementById('btnConfirmarAdd').onclick = finalizarAdicao;
