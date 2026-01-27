@@ -76,18 +76,32 @@
 </footer>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
+};
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
 let formaPagamento = "";
-let foneLoja = "5511999999999"; // Valor padrão caso falhe a busca
+let foneLoja = "5511999999999"; // Valor reserva (padrão)
 
-// Busca o telefone da empresa no Firebase (o mesmo do Admin)
-db.ref('settings/empresa/whatsapp').on('value', s => {
-    if(s.val()) foneLoja = s.val().replace(/\\\\D/g, ''); 
+// Busca o telefone da empresa no Firebase
+// Obs: Verifique se no seu Firebase o caminho é 'settings/whatsapp' ou 'settings/empresa/whatsapp'
+db.ref('settings/whatsapp').on('value', s => {
+    let rawFone = s.val();
+    if(rawFone) {
+        // Remove tudo o que não for número (limpa parênteses, traços e espaços)
+        foneLoja = rawFone.replace(/\D/g, ''); 
+        
+        // Se o número for digitado sem o 55, o código adiciona automaticamente
+        if(foneLoja.length <= 11 && !foneLoja.startsWith('55')) {
+            foneLoja = "55" + foneLoja;
+        }
+    }
 });
+</script>
 
 function setPagamento(tipo, el) {
     formaPagamento = tipo;
