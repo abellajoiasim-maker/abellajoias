@@ -39,7 +39,7 @@
 
         <div class="card-create p-6 rounded-2xl mb-8">
             <h2 class="text-[#caa85c] font-bold text-xs uppercase mb-4 tracking-widest">✨ Criar Novo Produto</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
                 <div>
                     <label class="text-[9px] text-gray-500 uppercase ml-1">SKU</label>
                     <input id="newSku" class="input-dark" placeholder="EX: AB-01">
@@ -52,6 +52,14 @@
                     <label class="text-[9px] text-gray-500 uppercase ml-1">Categoria</label>
                     <select id="newCat" class="input-dark">
                         <option value="">Selecione...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] text-gray-500 uppercase ml-1">Variação</label>
+                    <select id="newVarTipo" class="input-dark">
+                        <option value="">Nenhuma</option>
+                        <option value="Lista">Lista (Letras/Opções)</option>
+                        <option value="Aro">Aro (Anéis)</option>
                     </select>
                 </div>
                 <div>
@@ -82,6 +90,7 @@
                             <th class="w-28">SKU</th>
                             <th>Nome</th>
                             <th class="w-40">Categoria</th>
+                            <th class="w-32">Variação</th>
                             <th class="w-24">Preço</th>
                             <th class="w-20">Peso</th>
                             <th>Link da Imagem</th>
@@ -89,7 +98,7 @@
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo">
-                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic">Digite algo no campo de busca para listar os produtos...</td></tr>
+                        <tr><td colspan="10" class="p-20 text-center text-gray-500 italic">Digite algo no campo de busca para listar os produtos...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -113,17 +122,14 @@ const db = firebase.database();
 
 let categoriasCache = {};
 
-// Carrega categorias imediatamente (leves)
 async function carregarCacheCategorias() {
     const snap = await db.ref('categories').once('value');
     categoriasCache = snap.val() || {};
     const select = document.getElementById('newCat');
-    
     let options = '<option value="">Selecione...</option>';
     Object.entries(categoriasCache).forEach(([id, dados]) => {
         options += `<option value="${id}">${dados.name}</option>`;
     });
-    
     select.innerHTML = options;
 }
 
@@ -134,6 +140,7 @@ function criarProduto() {
     const price = document.getElementById('newPrice').value;
     const weight = document.getElementById('newWeight').value;
     const img = document.getElementById('newImg').value;
+    const varTipo = document.getElementById('newVarTipo').value;
 
     if(!sku || !name || !cat) return alert("Preencha SKU, Nome e Categoria!");
 
@@ -144,6 +151,7 @@ function criarProduto() {
         price: parseFloat(price) || 0,
         weight: weight,
         image: img || "https://via.placeholder.com/400",
+        variacaoTipo: varTipo,
         paused: false
     };
 
@@ -152,6 +160,7 @@ function criarProduto() {
         document.getElementById('newSku').value = '';
         document.getElementById('newName').value = '';
         document.getElementById('newPrice').value = '';
+        document.getElementById('newVarTipo').value = '';
     });
 }
 
@@ -161,12 +170,11 @@ async function carregarProdutos() {
     const statusInfo = document.getElementById('statusInfo');
 
     if (filtro.length < 1) {
-        alert("Por favor, digite pelo menos um caractere para buscar.");
+        alert("Digite algo para buscar.");
         return;
     }
 
-    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">Buscando no banco de dados...</td></tr>';
-    statusInfo.innerText = "Buscando...";
+    corpo.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">Buscando...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
@@ -182,7 +190,6 @@ async function carregarProdutos() {
             const sku = String(p.sku || "").toUpperCase();
             const nome = String(p.name || "").toUpperCase();
 
-            // Busca por SKU ou Nome
             if (sku.includes(filtro) || nome.includes(filtro)) {
                 contador++;
                 html += `
@@ -198,6 +205,13 @@ async function carregarProdutos() {
                             ${catOptionsHtml.replace(`value="${p.category}"`, `value="${p.category}" selected`)}
                         </select>
                     </td>
+                    <td class="p-1">
+                        <select class="input-dark edit-var">
+                            <option value="" ${p.variacaoTipo === '' ? 'selected' : ''}>Nenhuma</option>
+                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista</option>
+                            <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro</option>
+                        </select>
+                    </td>
                     <td class="p-1"><input class="input-dark edit-price" type="number" step="0.01" value="${p.price || 0}"></td>
                     <td class="p-1"><input class="input-dark edit-weight" value="${p.weight || 0}"></td>
                     <td class="p-1"><input class="input-dark edit-img" value="${p.image || ''}"></td>
@@ -208,13 +222,8 @@ async function carregarProdutos() {
             }
         });
 
-        if (contador === 0) {
-            corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-red-500 font-bold">Nenhum produto encontrado com este termo.</td></tr>';
-            statusInfo.innerText = "0 produtos encontrados.";
-        } else {
-            corpo.innerHTML = html;
-            statusInfo.innerText = `${contador} produtos listados para edição.`;
-        }
+        corpo.innerHTML = html || '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold">Nada encontrado.</td></tr>';
+        statusInfo.innerText = `${contador} produtos encontrados.`;
     });
 }
 
@@ -227,47 +236,42 @@ function toggleStatus(btn) {
     tr.classList.toggle('is-paused', isActive);
 }
 
-function deletarProduto(id) {
-    if(confirm("Deseja realmente excluir este produto permanentemente?")) {
-        db.ref('products/' + id).remove().then(() => carregarProdutos());
-    }
-}
-
 function salvarAlteracoes() {
     const updates = {};
     const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
-    
-    if(linhas.length === 0) return alert("Não há produtos carregados para salvar.");
+    if(linhas.length === 0) return alert("Nada para salvar.");
 
     linhas.forEach(tr => {
         const id = tr.dataset.id;
         updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
         updates[`/products/${id}/category`] = tr.querySelector('.edit-cat').value;
+        updates[`/products/${id}/variacaoTipo`] = tr.querySelector('.edit-var').value;
         updates[`/products/${id}/price`] = parseFloat(tr.querySelector('.edit-price').value) || 0;
         updates[`/products/${id}/weight`] = tr.querySelector('.edit-weight').value;
         updates[`/products/${id}/image`] = tr.querySelector('.edit-img').value;
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
 
-    db.ref().update(updates).then(() => alert("✅ Alterações dos produtos listados salvas com sucesso!"));
+    db.ref().update(updates).then(() => alert("✅ Alterações salvas!"));
+}
+
+function deletarProduto(id) {
+    if(confirm("Excluir permanentemente?")) {
+        db.ref('products/' + id).remove().then(() => carregarProdutos());
+    }
 }
 
 function sincronizarFotosComStorage() {
     const dominio = "catalogo-abella-joias.firebasestorage.app";
-    const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
-    if(linhas.length === 0) return alert("Pesquise os produtos primeiro.");
-    
-    linhas.forEach(tr => {
+    document.querySelectorAll('#tabelaCorpo tr[data-id]').forEach(tr => {
         const sku = tr.querySelector('.font-mono').innerText.trim();
         const inputImg = tr.querySelector('.edit-img');
         if (sku && (inputImg.value === "" || inputImg.value.includes("placeholder"))) {
             inputImg.value = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.png?alt=media`;
         }
     });
-    alert("Links gerados para os itens da lista.");
 }
 
-// Inicia apenas o cache de categorias
 carregarCacheCategorias();
 </script>
 </body>
