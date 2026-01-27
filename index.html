@@ -1,48 +1,35 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    body { font-family:'Poppins', sans-serif; background:#f8f6f2; color:#333; }
+    .serif { font-family:'Cinzel', serif; }
+    .gold { color:#A68966; }
     
-    <title>Abella Joias | Catálogo Atacado</title>
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Abella Joias | Catálogo Virtual">
-    <meta property="og:description" content="Clique para conferir nossas novidades em joias no bruto e faça seu pedido.">
-    <meta property="og:url" content="https://abellajoiasim-maker.github.io/abellajoias/">
-    
-    <meta property="og:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.jpeg">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.jpeg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
-
-    <style>
-        body { font-family:'Poppins', sans-serif; background:#f8f6f2; }
-        .serif { font-family:'Cinzel', serif; }
-        .gold { color:#A68966; }
-        .card-cat { background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; overflow:hidden; }
-        .card-cat:hover { transform:translateY(-5px); border-color:#A68966; }
-    </style>
-</head>
-<body>
+    /* Estilo do Contador do Carrinho */
+    #cartCount { transition: transform 0.3s ease; }
+    .bump { transform: scale(1.3); } /* Efeito de pulinho ao adicionar item */
+</style>
 
 <header class="bg-white border-b sticky top-0 z-50">
     <div class="text-center py-8 space-y-4">
         <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
         <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
-        <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium">Atacado de Joias no Bruto</p>
+        <p id="catTitle" class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium italic">Coleção Atacado</p>
 
-        <div class="flex justify-center gap-2 mt-4 px-4">
-            <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Categorias</a>
-            <a href="galvanicas.html" class="bg-white border border-gray-200 text-gray-600 px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Galvânicas</a>
-            <a href="https://abellajoiasim-maker.github.io/abellajoias/checkout_premium.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Carrinho</a>
+        <div class="flex flex-wrap justify-center gap-3 mt-4 px-4">
+            <a href="index.html" class="bg-black text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 hover:bg-zinc-800 transition">
+                <span>← Voltar</span>
+            </a>
+            
+            <a href="galvanicas.html" class="bg-white border border-gray-200 text-gray-600 px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase hover:border-[#A68966] hover:text-[#A68966] transition">
+                Galvânicas
+            </a>
+
+            <a href="checkout_premium.html" class="bg-[#A68966] text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 shadow-lg shadow-[#A68966]/30">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Carrinho</span>
+                <span id="cartCount" class="bg-white text-[#A68966] min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[9px] font-black px-1">0</span>
+            </a>
         </div>
     </div>
 </header>
