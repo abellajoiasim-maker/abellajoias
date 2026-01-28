@@ -21,24 +21,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- ESTILO PREMIUM RESTAURADO -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #fdfcf9;
+            color: #333;
+        }
+
+        .serif {
+            font-family: 'Cinzel', serif;
+        }
+
+        .gold-text {
+            color: #A68966;
+        }
+
+        .gold-bg {
+            background: #A68966;
+        }
+
+        .btn-nav {
+            border: 1px solid #A68966;
+            color: #A68966;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            transition: all .3s ease;
+        }
+
+        .btn-nav:hover {
+            background: #A68966;
+            color: #fff;
+        }
+    </style>
 </head>
 
 <body>
 
 <header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center text-center">
-        <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">Abella Joias</h1>
-        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">Atacado de Joias no Bruto</p>
-        
+
+        <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">
+            Abella Joias
+        </h1>
+
+        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">
+            Atacado de Joias no Bruto
+        </p>
+
         <div class="flex gap-3 flex-wrap justify-center">
-            <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">INÍCIO</a>
-            <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">GALVÂNICAS</a>
+            <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">
+                INÍCIO
+            </a>
+
+            <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">
+                GALVÂNICAS
+            </a>
+
             <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative">
                 CARRINHO <span id="contadorCarrinho" class="ml-1">(0)</span>
             </a>
         </div>
-        
+
     </div>
 </header>
 
