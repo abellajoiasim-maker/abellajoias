@@ -51,7 +51,7 @@
                 <div>
                     <label class="text-[9px] text-gray-500 uppercase ml-1">Categoria</label>
                     <select id="newCat" class="input-dark">
-                        <option value="">Selecione...</option>
+                        <option value="">Carregando...</option>
                     </select>
                 </div>
                 <div>
@@ -122,17 +122,23 @@ const db = firebase.database();
 
 let categoriasCache = {};
 
+// 1. CARREGAR CATEGORIAS PARA O CACHE
 async function carregarCacheCategorias() {
-    const snap = await db.ref('categories').once('value');
-    categoriasCache = snap.val() || {};
-    const select = document.getElementById('newCat');
-    let options = '<option value="">Selecione...</option>';
-    Object.entries(categoriasCache).forEach(([id, dados]) => {
-        options += `<option value="${id}">${dados.name}</option>`;
-    });
-    select.innerHTML = options;
+    try {
+        const snap = await db.ref('categories').once('value');
+        categoriasCache = snap.val() || {};
+        const select = document.getElementById('newCat');
+        let options = '<option value="">Selecione...</option>';
+        Object.entries(categoriasCache).forEach(([id, dados]) => {
+            options += `<option value="${id}">${dados.name}</option>`;
+        });
+        select.innerHTML = options;
+    } catch (e) {
+        console.error("Erro ao carregar categorias:", e);
+    }
 }
 
+// 2. CRIAR PRODUTO
 function criarProduto() {
     const sku = document.getElementById('newSku').value.trim();
     const name = document.getElementById('newName').value.trim();
@@ -160,30 +166,22 @@ function criarProduto() {
         document.getElementById('newSku').value = '';
         document.getElementById('newName').value = '';
         document.getElementById('newPrice').value = '';
-        document.getElementById('newVarTipo').value = '';
     });
 }
 
+// 3. BUSCAR PRODUTOS COM CATEGORIAS CORRETAS
 async function carregarProdutos() {
     const filtro = document.getElementById('filtroSku').value.trim().toUpperCase();
     const corpo = document.getElementById('tabelaCorpo');
     const statusInfo = document.getElementById('statusInfo');
 
-    if (filtro.length < 1) {
-        alert("Digite algo para buscar.");
-        return;
-    }
+    if (filtro.length < 1) return alert("Digite algo para buscar.");
 
     corpo.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">Buscando...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
         let contador = 0;
-        
-        let catOptionsHtml = '';
-        Object.entries(categoriasCache).forEach(([id, dados]) => {
-            catOptionsHtml += `<option value="${id}">${dados.name}</option>`;
-        });
 
         snapshot.forEach(child => {
             const p = child.val();
@@ -192,6 +190,14 @@ async function carregarProdutos() {
 
             if (sku.includes(filtro) || nome.includes(filtro)) {
                 contador++;
+
+                // Gerar as opções do select de categorias dinamicamente
+                let catOptions = '';
+                Object.entries(categoriasCache).forEach(([catId, catDados]) => {
+                    const selected = (p.category === catId) ? 'selected' : '';
+                    catOptions += `<option value="${catId}" ${selected}>${catDados.name}</option>`;
+                });
+
                 html += `
                 <tr data-id="${child.key}" class="border-b border-[#222] ${p.paused ? 'is-paused' : ''}">
                     <td class="p-2">
@@ -202,7 +208,7 @@ async function carregarProdutos() {
                     <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
                     <td class="p-1">
                         <select class="input-dark edit-cat">
-                            ${catOptionsHtml.replace(`value="${p.category}"`, `value="${p.category}" selected`)}
+                            ${catOptions}
                         </select>
                     </td>
                     <td class="p-1">
@@ -236,9 +242,11 @@ function toggleStatus(btn) {
     tr.classList.toggle('is-paused', isActive);
 }
 
+// 4. SALVAR TUDO (CORRIGIDO)
 function salvarAlteracoes() {
     const updates = {};
     const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
+    
     if(linhas.length === 0) return alert("Nada para salvar.");
 
     linhas.forEach(tr => {
@@ -252,7 +260,9 @@ function salvarAlteracoes() {
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
 
-    db.ref().update(updates).then(() => alert("✅ Alterações salvas!"));
+    db.ref().update(updates)
+        .then(() => alert("✅ Alterações salvas com sucesso no banco de dados!"))
+        .catch(err => alert("Erro ao salvar: " + err.message));
 }
 
 function deletarProduto(id) {
@@ -272,6 +282,7 @@ function sincronizarFotosComStorage() {
     });
 }
 
+// Iniciar carregando as categorias
 carregarCacheCategorias();
 </script>
 </body>
