@@ -99,79 +99,105 @@
         el.classList.add('active');
     }
 
-    function carregarCarrinho() {
-        const lista = document.getElementById('listaItens');
-        let total = 0;
-        lista.innerHTML = "";
+/* ===== FUNÇÕES DO CARRINHO UNIFICADAS ===== */
 
-        if(carrinho.length === 0) {
-            lista.innerHTML = "<p class='text-center py-10 text-gray-400'>Seu carrinho está vazio.</p>";
-            document.getElementById('totalGeral').innerText = "R$ 0,00";
-            return;
-        }
+function carregarCarrinho() {
+    const lista = document.getElementById('listaItens');
+    // Função de formatação de moeda (R$) vinda do arquivo 2
+    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    let subtotal = 0;
+    lista.innerHTML = "";
 
-        carrinho.forEach((item, index) => {
-            const subtotal = item.precoFinal * item.quantidade;
-            total += subtotal;
-            lista.innerHTML += `
-                <div class="item-card flex gap-4 items-center">
-                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
-                    <div class="flex-1">
-                        <h3 class="text-[11px] font-bold uppercase">${item.name}</h3>
-                        <p class="text-[10px] text-gray-500 mb-1">R$ ${item.precoFinal.toFixed(2)} cada</p>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-bold text-gray-400">QTD:</span>
-                            <input type="number" value="${item.quantidade}" min="1" 
-                                onchange="editarQtd(${index}, this.value)" 
-                                class="qtd-input">
-                        </div>
+    if (carrinho.length === 0) {
+        lista.innerHTML = "<p class='text-center py-10 text-gray-400'>Seu carrinho está vazio.</p>";
+        document.getElementById('totalGeral').innerText = fM(0);
+        if(document.getElementById('valorPix')) document.getElementById('valorPix').innerText = fM(0);
+        return;
+    }
+
+    // Mapeamento mantendo a lógica de input de quantidade do arquivo 1 e design do arquivo 2
+    lista.innerHTML = carrinho.map((item, index) => {
+        const itemTotal = item.precoFinal * item.quantidade;
+        subtotal += itemTotal;
+        
+        return `
+            <div class="item-card flex gap-4 items-center bg-white p-4 rounded-xl border">
+                <img src="${item.image}" class="w-16 h-16 object-contain rounded-lg">
+                <div class="flex-1">
+                    <h4 class="text-xs font-bold uppercase">${item.name}</h4>
+                    <p class="text-[10px] text-gray-500 mb-1">${fM(item.precoFinal)} cada</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-gray-400">QTD:</span>
+                        <input type="number" value="${item.quantidade}" min="1" 
+                            onchange="editarQtd(${index}, this.value)" 
+                            class="qtd-input w-12 border rounded text-center text-xs">
                     </div>
-                    <div class="text-right">
-                        <button onclick="remover(${index})" class="text-red-400 text-xs mb-2">Remover</button>
-                        <p class="font-bold text-xs gold">R$ ${subtotal.toFixed(2)}</p>
-                    </div>
-                </div>`;
-        });
+                </div>
+                <div class="text-right">
+                    <button onclick="remover(${index})" class="text-red-400 text-sm mb-2">✕</button>
+                    <p class="gold text-sm font-bold">${fM(itemTotal)}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
 
-        document.getElementById('totalGeral').innerText = `R$ ${total.toFixed(2)}`;
+    // Atualização dos totais com formatação R$
+    const pixVal = subtotal * 0.90; // Exemplo de 10% de desconto no PIX
+    document.getElementById('totalGeral').innerText = fM(subtotal);
+    if(document.getElementById('valorPix')) {
+        document.getElementById('valorPix').innerText = `Total no PIX: ${fM(pixVal)}`;
+    }
+}
+
+function editarQtd(index, novaQtd) {
+    if (novaQtd < 1) novaQtd = 1;
+    carrinho[index].quantidade = parseInt(novaQtd);
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    carregarCarrinho();
+}
+
+function remover(index) {
+    carrinho.splice(index, 1);
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    carregarCarrinho();
+}
+
+/* ===== FINALIZAÇÃO DO PEDIDO (WHATSAPP E BANCO) ===== */
+
+async function enviarPedido() {
+    const nome = document.getElementById('nome').value.trim();
+    const contato = document.getElementById('contato').value.trim();
+    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    // Cálculo do total numérico para o Banco de Dados
+    const totalNumerico = carrinho.reduce((acc, item) => acc + (item.precoFinal * item.quantidade), 0);
+
+    if (!nome || !contato || carrinho.length === 0) {
+        return alert("Preencha seus dados e certifique-se que o carrinho não está vazio.");
     }
 
-    function editarQtd(index, novaQtd) {
-        if(novaQtd < 1) novaQtd = 1;
-        carrinho[index].quantidade = parseInt(novaQtd);
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        carregarCarrinho();
-    }
-
-    function remover(index) {
-        carrinho.splice(index, 1);
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        carregarCarrinho();
-    }
-
-    async function enviarPedido() {
-        const nome = document.getElementById('nome').value.trim();
-        const contato = document.getElementById('contato').value.trim();
-        const total = document.getElementById('totalGeral').innerText;
-
-        if(!nome || !contato || !formaPagamento || carrinho.length === 0) {
-            return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
+    const orderData = {
+        cliente: nome,
+        whatsapp: contato,
+        total: fM(totalNumerico), // Salva formatado como pedido
+        pagamento: typeof formaPagamento !== 'undefined' ? formaPagamento : "A combinar",
+        data: new Date().toLocaleString('pt-BR'),
+        itens: carrinho,
+        endereco: {
+            rua: document.getElementById('rua').value,
+            num: document.getElementById('num').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value
         }
+    };
 
-        const orderData = {
-            cliente: nome, whatsapp: contato, total: total, pagamento: formaPagamento,
-            data: new Date().toLocaleString('pt-BR'), itens: carrinho,
-            endereco: {
-                rua: document.getElementById('rua').value,
-                num: document.getElementById('num').value,
-                bairro: document.getElementById('bairro').value,
-                cidade: document.getElementById('cidade').value
-            }
-        };
-
+    try {
+        // Salva no Firebase (Lógica do arquivo 1)
         await db.ref('orders').push(orderData);
 
-        let msg = `Olá, meu nome é *${nome}*!\n\n`;
+        // Gera mensagem para WhatsApp (Lógica do arquivo 2)
+       let msg = `Olá, meu nome é *${nome}*!\n\n`;
         msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
         msg += `💰 *Total:* ${total}\n`;
         msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
@@ -179,6 +205,10 @@
 
         window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
         localStorage.removeItem('carrinho');
+    } catch (e) {
+        alert("Erro ao processar pedido.");
+    }
+
     }
 
     carregarCarrinho();
