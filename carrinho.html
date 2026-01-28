@@ -191,24 +191,26 @@ async function enviarPedido() {
 
     try {
         // Salva no Firebase (Lógica do arquivo 1)
-        await db.ref('orders').push(orderData);
+       await db.ref('orders').push(pedidoDB);
 
-        // Gera mensagem para WhatsApp (Lógica do arquivo 2)
-       let msg = `Olá, meu nome é *${nome}*!\n\n`;
-        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
-        msg += `💰 *Total:* ${total}\n`;
-        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
-        msg += `Aguardando seu retorno para finalizar!`;
+            // Mensagem de WhatsApp (Limpa e Objetiva como solicitado)
+             let msg = `Olá, meu nome é *${nome}*!\n\n`;
+             msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
+             msg += `💰 *Total:* ${total}\n`;
+             msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+             msg += `Aguardando seu retorno para finalizar!`;
 
-        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-        localStorage.removeItem('carrinho');
-    } catch (e) {
-        alert("Erro ao processar pedido.");
+            window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+            
+            localStorage.removeItem('carrinho');
+        } catch (e) {
+            alert("Erro ao processar pedido. Verifique sua conexão.");
+        }
     }
 
-    }
-
+    // Iniciar a listagem ao abrir a página
     carregarCarrinho();
 </script>
+
 </body>
 </html>
