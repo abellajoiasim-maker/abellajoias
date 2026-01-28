@@ -1,147 +1,175 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Carrinho | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
-<style>
-body{font-family:'Poppins',sans-serif;background:#fdfcf9}
-.serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.card{background:#fff;border:1px solid #eee;border-radius:14px}
-.img-box{width:80px;height:80px;aspect-ratio:1/1}
-.img-box img{width:100%;height:100%;object-fit:contain}
-input.qtd{width:55px;border:1px solid #A68966;border-radius:6px;text-align:center}
-</style>
+    <meta charset="UTF-8">
+    <title>Finalizar Pedido | Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        body{font-family:'Poppins',sans-serif;background:#fdfcf9;color:#333}
+        .serif{font-family:'Cinzel',serif}
+        .gold{color:#A68966}
+        .item-card { background:#fff; border-radius:12px; border:1px solid #eee; padding: 15px; margin-bottom: 10px;}
+        .btn-pagamento { border: 2px solid #eee; transition: 0.3s; cursor: pointer; background: #fdfdfd; border-radius: 12px; padding: 15px; text-align: center; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .btn-pagamento.active { border-color: #A68966; background: #fffaf5; color: #A68966; }
+        input.dados { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; outline: none; }
+        input.qtd-input { width: 50px; border: 1px solid #A68966; border-radius: 6px; text-align: center; font-weight: bold; padding: 4px; }
+    </style>
 </head>
-
 <body>
 
-<!-- CABEÇALHO PADRÃO -->
-<header class="bg-white border-b shadow sticky top-0 z-50">
-  <div class="max-w-xl mx-auto p-4">
-    <h1 class="serif text-xl gold text-center uppercase">Abella Joias</h1>
-    <p class="text-[10px] text-center tracking-widest">ATACADO DE JOIAS NO BRUTO</p>
-
-    <div class="flex justify-between mt-4 text-xs font-bold uppercase">
-      <a href="index.html">Categorias</a>
-      <a href="galvanicas.html">Galvânicas</a>
-      <a href="carrinho.html">Carrinho</a>
+<header class="bg-white border-b p-6 mb-6 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-xl mx-auto flex justify-between items-center">
+        <button onclick="window.history.back()" class="text-[10px] font-bold uppercase tracking-widest">← Voltar</button>
+        <h1 class="serif text-xl gold uppercase tracking-widest">Meu Pedido</h1>
+        <div class="w-10"></div>
     </div>
-  </div>
 </header>
 
 <main class="max-w-xl mx-auto p-4 pb-32">
+    <h2 class="serif mb-4 text-gray-700 border-b pb-2">Itens no Carrinho</h2>
+    <div id="listaItens" class="mb-8"></div>
 
-<h2 class="serif mb-4">Itens no Carrinho</h2>
-<div id="listaItens"></div>
+    <section class="mb-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <h2 class="serif mb-4 text-gray-700 border-b pb-2">Seus Dados</h2>
+        <input type="text" id="nome" class="dados" placeholder="Nome Completo *">
+        <input type="tel" id="contato" class="dados" placeholder="WhatsApp *">
+        
+        <div class="mt-4 pt-4 border-t">
+            <p class="text-[10px] gold uppercase font-bold mb-3 tracking-widest">Endereço de Entrega</p>
+            <input type="text" id="rua" class="dados" placeholder="Rua / Avenida">
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="num" class="dados" placeholder="Nº">
+                <input type="text" id="bairro" class="dados" placeholder="Bairro">
+            </div>
+            <input type="text" id="cidade" class="dados" placeholder="Cidade">
+        </div>
+    </section>
 
-<div class="card p-5 mt-6">
-  <div class="flex justify-between font-bold gold text-lg">
-    <span>Total</span>
-    <span id="totalGeral">R$ 0,00</span>
-  </div>
-</div>
+    <section class="mb-8">
+        <h2 class="serif mb-4 text-gray-700">Forma de Pagamento</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="btn-pagamento" onclick="setPagamento('Pix', this)">Pix</div>
+            <div class="btn-pagamento" onclick="setPagamento('Cartão', this)">Cartão</div>
+        </div>
+    </section>
 
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-inner">
+        <div class="flex justify-between items-center text-xl font-bold gold">
+            <span>Total do Pedido</span>
+            <span id="totalGeral">R$ 0,00</span>
+        </div>
+    </div>
 </main>
 
-<footer class="fixed bottom-0 left-0 right-0 bg-white border-t p-4">
-  <button onclick="enviarPedido()" class="w-full bg-black text-white py-4 rounded-xl uppercase tracking-widest">
-    Finalizar no WhatsApp
-  </button>
+<footer class="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-lg">
+    <div class="max-w-xl mx-auto">
+        <button onclick="enviarPedido()" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-[#A68966]">
+            Finalizar via WhatsApp
+        </button>
+    </div>
 </footer>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    const firebaseConfig = { 
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
+    };
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
-let pagamento = "Pix";
-let foneLoja = "5511999999999";
+    let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    let formaPagamento = "";
+    let foneLoja = "5511999999999";
 
-db.ref('settings/whatsapp').on('value', s=>{
-  if(s.val()) foneLoja = "55"+s.val().replace(/\D/g,'')
-});
+    db.ref('settings/whatsapp').on('value', s => {
+        let rawFone = s.val();
+        if(rawFone) {
+            foneLoja = rawFone.replace(/\D/g, ''); 
+            if(foneLoja.length <= 11 && !foneLoja.startsWith('55')) foneLoja = "55" + foneLoja;
+        }
+    });
 
-function moeda(v){
-  return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-}
+    function setPagamento(tipo, el) {
+        formaPagamento = tipo;
+        document.querySelectorAll('.btn-pagamento').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
 
-function carregarCarrinho(){
-  const lista=document.getElementById('listaItens');
-  let total=0;
-  lista.innerHTML="";
+    function carregarCarrinho() {
+        const lista = document.getElementById('listaItens');
+        let total = 0;
+        lista.innerHTML = "";
 
-  if(!carrinho.length){
-    lista.innerHTML="<p class='text-center text-gray-400 py-10'>Carrinho vazio</p>";
-    return;
-  }
+        if(carrinho.length === 0) {
+            lista.innerHTML = "<p class='text-center py-10 text-gray-400'>Seu carrinho está vazio.</p>";
+            document.getElementById('totalGeral').innerText = "R$ 0,00";
+            return;
+        }
 
-  carrinho.forEach((p,i)=>{
-    const preco = p.precoPromo || p.preco;
-    const subtotal = preco * p.quantidade;
-    total += subtotal;
+        carrinho.forEach((item, index) => {
+            const subtotal = item.precoFinal * item.quantidade;
+            total += subtotal;
+            lista.innerHTML += `
+                <div class="item-card flex gap-4 items-center">
+                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h3 class="text-[11px] font-bold uppercase">${item.name}</h3>
+                        <p class="text-[10px] text-gray-500 mb-1">R$ ${item.precoFinal.toFixed(2)} cada</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-gray-400">QTD:</span>
+                            <input type="number" value="${item.quantidade}" min="1" 
+                                onchange="editarQtd(${index}, this.value)" 
+                                class="qtd-input">
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button onclick="remover(${index})" class="text-red-400 text-xs mb-2">Remover</button>
+                        <p class="font-bold text-xs gold">R$ ${subtotal.toFixed(2)}</p>
+                    </div>
+                </div>`;
+        });
 
-    lista.innerHTML+=`
-    <div class="card p-4 mb-4 flex gap-4">
-      <div class="img-box">
-        <img src="${p.image}">
-      </div>
+        document.getElementById('totalGeral').innerText = `R$ ${total.toFixed(2)}`;
+    }
 
-      <div class="flex-1 text-xs">
-        <p class="font-bold">${p.nome}</p>
-        <p class="text-gray-400">SKU: ${p.sku}</p>
-        <p>Peso: ${p.peso || '-'} g</p>
+    function editarQtd(index, novaQtd) {
+        if(novaQtd < 1) novaQtd = 1;
+        carrinho[index].quantidade = parseInt(novaQtd);
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        carregarCarrinho();
+    }
 
-        ${p.precoPromo ? `
-          <p class="line-through text-gray-400">${moeda(p.preco)}</p>
-          <p class="font-bold gold">${moeda(p.precoPromo)}</p>
-        ` : `<p class="font-bold gold">${moeda(p.preco)}</p>`}
+    function remover(index) {
+        carrinho.splice(index, 1);
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        carregarCarrinho();
+    }
 
-        <p class="text-[10px]">Pix: ${moeda(preco*0.95)}</p>
-        <p class="text-[10px]">Cartão: 3x</p>
+    async function enviarPedido() {
+        const nome = document.getElementById('nome').value.trim();
+        const contato = document.getElementById('contato').value.trim();
+        const total = document.getElementById('totalGeral').innerText;
 
-        <div class="mt-2 flex items-center gap-2">
-          <span>Qtd</span>
-          <input class="qtd" type="number" min="1" value="${p.quantidade}" 
-            onchange="editarQtd(${i},this.value)">
-        </div>
-      </div>
+        if(!nome || !contato || !formaPagamento || carrinho.length === 0) {
+            return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
+        }
 
-      <div class="text-right text-xs">
-        <button onclick="remover(${i})" class="text-red-400 mb-2">Remover</button>
-        <p class="font-bold">${moeda(subtotal)}</p>
-      </div>
-    </div>`;
-  });
+        const orderData = {
+            cliente: nome, whatsapp: contato, total: total, pagamento: formaPagamento,
+            data: new Date().toLocaleString('pt-BR'), itens: carrinho,
+            endereco: {
+                rua: document.getElementById('rua').value,
+                num: document.getElementById('num').value,
+                bairro: document.getElementById('bairro').value,
+                cidade: document.getElementById('cidade').value
+            }
+        };
 
-  document.getElementById('totalGeral').innerText = moeda(total);
-}
-
-function editarQtd(i,q){
-  carrinho[i].quantidade=parseInt(q)||1;
-  localStorage.setItem('carrinho',JSON.stringify(carrinho));
-  carregarCarrinho();
-}
-
-function remover(i){
-  carrinho.splice(i,1);
-  localStorage.setItem('carrinho',JSON.stringify(carrinho));
-  carregarCarrinho();
-}
-
-function enviarPedido(){
- await db.ref('orders').push(orderData);
+        await db.ref('orders').push(orderData);
 
         let msg = `Olá, meu nome é *${nome}*!\n\n`;
         msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
