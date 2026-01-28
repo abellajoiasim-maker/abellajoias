@@ -73,48 +73,58 @@
     }
 
     async function carregarProdutos() {
-        const setSnap = await db.ref('settings/promocao').once('value');
-        const promo = setSnap.val() || { ativa: false, porcentagem: 0 };
-        const catSnap = await db.ref('categories/' + catId).once('value');
-        const categoria = catSnap.val();
-        document.getElementById('tituloCategoria').innerText = categoria.name;
+    // 1. Busca as configurações da aba EMPRESA (Desconto PIX e Parcelas)
+    const empSnap = await db.ref('settings/empresa').once('value');
+    const configEmpresa = empSnap.val() || { descontoPix: 10, parcelas: 6 };
 
-        db.ref('products').on('value', snap => {
-            const grid = document.getElementById('gridProdutos');
-            grid.innerHTML = '';
-            snap.forEach(s => {
-                const p = s.val();
-                if (p.paused || p.category !== catId) return;
+    // 2. Busca configurações de PROMOÇÃO GERAL
+    const setSnap = await db.ref('settings/promocao').once('value');
+    const promo = setSnap.val() || { ativa: false, porcentagem: 0 };
+    
+    const catSnap = await db.ref('categories/' + catId).once('value');
+    const categoria = catSnap.val();
+    document.getElementById('tituloCategoria').innerText = categoria.name;
 
-                let desconto = promo.ativa ? (p.discount > 0 ? p.discount : (categoria.discount || promo.porcentagem)) : 0;
-                let precoFinal = desconto > 0 ? p.price * (1 - desconto/100) : p.price;
-                let pix = precoFinal * 0.90; // 10% de desconto no PIX
-                let parcela = precoFinal / 6;
+    db.ref('products').on('value', snap => {
+        const grid = document.getElementById('gridProdutos');
+        grid.innerHTML = '';
+        snap.forEach(s => {
+            const p = s.val();
+            if (p.paused || p.category !== catId) return;
 
-                grid.innerHTML += `
-                    <div class="card-prod p-4 flex flex-col">
-                        <div class="aspect-square mb-4 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
-                            <img src="${p.image}" class="w-full h-full object-contain p-2">
-                        </div>
-                        <div class="text-[9px] text-gray-400 font-bold">SKU: ${p.sku}</div>
-                        <h3 class="text-[11px] font-bold uppercase mb-1 h-8 overflow-hidden">${p.name}</h3>
-                        <div class="text-[10px] text-gray-500 mb-2 italic">Peso: ${p.weight}g</div>
-                        
-                        <div class="mb-4">
-                            ${desconto > 0 ? `<div class="price-old">R$ ${p.price.toFixed(2)}</div>` : ''}
-                            <div class="text-base font-bold gold-text">R$ ${precoFinal.toFixed(2)}</div>
-                            <div class="text-[10px] text-gray-600 font-medium">Ou 6x de R$ ${parcela.toFixed(2)}</div>
-                            <div class="text-[10px] text-green-600 font-bold uppercase mt-1">R$ ${pix.toFixed(2)} no PIX (-10%)</div>
-                        </div>
+            // Lógica de Desconto (Produto > Categoria > Geral)
+            let desconto = promo.ativa ? (p.discount > 0 ? p.discount : (categoria.discount || promo.porcentagem)) : 0;
+            
+            let precoFinal = desconto > 0 ? p.price * (1 - desconto/100) : p.price;
+            
+            // AQUI ESTÁ A CORREÇÃO: Usando os valores do Painel
+            let valorPix = precoFinal * (1 - (configEmpresa.descontoPix / 100));
+            let valorParcela = precoFinal / configEmpresa.parcelas;
 
-                        <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal}).replace(/'/g, "")})' 
-                            class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-md active:scale-95 transition">
-                            Adicionar ao Carrinho
-                        </button>
-                    </div>`;
-            });
+            grid.innerHTML += `
+                <div class="card-prod p-4 flex flex-col">
+                    <div class="aspect-square mb-4 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
+                        <img src="${p.image}" class="w-full h-full object-contain p-2">
+                    </div>
+                    <div class="text-[9px] text-gray-400 font-bold">SKU: ${p.sku}</div>
+                    <h3 class="text-[11px] font-bold uppercase mb-1 h-8 overflow-hidden">${p.name}</h3>
+                    <div class="text-[10px] text-gray-500 mb-2 italic">Peso: ${p.weight}g</div>
+                    
+                    <div class="mb-4">
+                        ${desconto > 0 ? `<div class="price-old">R$ ${p.price.toFixed(2)}</div>` : ''}
+                        <div class="text-base font-bold gold-text">R$ ${precoFinal.toFixed(2)}</div>
+                        <div class="text-[10px] text-gray-600 font-medium">Ou ${configEmpresa.parcelas}x de R$ ${valorParcela.toFixed(2)}</div>
+                        <div class="text-[10px] text-green-600 font-bold uppercase mt-1">R$ ${valorPix.toFixed(2)} no PIX (-${configEmpresa.descontoPix}%)</div>
+                    </div>
+
+                    <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal}).replace(/'/g, "")})' 
+                        class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase shadow-md active:scale-95 transition">
+                        Adicionar ao Carrinho
+                    </button>
+                </div>`;
         });
-    }
+    });
+}
 
     function prepararAdd(p) {
         produtoAtualParaAdd = p;
