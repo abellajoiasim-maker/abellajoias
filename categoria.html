@@ -2,35 +2,32 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Produtos | Abella Joias</title>
+    <title>Abella Joias | Atacado de Joias no Bruto</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; }
+        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; color: #333; }
         .serif { font-family: 'Cinzel', serif; }
-        .gold-text { color: #A68966; }
         .gold-bg { background: #A68966; }
-        .card-prod { background: #fff; border-radius: 15px; border: 1px solid #eee; transition: .3s; }
-        .card-prod:hover { border-color: #A68966; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .gold-text { color: #A68966; }
+        .card-lux { background: #fff; border-radius: 20px; border: 1px solid #eee; transition: .4s; overflow: hidden; }
+        .card-lux:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(166,137,102,0.15); border-color: #A68966; }
         .btn-nav { border: 1px solid #A68966; color: #A68966; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; }
         .btn-nav:hover { background: #A68966; color: #fff; }
-        .price-old { text-decoration: line-through; color: #999; font-size: 11px; }
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; align-items:center; justify-content:center; }
-        .modal.active { display:flex; }
     </style>
 </head>
 <body>
 
 <header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center">
-        <h1 class="serif text-3xl gold-text tracking-widest uppercase">Abella Joias</h1>
-        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6">ATACADO DE JOIAS NO BRUTO</p>
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center text-center">
+        <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">Abella Joias</h1>
+        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">Atacado de Joias no Bruto</p>
         
         <div class="flex gap-3 flex-wrap justify-center">
-            <a href="index.html" class="btn-nav px-6 py-2 rounded-full">CATEGORIAS</a>
+            <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">INÍCIO</a>
             <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">GALVÂNICAS</a>
             <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative">
                 CARRINHO <span id="contadorCarrinho" class="ml-1">(0)</span>
@@ -39,119 +36,43 @@
     </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-6">
-    <h2 id="tituloCategoria" class="serif text-center text-xl mb-8 gold-text">...</h2>
-    <div id="gridProdutos" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        </div>
+<main class="max-w-7xl mx-auto p-6 md:p-12">
+    <h2 class="serif text-center text-2xl mb-12 gold-text">Nossas Categorias</h2>
+    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
 </main>
 
-<div id="modalQtd" class="modal">
-    <div class="bg-white p-8 rounded-2xl max-w-sm w-full mx-4 shadow-2xl text-center">
-        <h3 class="serif gold-text text-lg mb-2">Digite a Quantidade</h3>
-        <p id="modalNomeProd" class="text-[11px] text-gray-500 uppercase mb-4"></p>
-        <input type="number" id="inputQtd" value="1" min="1" class="w-full border-2 border-[#A68966] rounded-xl p-3 text-center text-lg font-bold mb-6 outline-none">
-        <div class="flex gap-2">
-            <button onclick="fecharModal()" class="flex-1 py-3 text-xs font-bold text-gray-400 uppercase">Cancelar</button>
-            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-white py-3 rounded-xl text-xs font-bold uppercase shadow-lg">Confirmar</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    firebase.initializeApp({
+    const firebaseConfig = {
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
+    };
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const urlParams = new URLSearchParams(window.location.search);
-    const catId = urlParams.get('id');
-
-    let produtoAtualParaAdd = null;
 
     function atualizarContador() {
         const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
         document.getElementById('contadorCarrinho').innerText = `(${c.length})`;
     }
-
-    async function carregarProdutos() {
-        // Carrega configurações de promoção
-        const settingsSnap = await db.ref('settings/promocao').once('value');
-        const promo = settingsSnap.val() || { ativa: false, porcentagem: 0 };
-
-        // Carrega categoria para pegar o desconto específico
-        const catSnap = await db.ref('categories/' + catId).once('value');
-        const categoria = catSnap.val();
-        document.getElementById('tituloCategoria').innerText = categoria.name;
-        const descCat = categoria.discount || 0;
-
-        db.ref('products').on('value', snap => {
-            const grid = document.getElementById('gridProdutos');
-            grid.innerHTML = '';
-
-            snap.forEach(s => {
-                const p = s.val();
-                if (p.paused || p.category !== catId) return;
-
-                // Lógica de Preço
-                let descontoFinal = promo.ativa ? (p.discount > 0 ? p.discount : (descCat > 0 ? descCat : promo.porcentagem)) : 0;
-                let precoOriginal = p.price;
-                let precoComDesconto = descontoFinal > 0 ? precoOriginal * (1 - descontoFinal / 100) : precoOriginal;
-                
-                let precoPix = precoComDesconto * 0.90; // 10% no PIX
-                let parcela = precoComDesconto / 3;
-
-                grid.innerHTML += `
-                    <div class="card-prod p-4 flex flex-col">
-                        <div class="aspect-square mb-4 bg-gray-50 rounded-lg overflow-hidden">
-                            <img src="${p.image}" class="w-full h-full object-contain">
-                        </div>
-                        <div class="text-[10px] text-gray-400 font-bold">SKU: ${p.sku}</div>
-                        <h3 class="text-xs font-bold uppercase mb-1 h-8 overflow-hidden">${p.name}</h3>
-                        <div class="text-[10px] text-gray-500 mb-3 italic">Peso: ${p.weight}g</div>
-                        
-                        <div class="mb-4">
-                            ${descontoFinal > 0 ? `<div class="price-old text-red-400">R$ ${precoOriginal.toFixed(2)}</div>` : ''}
-                            <div class="text-lg font-bold gold-text">R$ ${precoComDesconto.toFixed(2)}</div>
-                            <div class="text-[10px] text-green-600 font-semibold">R$ ${precoPix.toFixed(2)} no PIX (-10%)</div>
-                            <div class="text-[10px] text-gray-400">ou 3x de R$ ${parcela.toFixed(2)}</div>
-                        </div>
-
-                        <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal: precoComDesconto}).replace(/'/g, "")})' 
-                            class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-md hover:brightness-110 transition">
-                            Adicionar ao Carrinho
-                        </button>
-                    </div>
-                `;
-            });
-        });
-    }
-
-    function prepararAdd(produto) {
-        produtoAtualParaAdd = produto;
-        document.getElementById('modalNomeProd').innerText = produto.name;
-        document.getElementById('inputQtd').value = 1;
-        document.getElementById('modalQtd').classList.add('active');
-    }
-
-    function fecharModal() {
-        document.getElementById('modalQtd').classList.remove('active');
-    }
-
-    document.getElementById('btnConfirmarAdd').onclick = () => {
-        const qtd = parseInt(document.getElementById('inputQtd').value);
-        if(qtd < 1) return alert("Mínimo 1 unidade");
-
-        let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        carrinho.push({ ...produtoAtualParaAdd, quantidade: qtd });
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        
-        fecharModal();
-        atualizarContador();
-        alert("Adicionado ao carrinho!");
-    };
-
-    carregarProdutos();
     atualizarContador();
+
+    db.ref('categories').on('value', snap => {
+        const grid = document.getElementById('gridCategorias');
+        grid.innerHTML = '';
+        snap.forEach(s => {
+            const cat = s.val();
+            if (cat.paused) return;
+            grid.innerHTML += `
+                <a href="categoria.html?id=${s.key}" class="card-lux group">
+                    <div class="aspect-[4/5] overflow-hidden bg-gray-50">
+                        <img src="${cat.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="p-4 text-center">
+                        <span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span>
+                    </div>
+                </a>
+            `;
+        });
+    });
 </script>
 </body>
 </html>
