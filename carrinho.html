@@ -166,24 +166,32 @@ function remover(index) {
 /* ===== FINALIZAÇÃO DO PEDIDO (WHATSAPP E BANCO) ===== */
 
 async function enviarPedido() {
-    const nome = document.getElementById('nome').value.trim();
-    const contato = document.getElementById('contato').value.trim();
+    // 1. Pegar os elementos do HTML
+    const nomeInput = document.getElementById('nome');
+    const contatoInput = document.getElementById('contato');
     
-    // 1. Calculamos o valor real
-    const valorTotal = carrinho.reduce((acc, item) => acc + ((item.precoFinal || item.preco || 0) * item.quantidade), 0);
+    const nome = nomeInput ? nomeInput.value.trim() : "";
+    const contato = contatoInput ? contatoInput.value.trim() : "";
     
-    // 2. Criamos a formatação de moeda para usar na mensagem
-    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    // 2. Definir a função de moeda localmente para evitar erros
+    const formatarMoeda = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    // 3. Validação de campos
+    // 3. Calcular o Total de forma segura (verifica se existe precoFinal ou preco)
+    const totalCalculado = carrinho.reduce((acc, item) => {
+        const preco = item.precoFinal || item.preco || 0;
+        return acc + (preco * item.quantidade);
+    }, 0);
+
+    // 4. Validações
     if (!nome || !contato || !formaPagamento || carrinho.length === 0) {
-        return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
+        return alert("Por favor, preencha Nome, WhatsApp e escolha a Forma de Pagamento.");
     }
 
-    const orderData = {
+    // 5. Organizar os dados para o Firebase
+    const pedidoDB = {
         cliente: nome,
         whatsapp: contato,
-        total: fM(valorTotal), // Usando a função de moeda
+        total: formatarMoeda(totalCalculado), // Salva R$ 0,00 formatado no banco
         pagamento: formaPagamento,
         data: new Date().toLocaleString('pt-BR'),
         itens: carrinho,
@@ -196,24 +204,24 @@ async function enviarPedido() {
     };
 
     try {
-        // Salva no Firebase
-        await db.ref('orders').push(orderData);
+        // Salva no Banco de Dados
+        await db.ref('orders').push(pedidoDB);
 
-        // 4. Montagem da Mensagem (USANDO AS VARIÁVEIS CORRETAS)
+        // 6. Montar a mensagem do WhatsApp (USANDO AS VARIÁVEIS CERTAS)
         let msg = `Olá, meu nome é *${nome}*!\n\n`;
         msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
-        msg += `💰 *Total:* ${fM(valorTotal)}\n`; // <--- Corrigido para fM(valorTotal)
+        msg += `💰 *Total:* ${formatarMoeda(totalCalculado)}\n`; // Aqui não dará mais undefined
         msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
         msg += `Aguardando seu retorno para finalizar!`;
 
-        // 5. Redirecionamento
-        const linkWhatsapp = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+        // 7. Redirecionar
+        const urlFone = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
         
         localStorage.removeItem('carrinho');
-        window.location.href = linkWhatsapp;
+        window.location.href = urlFone;
 
     } catch (e) {
-        console.error(e);
+        console.error("Erro completo:", e);
         alert("Erro ao processar pedido. Verifique sua conexão.");
     }
 }
