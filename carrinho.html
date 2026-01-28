@@ -118,7 +118,7 @@ function carregarCarrinho() {
 
     // Mapeamento mantendo a lógica de input de quantidade do arquivo 1 e design do arquivo 2
     lista.innerHTML = carrinho.map((item, index) => {
-        const itemTotal = item.precoFinal * item.quantidade;
+        const itemTotal = (item.precoFinal || item.preco || 0) * item.quantidade;
         subtotal += itemTotal;
         
         return `
@@ -126,7 +126,7 @@ function carregarCarrinho() {
                 <img src="${item.image}" class="w-16 h-16 object-contain rounded-lg">
                 <div class="flex-1">
                     <h4 class="text-xs font-bold uppercase">${item.name}</h4>
-                    <p class="text-[10px] text-gray-500 mb-1">${fM(item.precoFinal)} cada</p>
+                    <p class="text-[10px] text-gray-500 mb-1">${fM(item.precoFinal || item.preco || 0)} cada</p>
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] font-bold text-gray-400">QTD:</span>
                         <input type="number" value="${item.quantidade}" min="1" 
