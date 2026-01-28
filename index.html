@@ -2,127 +2,55 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-
     <title>Abella Joias | Atacado de Joias no Bruto</title>
-
-    <!-- Open Graph / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Abella Joias | Catálogo de Atacado">
-    <meta property="og:description" content="Confira nossas joias no bruto. Qualidade e sofisticação para o seu negócio.">
-    <meta property="og:url" content="https://abellajoiasim-maker.github.io/abellajoias/">
+    <meta property="og:description" content="Confira nossas joias no bruto. Qualidade e sofisticação.">
     <meta property="og:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png">
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-    <!-- ESTILO PREMIUM RESTAURADO -->
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #fdfcf9;
-            color: #333;
-        }
-
-        .serif {
-            font-family: 'Cinzel', serif;
-        }
-
-        .gold-text {
-            color: #A68966;
-        }
-
-        .gold-bg {
-            background: #A68966;
-        }
-
-        .btn-nav {
-            border: 1px solid #A68966;
-            color: #A68966;
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            transition: all .3s ease;
-        }
-
-        .btn-nav:hover {
-            background: #A68966;
-            color: #fff;
-        }
+        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; color: #333; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold-bg { background: #A68966; }
+        .gold-text { color: #A68966; }
+        .card-lux { background: #fff; border-radius: 20px; border: 1px solid #eee; transition: .4s; overflow: hidden; display: block; }
+        /* Ajuste 1:1 Categoria */
+        .img-wrapper { aspect-ratio: 1 / 1; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: contain; padding: 15px; transition: .7s; }
+        .card-lux:hover img { transform: scale(1.08); }
+        .btn-nav { border: 1px solid #A68966; color: #A68966; font-size: 10px; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
-
 <body>
-
-<header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center text-center">
-
-        <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">
-            Abella Joias
-        </h1>
-
-        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">
-            Atacado de Joias no Bruto
-        </p>
-
-        <div class="flex gap-3 flex-wrap justify-center">
-            <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">
-                INÍCIO
-            </a>
-
-            <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">
-                GALVÂNICAS
-            </a>
-
-            <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative">
-                CARRINHO <span id="contadorCarrinho" class="ml-1">(0)</span>
-            </a>
-        </div>
-
+<header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 p-6">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <h1 class="serif text-2xl gold-text tracking-[4px] uppercase">Abella Joias</h1>
+        <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative">CARRINHO <span id="contadorCarrinho" class="ml-1">(0)</span></a>
     </div>
 </header>
-
 <main class="max-w-7xl mx-auto p-6 md:p-12">
     <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
 </main>
-
 <script>
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
+    firebase.initializeApp({ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" });
     const db = firebase.database();
-
     function atualizarContador() {
         const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
         document.getElementById('contadorCarrinho').innerText = `(${c.length})`;
     }
     atualizarContador();
-
     db.ref('categories').on('value', snap => {
-        const grid = document.getElementById('gridCategorias');
-        grid.innerHTML = '';
+        const grid = document.getElementById('gridCategorias'); grid.innerHTML = '';
         snap.forEach(s => {
-            const cat = s.val();
-            if (cat.paused) return;
-            grid.innerHTML += `
-                <a href="categoria.html?id=${s.key}" class="card-lux group">
-                    <div class="aspect-[4/5] overflow-hidden bg-gray-50">
-                        <img src="${cat.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
-                    </div>
-                    <div class="p-4 text-center">
-                        <span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span>
-                    </div>
-                </a>
-            `;
+            const cat = s.val(); if (cat.paused) return;
+            grid.innerHTML += `<a href="categoria.html?id=${s.key}" class="card-lux group">
+                <div class="img-wrapper"><img src="${cat.image || ''}"></div>
+                <div class="p-6 text-center"><h2 class="serif text-xs uppercase tracking-widest gold-text font-bold">${cat.name}</h2></div>
+            </a>`;
         });
     });
 </script>
