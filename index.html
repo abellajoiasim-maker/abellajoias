@@ -66,6 +66,17 @@
             databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
         });
         const db = firebase.database();
+        // Adicione esta linha (por volta da linha 80)
+const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function atualizarContador() {
+    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    // Soma a quantidade total de itens
+    const totalItens = carrinho.reduce((acc, item) => acc + (parseInt(item.quantidade) || 0), 0);
+    document.getElementById('contadorCarrinho').innerText = `(${totalItens})`;
+}
+// Chama a função ao carregar a página
+atualizarContador();
 
         db.ref('categories').on('value', snap => {
             const grid = document.getElementById('gridCategorias');
