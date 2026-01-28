@@ -72,52 +72,61 @@
         document.getElementById('contadorCarrinho').innerText = `(${c.length})`;
     }
 
-    async function carregarProdutos() {
-    // 1. Busca as configurações da aba EMPRESA (Desconto PIX e Parcelas)
+   async function carregarProdutos() {
+    // 1. Busca configurações da aba EMPRESA (PIX e Parcelas)
     const empSnap = await db.ref('settings/empresa').once('value');
-    const configEmpresa = empSnap.val() || { descontoPix: 10, parcelas: 6 };
+    const configEmpresa = empSnap.val() || { descontoPix: 0, parcelas: 1 };
 
-    // 2. Busca configurações de PROMOÇÃO GERAL
+    // 2. Busca configurações da aba PROMOÇÕES
     const setSnap = await db.ref('settings/promocao').once('value');
-    const promo = setSnap.val() || { ativa: false, porcentagem: 0 };
+    const promoGeral = setSnap.val() || { ativa: false, porcentagem: 0 };
     
+    // 3. Busca dados da categoria atual (para saber o desconto específico dela)
     const catSnap = await db.ref('categories/' + catId).once('value');
-    const categoria = catSnap.val();
-    document.getElementById('tituloCategoria').innerText = categoria.name;
+    const categoria = catSnap.val() || {};
+    document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
 
     db.ref('products').on('value', snap => {
         const grid = document.getElementById('gridProdutos');
         grid.innerHTML = '';
+        
         snap.forEach(s => {
             const p = s.val();
             if (p.paused || p.category !== catId) return;
 
-            // Lógica de Desconto (Produto > Categoria > Geral)
-            let desconto = promo.ativa ? (p.discount > 0 ? p.discount : (categoria.discount || promo.porcentagem)) : 0;
+            // --- LÓGICA DE DESCONTO ALINHADA COM O PAINEL ---
+            let porcentagemAplicada = 0;
+
+            if (promoGeral.ativa) {
+                // Se o produto tem desconto próprio, usa ele. 
+                // Senão, tenta o da categoria. Se não tiver, usa a porcentagem geral.
+                porcentagemAplicada = p.discount > 0 ? p.discount : (categoria.discount > 0 ? categoria.discount : promoGeral.porcentagem);
+            }
+
+            let precoFinal = porcentagemAplicada > 0 ? p.price * (1 - porcentagemAplicada / 100) : p.price;
             
-            let precoFinal = desconto > 0 ? p.price * (1 - desconto/100) : p.price;
-            
-            // AQUI ESTÁ A CORREÇÃO: Usando os valores do Painel
+            // Cálculos de Rodapé (PIX e Parcelas)
             let valorPix = precoFinal * (1 - (configEmpresa.descontoPix / 100));
             let valorParcela = precoFinal / configEmpresa.parcelas;
 
             grid.innerHTML += `
                 <div class="card-prod p-4 flex flex-col">
-                    <div class="aspect-square mb-4 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
+                    <div class="aspect-square mb-4 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative">
+                        ${porcentagemAplicada > 0 ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">-${porcentagemAplicada}%</span>` : ''}
                         <img src="${p.image}" class="w-full h-full object-contain p-2">
                     </div>
-                    <div class="text-[9px] text-gray-400 font-bold">SKU: ${p.sku}</div>
+                    <div class="text-[9px] text-gray-400 font-bold uppercase">SKU: ${p.sku}</div>
                     <h3 class="text-[11px] font-bold uppercase mb-1 h-8 overflow-hidden">${p.name}</h3>
                     <div class="text-[10px] text-gray-500 mb-2 italic">Peso: ${p.weight}g</div>
                     
                     <div class="mb-4">
-                        ${desconto > 0 ? `<div class="price-old">R$ ${p.price.toFixed(2)}</div>` : ''}
+                        ${porcentagemAplicada > 0 ? `<div class="text-[11px] text-gray-400 line-through">R$ ${p.price.toFixed(2)}</div>` : ''}
                         <div class="text-base font-bold gold-text">R$ ${precoFinal.toFixed(2)}</div>
                         <div class="text-[10px] text-gray-600 font-medium">Ou ${configEmpresa.parcelas}x de R$ ${valorParcela.toFixed(2)}</div>
                         <div class="text-[10px] text-green-600 font-bold uppercase mt-1">R$ ${valorPix.toFixed(2)} no PIX (-${configEmpresa.descontoPix}%)</div>
                     </div>
 
-                    <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal}).replace(/'/g, "")})' 
+                    <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal, porcentagemAplicada}).replace(/'/g, "")})' 
                         class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase shadow-md active:scale-95 transition">
                         Adicionar ao Carrinho
                     </button>
@@ -125,7 +134,6 @@
         });
     });
 }
-
     function prepararAdd(p) {
         produtoAtualParaAdd = p;
         document.getElementById('modalImgProd').src = p.image;
