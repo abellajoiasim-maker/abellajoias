@@ -9,107 +9,85 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:Poppins,sans-serif;background:#fdfcf9}
-.serif{font-family:Cinzel,serif}
+body{font-family:'Poppins',sans-serif;background:#fdfcf9}
+.serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-
-.card{
- background:#fff;
- border:1px solid #eee;
- border-radius:18px;
- padding:14px;
- position:relative;
-}
-.img-box{
- aspect-ratio:1/1;
- display:flex;
- align-items:center;
- justify-content:center;
-}
-.img-box img{
- width:100%;
- height:100%;
- object-fit:contain;
-}
-.badge{
- position:absolute;
- top:10px;left:10px;
- background:#c53030;
- color:#fff;
- font-size:9px;
- padding:4px 8px;
- border-radius:99px;
-}
+.card{background:#fff;border-radius:16px;border:1px solid #eee}
+.square{aspect-ratio:1/1}
+.square img{width:100%;height:100%;object-fit:contain}
 </style>
 </head>
 
 <body>
 
-<header class="bg-white border-b p-6 sticky top-0">
- <div class="max-w-7xl mx-auto flex justify-between items-center">
-  <a href="index.html" class="text-xs font-bold">Categorias</a>
-  <h1 id="titulo" class="serif gold text-sm uppercase">...</h1>
-  <a href="carrinho.html" class="text-xs font-bold">Carrinho</a>
- </div>
+<header class="bg-white border-b shadow sticky top-0 z-50">
+  <div class="max-w-xl mx-auto p-4">
+    <h1 class="serif text-xl gold text-center uppercase">Abella Joias</h1>
+    <p class="text-[10px] text-center tracking-widest">ATACADO DE JOIAS NO BRUTO</p>
+
+    <div class="flex justify-between mt-4 text-xs font-bold uppercase">
+      <a href="index.html">Categorias</a>
+      <a href="galvanicas.html">Galvânicas</a>
+      <a href="carrinho.html">Carrinho (<span id="contador">0</span>)</a>
+    </div>
+  </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-6">
- <div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-</main>
+<main class="max-w-xl mx-auto p-4 space-y-4" id="listaProdutos"></main>
 
 <script>
-firebase.initializeApp({
- apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-});
+const params=new URLSearchParams(location.search);
+const categoriaId=params.get('id');
+
+const firebaseConfig={
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
 function moeda(v){
- return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 }
 
-const catId=new URLSearchParams(location.search).get("id");
+db.ref('produtos').orderByChild('categoria').equalTo(categoriaId).on('value',snap=>{
+  const lista=document.getElementById('listaProdutos');
+  lista.innerHTML='';
+  snap.forEach(p=>{
+    const d=p.val();
+    lista.innerHTML+=`
+    <div class="card p-4">
+      <div class="square mb-3">
+        <img src="${d.image}">
+      </div>
 
-db.ref("categories/"+catId).once("value",s=>{
- document.getElementById("titulo").innerText=s.val()?.name||"Produtos";
+      <p class="font-bold">${d.nome}</p>
+      <p class="text-xs text-gray-400">SKU: ${d.sku}</p>
+      <p class="text-xs">Peso: ${d.peso||'-'} g</p>
+
+      ${d.precoPromo ? `
+        <p class="line-through text-sm text-gray-400">${moeda(d.preco)}</p>
+        <p class="font-bold gold">${moeda(d.precoPromo)}</p>
+      ` : `<p class="font-bold gold">${moeda(d.preco)}</p>`}
+
+      <p class="text-[10px]">Pix: ${moeda((d.precoPromo||d.preco)*0.95)}</p>
+      <p class="text-[10px]">Cartão: 3x</p>
+
+      <button onclick="add('${p.key}')" class="w-full mt-3 bg-black text-white py-2 rounded-lg uppercase text-xs">
+        Adicionar ao Carrinho
+      </button>
+    </div>`;
+  });
 });
 
-db.ref("products").on("value",snap=>{
- const grid=document.getElementById("grid");
- grid.innerHTML="";
- snap.forEach(s=>{
-  const p=s.val();
-  if(p.paused||p.category!==catId) return;
-
-  let desconto=p.discount||0;
-  let precoFinal=desconto?p.price*(1-desconto/100):p.price;
-
-  grid.innerHTML+=`
-  <div class="card">
-   ${desconto?`<div class="badge">-${desconto}%</div>`:""}
-   <div class="img-box mb-3">
-     <img src="${p.image||''}">
-   </div>
-   <div class="text-[10px] text-gray-400">SKU: ${p.sku}</div>
-   <div class="text-xs font-bold uppercase mb-2">${p.name}</div>
-   ${desconto?`<div class="text-[11px] line-through">${moeda(p.price)}</div>`:""}
-   <div class="font-bold gold">${moeda(precoFinal)}</div>
-   <button onclick="addCarrinho(${JSON.stringify({...p,precoFinal}).replace(/"/g,'&quot;')})"
-    class="w-full mt-3 bg-black text-white py-2 rounded text-[10px] font-bold">
-    Adicionar
-   </button>
-  </div>`;
- });
-});
-
-function addCarrinho(p){
- let c=JSON.parse(localStorage.getItem("carrinho")||"[]");
- c.push({...p,quantidade:1});
- localStorage.setItem("carrinho",JSON.stringify(c));
- alert("Adicionado ao carrinho");
+function add(id){
+  const carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
+  carrinho.push({id,quantidade:1});
+  localStorage.setItem('carrinho',JSON.stringify(carrinho));
+  document.getElementById('contador').innerText=carrinho.length;
 }
 </script>
 
