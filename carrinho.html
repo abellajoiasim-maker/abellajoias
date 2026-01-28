@@ -177,10 +177,10 @@ async function enviarPedido() {
     const formatarMoeda = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     // 3. Calcular o Total de forma segura (verifica se existe precoFinal ou preco)
-    const totalCalculado = carrinho.reduce((acc, item) => {
-        const preco = item.precoFinal || item.preco || 0;
-        return acc + (preco * item.quantidade);
-    }, 0);
+   const totalCalculado = carrinho.reduce((acc, item) => {
+    const preco = item.precoFinal || item.preco || 0;
+    return acc + (preco * item.quantidade);
+}, 0);
 
     // 4. Validações
     if (!nome || !contato || !formaPagamento || carrinho.length === 0) {
