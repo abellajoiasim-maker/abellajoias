@@ -2,188 +2,91 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Admin • Abella Joias</title>
+<title>Abella Joias | Atacado de Joias no Bruto</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
 <style>
-body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
-nav button.active{border-color:#caa85c;color:#caa85c}
-section{display:none}
-section.active{display:block}
-.card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px;position:relative}
-.grid{display:grid;gap:12px}
-@media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
-@media(min-width:1200px){.grid{grid-template-columns:repeat(6,1fr)}}
-
-input,select{
-background:#111;border:1px solid #333;
-padding:8px;border-radius:8px;width:100%;
-color:#fff;font-size:13px
+body{font-family:'Poppins',sans-serif;background:#f8f6f2}
+.serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+.card{
+ background:#fff;
+ border:1px solid #eee;
+ border-radius:18px;
+ transition:.3s;
 }
-
-.btn{background:#222;border:1px solid #444;padding:6px 10px;
-border-radius:8px;font-size:11px;cursor:pointer}
-.btn-gold{background:#caa85c;color:#000;font-weight:700}
-.btn-red{border-color:#c33;color:#f77}
-
-.badge-desconto{
-position:absolute;top:6px;right:6px;
-background:#16a34a;color:#fff;
-font-size:9px;font-weight:800;
-padding:2px 6px;border-radius:4px
+.card:hover{
+ transform:translateY(-4px);
+ border-color:#A68966;
 }
-.preco-riscado{text-decoration:line-through;opacity:.5;font-size:11px}
+.img-box{
+ aspect-ratio:1/1;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+}
+.img-box img{
+ max-height:100%;
+ object-fit:contain;
+}
 </style>
 </head>
 
 <body>
 
-<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222]">
-Painel Administrativo • Abella Joias
+<header class="bg-white border-b sticky top-0 z-50">
+ <div class="text-center py-8">
+  <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
+  <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">Atacado de Joias no Bruto</p>
+ </div>
+
+ <div class="flex justify-center gap-2 pb-4">
+  <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">CATEGORIAS</a>
+  <a href="galvanicas.html" class="bg-white border px-6 py-2 rounded-full text-[10px] font-bold text-gray-500">GALVÂNICAS</a>
+  <a href="carrinho.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold">CARRINHO</a>
+ </div>
 </header>
 
-<nav class="flex gap-2 p-2 bg-[#111] overflow-x-auto">
-<button class="btn active" onclick="showTab('empresa',this)">Empresa</button>
-<button class="btn" onclick="showTab('categorias',this)">Categorias</button>
-<button class="btn" onclick="showTab('produtos',this)">Produtos</button>
-<button class="btn" onclick="abrirPainelPromocoes()">Promoções</button>
-<button class="btn" onclick="showTab('pedidos',this)">Pedidos</button>
-</nav>
-
-<main class="p-6">
-
-<section id="empresa" class="active max-w-md mx-auto">
-<div class="card space-y-2">
-<label class="text-[10px] uppercase">Nome da Loja</label>
-<input id="empNome">
-<label class="text-[10px] uppercase">WhatsApp</label>
-<input id="empWhats">
-<label class="text-[10px] uppercase">Desconto PIX %</label>
-<input id="empPix" type="number">
-<label class="text-[10px] uppercase">Parcelas</label>
-<input id="empParc" type="number">
-<button class="btn-gold w-full mt-3 py-3" onclick="salvarEmpresa()">Salvar</button>
-</div>
-</section>
-
-<section id="categorias">
-<button class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
-<div id="listaCategorias" class="grid"></div>
-</section>
-
-<section id="produtos">
-<div id="produtosPorCategoria"></div>
-</section>
-
-<section id="pedidos">
-<div id="listaPedidos"></div>
-</section>
-
+<main class="max-w-6xl mx-auto p-6">
+ <h2 class="serif text-xl text-center mb-10 text-gray-700">Escolha uma Categoria</h2>
+ <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
 <script>
 firebase.initializeApp({
-apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 });
 const db=firebase.database();
 
-/* === UTIL === */
-function showTab(id,btn){
-document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-btn.classList.add('active');
-}
+db.ref('categories').on('value',snap=>{
+ const grid=document.getElementById('gridCategorias');
+ grid.innerHTML='';
+ let lista=[];
+ snap.forEach(s=>lista.push(s.val()));
+ lista.sort((a,b)=>a.name.localeCompare(b.name));
 
-/* === EMPRESA === */
-db.ref('settings').on('value',s=>{
-const v=s.val()||{};
-empNome.value=v.nome||'';
-empWhats.value=v.whatsapp||'';
-empPix.value=v.pix||0;
-empParc.value=v.parcelas||1;
-});
-
-function salvarEmpresa(){
-db.ref('settings').update({
-nome:empNome.value,
-whatsapp:empWhats.value,
-pix:+empPix.value,
-parcelas:+empParc.value
-});
-alert('Salvo');
-}
-
-/* === CATEGORIAS === */
-db.ref('categories').on('value',s=>{
-listaCategorias.innerHTML='';
-s.forEach(c=>{
-const d=c.val();
-listaCategorias.innerHTML+=`
-<div class="card">
-<b>${d.name}</b>
-<div class="flex gap-1 mt-2">
-<button class="btn" onclick="editarCategoria('${c.key}')">Editar</button>
-<button class="btn btn-red" onclick="db.ref('categories/${c.key}').remove()">Excluir</button>
-</div>
-</div>`;
-});
-});
-
-/* === PRODUTOS COM PROMO HÍBRIDA === */
-db.ref('products').on('value',s=>{
-produtosPorCategoria.innerHTML='';
-db.ref('settings/promocao').once('value').then(sp=>{
-const promo=sp.val()||{ativa:false,porcentagem:0};
-const map={};
-
-s.forEach(p=>{
-const v=p.val();v.id=p.key;
-if(!map[v.category])map[v.category]=[];
-map[v.category].push(v);
-});
-
-Object.keys(map).forEach(cat=>{
-produtosPorCategoria.innerHTML+=`<h3 class="mt-6 text-[#caa85c]">${cat}</h3><div class="grid"></div>`;
-const grid=produtosPorCategoria.lastElementChild;
-
-map[cat].forEach(p=>{
-let base=p.price||0;
-let dProd=p.discount||0;
-let dCat=0;
-let dGlobal=promo.ativa?promo.porcentagem:0;
-let best=Math.max(dProd,dCat,dGlobal);
-let priceHTML=`R$ ${base.toFixed(2)}`;
-let badge='';
-
-if(best>0){
-const novo=base*(1-best/100);
-badge=`<div class="badge-desconto">-${best}%</div>`;
-priceHTML=`<div class="preco-riscado">R$ ${base.toFixed(2)}</div>
-<div class="text-green-500">R$ ${novo.toFixed(2)}</div>`;
-}
-
-grid.innerHTML+=`
-<div class="card">
-${badge}
-<img src="${p.image}" class="w-full h-32 object-contain mb-2">
-<div class="text-[10px] opacity-50">${p.sku||''}</div>
-<div class="font-bold">${p.name}</div>
-${priceHTML}
-<div class="flex gap-1 mt-2">
-<button class="btn" onclick="editarProduto('${p.id}')">Editar</button>
-<button class="btn btn-red" onclick="db.ref('products/${p.id}').remove()">✕</button>
-</div>
-</div>`;
-});
-});
-});
+ lista.forEach(c=>{
+  if(c.paused) return;
+  grid.innerHTML+=`
+  <a href="categoria.html?cat=${c.slug}" class="card shadow-sm">
+   <div class="img-box">
+    <img src="${c.image||'https://via.placeholder.com/500'}">
+   </div>
+   <div class="p-4 text-center border-t">
+    <span class="text-xs font-bold tracking-widest uppercase">${c.name}</span>
+   </div>
+  </a>`;
+ });
 });
 </script>
+
 </body>
 </html>
