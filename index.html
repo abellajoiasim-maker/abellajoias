@@ -89,28 +89,25 @@
     
     atualizarContador();
 
-    db.ref('categories').on('value', snap => {
+db.ref('categories').on('value', snap => {
         const grid = document.getElementById('gridCategorias');
-        if(!grid) return;
         grid.innerHTML = '';
-        
         snap.forEach(s => {
             const cat = s.val();
             if (cat.paused) return;
             
-            const imgUrl = cat.image || 'https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png';
-            
             grid.innerHTML += `
-                <a href="categoria.html?id=${s.key}" class="card-lux group block">
-                    <div class="img-container">
-                        <img src="${imgUrl}" 
-                             class="transition duration-700 group-hover:scale-110" 
-                             loading="lazy">
+                <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
+                    <div style="width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden;">
+                        <img src="${cat.image || 'https://via.placeholder.com/400'}" 
+                             style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 10px;"
+                             class="transition duration-700 group-hover:scale-110">
                     </div>
-                    <div class="p-4 text-center">
-                        <span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span>
+                    <div class="p-4 text-center mt-auto">
+                        <span class="serif text-[12px] gold-text tracking-widest uppercase font-bold">${cat.name}</span>
                     </div>
-                </a>`;
+                </a>
+            `;
         });
     });
 </script>
