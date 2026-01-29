@@ -16,7 +16,7 @@
         .status-on { background: #15803d; color: white; }
         .status-off { background: #b91c1c; color: white; }
         .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 12px; }
-        .img-preview { width: 45px; height: 45px; object-fit: contain; background: #000; border-radius: 6px; border: 1px solid #333; }
+        .img-preview { width: 45px; height: 45px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #333; }
         .card-create { background: #141414; border: 2px dashed #333; transition: 0.3s; }
         .card-create:hover { border-color: #caa85c; }
     </style>
@@ -33,51 +33,22 @@
             <div class="flex flex-wrap gap-3 w-full xl:w-auto">
                 <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="Digite SKU ou Nome e aperte Enter..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-64 outline-none focus:border-[#caa85c] text-white">
                 <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:brightness-110 transition-all">🔍 BUSCAR AGORA</button>
-                <button onclick="sincronizarFotosComStorage()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700 transition-all">🔄 SYNC FOTOS</button>
+                <button onclick="sincronizarFotosComStorage()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700 transition-all">🔄 SYNC FOTOS (SKU)</button>
             </div>
         </header>
 
         <div class="card-create p-6 rounded-2xl mb-8">
             <h2 class="text-[#caa85c] font-bold text-xs uppercase mb-4 tracking-widest">✨ Criar Novo Produto</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase ml-1">SKU</label>
-                    <input id="newSku" class="input-dark" placeholder="EX: AB-01">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase ml-1">Nome</label>
-                    <input id="newName" class="input-dark" placeholder="Nome do item">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase ml-1">Categoria</label>
-                    <select id="newCat" class="input-dark">
-                        <option value="">Carregando...</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase ml-1">Variação</label>
-                    <select id="newVarTipo" class="input-dark">
-                        <option value="">Nenhuma</option>
-                        <option value="Lista">Lista (Letras/Opções)</option>
-                        <option value="Aro">Aro (Anéis)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase ml-1">Preço</label>
-                    <input id="newPrice" type="number" step="0.01" class="input-dark" placeholder="0.00">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase ml-1">Peso (g)</label>
-                    <input id="newWeight" class="input-dark" placeholder="0.00g">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase ml-1">Imagem URL</label>
-                    <input id="newImg" class="input-dark" placeholder="Link da foto">
-                </div>
+                <div><label class="text-[9px] text-gray-500 uppercase ml-1">SKU</label><input id="newSku" class="input-dark" placeholder="EX: AB-01"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Nome</label><input id="newName" class="input-dark" placeholder="Nome do item"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Categoria</label><select id="newCat" class="input-dark"><option value="">Carregando...</option></select></div>
+                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Variação</label><select id="newVarTipo" class="input-dark"><option value="">Nenhuma</option><option value="Lista">Lista</option><option value="Aro">Aro</option></select></div>
+                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Preço</label><input id="newPrice" type="number" step="0.01" class="input-dark" placeholder="0.00"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Peso (g)</label><input id="newWeight" class="input-dark" placeholder="0.00g"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Imagem URL</label><input id="newImg" class="input-dark" placeholder="Link da foto"></div>
             </div>
-            <button onclick="criarProduto()" class="w-full bg-[#caa85c] text-black font-black py-3 rounded-xl mt-4 uppercase text-xs hover:brightness-110 transition-all">
-                + Adicionar ao Banco de Dados
-            </button>
+            <button onclick="criarProduto()" class="w-full bg-[#caa85c] text-black font-black py-3 rounded-xl mt-4 uppercase text-xs hover:brightness-110 transition-all">+ Adicionar ao Banco de Dados</button>
         </div>
 
         <div class="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden shadow-2xl">
@@ -98,7 +69,7 @@
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo">
-                        <tr><td colspan="10" class="p-20 text-center text-gray-500 italic">Digite algo no campo de busca para listar os produtos...</td></tr>
+                        <tr><td colspan="10" class="p-20 text-center text-gray-500 italic">Digite algo no campo de busca para listar...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -122,23 +93,15 @@ const db = firebase.database();
 
 let categoriasCache = {};
 
-// 1. CARREGAR CATEGORIAS PARA O CACHE
 async function carregarCacheCategorias() {
-    try {
-        const snap = await db.ref('categories').once('value');
-        categoriasCache = snap.val() || {};
-        const select = document.getElementById('newCat');
-        let options = '<option value="">Selecione...</option>';
-        Object.entries(categoriasCache).forEach(([id, dados]) => {
-            options += `<option value="${id}">${dados.name}</option>`;
-        });
-        select.innerHTML = options;
-    } catch (e) {
-        console.error("Erro ao carregar categorias:", e);
-    }
+    const snap = await db.ref('categories').once('value');
+    categoriasCache = snap.val() || {};
+    const select = document.getElementById('newCat');
+    let options = '<option value="">Selecione...</option>';
+    Object.entries(categoriasCache).forEach(([id, dados]) => { options += `<option value="${id}">${dados.name}</option>`; });
+    select.innerHTML = options;
 }
 
-// 2. CRIAR PRODUTO
 function criarProduto() {
     const sku = document.getElementById('newSku').value.trim();
     const name = document.getElementById('newName').value.trim();
@@ -150,31 +113,17 @@ function criarProduto() {
 
     if(!sku || !name || !cat) return alert("Preencha SKU, Nome e Categoria!");
 
-    const pData = {
-        sku: sku,
-        name: name,
-        category: cat,
-        price: parseFloat(price) || 0,
-        weight: weight,
-        image: img || "https://via.placeholder.com/400",
-        variacaoTipo: varTipo,
-        paused: false
-    };
+    const pData = { sku, name, category: cat, price: parseFloat(price) || 0, weight, image: img || "https://via.placeholder.com/400", variacaoTipo: varTipo, paused: false };
 
     db.ref('products').push(pData).then(() => {
         alert("Produto criado!");
-        document.getElementById('newSku').value = '';
-        document.getElementById('newName').value = '';
-        document.getElementById('newPrice').value = '';
+        carregarProdutos();
     });
 }
 
-// 3. BUSCAR PRODUTOS COM CATEGORIAS CORRETAS
 async function carregarProdutos() {
     const filtro = document.getElementById('filtroSku').value.trim().toUpperCase();
     const corpo = document.getElementById('tabelaCorpo');
-    const statusInfo = document.getElementById('statusInfo');
-
     if (filtro.length < 1) return alert("Digite algo para buscar.");
 
     corpo.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">Buscando...</td></tr>';
@@ -182,7 +131,6 @@ async function carregarProdutos() {
     db.ref('products').once('value', snapshot => {
         let html = '';
         let contador = 0;
-
         snapshot.forEach(child => {
             const p = child.val();
             const sku = String(p.sku || "").toUpperCase();
@@ -190,63 +138,61 @@ async function carregarProdutos() {
 
             if (sku.includes(filtro) || nome.includes(filtro)) {
                 contador++;
-
-                // Gerar as opções do select de categorias dinamicamente
                 let catOptions = '';
                 Object.entries(categoriasCache).forEach(([catId, catDados]) => {
-                    const selected = (p.category === catId) ? 'selected' : '';
-                    catOptions += `<option value="${catId}" ${selected}>${catDados.name}</option>`;
+                    catOptions += `<option value="${catId}" ${p.category === catId ? 'selected' : ''}>${catDados.name}</option>`;
                 });
 
                 html += `
                 <tr data-id="${child.key}" class="border-b border-[#222] ${p.paused ? 'is-paused' : ''}">
-                    <td class="p-2">
-                        <button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'Pausado' : 'Ativo'}</button>
-                    </td>
-                    <td class="p-2"><img src="${p.image}" class="img-preview"></td>
-                    <td class="p-2 font-mono text-[#caa85c] font-bold">${sku}</td>
+                    <td class="p-2"><button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'Pausado' : 'Ativo'}</button></td>
+                    <td class="p-2"><img src="${p.image}" class="img-preview row-img"></td>
+                    <td class="p-2 font-mono text-[#caa85c] font-bold row-sku">${sku}</td>
                     <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
-                    <td class="p-1">
-                        <select class="input-dark edit-cat">
-                            ${catOptions}
-                        </select>
-                    </td>
-                    <td class="p-1">
-                        <select class="input-dark edit-var">
-                            <option value="" ${p.variacaoTipo === '' ? 'selected' : ''}>Nenhuma</option>
-                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista</option>
-                            <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro</option>
-                        </select>
-                    </td>
+                    <td class="p-1"><select class="input-dark edit-cat">${catOptions}</select></td>
+                    <td class="p-1"><select class="input-dark edit-var"><option value="" ${p.variacaoTipo===''?'selected':''}>Nenhuma</option><option value="Lista" ${p.variacaoTipo==='Lista'?'selected':''}>Lista</option><option value="Aro" ${p.variacaoTipo==='Aro'?'selected':''}>Aro</option></select></td>
                     <td class="p-1"><input class="input-dark edit-price" type="number" step="0.01" value="${p.price || 0}"></td>
                     <td class="p-1"><input class="input-dark edit-weight" value="${p.weight || 0}"></td>
-                    <td class="p-1"><input class="input-dark edit-img" value="${p.image || ''}"></td>
-                    <td class="p-1">
-                        <button onclick="deletarProduto('${child.key}')" class="text-red-500 hover:text-white p-2">🗑️</button>
-                    </td>
+                    <td class="p-1"><input class="input-dark edit-img" value="${p.image || ''}" onchange="this.closest('tr').querySelector('.row-img').src=this.value"></td>
+                    <td class="p-1"><button onclick="deletarProduto('${child.key}')" class="text-red-500 p-2">🗑️</button></td>
                 </tr>`;
             }
         });
-
         corpo.innerHTML = html || '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold">Nada encontrado.</td></tr>';
-        statusInfo.innerText = `${contador} produtos encontrados.`;
+        document.getElementById('statusInfo').innerText = `${contador} produtos encontrados.`;
     });
+}
+
+function sincronizarFotosComStorage() {
+    const dominio = "catalogo-abella-joias.firebasestorage.app";
+    const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
+    if(linhas.length === 0) return alert("Busque os produtos primeiro.");
+
+    linhas.forEach(tr => {
+        const sku = tr.querySelector('.row-sku').innerText.trim();
+        const inputImg = tr.querySelector('.edit-img');
+        const imgPreview = tr.querySelector('.row-img');
+        
+        if (sku) {
+            const novoLink = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.png?alt=media`;
+            inputImg.value = novoLink;
+            imgPreview.src = novoLink; // Atualiza a foto na hora para conferência
+        }
+    });
+    alert("Links gerados baseados no SKU. Não esqueça de SALVAR ALTERAÇÕES!");
 }
 
 function toggleStatus(btn) {
     const tr = btn.closest('tr');
     const isActive = btn.classList.contains('status-on');
-    btn.classList.toggle('status-on', !isActive);
-    btn.classList.toggle('status-off', isActive);
+    btn.className = `btn-status ${isActive ? 'status-off' : 'status-on'}`;
     btn.innerText = isActive ? 'Pausado' : 'Ativo';
     tr.classList.toggle('is-paused', isActive);
 }
 
-// 4. SALVAR TUDO (CORRIGIDO)
 function salvarAlteracoes() {
     const updates = {};
     const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
-    
     if(linhas.length === 0) return alert("Nada para salvar.");
 
     linhas.forEach(tr => {
@@ -260,29 +206,11 @@ function salvarAlteracoes() {
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
 
-    db.ref().update(updates)
-        .then(() => alert("✅ Alterações salvas com sucesso no banco de dados!"))
-        .catch(err => alert("Erro ao salvar: " + err.message));
+    db.ref().update(updates).then(() => alert("✅ Tudo salvo!")).catch(err => alert("Erro: " + err.message));
 }
 
-function deletarProduto(id) {
-    if(confirm("Excluir permanentemente?")) {
-        db.ref('products/' + id).remove().then(() => carregarProdutos());
-    }
-}
+function deletarProduto(id) { if(confirm("Excluir?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
 
-function sincronizarFotosComStorage() {
-    const dominio = "catalogo-abella-joias.firebasestorage.app";
-    document.querySelectorAll('#tabelaCorpo tr[data-id]').forEach(tr => {
-        const sku = tr.querySelector('.font-mono').innerText.trim();
-        const inputImg = tr.querySelector('.edit-img');
-        if (sku && (inputImg.value === "" || inputImg.value.includes("placeholder"))) {
-            inputImg.value = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.png?alt=media`;
-        }
-    });
-}
-
-// Iniciar carregando as categorias
 carregarCacheCategorias();
 </script>
 </body>
