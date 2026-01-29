@@ -139,31 +139,33 @@
                 const valorPix = precoFinal * (1 - (configEmpresa.descontoPix / 100));
                 const valorParcela = precoFinal / configEmpresa.parcelas;
 
-                grid.innerHTML += `
-                    <div class="card-prod p-4 shadow-sm">
-                        <div class="img-container mb-4 border border-gray-50">
-                            ${porcentagem > 0 ? `<span class="absolute top-2 left-2 z-10 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">-${porcentagem}%</span>` : ''}
-                            <img src="${p.image}" loading="lazy">
-                        </div>
+grid.innerHTML += `
+    <div class="card-prod p-4 shadow-sm border border-gray-100" style="display: flex; flex-direction: column; height: 100%; background: #fff; border-radius: 15px;">
+        
+        <div style="width: 100%; aspect-ratio: 1/1; position: relative; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden; border-radius: 10px; border: 1px solid #f9f9f9; margin-bottom: 1rem;">
+            ${porcentagem > 0 ? `<span style="position: absolute; top: 8px; left: 8px; z-index: 10; background: #dc2626; color: #fff; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 9999px;">-${porcentagem}%</span>` : ''}
+            
+            <img src="${p.image}" style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 10px;">
+        </div>
 
-                        <div class="flex-1">
-                            <div class="text-[9px] text-gray-400 font-bold uppercase">SKU: ${p.sku}</div>
-                            <h3 class="text-[11px] font-bold uppercase mb-1 h-8 overflow-hidden">${p.name}</h3>
-                            <div class="text-[10px] text-gray-500 mb-2 italic">Peso: ${p.weight}g</div>
-                            
-                            <div class="mb-4">
-                                ${porcentagem > 0 ? `<div class="text-[11px] text-gray-400 line-through">${fM(p.price)}</div>` : ''}
-                                <div class="text-base font-bold gold-text">${fM(precoFinal)}</div>
-                                <div class="text-[10px] text-gray-600 font-medium">Ou ${configEmpresa.parcelas}x de ${fM(valorParcela)}</div>
-                                <div class="text-[10px] text-green-600 font-bold uppercase mt-1">PIX: ${fM(valorPix)}</div>
-                            </div>
-                        </div>
+        <div style="flex: 1 1 0%;">
+            <div style="font-size: 9px; color: #9ca3af; font-weight: bold; text-transform: uppercase;">SKU: ${p.sku}</div>
+            <h3 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 0.25rem; height: 2rem; overflow: hidden;">${p.name}</h3>
+            <div style="font-size: 10px; color: #6b7280; margin-bottom: 0.5rem; font-style: italic;">Peso: ${p.weight}g</div>
+            
+            <div style="margin-bottom: 1rem;">
+                ${porcentagem > 0 ? `<div style="font-size: 11px; color: #9ca3af; text-decoration: line-through;">${fM(p.price)}</div>` : ''}
+                <div style="font-size: 1rem; font-weight: bold; color: #A68966;">${fM(precoFinal)}</div>
+                <div style="font-size: 10px; color: #4b5563; font-weight: 500;">Ou ${configEmpresa.parcelas}x de ${fM(valorParcela)}</div>
+                <div style="font-size: 10px; color: #16a34a; font-weight: bold; text-transform: uppercase; margin-top: 0.25rem;">À Vista no PIX: ${fM(valorPix)}</div>
+            </div>
+        </div>
 
-                        <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal, porcentagem}).replace(/'/g, "")})' 
-                            class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase shadow-md active:scale-95 transition">
-                            Adicionar ao Carrinho
-                        </button>
-                    </div>`;
+        <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal, porcentagem}).replace(/'/g, "")})' 
+            style="width: 100%; background: #A68966; color: #fff; padding: 0.75rem 0; border-radius: 0.5rem; font-size: 10px; font-weight: bold; text-transform: uppercase; border: none; cursor: pointer;">
+            Adicionar ao Carrinho
+        </button>
+    </div>`;
             });
         });
     }
