@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Produtos • Abella Joias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0b0b0b; color: #eee; font-family: 'Poppins', sans-serif; }
+        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 6px 10px; border-radius: 6px; width: 100%; font-size: 11px; }
+        .input-dark:focus { border-color: #caa85c; outline: none; }
+        .img-preview { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 4px; }
+        tr:hover { background: #141414; }
+        .sticky-th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8 bg-[#141414] p-6 rounded-xl border border-[#2a2a2a]">
+            <div>
+                <h1 class="text-xl font-bold text-[#caa85c]">Gestor de Estoque</h1>
+                <p class="text-[10px] text-gray-500 uppercase">Abella Joias • Edição em Lote</p>
+            </div>
+            <div class="flex gap-3">
+                <input id="filtro" placeholder="Buscar por SKU..." class="bg-black border border-[#333] px-4 py-2 rounded-lg text-sm text-white outline-none focus:border-[#caa85c]">
+                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-lg text-sm">BUSCAR</button>
+                <button onclick="syncFotos()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-lg text-sm">SYNC FOTOS (.JPG)</button>
+            </div>
+        </header>
+
+        <div class="bg-[#141414] rounded-xl border border-[#2a2a2a] overflow-hidden">
+            <table class="w-full text-left text-[11px]">
+                <thead>
+                    <tr class="text-[#caa85c] uppercase text-[9px] sticky-th">
+                        <th class="p-4">Foto</th>
+                        <th class="p-4">SKU</th>
+                        <th class="p-4">Nome do Produto</th>
+                        <th class="p-4 w-32">Preço (R$)</th>
+                        <th class="p-4">Link da Imagem (.jpg)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaCorpo">
+                    <tr><td colspan="5" class="p-10 text-center text-gray-500">Faça uma busca para carregar os itens.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button onclick="salvarTudo()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-12 py-4 rounded-xl shadow-lg transition-all uppercase text-xs tracking-widest">
+                💾 Salvar Alterações
+            </button>
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    async function carregarProdutos() {
+        const filtro = document.getElementById('filtro').value.toUpperCase();
+        const corpo = document.getElementById('tabelaCorpo');
+        corpo.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-[#caa85c]">Carregando...</td></tr>';
+
+        db.ref('products').once('value', snap => {
+            let html = '';
+            snap.forEach(child => {
+                const p = child.val();
+                if (filtro && !p.sku.toUpperCase().includes(filtro)) return;
+
+                html += `
+                <tr data-id="${child.key}" class="border-b border-[#222]">
+                    <td class="p-2"><img src="${p.image}" class="img-preview row-img"></td>
+                    <td class="p-2 font-bold text-[#caa85c] row-sku">${p.sku}</td>
+                    <td class="p-2"><input class="input-dark edit-name" value="${p.name}"></td>
+                    <td class="p-2"><input class="input-dark edit-price" type="number" step="0.01" value="${p.price}"></td>
+                    <td class="p-2"><input class="input-dark edit-img" value="${p.image}" onchange="atualizarPreview(this)"></td>
+                </tr>`;
+            });
+            corpo.innerHTML = html || '<tr><td colspan="5" class="p-10 text-center text-red-500">Nenhum produto encontrado.</td></tr>';
+        });
+    }
+
+    function atualizarPreview(input) {
+        const tr = input.closest('tr');
+        tr.querySelector('.row-img').src = input.value;
+    }
+
+    function syncFotos() {
+        const dominio = "catalogo-abella-joias.firebasestorage.app";
+        document.querySelectorAll('#tabelaCorpo tr').forEach(tr => {
+            const sku = tr.querySelector('.row-sku').innerText;
+            const inputImg = tr.querySelector('.edit-img');
+            const imgTag = tr.querySelector('.row-img');
+            
+            // Monta o link .jpg padrão do seu Storage
+            const novoLink = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.jpg?alt=media`;
+            
+            inputImg.value = novoLink;
+            imgTag.src = novoLink;
+        });
+        alert("Links gerados! Verifique as imagens na tabela e clique em SALVAR.");
+    }
+
+    function salvarTudo() {
+        const updates = {};
+        document.querySelectorAll('#tabelaCorpo tr').forEach(tr => {
+            const id = tr.dataset.id;
+            if(!id) return;
+            updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
+            updates[`/products/${id}/price`] = parseFloat(tr.querySelector('.edit-price').value) || 0;
+            updates[`/products/${id}/image`] = tr.querySelector('.edit-img').value;
+        });
+
+        db.ref().update(updates).then(() => alert("✅ Alterações gravadas com sucesso!"));
+    }
+</script>
+</body>
+</html>
