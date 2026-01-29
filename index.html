@@ -73,19 +73,31 @@
     </main>
 
 <script>
+    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     firebase.initializeApp({
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
     });
     const db = firebase.database();
-    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
 
     function atualizarContador() {
-        const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        const totalItens = carrinho.reduce((acc, item) => acc + (parseInt(item.quantidade) || 0), 0);
-        const el = document.getElementById('contadorCarrinho');
-        if(el) el.innerText = `(${totalItens})`;
-    }
+    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    
+    // Calcula o valor total (Preço x Quantidade)
+    const valorTotal = carrinho.reduce((acc, item) => {
+        const preco = parseFloat(item.precoFinal) || 0;
+        const qtd = parseInt(item.quantidade) || 0;
+        return acc + (preco * qtd);
+    }, 0);
+
+    // Se quiser testar com os 100 mil que você colocou:
+    // const teste = 100000; 
+    // document.getElementById('contadorCarrinho').innerText = fM(teste);
+
+    // O correto para o funcionamento real:
+    document.getElementById('contadorCarrinho').innerText = fM(valorTotal);
+}
     
     atualizarContador();
 
