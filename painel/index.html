@@ -78,237 +78,135 @@
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
         projectId: "catalogo-abella-joias"
     });
-    const db = firebase.database();
+    const pedidosRef = db.ref('orders');
 
-    /* --- MOTOR UNIFICADO DO MODAL --- */
-    function abrirModal(titulo, corpo, callback) {
-        document.getElementById('modal').classList.replace('hidden', 'flex');
-        document.getElementById('modalTitle').innerText = titulo;
-        document.getElementById('modalBody').innerHTML = corpo;
-        const btnS = document.getElementById('btnSalvar');
-        if (callback) {
-            btnS.style.display = 'block';
-            btnS.onclick = () => { callback(); fecharModal(); };
-        } else {
-            btnS.style.display = 'none';
-        }
-    }
-    function fecharModal() { document.getElementById('modal').classList.replace('flex', 'hidden'); }
+/* LISTAGEM + BUSCA */
+pedidosRef.on('value', s => {
+    const lista = document.getElementById('listaPedidos');
 
-    function showTab(id, btn) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    if (!document.getElementById('inputBusca')) {
+        lista.insertAdjacentHTML('beforebegin', `
+            <input type="text" id="inputBusca"
+            placeholder="🔍 Buscar pedido..."
+            oninput="filtrarPedidos()"
+            class="w-full p-2 mb-3 bg-[#111] border border-[#333] rounded text-xs text-white">
+        `);
     }
 
-    /* --- PEDIDOS (LÓGICA PAINEL 3 + COMPONENTES GEMINI) --- */
-    db.ref('orders').on('value', snap => {
-        const lista = document.getElementById('listaPedidos');
-        lista.innerHTML = '';
-        snap.forEach(o => {
-            const p = o.val();
-            if(p.arquivado) return;
-            lista.innerHTML += `
-                <div class="card flex justify-between items-center border-l-4 border-l-[#caa85c]">
-                    <div onclick="verPedido('${o.key}')" class="cursor-pointer">
-                        <div class="text-[10px] font-bold text-[#caa85c]">ID: #${o.key.substring(0,6).toUpperCase()}</div>
-                        <div class="text-xs font-bold uppercase">${p.cliente}</div>
-                        <div class="text-[9px] opacity-40">${p.data || ''}</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-outline px-3" onclick="verPedido('${o.key}')">ABRIR</button>
-                        <button class="btn btn-red px-2" onclick="arquivarPedido('${o.key}')">✕</button>
-                    </div>
-                </div>`;
-        });
+    lista.innerHTML = '';
+    if (!s.exists()) return;
+
+    s.forEach(o => {
+        const p = o.val();
+        if (p.arquivado) return;
+
+        lista.innerHTML += `
+        <div class="card flex justify-between items-center pedido-card">
+            <div>
+                <div class="text-[#caa85c] font-bold">#${p.numeroPedido || o.key.slice(0,8)}</div>
+                <div class="text-xs">${p.cliente}</div>
+                <div class="text-[11px] opacity-60">R$ ${Number(p.total||0).toFixed(2)}</div>
+            </div>
+            <div class="flex gap-1">
+                <button class="btn btn-gold" onclick="verDetalhesPedido('${o.key}')">Ver</button>
+                <button class="btn" onclick="editarPedido('${o.key}')">Editar</button>
+                <button class="btn bg-orange-600" onclick="arquivarPedido('${o.key}')">📦</button>
+                <button class="btn btn-red" onclick="excluirPedido('${o.key}')">✕</button>
+            </div>
+        </div>`;
     });
+});
 
-    function verPedido(id) {
-        db.ref('orders/'+id).once('value', s => {
-            const p = s.val();
-            let itensHtml = '';
-            Object.values(p.itens || {}).forEach(i => {
-                itensHtml += `<div class="flex justify-between text-[11px] py-1 border-b border-white/5">
-                    <span>${i.qtd}x ${i.nome}</span>
-                    <span>R$ ${(i.preco * i.qtd).toFixed(2)}</span>
-                </div>`;
+/* BUSCA */
+function filtrarPedidos(){
+    const termo = inputBusca.value.toLowerCase();
+    document.querySelectorAll('.pedido-card').forEach(c=>{
+        c.style.display = c.innerText.toLowerCase().includes(termo) ? 'flex' : 'none';
+    });
+}
+
+/* DETALHES + ROMANEIOS */
+function verDetalhesPedido(id){
+    pedidosRef.child(id).once('value').then(s=>{
+        const p = s.val();
+        const e = p.endereco_detalhado || {};
+        let itensHTML = '';
+
+        Object.values(p.itens||{}).forEach(i=>{
+            itensHTML += `
+            <div class="flex justify-between text-xs border-b border-[#222] py-1">
+                <span>${i.qtd}x ${i.nome}</span>
+                <span>R$ ${(i.qtd*i.preco).toFixed(2)}</span>
+            </div>`;
+        });
+
+        abrirModal('Detalhes do Pedido', `
+            <div class="space-y-2 text-xs">
+                <b>Cliente:</b> ${p.cliente}<br>
+                <b>Whats:</b> ${p.whatsapp || '-'}<br>
+                <b>Endereço:</b> ${e.rua||''}, ${e.num||''} - ${e.bairro||''}<br><br>
+
+                ${itensHTML}
+
+                <div class="mt-3 text-right font-bold text-lg text-[#caa85c]">
+                    Total: R$ ${Number(p.total).toFixed(2)}
+                </div>
+
+                <div class="grid gap-2 mt-4">
+                    <button class="btn" onclick="gerarRomaneio('${id}','simples')">📄 Simples</button>
+                    <button class="btn" onclick="gerarRomaneio('${id}','completo')">🖨️ Completo</button>
+                    <button class="btn" onclick="gerarRomaneio('${id}','cliente')">📸 Com Fotos</button>
+                </div>
+            </div>
+        `);
+    });
+}
+
+/* EDITAR */
+function editarPedido(id){
+    pedidosRef.child(id).once('value').then(s=>{
+        const p = s.val();
+        let htmlItens='';
+
+        Object.entries(p.itens||{}).forEach(([k,i])=>{
+            htmlItens+=`
+            <div class="flex justify-between gap-2">
+                <span>${i.nome}</span>
+                <input type="number" value="${i.qtd}"
+                class="w-16 bg-black border border-[#333]"
+                oninput="this.dataset.changed=true"
+                data-id="${k}">
+            </div>`;
+        });
+
+        abrirModal('Editar Pedido', `
+            <input id="editCliente" value="${p.cliente}">
+            <div class="mt-3">${htmlItens}</div>
+        `, ()=>{
+            const novosItens={...p.itens};
+            document.querySelectorAll('[data-changed]').forEach(inp=>{
+                novosItens[inp.dataset.id].qtd = parseInt(inp.value)||1;
             });
-
-            const html = `
-                <div class="space-y-4 text-left">
-                    <div class="bg-white/5 p-3 rounded text-[11px]">
-                        <p class="mb-1"><b>Cliente:</b> ${p.cliente}</p>
-                        <p class="mb-1"><b>WhatsApp:</b> ${p.whatsapp || 'Não informado'}</p>
-                        <p class="mb-1"><b>Pagamento:</b> ${p.pagamento || 'A combinar'}</p>
-                        <p><b>Endereço:</b> ${p.endereco ? `${p.endereco.rua}, ${p.endereco.num} - ${p.endereco.bairro}` : 'Retirada'}</p>
-                    </div>
-                    <div class="max-h-40 overflow-y-auto">${itensHtml}</div>
-                    <div class="flex justify-between items-center border-t border-[#333] pt-3">
-                        <span class="text-[#caa85c] font-bold">TOTAL</span>
-                        <span class="text-xl font-bold text-green-500">R$ ${parseFloat(p.total).toFixed(2)}</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 pt-2">
-                        <button class="btn btn-outline" onclick="gerarRomaneio('${id}', 'cliente')">Romaneio Cliente</button>
-                        <button class="btn btn-outline" onclick="gerarRomaneio('${id}', 'logistica')">Romaneio Interno</button>
-                    </div>
-                </div>`;
-            abrirModal('Detalhes do Pedido', html, null);
-        });
-    }
-
-    /* --- ROMANEIO (RECURSO DO GEMINI) --- */
-    function gerarRomaneio(id, tipo) {
-        db.ref('orders/'+id).once('value', s => {
-            const p = s.val();
-            const win = window.open('','_blank');
-            let html = `<html><head><style>body{font-family:sans-serif;padding:20px} table{width:100%;border-collapse:collapse} td,th{border:1px solid #ddd;padding:8px;text-align:left}</style></head><body>`;
-            html += `<h2>ABELLA JOIAS - ROMANEIO ${tipo.toUpperCase()}</h2>`;
-            html += `<p><b>Cliente:</b> ${p.cliente} | <b>Data:</b> ${p.data}</p>`;
-            html += `<table><tr><th>Qtd</th><th>Produto</th>${tipo==='logistica'?'<th>SKU</th>':''}<th>Subtotal</th></tr>`;
-            Object.values(p.itens || {}).forEach(i => {
-                html += `<tr><td>${i.qtd}</td><td>${i.nome}</td>${tipo==='logistica'?`<td>${i.sku||'--'}</td>`:''}<td>R$ ${(i.preco*i.qtd).toFixed(2)}</td></tr>`;
-            });
-            html += `</table><h3>Total: R$ ${parseFloat(p.total).toFixed(2)}</h3></body></html>`;
-            win.document.write(html);
-            win.document.close();
-            win.print();
-        });
-    }
-
-    /* --- PROMOÇÃO (LÓGICA PAINEL 3) --- */
-    function abrirModalPromocao() {
-        db.ref().once('value', snap => {
-            const data = snap.val();
-            const promo = data.settings?.promocao || { ativa: false, porcentagem: 0 };
-            const cats = data.categories || {};
-            let lista = "";
-            Object.entries(cats).forEach(([id, c]) => {
-                lista += `<div class="flex justify-between items-center p-2 bg-white/5 rounded mb-1 text-[10px]">
-                    <span class="font-bold uppercase">${c.name}</span>
-                    <input type="number" id="promo-${id}" value="${c.discount||0}" class="w-12 text-center">
-                </div>`;
-            });
-            const html = `
-                <div class="space-y-4">
-                    <button onclick="togglePromoStatus()" class="w-full py-2 rounded font-bold text-[10px] ${promo.ativa?'bg-green-600':'bg-red-600'}">
-                        STATUS: ${promo.ativa?'PROMO ATIVA':'PROMO INATIVA'}
-                    </button>
-                    <div><label class="text-[10px] font-bold text-[#caa85c]">DESC. GERAL (%)</label><input type="number" id="pGeral" value="${promo.porcentagem||0}"></div>
-                    <div class="max-h-40 overflow-y-auto border-t border-[#222] pt-2">${lista}</div>
-                </div>`;
-            abrirModal('Gerenciar Promoções', html, () => {
-                const up = {};
-                up['settings/promocao/porcentagem'] = parseInt(document.getElementById('pGeral').value);
-                document.querySelectorAll('[id^="promo-"]').forEach(i => {
-                    up['categories/'+i.id.replace('promo-','')+'/discount'] = parseInt(i.value || 0);
-                });
-                db.ref().update(up).then(() => alert("Sincronizado!"));
-            });
-        });
-    }
-
-    function togglePromoStatus() {
-        db.ref('settings/promocao/ativa').once('value', s => {
-            db.ref('settings/promocao/ativa').set(!s.val()).then(() => abrirModalPromocao());
-        });
-    }
-
-    /* --- PRODUTOS E CATEGORIAS (ESTABILIDADE PAINEL 3) --- */
-    db.ref('products').on('value', snap => {
-        const container = document.getElementById('produtosPorCategoria');
-        container.innerHTML = '';
-        const data = snap.val() || {};
-        const cats = {};
-        Object.entries(data).forEach(([id, p]) => {
-            if(!cats[p.category]) cats[p.category] = [];
-            p.id = id; cats[p.category].push(p);
-        });
-        Object.keys(cats).forEach(cat => {
-            container.innerHTML += `<h3 class="text-[#caa85c] text-[10px] font-bold mt-6 mb-2 uppercase border-l-2 border-[#caa85c] pl-2">${cat}</h3><div class="grid" id="grid-${cat.replace(/\s/g,'')}"></div>`;
-            cats[cat].forEach(p => {
-                document.getElementById(`grid-${cat.replace(/\s/g,'')}`).innerHTML += `
-                    <div class="card">
-                        ${p.discount > 0 ? `<div class="badge-promo">-${p.discount}%</div>` : ''}
-                        <img src="${p.image}" class="w-full h-24 object-contain mb-2">
-                        <div class="text-[9px] opacity-50 font-mono">${p.sku || 'S/SKU'} | ${p.weight || '0'}g</div>
-                        <div class="text-[10px] font-bold truncate">${p.name}</div>
-                        <div class="text-[11px] text-[#caa85c] font-bold">R$ ${parseFloat(p.price).toFixed(2)}</div>
-                        <div class="flex gap-1 mt-2">
-                            <button class="btn flex-1" onclick="editarProduto('${p.id}')">Editar</button>
-                            <button class="btn btn-red px-2" onclick="excluir('products','${p.id}')">✕</button>
-                        </div>
-                    </div>`;
+            pedidosRef.child(id).update({
+                cliente: editCliente.value,
+                itens: novosItens
             });
         });
     });
+}
 
-    function editarProduto(id) {
-        db.ref('products/'+id).once('value', s => {
-            const p = s.val();
-            const html = `
-                <div class="space-y-3">
-                    <input id="eName" value="${p.name}" placeholder="Nome">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input id="ePrice" type="number" step="0.01" value="${p.price}">
-                        <input id="eWeight" value="${p.weight||''}" placeholder="Peso">
-                    </div>
-                    <input id="eSku" value="${p.sku||''}" placeholder="SKU/Ref">
-                    <input id="eImg" value="${p.image}">
-                </div>`;
-            abrirModal('Editar Produto', html, () => {
-                db.ref('products/'+id).update({
-                    name: document.getElementById('eName').value,
-                    price: parseFloat(document.getElementById('ePrice').value),
-                    weight: document.getElementById('eWeight').value,
-                    sku: document.getElementById('eSku').value,
-                    image: document.getElementById('eImg').value
-                });
-            });
-        });
+/* AÇÕES */
+function arquivarPedido(id){
+    if(confirm('Arquivar pedido?')){
+        pedidosRef.child(id).update({ arquivado:true });
     }
+}
 
-    function abrirModalConfig() {
-        db.ref('settings/empresa').once('value', s => {
-            const v = s.val() || {};
-            const html = `
-                <div class="space-y-4">
-                    <input id="cNome" value="${v.nome||''}" placeholder="Nome da Loja">
-                    <input id="cFone" value="${v.fone||''}" placeholder="WhatsApp">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input id="cPix" type="number" value="${v.descontoPix||0}" placeholder="Pix %">
-                        <input id="cMin" type="number" value="${v.minPedido||0}" placeholder="Mínimo R$">
-                    </div>
-                </div>`;
-            abrirModal('Configurações', html, () => {
-                db.ref('settings/empresa').update({
-                    nome: document.getElementById('cNome').value,
-                    fone: document.getElementById('cFone').value,
-                    descontoPix: parseInt(document.getElementById('cPix').value),
-                    minPedido: parseFloat(document.getElementById('cMin').value)
-                });
-            });
-        });
+function excluirPedido(id){
+    if(confirm('Excluir definitivamente?')){
+        pedidosRef.child(id).remove();
     }
-
-    function abrirModalCategoria() {
-        abrirModal('Nova Categoria', '<input id="newCatName" placeholder="Nome">', () => {
-            const n = document.getElementById('newCatName').value;
-            if(n) db.ref('categories').push({ name: n, discount: 0 });
-        });
-    }
-
-    db.ref('categories').on('value', snap => {
-        const g = document.getElementById('listaCategorias');
-        g.innerHTML = '';
-        snap.forEach(c => {
-            g.innerHTML += `<div class="card flex justify-between items-center"><span class="text-xs font-bold uppercase">${c.val().name}</span><button class="text-red-500 text-xs" onclick="excluir('categories','${c.key}')">✕</button></div>`;
-        });
-    });
-
-    function excluir(path, id) { if(confirm("Confirmar exclusão?")) db.ref(path+'/'+id).remove(); }
-    function arquivarPedido(id) { if(confirm("Arquivar pedido?")) db.ref('orders/'+id).update({arquivado:true}); }
-
+}
 </script>
 </body>
 </html>
