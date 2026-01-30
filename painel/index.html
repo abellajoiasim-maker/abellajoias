@@ -1,212 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel VIP • Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <style>
-        body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;padding-bottom:60px}
-        nav button.active{border-color:#caa85c;color:#caa85c;opacity:1;border-bottom-width:2px}
-        nav button{opacity:0.6;transition:0.3s;padding:10px 5px;font-size:10px;text-transform:uppercase;font-weight:bold}
-        section{display:none}
-        section.active{display:block}
-        .card{background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:12px;position:relative}
-        .grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
-        @media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
-        input, select, textarea{background:#1a1a1a;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%;font-size:14px;outline:none}
-        input:focus{border-color:#caa85c}
-        .btn{background:#caa85c;color:#000;font-weight:bold;padding:8px;border-radius:6px;cursor:pointer;text-align:center;display:inline-block;font-size:10px;text-transform:uppercase}
-        .btn-red{background:#ef4444;color:#fff}
-        .btn-outline{border:1px solid #caa85c;color:#caa85c;background:transparent}
-        .badge-promo{position:absolute;top:5px;right:5px;background:#22c55e;color:#fff;font-size:9px;padding:2px 5px;border-radius:4px;font-weight:bold}
-    </style>
+<meta charset="UTF-8">
+<title>Painel VIP • Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;padding-bottom:60px}
+nav button.active{border-color:#caa85c;color:#caa85c;border-bottom:2px solid}
+nav button{opacity:.6;padding:10px 5px;font-size:10px;text-transform:uppercase;font-weight:bold}
+section{display:none}
+section.active{display:block}
+.card{background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:12px}
+.btn{background:#caa85c;color:#000;font-weight:bold;padding:6px 10px;border-radius:6px;font-size:10px}
+.btn-red{background:#ef4444;color:#fff}
+.btn-gold{background:#caa85c;color:#000}
+input{background:#1a1a1a;border:1px solid #333;color:#fff;padding:6px;border-radius:6px;width:100%}
+</style>
 </head>
+
 <body>
 
-<nav class="flex justify-around bg-[#0b0b0b] p-4 border-b border-[#222] sticky top-0 z-50 backdrop-blur-md bg-opacity-90">
+<nav class="flex justify-around p-4 border-b border-[#222] sticky top-0 bg-black">
     <button onclick="showTab('tab-pedidos',this)" class="active">Pedidos</button>
     <button onclick="showTab('tab-produtos',this)">Produtos</button>
     <button onclick="showTab('tab-categorias',this)">Categorias</button>
-    <button onclick="abrirModalConfig()" class="text-[#caa85c]">Config</button>
-    <button onclick="abrirModalPromocao()" class="text-green-500">Promo</button>
+    <button onclick="abrirModalConfig()">Config</button>
+    <button onclick="abrirModalPromocao()">Promo</button>
 </nav>
 
-<main class="p-4 max-w-7xl mx-auto">
-    <section id="tab-pedidos" class="active">
-        <h2 class="text-[#caa85c] font-bold text-xs uppercase mb-4 tracking-widest">Fila de Pedidos</h2>
-        <div id="listaPedidos" class="space-y-3"></div>
-    </section>
-    
-    <section id="tab-produtos">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-[#caa85c] font-bold text-xs uppercase">Catálogo de Bruto</h2>
-            <button class="btn" onclick="abrirModalProduto()">+ Novo Produto</button>
-        </div>
-        <div id="produtosPorCategoria"></div>
-    </section>
+<main class="p-4 max-w-6xl mx-auto">
 
-    <section id="tab-categorias">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-[#caa85c] font-bold text-xs uppercase">Categorias</h2>
-            <button class="btn" onclick="abrirModalCategoria()">+ Nova Categoria</button>
-        </div>
-        <div id="listaCategorias" class="grid"></div>
-    </section>
+<section id="tab-pedidos" class="active">
+    <div id="listaPedidos" class="space-y-3"></div>
+</section>
+
+<section id="tab-produtos"></section>
+<section id="tab-categorias"></section>
+
 </main>
 
-<div id="modal" class="fixed inset-0 bg-black/95 z-[60] hidden items-center justify-center p-4">
-    <div class="bg-[#111] w-full max-w-md rounded-xl border border-[#333] overflow-hidden shadow-2xl">
-        <div class="p-4 border-b border-[#222] flex justify-between items-center">
-            <h2 id="modalTitle" class="text-[#caa85c] font-bold uppercase text-[10px] tracking-widest"></h2>
-            <button onclick="fecharModal()" class="text-gray-500 hover:text-white">✕</button>
-        </div>
-        <div id="modalBody" class="p-5 max-h-[75vh] overflow-y-auto"></div>
-        <div id="modalFooter" class="p-4 bg-[#0b0b0b] border-t border-[#222] flex justify-end gap-3">
-            <button id="btnSalvar" class="btn px-8">Salvar Alterações</button>
-        </div>
+<!-- MODAL -->
+<div id="modal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center p-4 z-50">
+<div class="bg-[#111] w-full max-w-md rounded-xl border border-[#333]">
+    <div class="p-3 border-b border-[#222] flex justify-between">
+        <h2 id="modalTitle" class="text-[#caa85c] text-xs"></h2>
+        <button onclick="fecharModal()">✕</button>
     </div>
+    <div id="modalBody" class="p-4"></div>
+    <div class="p-3 text-right">
+        <button id="btnSalvar" class="btn hidden">Salvar</button>
+    </div>
+</div>
 </div>
 
 <script>
-    // Inicialização do Firebase
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        authDomain: "catalogo-abella-joias.firebaseapp.com",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-        projectId: "catalogo-abella-joias"
-    });
-    const pedidosRef = db.ref('orders');
+/* FIREBASE */
+firebase.initializeApp({
+ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ authDomain: "catalogo-abella-joias.firebaseapp.com",
+ databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId: "catalogo-abella-joias"
+});
+const db = firebase.database();
+const pedidosRef = db.ref('orders');
 
-/* LISTAGEM + BUSCA */
-pedidosRef.on('value', s => {
-    const lista = document.getElementById('listaPedidos');
+/* UTIL */
+const money = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-    if (!document.getElementById('inputBusca')) {
-        lista.insertAdjacentHTML('beforebegin', `
-            <input type="text" id="inputBusca"
-            placeholder="🔍 Buscar pedido..."
-            oninput="filtrarPedidos()"
-            class="w-full p-2 mb-3 bg-[#111] border border-[#333] rounded text-xs text-white">
-        `);
-    }
+/* TABS */
+function showTab(id,btn){
+ document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+}
 
-    lista.innerHTML = '';
-    if (!s.exists()) return;
+/* MODAL */
+let modalCallback=null;
+function abrirModal(t,b,cb){
+ modalTitle.innerHTML=t;
+ modalBody.innerHTML=b;
+ modal.classList.remove('hidden');
+ btnSalvar.classList.toggle('hidden',!cb);
+ modalCallback=cb;
+}
+btnSalvar.onclick=()=>{ modalCallback && modalCallback(); fecharModal(); }
+function fecharModal(){ modal.classList.add('hidden'); }
 
-    s.forEach(o => {
-        const p = o.val();
-        if (p.arquivado) return;
-
-        lista.innerHTML += `
-        <div class="card flex justify-between items-center pedido-card">
-            <div>
-                <div class="text-[#caa85c] font-bold">#${p.numeroPedido || o.key.slice(0,8)}</div>
-                <div class="text-xs">${p.cliente}</div>
-                <div class="text-[11px] opacity-60">R$ ${Number(p.total||0).toFixed(2)}</div>
-            </div>
-            <div class="flex gap-1">
-                <button class="btn btn-gold" onclick="verDetalhesPedido('${o.key}')">Ver</button>
-                <button class="btn" onclick="editarPedido('${o.key}')">Editar</button>
-                <button class="btn bg-orange-600" onclick="arquivarPedido('${o.key}')">📦</button>
-                <button class="btn btn-red" onclick="excluirPedido('${o.key}')">✕</button>
-            </div>
-        </div>`;
-    });
+/* PEDIDOS */
+pedidosRef.on('value',snap=>{
+ listaPedidos.innerHTML='';
+ snap.forEach(o=>{
+   const p=o.val();
+   listaPedidos.innerHTML+=`
+   <div class="card flex justify-between">
+     <div>
+       <b>#${o.key.slice(0,8)}</b><br>${p.cliente}<br>
+       <small>${money(p.total||0)}</small>
+     </div>
+     <div class="flex gap-1">
+       <button class="btn" onclick="verDetalhes('${o.key}')">Ver</button>
+       <button class="btn btn-red" onclick="excluir('${o.key}')">✕</button>
+     </div>
+   </div>`;
+ });
 });
 
-/* BUSCA */
-function filtrarPedidos(){
-    const termo = inputBusca.value.toLowerCase();
-    document.querySelectorAll('.pedido-card').forEach(c=>{
-        c.style.display = c.innerText.toLowerCase().includes(termo) ? 'flex' : 'none';
-    });
+function verDetalhes(id){
+ pedidosRef.child(id).once('value').then(s=>{
+  const p=s.val();
+  abrirModal('Pedido',`
+   <b>${p.cliente}</b><br>
+   Total: ${money(p.total||0)}
+   <div class="mt-3 grid gap-2">
+     <button class="btn">Romaneio Simples</button>
+     <button class="btn">Romaneio Completo</button>
+     <button class="btn">Com Fotos</button>
+   </div>
+  `);
+ });
 }
 
-/* DETALHES + ROMANEIOS */
-function verDetalhesPedido(id){
-    pedidosRef.child(id).once('value').then(s=>{
-        const p = s.val();
-        const e = p.endereco_detalhado || {};
-        let itensHTML = '';
-
-        Object.values(p.itens||{}).forEach(i=>{
-            itensHTML += `
-            <div class="flex justify-between text-xs border-b border-[#222] py-1">
-                <span>${i.qtd}x ${i.nome}</span>
-                <span>R$ ${(i.qtd*i.preco).toFixed(2)}</span>
-            </div>`;
-        });
-
-        abrirModal('Detalhes do Pedido', `
-            <div class="space-y-2 text-xs">
-                <b>Cliente:</b> ${p.cliente}<br>
-                <b>Whats:</b> ${p.whatsapp || '-'}<br>
-                <b>Endereço:</b> ${e.rua||''}, ${e.num||''} - ${e.bairro||''}<br><br>
-
-                ${itensHTML}
-
-                <div class="mt-3 text-right font-bold text-lg text-[#caa85c]">
-                    Total: R$ ${Number(p.total).toFixed(2)}
-                </div>
-
-                <div class="grid gap-2 mt-4">
-                    <button class="btn" onclick="gerarRomaneio('${id}','simples')">📄 Simples</button>
-                    <button class="btn" onclick="gerarRomaneio('${id}','completo')">🖨️ Completo</button>
-                    <button class="btn" onclick="gerarRomaneio('${id}','cliente')">📸 Com Fotos</button>
-                </div>
-            </div>
-        `);
-    });
+function excluir(id){
+ if(confirm('Excluir pedido?')) pedidosRef.child(id).remove();
 }
 
-/* EDITAR */
-function editarPedido(id){
-    pedidosRef.child(id).once('value').then(s=>{
-        const p = s.val();
-        let htmlItens='';
-
-        Object.entries(p.itens||{}).forEach(([k,i])=>{
-            htmlItens+=`
-            <div class="flex justify-between gap-2">
-                <span>${i.nome}</span>
-                <input type="number" value="${i.qtd}"
-                class="w-16 bg-black border border-[#333]"
-                oninput="this.dataset.changed=true"
-                data-id="${k}">
-            </div>`;
-        });
-
-        abrirModal('Editar Pedido', `
-            <input id="editCliente" value="${p.cliente}">
-            <div class="mt-3">${htmlItens}</div>
-        `, ()=>{
-            const novosItens={...p.itens};
-            document.querySelectorAll('[data-changed]').forEach(inp=>{
-                novosItens[inp.dataset.id].qtd = parseInt(inp.value)||1;
-            });
-            pedidosRef.child(id).update({
-                cliente: editCliente.value,
-                itens: novosItens
-            });
-        });
-    });
-}
-
-/* AÇÕES */
-function arquivarPedido(id){
-    if(confirm('Arquivar pedido?')){
-        pedidosRef.child(id).update({ arquivado:true });
-    }
-}
-
-function excluirPedido(id){
-    if(confirm('Excluir definitivamente?')){
-        pedidosRef.child(id).remove();
-    }
-}
+/* PLACEHOLDERS */
+function abrirModalConfig(){abrirModal('Config','Em breve')}
+function abrirModalPromocao(){abrirModal('Promo','Em breve')}
 </script>
+
 </body>
 </html>
