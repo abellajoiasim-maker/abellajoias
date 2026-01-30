@@ -144,8 +144,9 @@
         document.getElementById('totalGeral').innerText = `R$ ${total.toFixed(2)}`;
     }
 
-    function fMoeda(v) {
+   function fMoeda(v) {
     return parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
     
     }
 
@@ -162,7 +163,7 @@
         carregarCarrinho();
     }
 
-    async function finalizarPedido() { // Adicionado async aqui
+   async function finalizarPedido() { // O segredo está neste 'async'
     const nome = document.getElementById('nome').value;
     const contato = document.getElementById('contato').value;
     const formaPagamento = document.querySelector('.btn-pagamento.border-gold')?.innerText;
@@ -172,13 +173,13 @@
         return;
     }
 
-    const totalElement = document.getElementById('total-carrinho');
-    const totalTexto = totalElement ? totalElement.innerText : "R$ 0,00";
+    // Captura o valor exatamente como aparece na tela (já formatado em R$)
+    const totalTexto = document.getElementById('total-carrinho').innerText;
 
     const pedidoDB = {
         cliente: nome,
         whatsapp: contato,
-        total: totalTexto, // Já salva com R$ para o painel ler fácil
+        total: totalTexto, 
         pagamento: formaPagamento,
         data: new Date().toLocaleString('pt-BR'),
         itens: carrinho,
@@ -191,26 +192,25 @@
     };
 
     try {
-        // Envio para o Firebase
+        // Agora o envio vai funcionar
         await db.ref('orders').push(pedidoDB);
 
-        // Mensagem de WhatsApp
+        // Monta a mensagem do WhatsApp
         let msg = `Olá, meu nome é *${nome}*!\n\n`;
-        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
+        msg += `Acabei de fazer um pedido pelo catálogo.\n`;
         msg += `💰 *Total:* ${totalTexto}\n`;
         msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
         msg += `Aguardando seu retorno para finalizar!`;
 
+        // Limpa o carrinho e redireciona
+        localStorage.removeItem('carrinho');
         window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
         
-        localStorage.removeItem('carrinho');
     } catch (e) {
-        console.error(e);
+        console.error("Erro ao salvar no Firebase:", e);
         alert("Erro ao processar pedido. Verifique sua conexão.");
     }
 }
-    // Iniciar a listagem ao abrir a página
-    carregarCarrinho();
 </script>
 
 </body>
