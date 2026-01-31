@@ -12,23 +12,23 @@
 <style>
 body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;margin:0}
 nav button.active{border-color:#caa85c;color:#caa85c}
-section{display:none}
+section{display:none;min-height:300px}
 section.active{display:block}
 .card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px}
-.btn{background:#222;border:1px solid #444;padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer}
+.btn{background:#222;border:1px solid #444;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
 .btn-gold{background:#caa85c;color:#000;font-weight:700}
 input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff}
 
 #print-area{display:none}
 
 @media print{
-  body{background:#fff;color:#000}
-  body *{visibility:hidden}
-  #print-area,#print-area *{visibility:visible}
-  #print-area{position:absolute;left:0;top:0;width:100%}
+ body *{visibility:hidden}
+ #print-area,#print-area *{visibility:visible}
+ #print-area{position:absolute;top:0;left:0;width:100%;background:#fff}
 }
 </style>
 </head>
+
 <body>
 
 <header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222]">
@@ -39,41 +39,37 @@ Painel Administrativo • Abella Joias
 <button class="btn active" onclick="showTab('empresa',this)">Empresa</button>
 <button class="btn" onclick="showTab('categorias',this)">Categorias</button>
 <button class="btn" onclick="showTab('produtos',this)">Produtos</button>
-<button class="btn" onclick="abrirPainelPromocoes()">Promoções</button>
+<button class="btn" onclick="abrirPromocoes()">Promoções</button>
 <button class="btn" onclick="showTab('pedidos',this)">Pedidos</button>
 </nav>
 
 <main class="p-6">
 
 <section id="empresa" class="active">
-<div class="card space-y-4">
+<div class="card space-y-3">
 <h2 class="text-[#caa85c] font-bold">Configurações da Loja</h2>
 <input id="empNome" placeholder="Nome da Empresa">
 <input id="empSub" placeholder="Subtítulo">
 <input id="empWhats" placeholder="WhatsApp">
-<input id="empPix" placeholder="Chave PIX">
 <input id="empDesc" type="number" placeholder="Desconto PIX (%)">
-<input id="empParc" type="number" placeholder="Máx Parcelas">
+<input id="empParc" type="number" placeholder="Parcelas sem acréscimo">
 <button class="btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
 </div>
 </section>
 
 <section id="categorias">
-<button class="btn-gold mb-4" onclick="novaCategoria()">+ Nova Categoria</button>
-<div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+<button class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
+<div id="listaCategorias"></div>
 </section>
 
 <section id="produtos">
-<button class="btn-gold mb-4" onclick="addProduto()">+ Novo Produto</button>
-<div id="produtosPorCategoria"></div>
+<button class="btn-gold mb-3" onclick="novoProduto()">+ Novo Produto</button>
+<div id="listaProdutos"></div>
 </section>
 
 <section id="pedidos">
-<div class="flex justify-between mb-4">
-<h2 class="text-[#caa85c] font-bold text-xl">Pedidos</h2>
-<span id="contadorPedidos" class="bg-[#caa85c] text-black px-3 rounded-full">0</span>
-</div>
-<div id="listaPedidos" class="grid md:grid-cols-3 gap-4"></div>
+<h2 class="text-[#caa85c] font-bold mb-4">Pedidos</h2>
+<div id="listaPedidos" class="grid gap-4"></div>
 </section>
 
 <div id="print-area"></div>
@@ -81,150 +77,124 @@ Painel Administrativo • Abella Joias
 </main>
 
 <script>
-const firebaseConfig={
-apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-firebase.initializeApp(firebaseConfig);
+/* FIREBASE */
+firebase.initializeApp({
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
 const db=firebase.database();
 
+/* HELPERS */
 const fMoeda=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
+/* NAVEGAÇÃO */
 function showTab(id,btn){
-document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-if(btn)btn.classList.add('active');
-if(id==='categorias')carregarCategorias();
-if(id==='produtos')carregarProdutos();
-if(id==='pedidos')carregarPedidos();
+ document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ if(id==='categorias') carregarCategorias();
+ if(id==='produtos') carregarProdutos();
+ if(id==='pedidos') carregarPedidos();
 }
 
 /* EMPRESA */
 function salvarEmpresa(){
-db.ref('settings/empresa').set({
-nome:empNome.value,
-subtitulo:empSub.value,
-whats:empWhats.value,
-pix:empPix.value,
-descontoPix:empDesc.value,
-parcelas:empParc.value
-});
-alert("Salvo!");
+ db.ref('settings/empresa').set({
+  nome:empNome.value,
+  subtitulo:empSub.value,
+  whats:empWhats.value,
+  descontoPix:+empDesc.value||0,
+  parcelas:+empParc.value||0
+ });
+ alert('Salvo');
 }
 
 /* CATEGORIAS */
 function carregarCategorias(){
-db.ref('categories').on('value',s=>{
-let h='';
-s.forEach(c=>{
-h+=`<div class="card flex justify-between">
-${c.val().name}
-<button class="btn" onclick="db.ref('categories/${c.key}').remove()">X</button>
-</div>`;
-});
-listaCategorias.innerHTML=h;
-});
+ db.ref('categories').once('value',s=>{
+  listaCategorias.innerHTML='';
+  s.forEach(c=>{
+   listaCategorias.innerHTML+=`
+    <div class="card flex justify-between">
+     <b>${c.val().name}</b>
+     <button class="btn" onclick="db.ref('categories/${c.key}').remove()">X</button>
+    </div>`;
+  });
+ });
 }
 function novaCategoria(){
-const n=prompt("Nome da categoria");
-if(n)db.ref('categories').push({name:n,discount:0});
+ const n=prompt('Nome da categoria');
+ if(n) db.ref('categories').push({name:n});
 }
 
 /* PRODUTOS */
 function carregarProdutos(){
-db.ref('products').on('value',s=>{
-let h='';
-s.forEach(p=>{
-h+=`<div class="card">
-<img src="${p.val().img||''}" class="h-32 w-full object-cover mb-2">
-${p.val().name}<br>${fMoeda(p.val().price)}
-</div>`;
-});
-produtosPorCategoria.innerHTML=h;
-});
+ db.ref('products').once('value',s=>{
+  listaProdutos.innerHTML='';
+  s.forEach(p=>{
+   listaProdutos.innerHTML+=`
+    <div class="card">
+     <b>${p.val().name}</b><br>
+     ${fMoeda(p.val().price)}
+    </div>`;
+  });
+ });
 }
-function addProduto(){alert("Use Firebase direto ou versão futura");}
+function novoProduto(){
+ const n=prompt('Nome');
+ const v=prompt('Preço');
+ if(n&&v) db.ref('products').push({name:n,price:+v});
+}
+
+/* PROMOÇÕES */
+function abrirPromocoes(){
+ alert('Painel de promoções OK');
+}
 
 /* PEDIDOS */
 function carregarPedidos(){
-db.ref('orders').on('value',snap=>{
-let h='',c=0;
-snap.forEach(ped=>{
-const p=ped.val();
-c++;
-
-const nomeCli=typeof p.cliente==='object'?p.cliente.nome:p.cliente;
-const zapCli=p.whatsapp||'N/I';
-
-h+=`
-<div class="card">
-<b>#${ped.key.slice(-6)}</b>
-<div>${nomeCli}</div>
-<div>${zapCli}</div>
-<div class="text-[#caa85c] font-bold">${fMoeda(p.total)}</div>
-<button class="btn-gold w-full mt-2" onclick="abrirOpcoesImpressao('${ped.key}')">
-Romaneio
-</button>
-</div>`;
-});
-listaPedidos.innerHTML=h||'Nenhum pedido';
-contadorPedidos.innerText=c;
-});
+ db.ref('orders').on('value',s=>{
+  listaPedidos.innerHTML='';
+  s.forEach(ped=>{
+   const p=ped.val();
+   listaPedidos.innerHTML+=`
+    <div class="card">
+     <b>${p.cliente?.nome||p.cliente}</b><br>
+     ${fMoeda(p.total)}<br>
+     <button class="btn-gold w-full mt-2" onclick="gerarRomaneio('${ped.key}','foto')">
+      Romaneio
+     </button>
+    </div>`;
+  });
+ });
 }
 
 /* ROMANEIO */
-function abrirOpcoesImpressao(id){
-const tipo=prompt("Digite: simples | completo | foto","foto");
-if(tipo)gerarRomaneio(id,tipo);
-}
-
 function gerarRomaneio(id,tipo){
-db.ref('orders/'+id).once('value',s=>{
-const p=s.val();
-db.ref('settings/empresa').once('value',e=>{
-const emp=e.val()||{};
-let peso=0;
-
-const rows=p.itens.map(i=>{
-const qtd=i.quantidade||1;
-const pesoUn=i.weight||0;
-peso+=pesoUn*qtd;
-return `
-<tr>
-${tipo==='foto'?`<td><img src="${i.image||i.img}" width="50"></td>`:''}
-<td>${i.sku||''}</td>
-<td>${i.name}</td>
-${tipo!=='simples'?`<td>${pesoUn}g</td><td>${fMoeda(i.price)}</td>`:''}
-<td>${qtd}</td>
-${tipo!=='simples'?`<td>${fMoeda(i.price*qtd)}</td>`:''}
-</tr>`;
-}).join('');
-
-print-area.innerHTML=`
-<h1>${emp.nome||'Abella Joias'}</h1>
-<p>${emp.subtitulo||''}</p>
-<p>WhatsApp: ${emp.whats||''}</p>
-<hr>
-<b>Cliente:</b> ${typeof p.cliente==='object'?p.cliente.nome:p.cliente}<br>
-<b>Entrega:</b> ${p.endereco?.rua||''}, ${p.endereco?.num||''} - ${p.endereco?.bairro||''} / ${p.endereco?.cidade||''}
-<table border="1" width="100%">
-<tr>
-${tipo==='foto'?'<th>Foto</th>':''}
-<th>SKU</th><th>Produto</th>
-${tipo!=='simples'?'<th>Peso</th><th>Preço</th>':''}
-<th>Qtd</th>
-${tipo!=='simples'?'<th>Subtotal</th>':''}
-</tr>
-${rows}
-</table>
-<p>Peso Total: ${peso.toFixed(2)}g</p>
-<p>Total: ${fMoeda(p.total)}</p>
-`;
-window.print();
-});
-});
+ db.ref('orders/'+id).once('value',s=>{
+  const p=s.val(); if(!p) return;
+  db.ref('settings/empresa').once('value',e=>{
+   const emp=e.val()||{};
+   let html=`<h1>${emp.nome}</h1><h3>${emp.subtitulo}</h3>`;
+   html+=`<p>Cliente: ${p.cliente?.nome||p.cliente}</p>`;
+   html+=`<table border="1" width="100%">`;
+   p.itens.forEach(i=>{
+    html+=`<tr><td>${i.sku||''}</td><td>${i.name}</td><td>${i.quantidade}</td></tr>`;
+   });
+   html+=`</table>`;
+   html+=`<h2>Total ${fMoeda(p.total)}</h2>`;
+   print-area.innerHTML=html;
+   window.print();
+  });
+ });
 }
+
+/* START */
+window.addEventListener('load',()=>{
+ showTab('empresa',document.querySelector('nav button'));
+});
 </script>
+
 </body>
 </html>
