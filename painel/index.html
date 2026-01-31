@@ -126,7 +126,6 @@ function showTab(tab, btn){
       box.innerHTML = '<p class="text-center text-gray-500 mt-10">Selecione "Por Categorias" ou "Por Produtos" acima.</p>';
     }
   }
-}
  function removerProduto(id) {
   if (confirm("Excluir este produto?")) {
     db.ref('products/' + id).remove()
