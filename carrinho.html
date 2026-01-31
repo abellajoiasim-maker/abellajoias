@@ -143,30 +143,63 @@ async function finalizarPedido(){
     return;
   }
 
-  await db.ref('orders').push({
-    cliente:{nome:nomeCliente.value,telefone:telefoneCliente.value},
-    whatsapp:telefoneCliente.value,
-    pagamento,
-    itens:carrinho,
-    subtotal:totalNumero,
-    descontos:descontoNumero,
-    pesoTotal:pesoNumero,
-    total:totalNumero-descontoNumero,
-    data:new Date().toLocaleString('pt-BR'),
-    endereco:{
-      nome:nomeEntrega.value,
-      rua:rua.value,
-      num:num.value,
-      bairro:bairro.value,
-      cidade:cidade.value
-    }
-  });
+  async function finalizarPedido() {
+  // 1. Validação de campos obrigatórios [cite: 8]
+  if (!nomeCliente.value || !telefoneCliente.value || !pagamento) {
+    alert('Preencha nome, WhatsApp e forma de pagamento.');
+    return;
+  }
 
-  localStorage.removeItem('carrinho');
+  // 2. Feedback visual (Evita que o cliente clique várias vezes)
+  const btnFinalizar = document.querySelector("footer button");
+  const textoOriginal = btnFinalizar.innerText;
+  btnFinalizar.innerText = "Processando pedido...";
+  btnFinalizar.disabled = true;
 
-  window.location.href=
-    `https://api.whatsapp.com/send?phone=55&text=`+
-    encodeURIComponent(`Olá, meu nome é ${nomeCliente.value}! Acabei de fazer um pedido pelo catálogo.`);
+  try {
+    // 3. Gravação no Firebase com tratamento de promessa 
+    // O uso do await aqui garante que o código só avance se o Firebase confirmar o recebimento
+    await db.ref('orders').push({
+      cliente: { 
+        nome: nomeCliente.value, 
+        telefone: telefoneCliente.value 
+      },
+      whatsapp: telefoneCliente.value,
+      pagamento: pagamento,
+      itens: carrinho,
+      subtotal: totalNumero,
+      descontos: descontoNumero,
+      pesoTotal: pesoNumero,
+      total: totalNumero - descontoNumero,
+      data: new Date().toLocaleString('pt-BR'),
+      endereco: {
+        nome: nomeEntrega.value,
+        rua: rua.value,
+        num: num.value,
+        bairro: bairro.value,
+        cidade: cidade.value
+      }
+    });
+
+    // 4. Limpeza do carrinho após sucesso na gravação 
+    localStorage.removeItem('carrinho');
+
+    // 5. Redirecionamento para o WhatsApp 
+    // Removendo caracteres não numéricos do telefone para garantir o link correto
+    const foneLimpo = telefoneCliente.value.replace(/\D/g, '');
+    const mensagem = encodeURIComponent(`Olá, meu nome é ${nomeCliente.value}! Acabei de fazer um pedido de ${fMoeda(totalNumero - descontoNumero)} pelo catálogo.`);
+    
+    window.location.href = `https://api.whatsapp.com/send?phone=55${foneLimpo}&text=${mensagem}`;
+
+  } catch (error) {
+    // 6. Tratamento de erro de rede ou banco de dados
+    console.error("Erro ao salvar pedido:", error);
+    alert("Houve um erro ao salvar seu pedido. Por favor, tente novamente.");
+    
+    // Restaura o botão para o usuário tentar de novo
+    btnFinalizar.innerText = textoOriginal;
+    btnFinalizar.disabled = false;
+  }
 }
 
 carregarCarrinho();
