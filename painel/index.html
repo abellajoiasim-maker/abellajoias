@@ -26,7 +26,11 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
  #print-area,#print-area *{visibility:visible}
  #print-area{position:absolute;top:0;left:0;width:100%;background:#fff;color:#000;display:block}
 }
+<style>
+  main section { display: none; }
+  main section.active { display: block; }
 </style>
+
 </head>
 
 <body>
@@ -536,9 +540,11 @@ function editarCategoria(id, nomeAtual) {
 
 
 /* ================= INIT ================= */
-window.addEventListener('load',()=>{
- carregarEmpresaSeExistir();
+window.addEventListener('DOMContentLoaded', () => {
+  const firstBtn = document.querySelector('nav button.active');
+  if (firstBtn) firstBtn.click();
 });
+
 </script>
 
 </body>
