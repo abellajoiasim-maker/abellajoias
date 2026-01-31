@@ -103,8 +103,13 @@ const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
 /* NAVEGAÇÃO — VERSÃO ÚNICA (remove duplicidade que travava o menu) */
-function showTab(id, btn) {
-  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+function showTab(tab, btn){
+  document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
+  document.getElementById(tab).classList.remove('hidden');
+
+  document.querySelectorAll('nav .btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
 
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
