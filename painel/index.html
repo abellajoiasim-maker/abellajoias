@@ -245,29 +245,108 @@ function listarPromos(tipo){
  });
 }
 
-/* ================= PEDIDOS ================= */
-function carregarPedidos(){
- const lista=document.getElementById('listaPedidos');
- db.ref('orders').on('value',snap=>{
-  lista.innerHTML='';
-  if(!snap.exists()) return;
-  snap.forEach(ped=>{
-   const p=ped.val(); const id=ped.key;
-   lista.innerHTML+=`
-   <div class="card mb-3 border-l-4 border-[#caa85c]">
-    <div class="flex justify-between">
-     <b>${p.cliente?.nome||p.cliente}</b>
-     <span>${p.pagamento||''}</span>
-    </div>
-    <div class="grid grid-cols-3 gap-1 mt-2">
-     <button onclick="gerarRomaneio('${id}',1)" class="btn text-[9px]">Simples</button>
-     <button onclick="gerarRomaneio('${id}',2)" class="btn text-[9px]">Completo</button>
-     <button onclick="gerarRomaneio('${id}',3)" class="btn text-[9px]">Completo+Foto</button>
-    </div>
-   </div>`;
+/* PEDIDOS - GESTÃO COMPLETA (ROMANEIOS + EDIÇÃO + EXCLUSÃO) */
+let pedidosListenerAtivo = false;
+
+function carregarPedidos() {
+  const listaPedidos = document.getElementById('listaPedidos');
+  if (!listaPedidos) return;
+
+  listaPedidos.innerHTML = '<p class="p-4 text-center text-gray-500">Carregando pedidos...</p>';
+
+  // Evita múltiplos listeners acumulando (causa travamento)
+  if (pedidosListenerAtivo) return;
+  pedidosListenerAtivo = true;
+
+  db.ref('orders').on('value', snapshot => {
+    if (!listaPedidos) return;
+
+    listaPedidos.innerHTML = '';
+    if (!snapshot.exists()) {
+      listaPedidos.innerHTML = '<p class="p-4 text-center text-gray-500">Nenhum pedido encontrado.</p>';
+      return;
+    }
+
+    let pedidosHtml = [];
+
+    snapshot.forEach(ped => {
+      const p = ped.val() || {};
+      const id = ped.key;
+      const nomeCliente = (p.cliente && typeof p.cliente === 'object') ? p.cliente.nome : (p.cliente || 'Cliente s/ nome');
+
+      const html = `
+        <div class="card mb-3 border-l-4 border-[#caa85c]">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <b class="text-[#caa85c] text-sm uppercase">${nomeCliente}</b>
+              <p class="text-[10px] text-gray-400">${p.data || ''}</p>
+            </div>
+            <span class="bg-[#222] px-2 py-1 rounded text-[9px] font-bold uppercase">${p.pagamento || 'N/A'}</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 mt-2 border-t border-[#2a2a2a] pt-2">
+            <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 1)">Simples</button>
+            <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 2)">Completo</button>
+            <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 3)">Com Foto</button>
+          </div>
+
+          <div class="flex gap-2 mt-2">
+            <button class="btn flex-1 text-blue-400 border-blue-900/30 text-[10px] py-1" onclick="abrirEditorPedido('${id}')">✎ AJUSTAR</button>
+            <button class="btn flex-1 text-red-500 border-red-900/30 text-[10px] py-1" onclick="excluirPedido('${id}')">EXCLUIR</button>
+          </div>
+
+          <div class="mt-2 text-right">
+            ${p.ajustadoManualmente ? '<span class="text-[9px] text-green-500 mr-2 font-bold">AJUSTADO</span>' : ''}
+            <b class="text-white text-sm">${fMoeda(p.total || 0)}</b>
+          </div>
+        </div>`;
+
+      pedidosHtml.push(html);
+    });
+
+    listaPedidos.innerHTML = pedidosHtml.reverse().join('');
   });
- });
 }
+
+/* EXCLUIR PEDIDO */
+function excluirPedido(id) {
+  if (!id) return;
+  if (confirm("Deseja realmente apagar este pedido? Esta ação não pode ser desfeita.")) {
+    db.ref('orders/' + id).remove()
+      .then(() => alert("Pedido removido do sistema."))
+      .catch(() => alert("Erro ao excluir."));
+  }
+}
+
+/* EDITAR PEDIDO - AJUSTE MANUAL PARA ATACADO */
+function abrirEditorPedido(id) {
+  if (!id) return;
+
+  db.ref('orders/' + id).once('value', s => {
+    const p = s.val();
+    if (!p) return alert("Pedido não encontrado.");
+
+    const novoTotal = prompt(
+      `Valor Total Atual: ${fMoeda(p.total || 0)}\nInforme o novo valor final para o cliente:`,
+      p.total || 0
+    );
+
+    if (novoTotal === null) return;
+
+    const nota = prompt("Motivo do ajuste ou observação para o romaneio:", p.obs || "");
+
+    db.ref('orders/' + id).update({
+      total: Number(novoTotal) || 0,
+      obs: nota || '',
+      ajustadoManualmente: true
+    }).then(() => {
+      alert("Pedido atualizado!");
+    }).catch(() => {
+      alert("Erro ao atualizar pedido.");
+    });
+  });
+}
+
 
 function gerarRomaneio(id, tipo = 1) {
   db.ref('orders/' + id).once('value', s => {
