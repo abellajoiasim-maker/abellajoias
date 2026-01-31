@@ -384,8 +384,7 @@ function limparPromo(tipo, id) {
   }
 }
 
-/* PEDIDOS - AJUSTE DEFINITIVO */
-/* PEDIDOS - COM 3 TIPOS DE ROMANEIO */
+/* PEDIDOS - GESTÃO COMPLETA (ROMANEIOS + EDIÇÃO + EXCLUSÃO) */
 function carregarPedidos() {
   const listaPedidos = document.getElementById('listaPedidos');
   listaPedidos.innerHTML = '<p class="p-4 text-center text-gray-500">Carregando pedidos...</p>';
@@ -412,18 +411,59 @@ function carregarPedidos() {
             </div>
             <span class="bg-[#222] px-2 py-1 rounded text-[9px] font-bold uppercase">${p.pagamento || 'N/A'}</span>
           </div>
+
           <div class="grid grid-cols-3 gap-1 mt-2 border-t border-[#2a2a2a] pt-2">
             <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 1)">Simples</button>
             <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 2)">Completo</button>
             <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 3)">Com Foto</button>
           </div>
+
+          <div class="flex gap-2 mt-2">
+            <button class="btn flex-1 text-blue-400 border-blue-900/30 text-[10px] py-1" onclick="abrirEditorPedido('${id}')">✎ AJUSTAR</button>
+            <button class="btn flex-1 text-red-500 border-red-900/30 text-[10px] py-1" onclick="excluirPedido('${id}')">EXCLUIR</button>
+          </div>
+
           <div class="mt-2 text-right">
+             ${p.ajustadoManualmente ? '<span class="text-[9px] text-green-500 mr-2 font-bold">AJUSTADO</span>' : ''}
              <b class="text-white text-sm">${fMoeda(p.total)}</b>
           </div>
         </div>`;
       pedidosHtml.push(html);
     });
     listaPedidos.innerHTML = pedidosHtml.reverse().join('');
+  });
+}
+
+ /* EXCLUIR PEDIDO */
+function excluirPedido(id) {
+  if (confirm("Deseja realmente apagar este pedido? Esta ação não pode ser desfeita.")) {
+    db.ref('orders/' + id).remove()
+      .then(() => alert("Pedido removido do sistema."))
+      .catch(e => alert("Erro ao excluir."));
+  }
+}
+
+/* EDITAR PEDIDO - AJUSTE MANUAL PARA ATACADO */
+function abrirEditorPedido(id) {
+  db.ref('orders/' + id).once('value', s => {
+    const p = s.val();
+    if (!p) return;
+
+    // Pergunta o novo valor total (ideal para dar descontos de última hora)
+    const novoTotal = prompt(`Valor Total Atual: ${fMoeda(p.total)}\nInforme o novo valor final para o cliente:`, p.total);
+    
+    // Adiciona uma nota interna (ex: "Desconto por volume de 50 peças")
+    const nota = prompt(`Motivo do ajuste ou observação para o romaneio:`, p.obs || "");
+
+    if (novoTotal !== null && novoTotal !== "") {
+      db.ref('orders/' + id).update({
+        total: Number(novoTotal),
+        obs: nota,
+        ajustadoManualmente: true
+      }).then(() => {
+        alert("Pedido atualizado!");
+      });
+    }
   });
 }
 
@@ -497,20 +537,41 @@ function gerarRomaneio(id, tipo = 1) {
 
   html += `</tbody></table>`;
 
-  if(tipo > 1) {
-    // Converte o peso total do pedido para Kg (ex: 1.25 Kg)
+ if (tipo > 1) {
+    // Cálculo do peso em Kg com 2 casas decimais
     const pesoTotalKg = (Number(p.pesoTotal || 0) / 1000).toFixed(2);
 
     html += `
-     <div class="totais" style="text-align:right; margin-top:15px; font-size:12px;">
-      Subtotal: ${fMoeda(p.subtotal)}<br>
+     <div class="totais" style="text-align:right; margin-top:15px; font-size:12px; line-height: 1.5;">
+      <span>Subtotal: ${fMoeda(p.subtotal)}</span><br>
       <span style="color:#666">Peso Total: ${pesoTotalKg} Kg</span><br>
-      Descontos: - ${fMoeda(p.descontos)}<br>
-      <div style="margin-top:5px; border-top:1px solid #eee; pt-2">
-        <b style="font-size:16px; color:#A68966">TOTAL: ${fMoeda(p.total)}</b>
+      <span style="color:#666">Descontos Aplicados: - ${fMoeda(p.descontos)}</span><br>
+      
+      ${p.ajustadoManualmente ? `
+        <div style="color: #2e7d32; font-style: italic; margin-top: 4px;">
+          ✓ Ajuste de negociação aplicado
+        </div>` : ''}
+      
+      ${p.obs ? `
+        <div style="background: #fdfaf3; border: 1px solid #f0e6d2; padding: 5px; display: inline-block; margin-top: 5px; text-align: left; border-radius: 4px; font-size: 10px; max-width: 250px;">
+          <b>Observação:</b> ${p.obs}
+        </div><br>` : ''}
+
+      <div style="margin-top:8px; border-top:2px solid #A68966; padding-top:8px;">
+        <span style="font-size:10px; color:#666; text-transform:uppercase;">Valor Final a Pagar:</span><br>
+        <b style="font-size:18px; color:#A68966">${fMoeda(p.total)}</b>
       </div>
      </div>`;
   }
+
+  html += `</div>`; // Fecha a div print-body
+  document.getElementById('print-area').innerHTML = html;
+  
+  // Pequeno delay para garantir que as fontes e imagens carreguem antes do print
+  setTimeout(() => { window.print(); }, 500);
+ }
+});
+}
 
   html += `</div>`;
   document.getElementById('print-area').innerHTML = html;
