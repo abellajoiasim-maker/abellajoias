@@ -18,17 +18,14 @@ section.active{display:block}
 .btn{background:#222;border:1px solid #444;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
 .btn-gold{background:#caa85c;color:#000;font-weight:700}
 input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff}
-
 #print-area{display:none}
-
 @media print{
  body *{visibility:hidden}
  #print-area,#print-area *{visibility:visible}
  #print-area{position:absolute;top:0;left:0;width:100%;background:#fff;color:#000;display:block}
 }
-<style>
-  main section { display: none; }
-  main section.active { display: block; }
+main section { display: none; }
+main section.active { display: block; }
 </style>
 
 </head>
@@ -106,13 +103,8 @@ const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
 /* NAVEGAÇÃO — VERSÃO ÚNICA (remove duplicidade que travava o menu) */
-function showTab(tab, btn){
-  document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
-  document.getElementById(tab).classList.remove('hidden');
-
-  document.querySelectorAll('nav .btn').forEach(b => b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-}
+function showTab(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
 
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
@@ -130,6 +122,8 @@ function showTab(tab, btn){
       box.innerHTML = '<p class="text-center text-gray-500 mt-10">Selecione "Por Categorias" ou "Por Produtos" acima.</p>';
     }
   }
+}
+
  function removerProduto(id) {
   if (confirm("Excluir este produto?")) {
     db.ref('products/' + id).remove()
@@ -217,7 +211,8 @@ lista.innerHTML += `
     </div>
     <div id="cat-content-${catId}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#222]"></div>
   </div>`;
-
+ </div>`;
+   
 function toggleCategoria(nomeCat, catId) {
   const content = document.getElementById(`cat-content-${catId}`);
   const seta = document.getElementById(`seta-${catId}`);
