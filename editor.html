@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Editor Full Master • Abella Joias</title>
+    <title>Editor Full Master v2.1 • Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -18,90 +18,50 @@
         .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 12px; }
         .img-preview { width: 45px; height: 45px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #333; }
         .card-gold { background: #141414; border: 1px solid #2a2a2a; border-left: 4px solid #caa85c; }
-        .card-create { background: #141414; border: 2px dashed #333; transition: 0.3s; }
-        .card-create:hover { border-color: #caa85c; }
     </style>
 </head>
 <body class="p-4 md:p-6">
 
     <div class="max-w-[99%] mx-auto">
-        <header class="flex flex-col xl:flex-row justify-between items-center mb-6 gap-6 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a] shadow-xl">
+        <header class="flex flex-col xl:flex-row justify-between items-center mb-6 gap-6 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a]">
             <div>
-                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.0</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold text-center xl:text-left">Gestão de Estoque e Configuração de Checkout</p>
+                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.1</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Gestão Avançada de Variações e Estoque</p>
             </div>
             
             <div class="flex flex-wrap gap-3 w-full xl:w-auto">
                 <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-64 outline-none focus:border-[#caa85c] text-white">
-                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:brightness-110 transition-all">🔍 BUSCAR</button>
-                <button onclick="sincronizarFotosComStorage()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700 transition-all">🔄 SYNC FOTOS</button>
+                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:brightness-110">🔍 BUSCAR</button>
             </div>
         </header>
 
-        <div class="card-gold p-6 rounded-2xl mb-8 shadow-lg">
-            <h2 class="text-[#caa85c] font-bold text-xs uppercase mb-4 tracking-widest flex items-center gap-2">
-                <span>⚙️ Configurações da Promoção (Checkout)</span>
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <label class="text-[9px] text-gray-400 uppercase font-bold">Texto da Promoção (Ex: OFERTA)</label>
-                    <input id="configNomePromo" class="input-dark mt-1" placeholder="Ex: OFERTA, QUEIMA, BLACK">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-400 uppercase font-bold">Desconto Adicional PIX (%)</label>
-                    <input id="configDescontoPix" type="number" class="input-dark mt-1" placeholder="Ex: 5">
-                </div>
-                <div class="flex items-end">
-                    <button onclick="salvarConfigGlobais()" class="w-full bg-green-700 text-white font-black py-2 rounded-xl text-[10px] uppercase hover:bg-green-600 transition-all shadow-md">
-                        ✓ Atualizar Regras de Venda
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-create p-6 rounded-2xl mb-8">
-            <h2 class="text-[#caa85c] font-bold text-xs uppercase mb-4 tracking-widest">✨ Novo Item</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4">
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">SKU</label><input id="newSku" class="input-dark"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Nome</label><input id="newName" class="input-dark"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Categoria</label><select id="newCat" class="input-dark"></select></div>
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Preço Cheio</label><input id="newPrice" type="number" class="input-dark"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Preço Promo</label><input id="newPrecoFinal" type="number" class="input-dark" placeholder="Opcional"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Peso (g)</label><input id="newWeight" class="input-dark"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Variação</label><select id="newVarTipo" class="input-dark"><option value="">Nenhuma</option><option value="Lista">Lista</option><option value="Aro">Aro</option></select></div>
-                <div><label class="text-[9px] text-gray-500 uppercase ml-1">Imagem URL</label><input id="newImg" class="input-dark"></div>
-            </div>
-            <button onclick="criarProduto()" class="w-full bg-[#caa85c] text-black font-black py-3 rounded-xl mt-4 uppercase text-xs hover:brightness-110">+ Adicionar Produto</button>
-        </div>
-
         <div class="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto" style="max-height: 60vh;">
+            <div class="overflow-x-auto" style="max-height: 70vh;">
                 <table class="w-full text-left text-[11px] border-collapse">
                     <thead class="sticky-header">
                         <tr class="text-[#caa85c] uppercase text-[9px] tracking-wider">
                             <th class="w-20">Status</th>
                             <th class="w-16">Foto</th>
-                            <th class="w-28">SKU</th>
-                            <th>Nome</th>
-                            <th class="w-40">Categoria</th>
+                            <th class="w-24">SKU</th>
+                            <th>Nome do Produto</th>
+                            <th class="w-32">Tipo Variação</th>
+                            <th class="w-48">Opções (se Lista)</th>
                             <th class="w-24">P. Cheio</th>
                             <th class="w-24">P. Promo</th>
-                            <th class="w-20">Peso</th>
-                            <th>URL Imagem</th>
                             <th class="w-10"></th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo">
-                        <tr><td colspan="10" class="p-20 text-center text-gray-500 italic">Faça uma busca para gerenciar...</td></tr>
+                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic">Busque um produto para editar as variações...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="mt-6 flex flex-col md:flex-row justify-between items-center bg-[#141414] p-5 rounded-2xl border border-[#2a2a2a] gap-4">
-            <div id="statusInfo" class="text-xs text-gray-400 font-medium italic">Aguardando...</div>
-            <button id="btnSalvar" onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-16 py-4 rounded-xl shadow-lg transition-all uppercase tracking-widest text-sm">
-                💾 Salvar Alterações em Lote
+            <div id="statusInfo" class="text-xs text-gray-400 font-medium italic">Aguardando busca...</div>
+            <button onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-16 py-4 rounded-xl shadow-lg transition-all uppercase tracking-widest text-sm">
+                💾 Salvar Alterações nos Produtos
             </button>
         </div>
     </div>
@@ -114,67 +74,12 @@ const firebaseConfig = {
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let categoriasCache = {};
-
-// Sincronia inicial com configurações da loja
-db.ref('settings/empresa').once('value', s => {
-    const v = s.val();
-    if(v) {
-        document.getElementById('configNomePromo').value = v.nomePromo || "";
-        document.getElementById('configDescontoPix').value = v.descontoPix || 0;
-    }
-});
-
-function salvarConfigGlobais() {
-    const nome = document.getElementById('configNomePromo').value.trim();
-    const desc = document.getElementById('configDescontoPix').value;
-    db.ref('settings/empresa').update({
-        nomePromo: nome,
-        descontoPix: parseFloat(desc) || 0
-    }).then(() => alert("Checkout Sincronizado com Sucesso!"));
-}
-
-async function carregarCacheCategorias() {
-    const snap = await db.ref('categories').once('value');
-    categoriasCache = snap.val() || {};
-    const select = document.getElementById('newCat');
-    let options = '<option value="">Selecione...</option>';
-    Object.entries(categoriasCache).forEach(([id, dados]) => { options += `<option value="${id}">${dados.name}</option>`; });
-    select.innerHTML = options;
-}
-
-function criarProduto() {
-    const sku = document.getElementById('newSku').value.trim();
-    const name = document.getElementById('newName').value.trim();
-    const cat = document.getElementById('newCat').value;
-    const price = document.getElementById('newPrice').value;
-    const precoFinal = document.getElementById('newPrecoFinal').value;
-    const weight = document.getElementById('newWeight').value;
-    const img = document.getElementById('newImg').value;
-    const varTipo = document.getElementById('newVarTipo').value;
-
-    if(!sku || !name || !cat) return alert("SKU, Nome e Categoria são obrigatórios!");
-
-    const pData = { 
-        sku, name, category: cat, 
-        price: parseFloat(price) || 0, 
-        precoFinal: parseFloat(precoFinal) || parseFloat(price) || 0,
-        weight, image: img || "https://via.placeholder.com/400", 
-        variacaoTipo: varTipo, paused: false 
-    };
-
-    db.ref('products').push(pData).then(() => {
-        alert("Produto Adicionado!");
-        carregarProdutos();
-    });
-}
-
 async function carregarProdutos() {
     const filtro = document.getElementById('filtroSku').value.trim().toUpperCase();
     const corpo = document.getElementById('tabelaCorpo');
     if (filtro.length < 1) return alert("Digite algo para buscar.");
 
-    corpo.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-[#caa85c] animate-pulse">Buscando no banco...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse">Lendo banco de dados...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
@@ -186,78 +91,85 @@ async function carregarProdutos() {
 
             if (sku.includes(filtro) || nome.includes(filtro)) {
                 contador++;
-                let catOptions = '';
-                Object.entries(categoriasCache).forEach(([catId, catDados]) => {
-                    catOptions += `<option value="${catId}" ${p.category === catId ? 'selected' : ''}>${catDados.name}</option>`;
-                });
-
+                
                 html += `
                 <tr data-id="${child.key}" class="border-b border-[#222] ${p.paused ? 'is-paused' : ''}">
-                    <td class="p-2"><button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'Pausado' : 'Ativo'}</button></td>
-                    <td class="p-2"><img src="${p.image}" class="img-preview row-img"></td>
-                    <td class="p-2 font-mono text-[#caa85c] font-bold row-sku">${sku}</td>
+                    <td class="p-2">
+                        <button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">
+                            ${p.paused ? 'Pausado' : 'Ativo'}
+                        </button>
+                    </td>
+                    <td class="p-2"><img src="${p.image}" class="img-preview"></td>
+                    <td class="p-2 font-mono text-[#caa85c] font-bold">${sku}</td>
                     <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
-                    <td class="p-1"><select class="input-dark edit-cat">${catOptions}</select></td>
+                    
+                    <td class="p-1">
+                        <select class="input-dark edit-varTipo" onchange="liberarCampoLista(this)">
+                            <option value="" ${!p.variacaoTipo ? 'selected' : ''}>Nenhuma</option>
+                            <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro (Anéis)</option>
+                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista (Iniciais/Dizeres)</option>
+                        </select>
+                    </td>
+
+                    <td class="p-1">
+                        <input class="input-dark edit-opcoes ${p.variacaoTipo === 'Lista' ? '' : 'opacity-20 pointer-events-none'}" 
+                               value="${p.opcoesPersonalizadas || ''}" 
+                               placeholder="A, B, C... ou Fé, Amor...">
+                    </td>
+
                     <td class="p-1"><input class="input-dark edit-price" type="number" step="0.01" value="${p.price || 0}"></td>
                     <td class="p-1"><input class="input-dark edit-precoFinal" type="number" step="0.01" value="${p.precoFinal || p.price || 0}"></td>
-                    <td class="p-1"><input class="input-dark edit-weight" value="${p.weight || 0}"></td>
-                    <td class="p-1"><input class="input-dark edit-img" value="${p.image || ''}" onchange="this.closest('tr').querySelector('.row-img').src=this.value"></td>
-                    <td class="p-1 text-center"><button onclick="deletarProduto('${child.key}')" class="grayscale hover:grayscale-0 transition">🗑️</button></td>
+                    <td class="p-1 text-center">
+                        <button onclick="deletarProduto('${child.key}')" class="opacity-30 hover:opacity-100 transition">🗑️</button>
+                    </td>
                 </tr>`;
             }
         });
-        corpo.innerHTML = html || '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold">Nenhum resultado.</td></tr>';
-        document.getElementById('statusInfo').innerText = `${contador} produtos listados.`;
+        corpo.innerHTML = html || '<tr><td colspan="9" class="p-20 text-center text-red-500 font-bold">Nenhum produto encontrado.</td></tr>';
+        document.getElementById('statusInfo').innerText = `${contador} produtos encontrados.`;
     });
 }
 
-function sincronizarFotosComStorage() {
-    const dominio = "catalogo-abella-joias.firebasestorage.app";
-    const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
-    if(linhas.length === 0) return alert("Busque os produtos primeiro.");
-    linhas.forEach(tr => {
-        const sku = tr.querySelector('.row-sku').innerText.trim();
-        const inputImg = tr.querySelector('.edit-img');
-        const imgPreview = tr.querySelector('.row-img');
-        if (sku) {
-            const novoLink = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.png?alt=media`;
-            inputImg.value = novoLink;
-            imgPreview.src = novoLink;
-        }
-    });
-    alert("Links gerados via SKU. Lembre-se de SALVAR ALTERAÇÕES!");
-}
-
-function toggleStatus(btn) {
-    const tr = btn.closest('tr');
-    const isActive = btn.classList.contains('status-on');
-    btn.className = `btn-status ${isActive ? 'status-off' : 'status-on'}`;
-    btn.innerText = isActive ? 'Pausado' : 'Ativo';
-    tr.classList.toggle('is-paused', isActive);
+// Função visual para habilitar/desabilitar o campo de lista na hora
+function liberarCampoLista(select) {
+    const tr = select.closest('tr');
+    const inputLista = tr.querySelector('.edit-opcoes');
+    if(select.value === 'Lista') {
+        inputLista.classList.remove('opacity-20', 'pointer-events-none');
+    } else {
+        inputLista.classList.add('opacity-20', 'pointer-events-none');
+        inputLista.value = ''; 
+    }
 }
 
 function salvarAlteracoes() {
     const updates = {};
     const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
-    if(linhas.length === 0) return alert("Não há dados para salvar.");
+    if(linhas.length === 0) return alert("Nada para salvar.");
 
     linhas.forEach(tr => {
         const id = tr.dataset.id;
         updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
-        updates[`/products/${id}/category`] = tr.querySelector('.edit-cat').value;
+        updates[`/products/${id}/variacaoTipo`] = tr.querySelector('.edit-varTipo').value;
+        updates[`/products/${id}/opcoesPersonalizadas`] = tr.querySelector('.edit-opcoes').value;
         updates[`/products/${id}/price`] = parseFloat(tr.querySelector('.edit-price').value) || 0;
         updates[`/products/${id}/precoFinal`] = parseFloat(tr.querySelector('.edit-precoFinal').value) || 0;
-        updates[`/products/${id}/weight`] = tr.querySelector('.edit-weight').value;
-        updates[`/products/${id}/image`] = tr.querySelector('.edit-img').value;
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
 
-    db.ref().update(updates).then(() => alert("✅ Banco de Dados Atualizado!")).catch(err => alert("Erro: " + err.message));
+    db.ref().update(updates)
+        .then(() => alert("✅ Sucesso! Variações e preços atualizados."))
+        .catch(err => alert("Erro: " + err.message));
 }
 
-function deletarProduto(id) { if(confirm("Deseja deletar permanentemente este produto?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
+function toggleStatus(btn) {
+    const isActive = btn.classList.contains('status-on');
+    btn.className = `btn-status ${isActive ? 'status-off' : 'status-on'}`;
+    btn.innerText = isActive ? 'Pausado' : 'Ativo';
+    btn.closest('tr').classList.toggle('is-paused', isActive);
+}
 
-carregarCacheCategorias();
+function deletarProduto(id) { if(confirm("Deletar produto?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
 </script>
 </body>
 </html>
