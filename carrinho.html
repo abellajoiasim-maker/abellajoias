@@ -78,11 +78,11 @@
         <div class="grid grid-cols-2 gap-4">
             <div class="pay-btn" onclick="setPagamento('Pix', this)">
                 <span class="block text-white font-bold">PIX</span>
-                <span class="text-[9px] text-green-500 font-bold uppercase">Com Desconto</span>
+                <span class="text-[10px] text-green-500 font-bold uppercase">Com Desconto</span>
             </div>
             <div class="pay-btn" onclick="setPagamento('Cartão', this)">
                 <span class="block text-white font-bold">CARTÃO</span>
-                <span class="text-[9px] text-blue-400 font-bold uppercase">Até 3x s/ Juros</span>
+                <span class="text-[10px] text-blue-400 font-bold uppercase">Até 3x s/ Acréscimo</span>
             </div>
         </div>
     </div>
@@ -96,7 +96,7 @@
             </div>
             <div id="containerDescontos" class="space-y-3 pt-3 border-t border-dashed border-[#333]">
                 <div id="linhaDescontoPromo" class="flex justify-between text-emerald-500 italic text-sm hidden">
-                    <span id="labelPromo">Desconto Promocional</span>
+                    <span id="labelPromo">Desconto</span>
                     <b id="valorDescontoPromo">- R$ 0,00</b>
                 </div>
                 <div id="linhaCondicao" class="flex justify-between text-blue-300 italic text-sm hidden">
@@ -148,7 +148,7 @@ db.ref('settings').on('value', s => {
             configEmpresa.descontoPix = parseFloat(data.empresa.descontoPix) || 0;
             configEmpresa.parcelas = parseInt(data.empresa.parcelas) || 3;
         }
-        let nomePromocaoPainel = (data.promocoes && data.promocoes.nome) || (data.empresa && data.empresa.nomePromo) || "BLACK FRIDAY";
+        let nomePromocaoPainel = (data.promocoes && data.promocoes.nome) || (data.empresa && data.empresa.nomePromo) || "OFERTA";
         configEmpresa.nomePromo = nomePromocaoPainel.toUpperCase();
     }
     carregarCarrinho();
