@@ -80,7 +80,19 @@
             background: #000;
             border-bottom: 1px solid #222;
         }
-    </style>
+
+    /* AJUSTE PARA MOBILE (COLAR AQUI) */
+    @media (max-width: 640px) {
+        .img-container img {
+            padding: 4px !important; /* Faz a imagem da joia ficar maior no celular */
+        }
+        
+        /* Opcional: Ajusta o arredondamento do card no mobile para ganhar espaço */
+        .card-prod {
+            border-radius: 10px !important;
+        }
+    }
+</style>
 </head>
 <body>
 
@@ -162,9 +174,21 @@ function carregarCategorias() {
                 grid.innerHTML += `
                     <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full relative">
                         ${temPromo ? `
-                            <span style="position:absolute; top:10px; right:10px; background:${cnf.colorBg}; color:${cnf.colorText}; font-size:9px; padding:2px 8px; border-radius:4px; z-index:10; font-weight:bold;">
-                                ${cnf.label}
-                            </span>
+    <span style="
+        position: absolute; 
+        top: 6px; 
+        right: 6px; 
+        background: ${cnf.colorBg}; 
+        color: ${cnf.colorText}; 
+        font-size: clamp(7px, 2.5vw, 9px); /* Um pouco menor para categorias */
+        padding: 2px 5px; 
+        border-radius: 4px; 
+        z-index: 10; 
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+        ${cnf.label} ${cat.promoPct}%
+    </span>
+` : ''}
                         ` : ''}
                         <div class="img-container">
                             <img src="${cat.image || ''}" loading="lazy">
