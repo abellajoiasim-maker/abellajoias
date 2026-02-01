@@ -131,10 +131,11 @@ async function finalizarPedido(){
         // Guarda no Firebase com os dados de entrega completos e o peso
         await db.ref('orders').push({
             cliente: nome,
-            whats: document.getElementById('telefoneCliente').value,
-            total: totalF,
+            subtotal: subtotalTexto,
+            total: totalTexto,
             pagamento: pagamento,
-            peso: window.pesoTotalFinal + 'g',
+            descontoPixAplicado: pagamento === 'Pix' ? configEmpresa.descontoPix + '%' : '0%',
+            pesoTotal: window.pesoTotalPedido + 'g',
             itens: carrinho,
             endereco: enderecoDB,
             data: new Date().toLocaleString('pt-BR')
