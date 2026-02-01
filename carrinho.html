@@ -205,7 +205,7 @@ function carregarCarrinho() {
 
     if(economiaPromo > 0) {
         document.getElementById('linhaDescontoPromo').classList.remove('hidden');
-        document.getElementById('labelPromo').innerText = `Desconto Promocional ${configEmpresa.nomePromo} -`;
+        document.getElementById('labelPromo').innerText = `Desconto ${configEmpresa.nomePromo} -`;
         document.getElementById('valorDescontoPromo').innerText = `- ${fM(economiaPromo)}`;
     }
 
