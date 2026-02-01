@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Editor Full Master v2.7 • Abella Joias</title>
+    <title>Editor Full Master v2.8 • Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -11,7 +11,7 @@
         body { background: #0b0b0b; color: #eee; font-family: 'Poppins', sans-serif; }
         .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; width: 100%; font-size: 12px; transition: 0.3s; }
         .input-dark:focus { border-color: #caa85c; outline: none; background: #222; box-shadow: 0 0 8px rgba(202, 168, 92, 0.4); }
-        .edit-name { font-weight: 600; color: #fff; }
+        .edit-sku { color: #caa85c; font-family: monospace; font-weight: bold; text-transform: uppercase; }
         tr.is-paused { opacity: 0.4; background: #2a1010 !important; }
         .btn-status { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 5px 10px; border-radius: 5px; cursor: pointer; width: 60px; text-align: center; }
         .status-on { background: #15803d; color: white; }
@@ -26,15 +26,15 @@
     <div class="max-w-[99%] mx-auto">
         <header class="flex flex-col xl:flex-row justify-between items-center mb-6 gap-6 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a] shadow-xl">
             <div>
-                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.7</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Foco em Nomes e Variações</p>
+                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.8</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Edição Completa: SKU, Nomes e Variações</p>
             </div>
             
             <div class="flex flex-wrap gap-3 w-full xl:w-auto justify-center">
                 <select id="filtroCat" class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm text-white outline-none focus:border-[#caa85c]">
                     <option value="">Todas Categorias</option>
                 </select>
-                <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-64 outline-none focus:border-[#caa85c] text-white">
+                <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="Buscar SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-64 outline-none focus:border-[#caa85c] text-white">
                 <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-8 py-2 rounded-xl text-sm hover:brightness-110">🔍 BUSCAR</button>
             </div>
         </header>
@@ -46,26 +46,26 @@
                         <tr class="text-[#caa85c] uppercase text-[9px] tracking-wider">
                             <th class="w-20 p-4">Status</th>
                             <th class="w-16">Foto</th>
-                            <th class="w-24">SKU</th>
+                            <th class="w-32">SKU (Código)</th>
                             <th class="w-1/4">Nome do Produto</th>
                             <th class="w-32">Categoria</th>
-                            <th class="w-32">Tipo Variação</th>
-                            <th class="w-48">Opções (A, B, C...)</th>
-                            <th class="w-20">R$ Promo</th>
-                            <th class="w-24 text-center">Ação</th>
+                            <th class="w-32">Variação</th>
+                            <th class="w-48">Opções Lista</th>
+                            <th class="w-20">Preço R$</th>
+                            <th class="w-24 text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo">
-                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic text-lg">Digite o SKU ou selecione uma categoria para começar a editar.</td></tr>
+                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic text-lg">Selecione os filtros para editar os produtos.</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="mt-6 flex flex-col md:flex-row justify-between items-center bg-[#141414] p-5 rounded-2xl border border-[#2a2a2a] gap-4">
-            <div id="statusInfo" class="text-sm text-gray-400">Pronto.</div>
+            <div id="statusInfo" class="text-sm text-gray-400">Aguardando...</div>
             <button onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-16 py-4 rounded-xl shadow-lg uppercase tracking-widest text-sm transition-all transform hover:scale-105">
-                💾 Salvar Todas as Mudanças
+                💾 SALVAR TODAS AS ALTERAÇÕES
             </button>
         </div>
     </div>
@@ -95,7 +95,7 @@ async function carregarProdutos() {
     const filtroTexto = document.getElementById('filtroSku').value.trim().toUpperCase();
     const filtroCat = document.getElementById('filtroCat').value;
     const corpo = document.getElementById('tabelaCorpo');
-    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">ABRINDO BANCO DE DADOS...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">CARREGANDO...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
@@ -118,60 +118,47 @@ async function carregarProdutos() {
                     <td class="p-3 text-center">
                         <button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'OFF' : 'ON'}</button>
                     </td>
-                    <td class="p-2">
-                        <img src="${p.image}" class="img-preview">
-                    </td>
-                    <td class="p-2 font-mono text-[#caa85c] font-bold">${sku}</td>
+                    <td class="p-2"><img src="${p.image}" class="img-preview"></td>
                     <td class="p-1">
-                        <input class="input-dark edit-name" value="${p.name || ''}" placeholder="Nome do produto">
+                        <input class="input-dark edit-sku" value="${sku}" placeholder="SKU">
                     </td>
                     <td class="p-1">
-                        <select class="input-dark edit-cat">${catOptions}</select>
+                        <input class="input-dark edit-name" value="${p.name || ''}" placeholder="Nome">
                     </td>
+                    <td class="p-1"><select class="input-dark edit-cat">${catOptions}</select></td>
                     <td class="p-1">
                         <select class="input-dark edit-varTipo" onchange="liberarCampoLista(this)">
                             <option value="" ${!p.variacaoTipo ? 'selected' : ''}>Sem Variação</option>
                             <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro (Anéis)</option>
-                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista (Letras/Nomes)</option>
+                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista (Iniciais)</option>
                         </select>
                     </td>
                     <td class="p-1">
                         <input class="input-dark edit-opcoes ${p.variacaoTipo === 'Lista' ? 'highlight-var' : 'opacity-20 pointer-events-none'}" 
-                        value="${p.opcoesPersonalizadas || ''}" placeholder="Ex: A, B, C, D...">
+                        value="${p.opcoesPersonalizadas || ''}" placeholder="A, B, C...">
                     </td>
                     <td class="p-1">
                         <input class="input-dark edit-precoFinal" type="number" step="0.01" value="${p.precoFinal || p.price || 0}">
                     </td>
-                    <td class="p-1 text-center flex justify-center gap-2 pt-4">
-                         <button onclick="salvarLinhaUnica(this)" class="bg-green-600 p-2 rounded-lg hover:bg-green-500 title="Salvar apenas este">✅</button>
-                         <button onclick="deletarProduto('${child.key}')" class="bg-red-900 p-2 rounded-lg hover:bg-red-700">🗑️</button>
+                    <td class="p-1 text-center">
+                         <div class="flex justify-center gap-2">
+                            <button onclick="salvarLinhaUnica(this)" class="bg-green-600 p-2 rounded-lg hover:bg-green-500" title="Salvar Este">✅</button>
+                            <button onclick="deletarProduto('${child.key}')" class="bg-red-900 p-2 rounded-lg hover:bg-red-700">🗑️</button>
+                         </div>
                     </td>
                 </tr>`;
             }
         });
-        corpo.innerHTML = html || '<tr><td colspan="9" class="p-20 text-center text-red-500 font-bold">Nenhum produto encontrado com esses filtros.</td></tr>';
-        document.getElementById('statusInfo').innerText = `${contador} produtos prontos para edição.`;
+        corpo.innerHTML = html || '<tr><td colspan="9" class="p-20 text-center text-red-500 font-bold">Nenhum produto encontrado.</td></tr>';
+        document.getElementById('statusInfo').innerText = `${contador} produtos listados.`;
     });
-}
-
-function liberarCampoLista(select) {
-    const tr = select.closest('tr');
-    const input = tr.querySelector('.edit-opcoes');
-    if(select.value === 'Lista') {
-        input.classList.remove('opacity-20', 'pointer-events-none');
-        input.classList.add('highlight-var');
-        input.focus();
-    } else {
-        input.classList.add('opacity-20', 'pointer-events-none');
-        input.classList.remove('highlight-var');
-        input.value = '';
-    }
 }
 
 function salvarLinhaUnica(btn) {
     const tr = btn.closest('tr');
     const id = tr.dataset.id;
     const data = {
+        sku: tr.querySelector('.edit-sku').value.toUpperCase(),
         name: tr.querySelector('.edit-name').value,
         category: tr.querySelector('.edit-cat').value,
         variacaoTipo: tr.querySelector('.edit-varTipo').value,
@@ -192,6 +179,7 @@ function salvarAlteracoes() {
     const updates = {};
     document.querySelectorAll('#tabelaCorpo tr[data-id]').forEach(tr => {
         const id = tr.dataset.id;
+        updates[`/products/${id}/sku`] = tr.querySelector('.edit-sku').value.toUpperCase();
         updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
         updates[`/products/${id}/category`] = tr.querySelector('.edit-cat').value;
         updates[`/products/${id}/variacaoTipo`] = tr.querySelector('.edit-varTipo').value;
@@ -199,7 +187,20 @@ function salvarAlteracoes() {
         updates[`/products/${id}/precoFinal`] = parseFloat(tr.querySelector('.edit-precoFinal').value) || 0;
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
-    db.ref().update(updates).then(() => alert("✅ Todos os produtos foram atualizados!")).catch(e => alert(e.message));
+    db.ref().update(updates).then(() => alert("✅ Tudo atualizado!")).catch(e => alert(e.message));
+}
+
+function liberarCampoLista(select) {
+    const tr = select.closest('tr');
+    const input = tr.querySelector('.edit-opcoes');
+    if(select.value === 'Lista') {
+        input.classList.remove('opacity-20', 'pointer-events-none');
+        input.classList.add('highlight-var');
+    } else {
+        input.classList.add('opacity-20', 'pointer-events-none');
+        input.classList.remove('highlight-var');
+        input.value = '';
+    }
 }
 
 function toggleStatus(btn) {
@@ -209,7 +210,7 @@ function toggleStatus(btn) {
     btn.closest('tr').classList.toggle('is-paused', isActive);
 }
 
-function deletarProduto(id) { if(confirm("Excluir definitivamente?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
+function deletarProduto(id) { if(confirm("Excluir?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
 
 carregarCategorias();
 </script>
