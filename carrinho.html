@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <title>Finalizar Pedido • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
     <style>
@@ -16,47 +14,43 @@
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
         .gold-bg { background: #caa85c; }
-        header { background: #000; border-bottom: 1px solid #222; }
         .card { background: #141414; border-radius: 18px; border: 1px solid #2a2a2a; padding: 20px; margin-bottom: 20px; }
-        
-        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; font-size: 14px; transition: 0.3s; }
-        input:focus { border-color: #caa85c !important; }
-
+        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; font-size: 14px; }
         .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; transition: 0.3s; }
         .pay-btn.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.05); }
-
-        .price-anchor-main { text-decoration: line-through; color: #ff4d4d; font-size: 1.4rem; font-weight: bold; margin-bottom: -5px; }
-        .promo-badge-item { font-size: 9px; background: #ff4d4d; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; vertical-align: middle; }
+        .price-anchor-highlight { text-decoration: line-through; color: #ff4d4d; font-size: 1.5rem; font-weight: bold; }
+        .promo-tag { color: #ff4d4d; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+        .btn-remove { color: #ff4d4d; opacity: 0.6; transition: 0.3s; padding: 5px; }
+        .btn-remove:hover { opacity: 1; transform: scale(1.1); }
     </style>
 </head>
-
 <body>
 
-<header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md">
+<header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-[#222]">
     <div class="max-w-xl mx-auto p-4 flex justify-between items-center">
-        <button onclick="history.back()" class="text-[10px] font-bold uppercase gold-text tracking-widest">← Voltar</button>
-        <h1 class="serif gold-text uppercase text-sm tracking-[0.2em]">Finalizar Pedido</h1>
+        <button onclick="history.back()" class="text-[10px] font-bold uppercase gold-text">← Voltar</button>
+        <h1 class="serif gold-text uppercase text-sm tracking-widest">Finalizar Pedido</h1>
     </div>
 </header>
 
 <main class="max-w-xl mx-auto p-4 pb-40">
 
     <div class="card">
-        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest opacity-70">Seus Produtos</h2>
+        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest opacity-70 text-center">Itens no Carrinho</h2>
         <div id="listaItens" class="space-y-4"></div>
 
         <div class="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-[#222]">
-            <div class="bg-[#000] p-3 rounded-xl border border-[#222] text-center">
+            <div class="bg-black p-3 rounded-xl border border-[#222] text-center">
                 <span class="block text-[8px] uppercase text-gray-500 font-bold mb-1">Modelos</span>
-                <b id="totalSkus" class="text-white font-mono">0</b>
+                <b id="totalSkus" class="text-white">0</b>
             </div>
-            <div class="bg-[#000] p-3 rounded-xl border border-[#222] text-center">
+            <div class="bg-black p-3 rounded-xl border border-[#222] text-center">
                 <span class="block text-[8px] uppercase text-gray-500 font-bold mb-1">Peças</span>
-                <b id="totalPecas" class="text-white font-mono">0</b>
+                <b id="totalPecas" class="text-white">0</b>
             </div>
-            <div class="bg-[#000] p-3 rounded-xl border border-[#caa85c]/20 text-center">
+            <div class="bg-black p-3 rounded-xl border border-[#caa85c]/20 text-center">
                 <span class="block text-[8px] uppercase gold-text font-bold mb-1">Peso Total</span>
-                <b id="pesoTotal" class="text-white font-mono text-xs">0,00g</b>
+                <b id="pesoTotal" class="text-white text-xs">0,00g</b>
             </div>
         </div>
     </div>
@@ -71,9 +65,9 @@
         <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">Local de Entrega</h2>
         <input id="nomeEntrega" placeholder="Nome do Destinatário">
         <input id="rua" placeholder="Rua / Avenida">
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-4 gap-2">
             <input id="num" placeholder="Nº">
-            <input id="bairro" placeholder="Bairro" class="col-span-2">
+            <input id="bairro" placeholder="Bairro" class="col-span-3">
         </div>
         <input id="cidade" placeholder="Cidade">
         <input id="cepEntrega" placeholder="CEP">
@@ -84,7 +78,7 @@
         <div class="grid grid-cols-2 gap-4">
             <div class="pay-btn" onclick="setPagamento('Pix', this)">
                 <span class="block text-white font-bold">PIX</span>
-                <span class="text-[9px] text-green-500 font-bold uppercase">Desconto Ativo</span>
+                <span class="text-[9px] text-green-500 font-bold uppercase">Com Desconto</span>
             </div>
             <div class="pay-btn" onclick="setPagamento('Cartão', this)">
                 <span class="block text-white font-bold">CARTÃO</span>
@@ -95,40 +89,35 @@
 
     <div class="card">
         <h2 class="serif gold-text uppercase text-[10px] mb-6 tracking-widest text-center border-b border-[#222] pb-2">Resumo Financeiro</h2>
-        
         <div class="space-y-4">
             <div class="flex justify-between text-gray-500 text-sm">
                 <span>Subtotal Bruto</span>
-                <b id="subtotalTxt" class="text-white font-mono">R$ 0,00</b>
+                <b id="subtotalTxt" class="text-white">R$ 0,00</b>
             </div>
-
             <div id="containerDescontos" class="space-y-3 pt-3 border-t border-dashed border-[#333]">
                 <div id="linhaDescontoPromo" class="flex justify-between text-emerald-500 italic text-sm hidden">
                     <span id="labelPromo">Desconto Promocional</span>
-                    <b id="valorDescontoPromo" class="font-mono">- R$ 0,00</b>
+                    <b id="valorDescontoPromo">- R$ 0,00</b>
                 </div>
-
                 <div id="linhaCondicao" class="flex justify-between text-blue-300 italic text-sm hidden">
-                    <span id="labelCondicao">Condição</span>
-                    <b id="valorCondicao" class="font-mono">R$ 0,00</b>
+                    <span id="labelCondicao">Condição Selecionada</span>
+                    <b id="valorCondicao">R$ 0,00</b>
                 </div>
             </div>
-
             <div class="mt-6 pt-6 border-t-2 border-[#caa85c] flex flex-col items-end">
-                <div id="precoBrutoRiscado" class="price-anchor-main hidden">R$ 0,00</div>
+                <div id="precoBrutoRiscado" class="price-anchor-highlight hidden">R$ 0,00</div>
                 <div class="flex justify-between w-full items-center mt-2">
                     <span class="serif gold-text text-xl">TOTAL A PAGAR</span>
-                    <span id="totalTxt" class="text-3xl font-bold gold-text tracking-tighter">R$ 0,00</span>
+                    <span id="totalTxt" class="text-3xl font-bold gold-text">R$ 0,00</span>
                 </div>
             </div>
         </div>
     </div>
-
 </main>
 
-<footer class="fixed bottom-0 left-0 right-0 p-4 bg-black/95 border-t border-[#222] z-50">
+<footer class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
     <div class="max-w-xl mx-auto">
-        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase tracking-widest shadow-lg active:scale-95 transition">
+        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase tracking-widest active:scale-95 transition shadow-lg">
             Finalizar via WhatsApp
         </button>
     </div>
@@ -142,7 +131,6 @@ if (!firebase.apps.length) {
     });
 }
 const db = firebase.database();
-
 let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
 let pagamento = '';
 let foneLoja = '';
@@ -151,56 +139,47 @@ let configEmpresa = { descontoPix: 0, parcelas: 3, nomePromo: "OFERTA" };
 const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fP = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + 'g';
 
-// Busca configurações globais (inclusive o nome da promoção)
-// Sincronização em tempo real com as configurações da loja
+// BLOCO DE SINCRONIA INTELIGENTE
 db.ref('settings').on('value', s => { 
     const data = s.val();
     if(data) {
-        // Busca os dados básicos da empresa
         if(data.empresa) {
             foneLoja = data.empresa.whats ? data.empresa.whats.replace(/\D/g,'') : '';
             configEmpresa.descontoPix = parseFloat(data.empresa.descontoPix) || 0;
             configEmpresa.parcelas = parseInt(data.empresa.parcelas) || 3;
         }
-        
-        // SINCRONIA DO NOME: Busca no nó 'promocoes' ou no 'empresa/nomePromo'
-        // Se não encontrar nenhum, ele usa "OFERTA" por padrão.
-        let nomePromocaoPainel = "OFERTA";
-        
-        if (data.promocoes && data.promocoes.nome) {
-            nomePromocaoPainel = data.promocoes.nome;
-        } else if (data.empresa && data.empresa.nomePromo) {
-            nomePromocaoPainel = data.empresa.nomePromo;
-        }
-        
+        let nomePromocaoPainel = (data.promocoes && data.promocoes.nome) || (data.empresa && data.empresa.nomePromo) || "OFERTA";
         configEmpresa.nomePromo = nomePromocaoPainel.toUpperCase();
     }
-    // Recarrega o carrinho para aplicar o novo nome e valores instantaneamente
     carregarCarrinho();
 });
+
 function carregarCarrinho() {
     let box = document.getElementById('listaItens');
     box.innerHTML = '';
     let bruto = 0, comPromo = 0, peso = 0, pecas = 0;
 
+    if(carrinho.length === 0) {
+        box.innerHTML = `<p class="text-center text-gray-500 py-10">Seu carrinho está vazio.</p>`;
+    }
+
     carrinho.forEach((item, index) => {
         let q = parseInt(item.quantidade) || 1;
         let pOrig = parseFloat(item.price || item.precoFinal || 0);
         let pProm = parseFloat(item.precoFinal || item.price || 0);
-        
-        bruto += (pOrig * q);
-        comPromo += (pProm * q);
-        pecas += q;
-        
+        bruto += (pOrig * q); comPromo += (pProm * q); pecas += q;
         let pU = item.peso || item.weight || 0;
         if(typeof pU === 'string') pU = parseFloat(pU.replace(',','.')) || 0;
         peso += (pU * q);
 
         box.innerHTML += `
-            <div class="flex items-center gap-4 py-3 border-b border-[#222]">
-                <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg border border-[#333]">
+            <div class="flex items-center gap-3 py-3 border-b border-[#222]">
+                <button onclick="removerItem(${index})" class="btn-remove">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+                <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
                 <div class="flex-1">
-                    <h3 class="text-[11px] font-bold text-white uppercase">${item.name}</h3>
+                    <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
                     <div class="flex items-center gap-2 mt-2">
                         <button onclick="altQtd(${index},-1)" class="w-6 h-6 bg-[#222] border border-[#caa85c] text-[#caa85c] rounded">-</button>
                         <span class="text-xs font-mono">${q}</span>
@@ -208,12 +187,7 @@ function carregarCarrinho() {
                     </div>
                 </div>
                 <div class="text-right">
-                    ${pOrig > pProm ? `
-                        <div class="flex flex-col items-end">
-                            <span class="text-[9px] text-gray-500 uppercase font-bold">${configEmpresa.nomePromo}</span>
-                            <span class="text-gray-600 line-through text-[10px]">${fM(pOrig*q)}</span>
-                        </div>
-                    ` : ''}
+                    ${pOrig > pProm ? `<div class="flex flex-col items-end"><span class="promo-tag">${configEmpresa.nomePromo}</span><span class="text-gray-600 line-through text-[9px]">${fM(pOrig*q)}</span></div>` : ''}
                     <b class="gold-text text-sm">${fM(pProm*q)}</b>
                 </div>
             </div>`;
@@ -226,34 +200,36 @@ function carregarCarrinho() {
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = fP(peso);
-
     document.getElementById('subtotalTxt').innerText = fM(bruto);
     document.getElementById('totalTxt').innerText = fM(valorFinal);
 
-    const linPromo = document.getElementById('linhaDescontoPromo');
-    const linCond = document.getElementById('linhaCondicao');
-    const precoRiscado = document.getElementById('precoBrutoRiscado');
-
     if(economiaPromo > 0) {
-        linPromo.classList.remove('hidden');
+        document.getElementById('linhaDescontoPromo').classList.remove('hidden');
         document.getElementById('labelPromo').innerText = `Desconto Promocional ${configEmpresa.nomePromo} -`;
         document.getElementById('valorDescontoPromo').innerText = `- ${fM(economiaPromo)}`;
     }
 
     if(pagamento !== '') {
-        linCond.classList.remove('hidden');
-        precoRiscado.classList.remove('hidden');
-        precoRiscado.innerText = fM(bruto);
-
+        document.getElementById('linhaCondicao').classList.remove('hidden');
+        document.getElementById('precoBrutoRiscado').classList.remove('hidden');
+        document.getElementById('precoBrutoRiscado').innerText = fM(bruto);
         if(pagamento === 'Pix') {
-            document.getElementById('labelCondicao').innerText = "Bônus Pagamento à Vista (Pix)";
+            document.getElementById('labelCondicao').innerText = "Bônus Pagamento Pix";
             document.getElementById('valorCondicao').innerText = `- ${fM(descPix)}`;
         } else {
-            document.getElementById('labelCondicao').innerText = `Condição de Parcelamento`;
-            document.getElementById('valorCondicao').innerText = `${configEmpresa.parcelas}x de ${fM(valorFinal/configEmpresa.parcelas)}`;
+            document.getElementById('labelCondicao').innerText = `Parcelamento em ${configEmpresa.parcelas}x`;
+            document.getElementById('valorCondicao').innerText = `${fM(valorFinal/configEmpresa.parcelas)} / mês`;
         }
     }
-    window.resumoFinal = { pecas, peso, total: valorFinal, pag: pagamento };
+    window.resumoFinal = { total: valorFinal };
+}
+
+function removerItem(i) {
+    if(confirm("Deseja remover este item do carrinho?")) {
+        carrinho.splice(i, 1);
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        carregarCarrinho();
+    }
 }
 
 function setPagamento(p, el) {
@@ -265,55 +241,20 @@ function setPagamento(p, el) {
 
 function altQtd(i, d) {
     carrinho[i].quantidade = (carrinho[i].quantidade || 1) + d;
-    if(carrinho[i].quantidade < 1) carrinho.splice(i, 1);
+    if(carrinho[i].quantidade < 1) return removerItem(i);
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     carregarCarrinho();
 }
 
 async function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if(!nome || !pagamento) return alert("Por favor, preencha seu Nome e escolha a Forma de Pagamento.");
-
-    // Captura os dados de entrega para salvar no Banco de Dados (Segurança)
-    const entrega = {
-        dest: document.getElementById('nomeEntrega').value || nome,
-        rua: document.getElementById('rua').value || '',
-        num: document.getElementById('num').value || '',
-        bai: document.getElementById('bairro').value || '',
-        cid: document.getElementById('cidade').value || '',
-        cep: document.getElementById('cepEntrega').value || ''
-    };
-
-    try {
-        // Salva o pedido completo no Firebase antes de redirecionar
-        await db.ref('orders').push({
-            cliente: nome,
-            entrega: entrega,
-            total: fM(window.resumoFinal.total),
-            pagamento: pagamento,
-            itens: carrinho,
-            data: new Date().toLocaleString('pt-BR')
-        });
-
-        // Variáveis para a mensagem limpa
-        const totalTexto = fM(window.resumoFinal.total);
-        const formaPagamento = pagamento;
-
-        // Formatação da mensagem conforme solicitado
-        let msg = `Olá, meu nome é *${nome}*!\n\n`;
-        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
-        msg += `💰 *Total:* ${totalTexto}\n`;
-        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
-        msg += `Aguardando seu retorno para finalizar!`;
-
-        // Limpa o carrinho e envia para o WhatsApp
-        localStorage.removeItem('carrinho');
-        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-        
-    } catch(e) { 
-        console.error(e);
-        alert("Ocorreu um erro ao processar seu pedido. Tente novamente."); 
-    }
+    if(!nome || !pagamento) return alert("Preencha Nome e Pagamento.");
+    
+    const totalTexto = fM(window.resumoFinal.total);
+    let msg = `Olá, meu nome é *${nome}*!\n\nAcabei de fazer um pedido pelo catálogo da Abella Joias.\n💰 *Total:* ${totalTexto}\n💳 *Pagamento:* ${pagamento}\n\nAguardando seu retorno para finalizar!`;
+    
+    localStorage.removeItem('carrinho');
+    window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
 }
 </script>
 </body>
