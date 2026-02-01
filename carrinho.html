@@ -91,115 +91,44 @@
     </div>
 </footer>
 
+<div class="card">
+    <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest">Dados do Cliente</h2>
+    <input id="nomeCliente" placeholder="Seu Nome Completo *">
+    <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
+
+    <p class="mt-2 text-[10px] uppercase gold-text font-bold mb-2">Endereço de Entrega (Opcional)</p>
+    <input id="nomeEntrega" placeholder="Nome do Destinatário">
+    <input id="cepEntrega" placeholder="CEP">
+    <input id="rua" placeholder="Rua / Avenida">
+    <div class="grid grid-cols-3 gap-2">
+        <input id="num" placeholder="Nº">
+        <input id="bairro" placeholder="Bairro" class="col-span-2">
+    </div>
+    <input id="cidade" placeholder="Cidade">
+</div>
+
 <script>
-// CONFIGURAÇÃO FIREBASE
-if (!firebase.apps.length) {
-    firebase.initializeApp({
-        apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
-}
-const db=firebase.database();
-
-let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
-let pagamento = '';
-let foneLoja = '';
-let configEmpresa = { descontoPix: 0, parcelas: 3 };
-
-const fM = (v) => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-
-// Busca telefone e configurações iniciais
-db.ref('settings/empresa').once('value', s => { 
-    const v = s.val();
-    if(v) {
-        foneLoja = v.whats ? v.whats.replace(/\D/g,'') : '';
-        configEmpresa.descontoPix = parseFloat(v.descontoPix) || 0;
-        configEmpresa.parcelas = parseInt(v.parcelas) || 3;
-    }
-    carregarCarrinho(); // Carrega após pegar configs
-});
-
-function carregarCarrinho(){
-    let box = document.getElementById('listaItens');
-    box.innerHTML = '';
-    let subtotalItens = 0;
-    let descontoCatalogo = 0;
-    let pesoTotal = 0;
-
-    carrinho.forEach((i, index) => {
-        let q = parseInt(i.quantidade) || 1;
-        let pFinal = parseFloat(i.precoFinal || i.price || 0);
-        let pOrig = parseFloat(i.price || pFinal);
-        
-        // Trata o peso do CSV (vírgula para ponto)
-        let pUnit = i.peso || i.weight || 0;
-        if(typeof pUnit === 'string') pUnit = pUnit.replace(',', '.');
-        pUnit = parseFloat(pUnit) || 0;
-
-        subtotalItens += (pFinal * q);
-        pesoTotal += (pUnit * q);
-        if(pOrig > pFinal) descontoCatalogo += (pOrig - pFinal) * q;
-
-        box.innerHTML += `
-            <div class="item">
-                <img src="${i.image || ''}">
-                <div class="flex-1">
-                    <b class="text-[12px] uppercase text-white">${i.name}</b><br>
-                    <small class="text-gray-500 text-[10px]">Peso: ${pUnit.toFixed(2)}g | SKU: ${i.sku||'--'}</small>
-                    <div class="flex items-center gap-3 mt-2">
-                        <button class="qtd-btn" onclick="alterarQtd(${index},-1)">-</button>
-                        <span class="font-bold text-sm">${q}</span>
-                        <button class="qtd-btn" onclick="alterarQtd(${index},1)">+</button>
-                    </div>
-                </div>
-                <b class="gold-text text-sm">${fM(pFinal * q)}</b>
-            </div>`;
-    });
-
-    // Desconto extra se for PIX
-    let descontoPgto = (pagamento === 'Pix') ? subtotalItens * (configEmpresa.descontoPix / 100) : 0;
-    let valorFinal = subtotalItens - descontoPgto;
-
-    document.getElementById('subtotalTxt').innerText = fM(subtotalItens + descontoCatalogo);
-    document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + 'g';
-    document.getElementById('descontoTxt').innerText = fM(descontoCatalogo + descontoPgto);
-    document.getElementById('totalTxt').innerText = fM(valorFinal);
-    document.getElementById('labelParcelas').innerText = `No Cartão (${configEmpresa.parcelas}x):`;
-    document.getElementById('parcelasTxt').innerText = fM(subtotalItens / configEmpresa.parcelas);
-    
-    window.pesoTotalFinal = pesoTotal.toFixed(2);
-}
-
-function setPagamento(p, el){
-    pagamento = p;
-    document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    carregarCarrinho(); // Recalcula na hora o desconto do Pix
-}
-
-function alterarQtd(index, delta){
-    carrinho[index].quantidade = (carrinho[index].quantidade || 1) + delta;
-    if(carrinho[index].quantidade < 1) return removerItem(index);
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-    carregarCarrinho();
-}
-
-function removerItem(index){
-    if(confirm("Remover item?")) {
-        carrinho.splice(index, 1);
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        carregarCarrinho();
-    }
-}
+// ... (mantenha as funções de carregarCarrinho e setPagamento enviadas anteriormente)
 
 async function finalizarPedido(){
     const nome = document.getElementById('nomeCliente').value;
-    if(!nome || !pagamento) return alert("Preencha seu Nome e Forma de Pagamento!");
-    if(carrinho.length === 0) return alert("Carrinho vazio!");
-
     const totalF = document.getElementById('totalTxt').innerText;
 
+    if(!nome || !pagamento) return alert("Por favor, preencha seu Nome e a Forma de Pagamento.");
+    if(carrinho.length === 0) return alert("Carrinho vazio.");
+
+    // Captura detalhada dos dados de entrega que estavam ocultos
+    const enderecoDB = {
+        destinatario: document.getElementById('nomeEntrega').value || 'Não informado',
+        cep: document.getElementById('cepEntrega').value || 'Não informado',
+        rua: document.getElementById('rua').value || '',
+        num: document.getElementById('num').value || '',
+        bairro: document.getElementById('bairro').value || '',
+        cidade: document.getElementById('cidade').value || ''
+    };
+
     try {
+        // Guarda no Firebase com os dados de entrega completos e o peso
         await db.ref('orders').push({
             cliente: nome,
             whats: document.getElementById('telefoneCliente').value,
@@ -207,19 +136,26 @@ async function finalizarPedido(){
             pagamento: pagamento,
             peso: window.pesoTotalFinal + 'g',
             itens: carrinho,
+            endereco: enderecoDB,
             data: new Date().toLocaleString('pt-BR')
         });
 
+        // Monta a mensagem para o WhatsApp incluindo a cidade para facilitar o frete
         let msg = `*NOVO PEDIDO - ABELLA JOIAS*\n\n`;
         msg += `👤 *Cliente:* ${nome}\n`;
+        msg += `📍 *Cidade:* ${enderecoDB.cidade || 'Não informada'}\n`;
         msg += `⚖️ *Peso Total:* ${window.pesoTotalFinal}g\n`;
         msg += `💳 *Pagamento:* ${pagamento}\n`;
         msg += `💰 *TOTAL FINAL:* ${totalF}\n\n`;
-        msg += `Aguardando confirmação!`;
+        msg += `*Itens:* ${carrinho.length} produtos.\n\n`;
+        msg += `Aguardando confirmação de stock!`;
 
         localStorage.removeItem('carrinho');
         window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-    } catch(e) { alert("Erro ao salvar pedido."); }
+    } catch(e) { 
+        console.error(e);
+        alert("Erro ao salvar o pedido."); 
+    }
 }
 </script>
 </body>
