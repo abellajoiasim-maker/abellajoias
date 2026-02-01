@@ -25,9 +25,8 @@
     .pay-btn.active { border-color: #caa85c; color: #caa85c; background: #1a1610; transform: scale(1.02); }
     input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; font-size: 14px; }
     input:focus { border-color: #caa85c !important; }
-    
-    /* Efeito de preço riscado */
-    .price-old { text-decoration: line-through; color: #666; font-size: 0.9em; }
+    .price-old { text-decoration: line-through; color: #777; font-size: 0.85em; }
+    .promo-highlight { color: #ff4d94; font-weight: 600; } /* Cor para promoções de catálogo */
 </style>
 </head>
 
@@ -99,28 +98,38 @@
         
         <div class="space-y-3 text-sm">
             <div class="flex justify-between text-gray-400 px-1">
-                <span>Subtotal Bruto:</span>
+                <span>Subtotal dos Itens:</span>
                 <b id="subtotalTxt" class="text-white">R$ 0,00</b>
+            </div>
+
+            <div id="blocoPromoCatalogo" class="hidden space-y-2 border-t border-[#222] pt-2">
+                <div class="flex justify-between promo-highlight italic">
+                    <span id="nomePromoCatalogo">Desconto Promocional:</span>
+                    <b id="valorDescontoPromo">- R$ 0,00</b>
+                </div>
+                <div class="flex justify-between text-gray-300 font-medium">
+                    <span>Preço de Catálogo:</span>
+                    <b id="subtotalComPromo">R$ 0,00</b>
+                </div>
             </div>
 
             <div id="infoBeneficios" class="space-y-2 border-t border-[#222] pt-2 hidden">
                 <div id="linhaDescontoPix" class="flex justify-between text-green-500 italic">
-                    <span id="labelDescPix">Desconto Pix:</span>
+                    <span>Bônus Extra (Pix):</span>
                     <b id="valorDescontoPix">- R$ 0,00</b>
                 </div>
                 <div id="linhaParcelas" class="flex justify-between text-blue-400 italic">
-                    <span>Plano:</span>
+                    <span>Parcelamento:</span>
                     <b id="valorParcelas">3x sem juros</b>
                 </div>
             </div>
 
             <div class="flex flex-col items-end mt-4 pt-3 border-t-2 border-[#caa85c]">
-                <span id="precoRiscado" class="price-old hidden">R$ 0,00</span>
+                <span id="precoBrutoRiscado" class="price-old hidden">R$ 0,00</span>
                 <div class="flex justify-between w-full items-center">
-                    <span class="text-xl font-bold gold-text uppercase">Total Final:</span>
+                    <span class="text-xl font-bold gold-text uppercase">Total a Pagar:</span>
                     <span id="totalTxt" class="text-2xl font-bold gold-text">R$ 0,00</span>
                 </div>
-                <small id="avisoPagamento" class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter italic">Selecione a forma de pagamento acima</small>
             </div>
         </div>
     </div>
@@ -165,18 +174,26 @@ db.ref('settings/empresa').once('value', s => {
 function carregarCarrinho(){
     let box = document.getElementById('listaItens');
     box.innerHTML = '';
-    let subtotalItens = 0;
+    let subtotalBrutoSemNada = 0;
+    let subtotalComPromoCatalogo = 0;
     let pesoTotal = 0;
     let somaPecas = 0;
+    let nomePromoDetectado = "Desconto Promocional";
 
     carrinho.forEach((i, index) => {
         let q = parseInt(i.quantidade) || 1;
-        let pFinal = parseFloat(i.precoFinal || i.price || 0);
-        let pUnit = i.peso || i.weight || 0;
-        if(typeof pUnit === 'string') pUnit = parseFloat(pUnit.replace(',', '.')) || 0;
+        let pOriginal = parseFloat(i.price || i.precoFinal || 0);
+        let pFinalCat = parseFloat(i.precoFinal || i.price || 0);
+        
+        // Tenta capturar o nome da categoria ou promoção se existir no item
+        if(i.category && pOriginal > pFinalCat) nomePromoDetectado = "Desconto " + i.category;
 
-        subtotalItens += (pFinal * q);
-        pesoTotal += (pUnit * q);
+        subtotalBrutoSemNada += (pOriginal * q);
+        subtotalComPromoCatalogo += (pFinalCat * q);
+        
+        let pUnitPeso = i.peso || i.weight || 0;
+        if(typeof pUnitPeso === 'string') pUnitPeso = parseFloat(pUnitPeso.replace(',', '.')) || 0;
+        pesoTotal += (pUnitPeso * q);
         somaPecas += q;
 
         box.innerHTML += `
@@ -184,54 +201,63 @@ function carregarCarrinho(){
                 <img src="${i.image || ''}">
                 <div class="flex-1">
                     <b class="text-[12px] uppercase text-white">${i.name}</b><br>
-                    <small class="text-gray-500 text-[10px]">Peso: ${fP(pUnit)}</small>
+                    <small class="text-gray-500 text-[10px]">Peso: ${fP(pUnitPeso)}</small>
                     <div class="flex items-center gap-3 mt-2">
                         <button class="qtd-btn" onclick="alterarQtd(${index},-1)">-</button>
                         <span class="font-bold text-sm">${q}</span>
                         <button class="qtd-btn" onclick="alterarQtd(${index},1)">+</button>
                     </div>
                 </div>
-                <b class="gold-text text-sm">${fM(pFinal * q)}</b>
+                <div class="text-right">
+                    ${pOriginal > pFinalCat ? `<span class="price-old block text-[10px]">${fM(pOriginal * q)}</span>` : ''}
+                    <b class="gold-text text-sm">${fM(pFinalCat * q)}</b>
+                </div>
             </div>`;
     });
 
-    const economiaPix = subtotalItens * (configEmpresa.descontoPix / 100);
-    const valorFinal = (pagamento === 'Pix') ? subtotalItens - economiaPix : subtotalItens;
+    const economiaCatalogo = subtotalBrutoSemNada - subtotalComPromoCatalogo;
+    const economiaPix = (pagamento === 'Pix') ? subtotalComPromoCatalogo * (configEmpresa.descontoPix / 100) : 0;
+    const valorFinalReal = subtotalComPromoCatalogo - economiaPix;
 
-    // Atualiza Contadores
+    // UI Updates
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = somaPecas;
     document.getElementById('pesoTotal').innerText = fP(pesoTotal);
+    document.getElementById('subtotalTxt').innerText = fM(subtotalBrutoSemNada);
+    document.getElementById('totalTxt').innerText = fM(valorFinalReal);
     
-    // Atualiza Financeiro
-    document.getElementById('subtotalTxt').innerText = fM(subtotalItens);
-    document.getElementById('totalTxt').innerText = fM(valorFinal);
+    // Logica de Exibição do Bloco de Promoção de Catálogo
+    const blocoPromo = document.getElementById('blocoPromoCatalogo');
+    const precoRiscadoFinal = document.getElementById('precoBrutoRiscado');
     
-    const infoBef = document.getElementById('infoBeneficios');
-    const linPix = document.getElementById('linhaDescontoPix');
-    const linCard = document.getElementById('linhaParcelas');
-    const priceOld = document.getElementById('precoRiscado');
-    const aviso = document.getElementById('avisoPagamento');
+    if(economiaCatalogo > 0) {
+        blocoPromo.classList.remove('hidden');
+        document.getElementById('nomePromoCatalogo').innerText = nomePromoDetectado + ":";
+        document.getElementById('valorDescontoPromo').innerText = `- ${fM(economiaCatalogo)}`;
+        document.getElementById('subtotalComPromo').innerText = fM(subtotalComPromoCatalogo);
+        precoRiscadoFinal.classList.remove('hidden');
+        precoRiscadoFinal.innerText = fM(subtotalBrutoSemNada);
+    } else {
+        blocoPromo.classList.add('hidden');
+        precoRiscadoFinal.classList.add('hidden');
+    }
 
+    // Lógica de Pagamento
+    const infoPag = document.getElementById('infoBeneficios');
     if(pagamento !== ''){
-        infoBef.classList.remove('hidden');
-        priceOld.classList.remove('hidden');
-        priceOld.innerText = fM(subtotalItens);
-        aviso.classList.add('hidden');
-
+        infoPag.classList.remove('hidden');
         if(pagamento === 'Pix'){
-            linPix.classList.remove('hidden');
-            linCard.classList.add('hidden');
-            document.getElementById('labelDescPix').innerText = `Benefício Pix (${configEmpresa.descontoPix}%):`;
+            document.getElementById('linhaDescontoPix').classList.remove('hidden');
+            document.getElementById('linhaParcelas').classList.add('hidden');
             document.getElementById('valorDescontoPix').innerText = `- ${fM(economiaPix)}`;
         } else {
-            linCard.classList.remove('hidden');
-            linPix.classList.add('hidden');
-            document.getElementById('valorParcelas').innerText = `${configEmpresa.parcelas}x de ${fM(subtotalItens/configEmpresa.parcelas)}`;
+            document.getElementById('linhaParcelas').classList.remove('hidden');
+            document.getElementById('linhaDescontoPix').classList.add('hidden');
+            document.getElementById('valorParcelas').innerText = `${configEmpresa.parcelas}x de ${fM(valorFinalReal/configEmpresa.parcelas)}`;
         }
     }
 
-    window.resumoFinal = { peso: pesoTotal, skus: carrinho.length, pecas: somaPecas, economia: economiaPix, total: valorFinal };
+    window.resumoTotal = { peso: pesoTotal, skus: carrinho.length, pecas: somaPecas, economia: economiaCatalogo + economiaPix, total: valorFinalReal };
 }
 
 function setPagamento(p, el){
@@ -244,7 +270,7 @@ function setPagamento(p, el){
 function alterarQtd(index, delta){
     carrinho[index].quantidade = (carrinho[index].quantidade || 1) + delta;
     if(carrinho[index].quantidade < 1) {
-        if(confirm("Deseja remover este item?")) carrinho.splice(index, 1);
+        if(confirm("Remover item?")) carrinho.splice(index, 1);
         else carrinho[index].quantidade = 1;
     }
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
@@ -253,35 +279,27 @@ function alterarQtd(index, delta){
 
 async function finalizarPedido(){
     const nome = document.getElementById('nomeCliente').value;
-    if(!nome || !pagamento) return alert("Por favor, preencha seu Nome e escolha o Pagamento.");
-
-    const entrega = {
-        cidade: document.getElementById('cidade').value || '',
-        rua: document.getElementById('rua').value || '',
-        num: document.getElementById('num').value || ''
-    };
+    if(!nome || !pagamento) return alert("Preencha Nome e Pagamento.");
 
     try {
         await db.ref('orders').push({
             cliente: nome,
-            total: fM(window.resumoFinal.total),
+            total: fM(window.resumoTotal.total),
             pagamento: pagamento,
-            pesoTotal: fP(window.resumoFinal.peso),
-            quantidadeSkus: window.resumoFinal.skus,
-            quantidadePecas: window.resumoFinal.pecas,
+            pesoTotal: fP(window.resumoTotal.peso),
+            quantidadePecas: window.resumoTotal.pecas,
             itens: carrinho,
             data: new Date().toLocaleString('pt-BR')
         });
 
         let msg = `Olá, meu nome é *${nome}*!\n\n`;
-        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n\n`;
-        msg += `📦 *Volumes:* ${window.resumoFinal.skus} Itens | ${window.resumoFinal.pecas} Peças\n`;
-        msg += `⚖️ *Peso Total:* ${fP(window.resumoFinal.peso)}\n`;
-        msg += `💰 *Total:* ${fM(window.resumoFinal.total)}\n`;
+        msg += `Fiz um pedido na Abella Joias:\n\n`;
+        msg += `📦 *Peças:* ${window.resumoTotal.pecas}\n`;
+        msg += `⚖️ *Peso:* ${fP(window.resumoTotal.peso)}\n`;
+        msg += `💰 *Total:* ${fM(window.resumoTotal.total)}\n`;
         msg += `💳 *Pagamento:* ${pagamento}\n`;
-        if(pagamento === 'Pix') msg += `✨ *Economia Pix:* ${fM(window.resumoFinal.economia)}\n`;
-        if(entrega.cidade) msg += `📍 *Cidade:* ${entrega.cidade}\n`;
-        msg += `\nAguardando seu retorno para finalizar!`;
+        if(window.resumoTotal.economia > 0) msg += `✨ *Economia Total:* ${fM(window.resumoTotal.economia)}\n`;
+        msg += `\nAguardando seu retorno!`;
 
         localStorage.removeItem('carrinho');
         window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
