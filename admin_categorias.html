@@ -12,9 +12,11 @@
         body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; }
         .serif { font-family: 'Cinzel', serif; }
         .gold { color: #caa85c; }
-        input, select, textarea { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; }
+        input, select, textarea { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; outline: none; }
+        input:focus, select:focus { border-color: #caa85c !important; }
         .card-cat { background: #141414; border: 1px solid #222; transition: 0.3s; }
-        #modalEdit { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; overflow-y: auto; }
+        .card-gold { background: #141414; border: 1px solid #2a2a2a; border-left: 4px solid #caa85c; }
+        #modalEdit { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -22,28 +24,49 @@
     <div class="max-w-5xl mx-auto">
         <header class="text-center mb-10">
             <h1 class="serif text-3xl gold uppercase tracking-widest">Painel de Categorias</h1>
-            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] mt-2">Gestão de Itens Personalizados e Iniciais</p>
+            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] mt-2 text-center">Gestão de Itens Personalizados e Iniciais</p>
         </header>
 
+        <div class="card-gold rounded-3xl p-6 mb-8 shadow-2xl">
+            <h2 class="gold font-bold uppercase text-[10px] mb-4 tracking-widest flex items-center gap-2">
+                <span>⚙️ Configurações Ativas no Checkout</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-[9px] text-zinc-500 uppercase font-bold ml-1">Nome da Promoção (Ex: OFERTA)</label>
+                    <input type="text" id="configNomePromo" placeholder="Ex: OFERTA" class="w-full p-3 rounded-xl text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-[9px] text-zinc-500 uppercase font-bold ml-1">Desconto PIX (%)</label>
+                    <input type="number" id="configDescontoPix" placeholder="Ex: 5" class="w-full p-3 rounded-xl text-sm mt-1">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="salvarConfigGlobais()" class="w-full bg-green-700 text-white font-bold py-3 rounded-xl uppercase text-[10px] hover:bg-green-600 transition-all">
+                        Atualizar Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="card-cat rounded-3xl p-6 mb-10 shadow-2xl">
-            <h2 class="gold font-bold uppercase text-xs mb-4 tracking-wider">Criar Nova Categoria (Iniciais ou Dizeres)</h2>
+            <h2 class="gold font-bold uppercase text-xs mb-4 tracking-wider text-center md:text-left">Criar Nova Categoria (Iniciais ou Dizeres)</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="newCatName" placeholder="Nome (Ex: Iniciais A-Z ou Anéis com Dizeres)" class="p-3 rounded-xl text-sm outline-none">
-                <input type="number" id="newCatDisc" placeholder="Desconto %" class="p-3 rounded-xl text-sm outline-none">
+                <input type="text" id="newCatName" placeholder="Nome (Ex: Iniciais A-Z)" class="p-3 rounded-xl text-sm">
+                <input type="number" id="newCatDisc" placeholder="Desconto %" class="p-3 rounded-xl text-sm">
                 
-                <select id="newCatVar" class="p-3 rounded-xl text-sm outline-none" onchange="toggleLista('new')">
+                <select id="newCatVar" class="p-3 rounded-xl text-sm" onchange="toggleLista('new')">
                     <option value="">Sem Variação</option>
                     <option value="Aro">Habilitar Aro (Anéis)</option>
                     <option value="Tamanho">Habilitar Tamanho</option>
                     <option value="Lista">Lista Personalizada (Iniciais/Dizeres)</option>
                 </select>
 
-                <input type="text" id="newCatImg" placeholder="URL da Imagem" class="p-3 rounded-xl text-sm outline-none">
+                <input type="text" id="newCatImg" placeholder="URL da Imagem" class="p-3 rounded-xl text-sm">
             </div>
 
             <div id="boxListaNew" class="hidden mt-4">
                 <label class="text-[10px] text-zinc-500 uppercase font-bold">Digite as Opções (Separe por vírgula):</label>
-                <textarea id="newCatListaOpcoes" placeholder="A, B, C, D... ou Fé, Jesus, Gratidão, Abençoada..." class="w-full p-3 rounded-xl text-sm outline-none mt-1 h-20"></textarea>
+                <textarea id="newCatListaOpcoes" placeholder="A, B, C... ou Fé, Jesus, Gratidão..." class="w-full p-3 rounded-xl text-sm mt-1 h-20"></textarea>
             </div>
 
             <button onclick="salvarNovaCategoria()" class="w-full bg-[#caa85c] text-black font-bold py-3 rounded-xl mt-4 uppercase text-xs hover:opacity-80 transition-all">
@@ -59,18 +82,18 @@
             <h3 class="serif gold text-xl mb-6 text-center uppercase">Editar Categoria</h3>
             <input type="hidden" id="editId">
             <div class="space-y-4">
-                <input type="text" id="editName" class="w-full p-3 rounded-xl text-sm outline-none">
-                <input type="number" id="editDisc" class="w-full p-3 rounded-xl text-sm outline-none">
-                <select id="editVar" class="w-full p-3 rounded-xl text-sm outline-none" onchange="toggleLista('edit')">
+                <input type="text" id="editName" class="w-full p-3 rounded-xl text-sm" placeholder="Nome">
+                <input type="number" id="editDisc" class="w-full p-3 rounded-xl text-sm" placeholder="Desconto %">
+                <select id="editVar" class="w-full p-3 rounded-xl text-sm" onchange="toggleLista('edit')">
                     <option value="">Sem Variação</option>
                     <option value="Aro">Habilitar Aro</option>
                     <option value="Tamanho">Habilitar Tamanho</option>
-                    <option value="Lista">Lista Personalizada (Iniciais/Dizeres)</option>
+                    <option value="Lista">Lista Personalizada</option>
                 </select>
                 <div id="boxListaEdit" class="hidden">
-                    <textarea id="editCatListaOpcoes" class="w-full p-3 rounded-xl text-sm outline-none h-24"></textarea>
+                    <textarea id="editCatListaOpcoes" class="w-full p-3 rounded-xl text-sm h-24" placeholder="Opções separadas por vírgula"></textarea>
                 </div>
-                <input type="text" id="editImg" class="w-full p-3 rounded-xl text-sm outline-none">
+                <input type="text" id="editImg" class="w-full p-3 rounded-xl text-sm" placeholder="URL da Imagem">
             </div>
             <div class="flex gap-2 mt-8">
                 <button onclick="confirmarEdicao()" class="flex-1 bg-[#caa85c] text-black font-bold py-3 rounded-xl uppercase text-[10px]">Salvar</button>
@@ -87,6 +110,25 @@
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // --- LOGICA DE SINCRONIA COM O CHECKOUT ---
+    db.ref('settings/empresa').on('value', s => {
+        const v = s.val();
+        if(v) {
+            document.getElementById('configNomePromo').value = v.nomePromo || "";
+            document.getElementById('configDescontoPix').value = v.descontoPix || 0;
+        }
+    });
+
+    function salvarConfigGlobais() {
+        const nome = document.getElementById('configNomePromo').value.trim();
+        const desc = document.getElementById('configDescontoPix').value;
+        db.ref('settings/empresa').update({
+            nomePromo: nome,
+            descontoPix: parseFloat(desc) || 0
+        }).then(() => alert("Checkout Sincronizado!"));
+    }
+
+    // --- LOGICA DE CATEGORIAS ---
     function toggleLista(tipo) {
         const val = tipo === 'new' ? document.getElementById('newCatVar').value : document.getElementById('editVar').value;
         const box = tipo === 'new' ? document.getElementById('boxListaNew') : document.getElementById('boxListaEdit');
@@ -125,7 +167,7 @@
             image: document.getElementById('newCatImg').value,
             variacaoTipo: document.getElementById('newCatVar').value,
             opcoesPersonalizadas: document.getElementById('newCatListaOpcoes').value
-        }).then(() => { alert("Categoria salva!"); location.reload(); });
+        }).then(() => { alert("Categoria salva!"); document.getElementById('newCatName').value=''; });
     }
 
     function abrirModal(id, nome, desc, img, vTipo, lista) {
