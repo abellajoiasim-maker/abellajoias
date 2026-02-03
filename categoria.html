@@ -65,6 +65,7 @@
 <div id="modalQtd" class="modal">
     <div class="modal-content">
         <h3 class="serif gold-text text-lg mb-1" id="modalNomeProd">Produto</h3>
+        <img id="modalImgProd" class="w-32 h-32 object-cover rounded-xl mx-auto mb-4 border border-[#333]">
         <p class="text-[10px] text-gray-500 uppercase mb-4" id="instrucaoModal">Escolha as quantidades</p>
         
         <div id="containerOpcoes">
@@ -128,7 +129,7 @@ async function carregarProdutos() {
             const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem / 100) : p.price;
             const valorPix = precoFinal * (1 - (v.descontoPix / 100));
             const valorParcela = precoFinal / (v.parcelas || 3);
-            const pesoExibicao = parseFloat(p.peso || 0).toFixed(2);
+            const pesoExibicao = p.peso || p.weight ? parseFloat(p.peso || p.weight).toFixed(2) : null;
 
             grid.innerHTML += `
                 <div class="card-prod p-4 flex flex-col h-full">
@@ -139,7 +140,8 @@ async function carregarProdutos() {
                     <div class="flex-1">
                         <div class="text-[9px] text-gray-500 font-bold uppercase">SKU: ${p.sku || '---'}</div>
                         <h3 class="text-[11px] font-bold uppercase mb-1 leading-tight h-8 overflow-hidden">${p.name}</h3>
-                        <div class="text-[10px] text-gray-400 mb-3 italic">Peso Médio: ${pesoExibicao}g</div>
+                        ${pesoExibicao ? `<div class="text-[10px] text-gray-400 mb-3 italic">Peso Médio: ${pesoExibicao}g</div>` : ''}
+                        
                         <div class="mb-4">
                             ${porcentagem > 0 ? `<div class="text-[10px] text-gray-500 line-through">${fM(p.price)}</div>` : ''}
                             <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
@@ -158,7 +160,8 @@ async function carregarProdutos() {
 function prepararAdd(p) {
     produtoAtualParaAdd = p;
     document.getElementById('modalNomeProd').innerText = p.name;
-    const container = document.getElementById('containerOpcoes');
+    document.getElementById('modalImgProd').src = p.image || 'https://via.placeholder.com/300';
+        const container = document.getElementById('containerOpcoes');
     container.innerHTML = '';
 
     if (p.variacaoTipo === 'Lista' && p.opcoesPersonalizadas) {
