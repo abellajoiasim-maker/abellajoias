@@ -499,31 +499,48 @@ function novaCategoria() {
 
 
 /* GESTÃO DE PEDIDOS E EDITOR */
-
 let pedidoEditando = null;
+
+// ✅ FUNÇÃO DE EXCLUIR (FICA FORA DE QUALQUER OUTRA)
+function excluirPedido(id) {
+  if (!confirm("Tem certeza que deseja excluir este pedido?")) return;
+
+  db.ref('orders/' + id).remove()
+    .then(() => alert("Pedido excluído com sucesso!"))
+    .catch(err => alert("Erro ao excluir: " + err.message));
+}
 
 function carregarPedidos() {
 
   db.ref('orders').on('value', s => {
 
     const lista = document.getElementById('listaPedidos');
-
     lista.innerHTML = '';
 
     s.forEach(ped => {
-
       const p = ped.val();
 
       lista.innerHTML += `
+        <div class="card border-l-4 border-[#caa85c]">
+          
+          <div class="flex justify-between items-center">
+            <div>
+              <b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente}</b><br>
+              <small>${p.data || ''}</small>
+            </div>
+            <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">
+              EDITAR / ROMANEIO
+            </button>
+          </div>
 
-        <div class="card border-l-4 border-[#caa85c] flex justify-between items-center">
-
-          <div><b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente}</b><br><small>${p.data || ''}</small></div>
-
-          <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
+          <div style="margin-top:10px;text-align:right;">
+            <button onclick="excluirPedido('${ped.key}')" 
+              style="background:#7f1d1d;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-size:11px;">
+              🗑 Excluir Pedido
+            </button>
+          </div>
 
         </div>`;
-
     });
 
   });
