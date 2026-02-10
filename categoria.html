@@ -17,7 +17,7 @@
         header { background: #000; border-bottom: 1px solid #222; }
         .btn-nav { border: 1px solid #caa85c; color: #caa85c; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; text-transform: uppercase; }
         .btn-nav:hover { background: #caa85c; color: #000; }
-        .card-prod { background:#141414; border-radius:15px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; height:100%; overflow:hidden; position: relative; }
+        .card-prod { background:#141414; border-radius:15px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; height:100%; overflow:hidden; position: relative; cursor: pointer; /* Indica que o quadro todo é clicável */ }
         .card-prod:hover { border-color: #caa85c; transform: translateY(-3px); }
         .img-container { width:100%; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; background:#1a1a1a; overflow:hidden; position:relative; }
         .img-container img { width:100%; height:100%; object-fit:cover; }
@@ -65,7 +65,7 @@
 <div id="modalQtd" class="modal">
     <div class="modal-content">
         <h3 class="serif gold-text text-lg mb-1" id="modalNomeProd">Produto</h3>
-        <img id="modalImgProd" class="w-32 h-32 object-cover rounded-xl mx-auto mb-4 border border-[#333]">
+        <img id="modalImgProd" class="w-full max-w-[250px] aspect-square object-cover rounded-xl mx-auto mb-4 border border-[#333] shadow-lg">
         <p class="text-[10px] text-gray-500 uppercase mb-4" id="instrucaoModal">Escolha as quantidades</p>
         
         <div id="containerOpcoes">
@@ -128,11 +128,13 @@ async function carregarProdutos() {
             const porcentagem = categoria.promoPct || p.promoPct || 0;
             const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem / 100) : p.price;
             const valorPix = precoFinal * (1 - (v.descontoPix / 100));
-            const valorParcela = precoFinal / (v.parcelas || 3);
             const pesoExibicao = p.peso || p.weight ? parseFloat(p.peso || p.weight).toFixed(2) : null;
 
+            // Criamos o objeto do produto para passar no clique
+            const prodData = JSON.stringify({ ...p, key: s.key, precoFinal }).replace(/'/g,"&apos;");
+
             grid.innerHTML += `
-                <div class="card-prod p-4 flex flex-col h-full">
+                <div class="card-prod p-4 flex flex-col h-full" onclick='prepararAdd(${prodData})'>
                     <div class="img-container mb-4 rounded-xl relative">
                       ${cnf.ativa && porcentagem > 0 ? `<span style="position: absolute; top: 6px; left: 6px; background: ${cnf.colorBg}; color: ${cnf.colorText}; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 10;">${cnf.label}</span>` : ''}
                         <img src="${p.image || 'https://via.placeholder.com/400'}" loading="lazy">
@@ -148,8 +150,7 @@ async function carregarProdutos() {
                             <div class="text-[11px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
                         </div>
                     </div>
-                    <button onclick='prepararAdd(${JSON.stringify({ ...p, key: s.key, precoFinal }).replace(/'/g,"&apos;")})'
-                        class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase hover:opacity-80">
+                    <button class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase hover:opacity-80">
                         Adicionar
                     </button>
                 </div>`;
