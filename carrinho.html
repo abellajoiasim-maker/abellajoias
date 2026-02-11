@@ -22,6 +22,9 @@
         .promo-tag { color: #ff4d4d; font-weight: bold; font-size: 10px; text-transform: uppercase; }
         .btn-remove { color: #ff4d4d; opacity: 0.6; transition: 0.3s; padding: 5px; }
         .btn-remove:hover { opacity: 1; transform: scale(1.1); }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body>
@@ -181,9 +184,15 @@ box.innerHTML += `
         <div class="flex-1">
             <h3 class="text-[10px] font-bold text-white uppercase leading-tight">${item.name}</h3>
             
-            <div class="flex items-center gap-3 mt-2">
+            <div class="flex items-center gap-2 mt-2">
                 <button onclick="altQtd(${index},-1)" class="w-8 h-8 flex items-center justify-center bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg active:bg-[#caa85c] active:text-black transition-colors">-</button>
-                <span class="text-sm font-bold w-4 text-center">${q}</span>
+                
+                <input type="number" 
+                       value="${q}" 
+                       min="1" 
+                       onchange="digitarQtd(${index}, this.value)"
+                       class="w-12 h-8 text-center bg-black border border-[#333] text-white text-xs rounded-lg focus:border-[#caa85c] !mb-0 !p-0 outline-none">
+                
                 <button onclick="altQtd(${index},1)" class="w-8 h-8 flex items-center justify-center bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg active:bg-[#caa85c] active:text-black transition-colors">+</button>
             </div>
         </div>
@@ -191,9 +200,9 @@ box.innerHTML += `
             ${pOrig > pProm ? `<div class="flex flex-col items-end"><span class="promo-tag">${configEmpresa.nomePromo}</span><span class="text-gray-600 line-through text-[9px]">${fM(pOrig*q)}</span></div>` : ''}
             <b class="gold-text text-sm">${fM(pProm*q)}</b>
         </div>
-    </div>`;
-    });
+      </div>`;
 
+    });
     const economiaPromo = bruto - comPromo;
     const descPix = (pagamento === 'Pix') ? comPromo * (configEmpresa.descontoPix / 100) : 0;
     const valorFinal = comPromo - descPix;
@@ -241,19 +250,33 @@ function setPagamento(p, el) {
 }
 
 function altQtd(i, d) {
-    // Garante que a quantidade atual existe e adiciona a diferença (1 ou -1)
-    let novaQtd = (parseInt(carrinho[i].quantidade) || 1) + d;
+    // Pega a quantidade atual, soma a diferença (d) e garante que seja número
+    let atual = parseInt(carrinho[i].quantidade) || 1;
+    let novaQtd = atual + d;
     
-    // Se a quantidade for menor que 1, pergunta se quer remover
+    // Se a quantidade for menor que 1, chama a remoção
     if (novaQtd < 1) {
         removerItem(i);
     } else {
         carrinho[i].quantidade = novaQtd;
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        carregarCarrinho(); // Recarrega a tela com os novos valores
+        carregarCarrinho();
     }
 }
 
+// NOVA FUNÇÃO: Necessária para processar o valor quando o usuário digita no campo
+function digitarQtd(i, valor) {
+    let novaQtd = parseInt(valor);
+    
+    // Validação: se não for número ou for menor que 1, volta para 1
+    if (isNaN(novaQtd) || novaQtd < 1) {
+        novaQtd = 1;
+    }
+    
+    carrinho[i].quantidade = novaQtd;
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    carregarCarrinho();
+}
 async function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
     const telefone = document.getElementById('telefoneCliente').value;
