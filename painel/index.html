@@ -211,14 +211,16 @@ function abrirEditorPedido(id) {
     db.ref('orders/' + id).once('value', s => {
         const p = s.val(); if (!p) return;
         pedidoEditando = id;
-        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
-        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
-        document.getElementById('edRua').value = p.entrega?.rua || '';
-        document.getElementById('edNum').value = p.entrega?.num || '';
-        document.getElementById('edBairro').value = p.entrega?.bairro || '';
-        document.getElementById('edCidade').value = p.entrega?.cidade || '';
         
-        // Carregar Valores Financeiros
+        // Dados do Cliente e Endereço
+        document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || p.whatsapp || '';
+        document.getElementById('edRua').value = p.entrega?.rua || p.endereco?.rua || '';
+        document.getElementById('edNum').value = p.entrega?.num || p.endereco?.num || '';
+        document.getElementById('edBairro').value = p.entrega?.bairro || p.endereco?.bairro || '';
+        document.getElementById('edCidade').value = p.entrega?.cidade || p.endereco?.cidade || '';
+        
+        // --- AJUSTE AQUI: Carrega os descontos e frete salvos para ficarem visíveis ---
         document.getElementById('edDescPromo').value = p.descontoPromo || 0;
         document.getElementById('edDescPix').value = p.descontoPix || 0;
         document.getElementById('edValorFrete').value = p.entrega?.valorFrete || p.valorFrete || 0;
@@ -226,9 +228,9 @@ function abrirEditorPedido(id) {
         document.getElementById('edItens').innerHTML = '';
         const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
         itens.forEach(i => addItemEditor(i));
+        
         document.getElementById('editorPedido').classList.remove('hidden');
     });
-}
 
 function addItemEditor(i = {}) {
     const div = document.createElement('div');
@@ -250,7 +252,7 @@ function fecharEditorPedido() { document.getElementById('editorPedido').classLis
 
 function salvarPedidoEditado() {
     const itens = []; 
-    let subtotal = 0, pesoTotal = 0;
+    let subtotalItens = 0, pesoTotal = 0;
 
     document.querySelectorAll('#edItens .card').forEach(c => {
         const ins = c.querySelectorAll('input');
@@ -261,14 +263,16 @@ function salvarPedidoEditado() {
             price: Number(ins[3].value) || 0,
             quantidade: Number(ins[4].value) || 1
         };
-        subtotal += (i.price * i.quantidade);
+        subtotalItens += (i.price * i.quantidade);
         pesoTotal += (i.peso * i.quantidade);
         itens.push(i);
     });
 
+    // Captura os valores dos inputs que você editou na tela
     const dp = Number(document.getElementById('edDescPromo').value) || 0;
     const dx = Number(document.getElementById('edDescPix').value) || 0;
     const vf = Number(document.getElementById('edValorFrete').value) || 0;
+    const novoTotal = subtotalItens - dp - dx + vf;
 
     db.ref('orders/' + pedidoEditando).update({
         cliente: { 
@@ -282,29 +286,34 @@ function salvarPedidoEditado() {
             cidade: document.getElementById('edCidade').value,
             valorFrete: vf
         },
-        itens,
+        itens: itens,
         pesoTotal: Number(pesoTotal.toFixed(2)),
         descontoPromo: dp,
         descontoPix: dx,
-        total: Number((subtotal - dp - dx + vf).toFixed(2)),
+        total: Number(novoTotal.toFixed(2)),
         ajustadoManualmente: true
     }).then(() => { 
-        alert("Pedido Salvo!"); 
+        alert("Pedido atualizado com sucesso!"); 
         fecharEditorPedido(); 
     });
 }
 
 /* FUNÇÃO ROMANEIO COMPLETA E CORRIGIDA */
 function gerarRomaneio(id, tipo = 1) {
+    // Função interna para formatar peso: g para kg se > 1000
     const fmtPeso = (g) => {
         const p = Number(g || 0);
-        return p >= 1000 ? `${(p/1000).toFixed(3).replace('.',',')} kg` : `${p.toFixed(2).replace('.',',')} g`;
+        return p >= 1000 ? `${(p / 1000).toFixed(3).replace('.', ',')} kg` : `${p.toFixed(2).replace('.', ',')} g`;
     };
 
+    // Busca os dados do pedido no Firebase
     db.ref('orders/' + id).once('value', s => {
         const p = s.val(); if (!p) return;
+        
+        // Busca os dados da empresa (nome, whats, etc)
         db.ref('settings/empresa').once('value', e => {
             const emp = e.val() || {};
+            
             let html = `<style>
                 .print-body { font-family: Arial, sans-serif; color:#000; padding:20px; font-size:11px; }
                 .lux-head { text-align:center; border-bottom:2px solid #A68966; padding-bottom:10px; margin-bottom:15px; }
@@ -315,29 +324,41 @@ function gerarRomaneio(id, tipo = 1) {
                 table td { border-bottom:1px solid #ddd; padding:4px; }
                 .totais-box { text-align:right; margin-top:15px; font-size:11px; border-top:1px solid #000; padding-top:10px; }
                 .img-mini { width:45px; height:45px; object-fit:cover; border-radius:4px; }
+                .linha-financeira { display: flex; justify-content: flex-end; gap: 15px; margin-bottom: 2px; }
             </style>
             <div class="print-body">
-                <div class="lux-head"><h1>${emp.nome || 'Abella Joias'}</h1><p>${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p></div>
+                <div class="lux-head">
+                    <h1>${emp.nome || 'Abella Joias'}</h1>
+                    <p>${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p>
+                </div>
                 <div class="grid-dados">
-                    <div><b>CLIENTE:</b> ${p.cliente?.nome || ''}<br>WhatsApp: ${p.cliente?.telefone || ''}</div>
+                    <div><b>CLIENTE:</b> ${p.cliente?.nome || p.cliente || ''}<br>WhatsApp: ${p.cliente?.telefone || p.whatsapp || ''}</div>
                     <div><b>ENTREGA:</b> ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}</div>
                 </div>
-                <table><thead><tr>
-                    ${tipo === 3 ? '<th>Foto</th>' : ''}
-                    <th>SKU</th><th>Produto</th><th>Peso</th>
-                    ${tipo > 1 ? '<th>Preço</th>' : ''}
-                    <th>Qtd</th>
-                    ${tipo > 1 ? '<th>Subtotal</th>' : ''}
-                </tr></thead><tbody>`;
+                <table>
+                    <thead>
+                        <tr>
+                            ${tipo === 3 ? '<th>Foto</th>' : ''}
+                            <th>SKU</th>
+                            <th>Produto</th>
+                            <th>Peso</th>
+                            ${tipo > 1 ? '<th>Preço</th>' : ''}
+                            <th>Qtd</th>
+                            ${tipo > 1 ? '<th>Subtotal</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>`;
 
             let subCalc = 0, pesoCalc = 0, qtdCalc = 0;
-            const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+            const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
 
-            itens.forEach(i => {
+            itensArr.forEach(i => {
                 const pr = Number(i.price || i.precoFinal || 0);
                 const qt = Number(i.quantidade || i.qtd || 1);
                 const ps = Number(i.peso || i.weight || 0);
-                subCalc += (pr * qt);
+                const subItem = pr * qt;
+                
+                subCalc += subItem;
                 pesoCalc += (ps * qt);
                 qtdCalc += qt;
 
@@ -348,31 +369,66 @@ function gerarRomaneio(id, tipo = 1) {
                     <td>${fmtPeso(ps)}</td>
                     ${tipo > 1 ? `<td>${fMoeda(pr)}</td>` : ''}
                     <td>${qt}</td>
-                    ${tipo > 1 ? `<td>${fMoeda(pr * qt)}</td>` : ''}
+                    ${tipo > 1 ? `<td>${fMoeda(subItem)}</td>` : ''}
                 </tr>`;
             });
 
+            // Recupera valores financeiros salvos no pedido
             const dPromo = Number(p.descontoPromo || 0);
             const dPix = Number(p.descontoPix || 0);
             const vFrete = Number(p.entrega?.valorFrete || p.valorFrete || 0);
+            const economiaTotal = dPromo + dPix;
+            
+            // Cálculo Final para o Romaneio
             const vFinal = subCalc - dPromo - dPix + vFrete;
 
             html += `</tbody></table>
             <div class="totais-box">
-                <span>Qtd Total: <b>${qtdCalc}</b></span> | <span>Peso Total: <b>${fmtPeso(pesoCalc)}</b></span>
+                <div style="margin-bottom:8px;">
+                    Qtd Total: <b>${qtdCalc}</b> pçs | Peso Total: <b>${fmtPeso(pesoCalc)}</b>
+                </div>
+                
                 ${tipo > 1 ? `
-                    <div style="margin-top:10px;">
-                        Subtotal: ${fMoeda(subCalc)}<br>
-                        ${dPromo > 0 ? `Desconto Promo: - ${fMoeda(dPromo)}<br>` : ''}
-                        ${dPix > 0 ? `Desconto Pix: - ${fMoeda(dPix)}<br>` : ''}
-                        ${vFrete > 0 ? `Frete: + ${fMoeda(vFrete)}<br>` : ''}
-                        <b style="font-size:15px; color:#A68966; display:block; margin-top:5px; border-top:1px double #000; pt-1">
-                            TOTAL A PAGAR: ${fMoeda(vFinal)}
-                        </b>
+                    <div style="display:inline-block; min-width:220px; border-top:1px solid #eee; padding-top:5px;">
+                        <div class="linha-financeira">
+                            <span>Subtotal Itens:</span> 
+                            <span>${fMoeda(subCalc)}</span>
+                        </div>
+                        
+                        ${dPromo > 0 ? `
+                        <div class="linha-financeira" style="color:#d32f2f;">
+                            <span>Desconto Promo:</span> 
+                            <span>- ${fMoeda(dPromo)}</span>
+                        </div>` : ''}
+                        
+                        ${dPix > 0 ? `
+                        <div class="linha-financeira" style="color:#d32f2f;">
+                            <span>Desconto Pix:</span> 
+                            <span>- ${fMoeda(dPix)}</span>
+                        </div>` : ''}
+                        
+                        ${vFrete > 0 ? `
+                        <div class="linha-financeira">
+                            <span>Frete:</span> 
+                            <span>+ ${fMoeda(vFrete)}</span>
+                        </div>` : ''}
+                        
+                        ${economiaTotal > 0 ? `
+                        <div class="linha-financeira" style="background: #fdf2f2; padding: 5px; border-radius: 4px; margin-top: 5px; border: 1px dashed #d32f2f;">
+                            <span style="color:#d32f2f; font-weight:bold; font-size:10px;">VOCÊ ECONOMIZOU:</span> 
+                            <span style="color:#d32f2f; font-weight:bold;">${fMoeda(economiaTotal)}</span>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="linha-financeira" style="font-size:14px; font-weight:bold; margin-top:8px; border-top:1px double #000; padding-top:4px; color:#A68966;">
+                            <span>TOTAL A PAGAR:</span> 
+                            <span>${fMoeda(vFinal)}</span>
+                        </div>
                     </div>
                 ` : ''}
             </div></div>`;
 
+            // Envia para a área de impressão e dispara a janela do navegador
             document.getElementById('print-area').innerHTML = html;
             setTimeout(() => { window.print(); }, 500);
         });
