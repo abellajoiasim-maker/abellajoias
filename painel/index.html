@@ -11,53 +11,61 @@
     <style>
         body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;margin:0}
         nav button.active{border-bottom:2px solid #caa85c;color:#caa85c}
-        section{display:none;min-height:300px}
+        section{display:none}
         section.active{display:block}
-        .card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px}
-        .btn{background:#222;border:1px solid #444;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
-        .btn-gold{background:#caa85c;color:#000;font-weight:700;padding:10px;border-radius:8px}
-        input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff;outline:none}
+        .card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:16px}
+        .btn-gold{background:#caa85c;color:#000;font-weight:700;padding:10px;border-radius:8px;cursor:pointer}
+        input,select{background:#111;border:1px solid #333;padding:10px;border-radius:8px;width:100%;margin-bottom:10px;color:#fff}
         
         #print-area { display: none; }
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; color: #000; background: #fff; }
         }
     </style>
 </head>
 <body>
 
-<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
-    Abella Joias • Painel de Controle
+<header class="p-6 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
+    Abella Joias • Gestão Total
 </header>
 
-<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
-    <button type="button" class="btn active" onclick="showTab('empresa', this)">Empresa</button>
-    <button type="button" class="btn" onclick="showTab('categorias', this)">Categorias</button>
-    <button type="button" class="btn" onclick="showTab('produtos', this)">Produtos</button>
-    <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
+<nav class="flex gap-2 p-3 bg-[#111] sticky top-0 z-50 overflow-x-auto justify-center">
+    <button class="px-4 py-2 text-xs uppercase font-bold active" onclick="showTab('empresa', this)">Configurações</button>
+    <button class="px-4 py-2 text-xs uppercase font-bold" onclick="showTab('categorias', this)">Categorias</button>
+    <button class="px-4 py-2 text-xs uppercase font-bold" onclick="showTab('produtos', this)">Produtos</button>
+    <button class="px-4 py-2 text-xs uppercase font-bold" onclick="showTab('pedidos', this)">Pedidos</button>
 </nav>
 
-<main class="p-6 max-w-4xl mx-auto">
+<main class="p-6 max-w-5xl mx-auto">
     <section id="empresa" class="active">
-        <div class="card space-y-3">
-            <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
-            <input id="empNome" placeholder="Nome da Empresa">
-            <input id="empSub" placeholder="Slogan / Subtítulo">
-            <input id="empWhats" placeholder="WhatsApp da Loja">
+        <div class="card max-w-md mx-auto">
+            <h2 class="text-[#caa85c] font-bold mb-4 uppercase">Dados da Empresa</h2>
+            <input id="empNome" placeholder="Nome da Loja">
+            <input id="empWhats" placeholder="WhatsApp (ex: 19 98820-7658)">
+            <input id="empSub" placeholder="Slogan ou Endereço Curto">
             <div class="grid grid-cols-2 gap-2">
-                <input id="empDesc" type="number" placeholder="Desc. PIX %">
-                <input id="empParc" type="number" placeholder="Parcelas Máx">
+                <div>
+                    <label class="text-[10px] text-gray-500">DESC. PIX %</label>
+                    <input id="empDesc" type="number">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500">PARCELAS MÁX</label>
+                    <input id="empParc" type="number">
+                </div>
             </div>
-            <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
+            <button class="btn-gold w-full mt-4" onclick="salvarEmpresa()">SALVAR CONFIGURAÇÕES</button>
         </div>
     </section>
 
     <section id="categorias">
-        <div class="card mb-4">
-            <input id="newCatName" placeholder="Nome da Nova Categoria">
-            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
+        <div class="card mb-6">
+            <h2 class="text-[#caa85c] font-bold mb-4 uppercase">Nova Categoria</h2>
+            <div class="flex gap-2">
+                <input id="newCatName" placeholder="Nome da Categoria" class="mb-0">
+                <button class="btn-gold" onclick="novaCategoria()">ADICIONAR</button>
+            </div>
         </div>
         <div id="listaCategorias" class="grid gap-2"></div>
     </section>
@@ -67,58 +75,57 @@
     </section>
 
     <section id="pedidos">
-        <div id="listaPedidos" class="grid gap-4"></div>
+        <div id="listaPedidos" class="grid gap-3"></div>
     </section>
 </main>
 
-<div id="editorPedido" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-    <div class="bg-[#111] w-full max-w-4xl rounded-2xl p-5 overflow-auto max-h-[90vh] border border-[#333]">
-        <h2 class="text-[#caa85c] font-bold text-lg mb-3 uppercase">Editar Pedido / Negociação</h2>
+<div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+    <div class="bg-[#141414] w-full max-w-4xl rounded-2xl p-6 overflow-auto max-h-[95vh] border border-[#caa85c]/30">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-[#caa85c] font-bold text-xl uppercase">Ajustes no Pedido</h2>
+            <button onclick="fecharEditorPedido()" class="text-white bg-red-900/20 px-4 py-1 rounded">FECHAR</button>
+        </div>
 
-        <div class="grid md:grid-cols-2 gap-4">
-            <div>
-                <h3 class="font-bold mb-2 text-xs text-gray-400">CLIENTE</h3>
-                <input id="edClienteNome" placeholder="Nome">
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold text-gray-500 uppercase border-b border-[#222] pb-1">Cliente</h3>
+                <input id="edClienteNome" placeholder="Nome do Cliente">
                 <input id="edClienteTel" placeholder="WhatsApp">
             </div>
-            <div>
-                <h3 class="font-bold mb-2 text-xs text-gray-400">ENTREGA</h3>
-                <input id="edRua" placeholder="Rua">
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold text-gray-500 uppercase border-b border-[#222] pb-1">Endereço</h3>
+                <input id="edRua" placeholder="Rua / Logradouro">
                 <div class="grid grid-cols-2 gap-2">
-                    <input id="edNum" placeholder="Nº">
                     <input id="edBairro" placeholder="Bairro">
+                    <input id="edCidade" placeholder="Cidade">
                 </div>
-                <input id="edCidade" placeholder="Cidade">
             </div>
         </div>
 
-        <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c]">ITENS DO PEDIDO</h3>
-        <div id="edItens" class="space-y-2"></div>
-        <button class="btn w-full mt-2 border-dashed border-gray-600" onclick="adicionarItemEditor()">+ ADICIONAR ITEM MANUALMENTE</button>
+        <h3 class="text-xs font-bold text-[#caa85c] uppercase mb-3">Itens Selecionados</h3>
+        <div id="edItens" class="space-y-2 mb-4"></div>
+        <button class="btn-gold bg-transparent border border-dashed border-[#caa85c] text-[#caa85c] w-full mb-6" onclick="addItemEditor()">+ ADICIONAR ITEM MANUALMENTE</button>
 
-        <div class="grid grid-cols-3 gap-3 mt-4">
+        <div class="grid grid-cols-3 gap-4 bg-black/50 p-4 rounded-xl">
             <div>
                 <label class="text-[10px] text-gray-400 font-bold uppercase">Desc. Promo (R$)</label>
-                <input id="edDescPromo" type="number" step="0.01">
+                <input id="edDescPromo" type="number" step="0.01" value="0">
             </div>
             <div>
-                <label class="text-[10px] text-gray-400 font-bold uppercase">Desc. PIX (R$)</label>
-                <input id="edDescPix" type="number" step="0.01">
+                <label class="text-[10px] text-gray-400 font-bold uppercase">Desc. Pix (R$)</label>
+                <input id="edDescPix" type="number" step="0.01" value="0">
             </div>
             <div>
                 <label class="text-[10px] text-gray-400 font-bold uppercase">Frete (R$)</label>
-                <input id="edValorFrete" type="number" step="0.01">
+                <input id="edValorFrete" type="number" step="0.01" value="0">
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 justify-between mt-6 pt-4 border-t border-[#222]">
-            <button class="btn px-6" onclick="fecharEditorPedido()">FECHAR</button>
-            <div class="flex gap-2">
-                <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 1)">CONFERÊNCIA</button>
-                <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO</button>
-                <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
-                <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR E ATUALIZAR</button>
-            </div>
+        <div class="flex flex-wrap gap-2 mt-8 justify-end">
+            <button class="btn-gold bg-blue-600 text-white border-none" onclick="gerarRomaneio(pedidoEditando, 1)">CONFERÊNCIA</button>
+            <button class="btn-gold bg-blue-800 text-white border-none" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO</button>
+            <button class="btn-gold bg-indigo-900 text-white border-none" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
+            <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR E ATUALIZAR</button>
         </div>
     </div>
 </div>
@@ -126,13 +133,12 @@
 <div id="print-area"></div>
 
 <script>
-/* CONFIGURAÇÃO FIREBASE */
-if (!firebase.apps.length) {
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
-}
+/* FIREBASE */
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
@@ -141,12 +147,10 @@ function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    if (btn) btn.classList.add('active');
-
+    btn.classList.add('active');
+    if (id === 'pedidos') carregarPedidos();
     if (id === 'categorias') carregarCategorias();
     if (id === 'produtos') carregarProdutos();
-    if (id === 'pedidos') carregarPedidos();
-    if (id === 'empresa') carregarEmpresaSeExistir();
 }
 
 /* PEDIDOS */
@@ -159,24 +163,18 @@ function carregarPedidos() {
         s.forEach(ped => {
             const p = ped.val();
             lista.innerHTML += `
-                <div class="card border-l-4 border-[#caa85c]">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente || 'Sem Nome'}</b><br>
-                            <small>${p.data || ''} • Total: ${fMoeda(p.total)}</small>
-                        </div>
-                        <div class="flex gap-2">
-                            <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
-                            <button onclick="excluirPedido('${ped.key}')" class="btn border-red-900 text-red-500 text-[10px]">🗑</button>
-                        </div>
+                <div class="card flex justify-between items-center border-l-4 border-[#caa85c]">
+                    <div>
+                        <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || p.cliente}</b><br>
+                        <small class="text-gray-500">${p.data} • <b>Total: ${fMoeda(p.total)}</b></small>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-gold text-[10px] px-4" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
+                        <button class="bg-red-900/20 text-red-500 p-2 rounded-lg" onclick="excluirPedido('${ped.key}')">🗑</button>
                     </div>
                 </div>`;
         });
     });
-}
-
-function excluirPedido(id) {
-    if (confirm("Deseja realmente excluir este pedido?")) db.ref('orders/' + id).remove();
 }
 
 function abrirEditorPedido(id) {
@@ -186,14 +184,14 @@ function abrirEditorPedido(id) {
         
         document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
         document.getElementById('edClienteTel').value = p.cliente?.telefone || p.whatsapp || '';
-        document.getElementById('edRua').value = p.entrega?.rua || p.endereco?.rua || '';
-        document.getElementById('edNum').value = p.entrega?.num || p.endereco?.num || '';
-        document.getElementById('edBairro').value = p.entrega?.bairro || p.endereco?.bairro || '';
-        document.getElementById('edCidade').value = p.entrega?.cidade || p.endereco?.cidade || '';
+        document.getElementById('edRua').value = p.entrega?.rua || '';
+        document.getElementById('edBairro').value = p.entrega?.bairro || '';
+        document.getElementById('edCidade').value = p.entrega?.cidade || '';
         
+        // RESTAURAÇÃO DOS VALORES DE DESCONTO
         document.getElementById('edDescPromo').value = p.descontoPromo || 0;
         document.getElementById('edDescPix').value = p.descontoPix || 0;
-        document.getElementById('edValorFrete').value = p.entrega?.valorFrete || p.valorFrete || 0;
+        document.getElementById('edValorFrete').value = p.entrega?.valorFrete || 0;
 
         document.getElementById('edItens').innerHTML = '';
         const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
@@ -205,37 +203,33 @@ function abrirEditorPedido(id) {
 
 function addItemEditor(i = {}) {
     const div = document.createElement('div');
-    div.className = "card bg-black/40 border-[#222] mb-2";
+    div.className = "flex flex-wrap gap-2 p-3 bg-black/30 rounded-lg border border-[#222]";
     div.innerHTML = `
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-            <input placeholder="SKU" value="${i.sku || ''}">
-            <input placeholder="Nome" value="${i.name || ''}">
-            <input type="number" placeholder="Peso" value="${i.peso || i.weight || 0}">
-            <input type="number" placeholder="Preço" value="${i.price || i.precoFinal || 0}">
-            <input type="number" placeholder="Qtd" value="${i.quantidade || i.qtd || 1}">
-        </div>
-        <button class="text-red-500 text-[10px] uppercase font-bold mt-1" onclick="this.parentElement.remove()">Remover</button>`;
+        <input class="flex-1 !mb-0 !p-1 text-xs" placeholder="SKU" value="${i.sku || ''}">
+        <input class="flex-[3] !mb-0 !p-1 text-xs" placeholder="Produto" value="${i.name || ''}">
+        <input class="flex-1 !mb-0 !p-1 text-xs" placeholder="Peso" value="${i.peso || i.weight || 0}">
+        <input class="flex-1 !mb-0 !p-1 text-xs" placeholder="Preço" value="${i.price || i.precoFinal || 0}">
+        <input class="w-16 !mb-0 !p-1 text-xs text-center" placeholder="Qtd" value="${i.quantidade || i.qtd || 1}">
+        <input type="hidden" class="item-img" value="${i.image || ''}">
+        <button class="text-red-500 font-bold px-2" onclick="this.parentElement.remove()">×</button>`;
     document.getElementById('edItens').appendChild(div);
 }
 
-function adicionarItemEditor() { addItemEditor(); }
-function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
-
 function salvarPedidoEditado() {
-    const itens = []; 
-    let subtotalItens = 0, pesoTotal = 0;
+    const itens = [];
+    let subtotal = 0, pesoTotal = 0;
 
-    document.querySelectorAll('#edItens .card').forEach(c => {
-        const ins = c.querySelectorAll('input');
-        if(ins.length < 5) return;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const inputs = div.querySelectorAll('input');
         const i = {
-            sku: ins[0].value,
-            name: ins[1].value,
-            peso: Number(ins[2].value) || 0,
-            price: Number(ins[3].value) || 0,
-            quantidade: Number(ins[4].value) || 1
+            sku: inputs[0].value,
+            name: inputs[1].value,
+            peso: Number(inputs[2].value) || 0,
+            price: Number(inputs[3].value) || 0,
+            quantidade: Number(inputs[4].value) || 1,
+            image: inputs[5].value
         };
-        subtotalItens += (i.price * i.quantidade);
+        subtotal += (i.price * i.quantidade);
         pesoTotal += (i.peso * i.quantidade);
         itens.push(i);
     });
@@ -246,163 +240,145 @@ function salvarPedidoEditado() {
 
     db.ref('orders/' + pedidoEditando).update({
         cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
-        entrega: { 
-            rua: document.getElementById('edRua').value, num: document.getElementById('edNum').value, 
-            bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value,
-            valorFrete: vf
-        },
+        entrega: { rua: document.getElementById('edRua').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value, valorFrete: vf },
         itens: itens,
-        pesoTotal: Number(pesoTotal.toFixed(2)),
         descontoPromo: dp,
         descontoPix: dx,
-        total: Number((subtotalItens - dp - dx + vf).toFixed(2))
-    }).then(() => { alert("Pedido Atualizado!"); fecharEditorPedido(); });
+        total: (subtotal - dp - dx + vf)
+    }).then(() => { alert("Pedido atualizado com sucesso!"); fecharEditorPedido(); });
 }
 
-/* ROMANEIO */
-function gerarRomaneio(id, tipo = 1) {
-    const fmtPeso = g => g >= 1000 ? `${(g/1000).toFixed(3).replace('.',',')} kg` : `${Number(g).toFixed(2).replace('.',',')} g`;
-    
+/* ROMANEIO COM FOTO E DADOS DA EMPRESA */
+function gerarRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', s => {
-        const p = s.val(); if (!p) return;
+        const p = s.val();
         db.ref('settings/empresa').once('value', e => {
-            const emp = e.val() || {};
-            let html = `<style>
-                .print-body { font-family: Arial; padding:20px; color:#000; font-size:11px; }
-                .lux-head { text-align:center; border-bottom:2px solid #A68966; padding-bottom:10px; margin-bottom:15px; }
-                table { width:100%; border-collapse:collapse; margin-top:10px; }
-                table th { background:#f5f5f5; text-align:left; border:1px solid #000; padding:4px; }
-                table td { border:1px solid #ddd; padding:4px; }
-                .totais-box { text-align:right; margin-top:15px; border-top:1px solid #000; padding-top:10px; }
-                .linha-f { display: flex; justify-content: flex-end; gap: 15px; margin-bottom: 2px; }
-            </style>
-            <div class="print-body">
-                <div class="lux-head"><h1>${emp.nome || 'Abella Joias'}</h1><p>${emp.whats || ''}</p></div>
-                <p><b>CLIENTE:</b> ${p.cliente?.nome || ''} | <b>WHATS:</b> ${p.cliente?.telefone || ''}</p>
-                <table><thead><tr>
-                    ${tipo === 3 ? '<th>Foto</th>' : ''}
-                    <th>SKU</th><th>Produto</th><th>Peso</th>
-                    ${tipo > 1 ? '<th>Preço</th><th>Subtotal</th>' : ''}
-                    <th>Qtd</th>
-                </tr></thead><tbody>`;
+            const emp = e.val() || { nome: 'Abella Joias', whats: '' };
+            
+            let html = `
+            <div style="font-family: Arial; padding: 20px; color: #000; background: #fff;">
+                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                    <h1 style="margin:0; font-size: 24px;">${emp.nome}</h1>
+                    <p style="margin:0; font-size: 12px;">WhatsApp: ${emp.whats} | ${emp.subtitulo || ''}</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 20px;">
+                    <div><b>CLIENTE:</b> ${p.cliente?.nome || p.cliente} <br> <b>TEL:</b> ${p.cliente?.telefone || ''}</div>
+                    <div style="text-align: right;"><b>DATA:</b> ${p.data} <br> <b>ENTREGA:</b> ${p.entrega?.cidade || ''}</div>
+                </div>
 
-            let subC = 0, pesoC = 0, qtdC = 0;
+                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                    <thead>
+                        <tr style="background: #eee;">
+                            ${tipo === 3 ? '<th style="border:1px solid #000; padding:5px;">Foto</th>' : ''}
+                            <th style="border:1px solid #000; padding:5px;">SKU</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:left;">Produto</th>
+                            <th style="border:1px solid #000; padding:5px;">Peso Un.</th>
+                            <th style="border:1px solid #000; padding:5px;">Preço</th>
+                            <th style="border:1px solid #000; padding:5px;">Qtd</th>
+                            <th style="border:1px solid #000; padding:5px;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            let subC = 0, pesoC = 0;
             const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+            
             itens.forEach(i => {
-                const pr = Number(i.price || 0), qt = Number(i.quantidade || 1), ps = Number(i.peso || 0);
-                subC += (pr * qt); pesoC += (ps * qt); qtdC += qt;
-                html += `<tr>
-                    ${tipo === 3 ? `<td><img src="${i.image || ''}" style="width:40px"></td>` : ''}
-                    <td>${i.sku || ''}</td><td>${i.name || ''}</td><td>${fmtPeso(ps)}</td>
-                    ${tipo > 1 ? `<td>${fMoeda(pr)}</td><td>${fMoeda(pr*qt)}</td>` : ''}
-                    <td>${qt}</td>
-                </tr>`;
+                const totalI = (i.price || i.precoFinal) * (i.quantidade || i.qtd);
+                subC += totalI;
+                pesoC += (i.peso || 0) * (i.quantidade || 0);
+                
+                html += `
+                    <tr>
+                        ${tipo === 3 ? `<td style="border:1px solid #ddd; text-align:center;"><img src="${i.image}" style="height:40px; width:40px; object-fit:cover;"></td>` : ''}
+                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${i.sku || ''}</td>
+                        <td style="border:1px solid #ddd; padding:5px;">${i.name}</td>
+                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${i.peso || 0}g</td>
+                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${fMoeda(i.price || i.precoFinal)}</td>
+                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${i.quantidade || i.qtd}</td>
+                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${fMoeda(totalI)}</td>
+                    </tr>`;
             });
 
             const dp = Number(p.descontoPromo || 0), dx = Number(p.descontoPix || 0), vf = Number(p.entrega?.valorFrete || 0);
-            const econ = dp + dx;
+            
+            html += `
+                    </tbody>
+                </table>
 
-            html += `</tbody></table>
-            <div class="totais-box">
-                <p>Qtd: ${qtdC} | Peso Total: ${fmtPeso(pesoC)}</p>
-                ${tipo > 1 ? `
-                    <div class="linha-f"><span>Subtotal:</span><span>${fMoeda(subC)}</span></div>
-                    ${dp > 0 ? `<div class="linha-f" style="color:red"><span>Desconto Promo:</span><span>- ${fMoeda(dp)}</span></div>` : ''}
-                    ${dx > 0 ? `<div class="linha-f" style="color:red"><span>Desconto PIX:</span><span>- ${fMoeda(dx)}</span></div>` : ''}
-                    ${vf > 0 ? `<div class="linha-f"><span>Frete:</span><span>+ ${fMoeda(vf)}</span></div>` : ''}
-                    ${econ > 0 ? `<div class="linha-f" style="background:#f9f9f9; border:1px dashed red; padding:4px; font-weight:bold; color:red"><span>ECONOMIA TOTAL:</span><span>${fMoeda(econ)}</span></div>` : ''}
-                    <div class="linha-f" style="font-size:14px; font-weight:bold; border-top:1px double #000; margin-top:5px"><span>TOTAL A PAGAR:</span><span>${fMoeda(subC-dp-dx+vf)}</span></div>
-                ` : ''}
-            </div></div>`;
+                <div style="margin-top: 20px; text-align: right; font-size: 12px;">
+                    <p style="margin:2px;">Subtotal Itens: ${fMoeda(subC)}</p>
+                    ${dp > 0 ? `<p style="margin:2px; color: red;">Desconto Promoção: - ${fMoeda(dp)}</p>` : ''}
+                    ${dx > 0 ? `<p style="margin:2px; color: red;">Desconto PIX: - ${fMoeda(dx)}</p>` : ''}
+                    ${vf > 0 ? `<p style="margin:2px;">Frete: + ${fMoeda(vf)}</p>` : ''}
+                    <h2 style="margin:10px 0 0 0; font-size: 18px; border-top: 1px solid #000; display: inline-block; padding-top: 5px;">
+                        TOTAL A PAGAR: ${fMoeda(subC - dp - dx + vf)}
+                    </h2>
+                    ${(dp+dx) > 0 ? `<p style="font-size: 10px; color: green;"><b>ECONOMIA TOTAL NESTE PEDIDO: ${fMoeda(dp+dx)}</b></p>` : ''}
+                </div>
+            </div>`;
+
             document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => window.print(), 500);
+            setTimeout(() => { window.print(); }, 500);
         });
     });
 }
 
-/* CATEGORIAS E PRODUTOS */
+/* OUTRAS FUNÇÕES (CATEGORIAS/PRODUTOS/EMPRESA) */
 function carregarCategorias() {
     db.ref('categories').once('value', s => {
         const l = document.getElementById('listaCategorias'); l.innerHTML = '';
         s.forEach(c => {
-            l.innerHTML += `<div class="card flex justify-between items-center mb-1">
+            l.innerHTML += `<div class="card flex justify-between items-center py-2">
                 <b class="uppercase text-xs">${c.val().name}</b>
-                <button class="btn text-blue-400" onclick="editarCategoria('${c.key}', '${c.val().name}')">✎</button>
+                <button class="text-red-500" onclick="db.ref('categories/${c.key}').remove().then(carregarCategorias)">🗑</button>
             </div>`;
         });
     });
 }
 
 function novaCategoria() {
-    const nome = document.getElementById('newCatName').value;
-    if (nome) db.ref('categories').push({ name: nome }).then(() => {
-        document.getElementById('newCatName').value = '';
-        carregarCategorias();
-    });
-}
-
-function editarCategoria(id, antigo) {
-    const novo = prompt("Novo nome da categoria:", antigo);
-    if (novo) db.ref('categories/' + id).update({ name: novo }).then(carregarCategorias);
+    const n = document.getElementById('newCatName').value;
+    if(n) db.ref('categories').push({name: n}).then(() => { document.getElementById('newCatName').value = ''; carregarCategorias(); });
 }
 
 function carregarProdutos() {
-    const lista = document.getElementById('listaProdutos');
-    lista.innerHTML = '<p class="text-center p-4">Carregando...</p>';
-    db.ref('categories').once('value', snapCats => {
-        db.ref('products').once('value', snapProds => {
-            const produtos = [];
-            snapProds.forEach(p => { produtos.push({ key: p.key, ...p.val() }); });
-            lista.innerHTML = '';
-            snapCats.forEach(cat => {
-                const prodsDaCat = produtos.filter(p => p.category === cat.key);
-                if (prodsDaCat.length > 0) {
-                    let htmlP = prodsDaCat.map(p => `
-                        <div class="card flex justify-between items-center py-2 px-3 text-[11px] bg-[#0d0d0d] mb-1">
-                            <span><b class="text-[#caa85c]">[${p.sku || '---'}]</b> ${p.name} - ${fMoeda(p.price)}</span>
-                            <button onclick="editarProduto('${p.key}')">✎</button>
-                        </div>`).join('');
-                    lista.innerHTML += `<div class="mb-4"><b class="text-xs uppercase text-[#caa85c] ml-2">${cat.val().name}</b><div class="mt-2">${htmlP}</div></div>`;
-                }
-            });
+    db.ref('products').once('value', s => {
+        const l = document.getElementById('listaProdutos'); l.innerHTML = '';
+        s.forEach(p => {
+            const v = p.val();
+            l.innerHTML += `<div class="card flex justify-between items-center py-2 text-xs">
+                <span>[${v.sku}] <b>${v.name}</b> - ${fMoeda(v.price)}</span>
+                <button class="text-blue-400" onclick="editarProduto('${p.key}')">✎</button>
+            </div>`;
         });
-    });
-}
-
-function editarProduto(id) {
-    db.ref('products/' + id).once('value', s => {
-        const p = s.val(); if (!p) return;
-        const nNome = prompt("Nome:", p.name);
-        const nPreco = prompt("Preço:", p.price);
-        if (nNome) db.ref('products/' + id).update({ name: nNome, price: Number(nPreco) }).then(carregarProdutos);
-    });
-}
-
-/* EMPRESA */
-function carregarEmpresaSeExistir() {
-    db.ref('settings/empresa').once('value', s => {
-        const v = s.val() || {};
-        document.getElementById('empNome').value = v.nome || '';
-        document.getElementById('empSub').value = v.subtitulo || '';
-        document.getElementById('empWhats').value = v.whats || '';
-        document.getElementById('empDesc').value = v.descontoPix || 0;
-        document.getElementById('empParc').value = v.parcelas || 0;
     });
 }
 
 function salvarEmpresa() {
     db.ref('settings/empresa').update({
         nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value,
         whats: document.getElementById('empWhats').value,
+        subtitulo: document.getElementById('empSub').value,
         descontoPix: Number(document.getElementById('empDesc').value),
         parcelas: Number(document.getElementById('empParc').value)
-    }).then(() => alert('Empresa Atualizada!'));
+    }).then(() => alert('Configurações salvas!'));
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    carregarEmpresaSeExistir();
-});
+function excluirPedido(id) { if(confirm("Excluir este pedido permanentemente?")) db.ref('orders/'+id).remove(); }
+function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+
+window.onload = () => {
+    db.ref('settings/empresa').once('value', s => {
+        const v = s.val() || {};
+        document.getElementById('empNome').value = v.nome || '';
+        document.getElementById('empWhats').value = v.whats || '';
+        document.getElementById('empSub').value = v.subtitulo || '';
+        document.getElementById('empDesc').value = v.descontoPix || 0;
+        document.getElementById('empParc').value = v.parcelas || 0;
+    });
+};
 </script>
 </body>
 </html>
