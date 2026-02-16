@@ -120,6 +120,26 @@ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 const db=firebase.database();
 const fM=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
+  // ===== FUNÇÕES DE SEGURANÇA (STUBS) =====
+function carregarCategorias(){
+  document.getElementById('listaCategorias').innerHTML =
+    '<div class="card">Categorias ainda não carregadas</div>';
+}
+
+function novaCategoria(){
+  alert('Função de categoria ainda não implementada');
+}
+
+function carregarProdutos(){
+  document.getElementById('listaProdutos').innerHTML =
+    '<div class="card">Produtos ainda não carregados</div>';
+}
+
+function abrirPainelPromocoes(){
+  alert('Painel de promoções ainda não implementado');
+}
+
+
 function showTab(id,btn){
 document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
 document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
@@ -243,6 +263,7 @@ setTimeout(()=>window.print(),300);
 }
 
 window.onload=()=>showTab('empresa',document.querySelector('nav button'));
+  
 </script>
 
 </body>
