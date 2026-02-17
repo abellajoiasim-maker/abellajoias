@@ -215,6 +215,33 @@
                 </div>
 
             </div>
+            
+            <div class="pt-4 border-t border-dashed border-[#333] mt-4">
+
+    <h3 class="text-[10px] uppercase text-gray-400 font-bold mb-3">Frete</h3>
+
+    <select id="tipoFrete" class="w-full bg-black border border-[#333] text-white rounded-lg p-3 mb-3">
+        <option value="">Selecione o Tipo de Frete</option>
+        <option value="Sedex">Sedex</option>
+        <option value="PAC">PAC</option>
+        <option value="Entregar na Galvânica">Entregar na Galvânica</option>
+    </select>
+
+    <input 
+        type="number"
+        id="valorFrete"
+        placeholder="Valor do Frete (R$)"
+        min="0"
+        step="0.01"
+        oninput="recalcularComFrete()"
+    >
+
+    <div class="flex justify-between text-sm mt-3">
+        <span class="text-gray-400">Frete</span>
+        <b id="freteTxt" class="text-white">R$ 0,00</b>
+    </div>
+
+</div>
 
             <div class="mt-6 pt-6 border-t-2 border-[#caa85c] flex flex-col items-end">
 
@@ -319,155 +346,92 @@ db.ref('settings').on('value', s => {
 function carregarCarrinho() {
 
     let box = document.getElementById('listaItens');
-
     box.innerHTML = '';
 
-    let bruto = 0, comPromo = 0, peso = 0, pecas = 0;
+    let bruto = 0;
+    let comPromo = 0;
+    let peso = 0;
+    let pecas = 0;
 
-
-
-    if(carrinho.length === 0) {
-
+    if (carrinho.length === 0) {
         box.innerHTML = `<p class="text-center text-gray-500 py-10">Seu carrinho está vazio.</p>`;
-
     }
-
-
 
     carrinho.forEach((item, index) => {
 
         let q = parseInt(item.quantidade) || 1;
 
-        let pOrig = parseFloat(item.price || item.precoFinal || 0);
-
+        let pOrig = parseFloat(item.price || item.precoOriginal || item.precoFinal || 0);
         let pProm = parseFloat(item.precoFinal || item.price || 0);
 
-        bruto += (pOrig * q); comPromo += (pProm * q); pecas += q;
+        bruto += (pOrig * q);
+        comPromo += (pProm * q);
+        pecas += q;
 
         let pU = item.peso || item.weight || 0;
-
-        if(typeof pU === 'string') pU = parseFloat(pU.replace(',','.')) || 0;
+        if (typeof pU === 'string') pU = parseFloat(pU.replace(',', '.')) || 0;
 
         peso += (pU * q);
 
+        box.innerHTML += `
+        <div class="flex items-center gap-3 py-4 border-b border-[#222]">
+            <button onclick="removerItem(${index})" class="btn-remove">✕</button>
 
+            <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
 
-box.innerHTML += `
+            <div class="flex-1">
+                <h3 class="text-[10px] font-bold text-white uppercase leading-tight">${item.name}</h3>
 
-    <div class="flex items-center gap-3 py-4 border-b border-[#222]">
+                <div class="flex items-center gap-2 mt-2">
+                    <button onclick="altQtd(${index},-1)" class="w-8 h-8 bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg">-</button>
 
-        <button onclick="removerItem(${index})" class="btn-remove">
+                    <input type="number"
+                        value="${q}"
+                        min="1"
+                        onchange="digitarQtd(${index}, this.value)"
+                        class="w-12 h-8 text-center bg-black border border-[#333] text-white text-xs rounded-lg !mb-0 !p-0">
 
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-
-        </button>
-
-        <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
-
-        <div class="flex-1">
-
-            <h3 class="text-[10px] font-bold text-white uppercase leading-tight">${item.name}</h3>
-
-            
-
-            <div class="flex items-center gap-2 mt-2">
-
-                <button onclick="altQtd(${index},-1)" class="w-8 h-8 flex items-center justify-center bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg active:bg-[#caa85c] active:text-black transition-colors">-</button>
-
-                
-
-                <input type="number" 
-
-                       value="${q}" 
-
-                       min="1" 
-
-                       onchange="digitarQtd(${index}, this.value)"
-
-                       class="w-12 h-8 text-center bg-black border border-[#333] text-white text-xs rounded-lg focus:border-[#caa85c] !mb-0 !p-0 outline-none">
-
-                
-
-                <button onclick="altQtd(${index},1)" class="w-8 h-8 flex items-center justify-center bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg active:bg-[#caa85c] active:text-black transition-colors">+</button>
-
+                    <button onclick="altQtd(${index},1)" class="w-8 h-8 bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg">+</button>
+                </div>
             </div>
 
-        </div>
-
-        <div class="text-right">
-
-            ${pOrig > pProm ? `<div class="flex flex-col items-end"><span class="promo-tag">${configEmpresa.nomePromo}</span><span class="text-gray-600 line-through text-[9px]">${fM(pOrig*q)}</span></div>` : ''}
-
-            <b class="gold-text text-sm">${fM(pProm*q)}</b>
-
-        </div>
-
-      </div>`;
-
-
-
+            <div class="text-right">
+                ${pOrig > pProm ? `<span class="text-gray-600 line-through text-[9px]">${fM(pOrig*q)}</span>` : ''}
+                <b class="gold-text text-sm">${fM(pProm*q)}</b>
+            </div>
+        </div>`;
     });
 
     const economiaPromo = bruto - comPromo;
-
     const descPix = (pagamento === 'Pix') ? comPromo * (configEmpresa.descontoPix / 100) : 0;
-
     const valorFinal = comPromo - descPix;
 
-
-
     document.getElementById('totalSkus').innerText = carrinho.length;
-
     document.getElementById('totalPecas').innerText = pecas;
-
     document.getElementById('pesoTotal').innerText = fP(peso);
-
     document.getElementById('subtotalTxt').innerText = fM(bruto);
-
     document.getElementById('totalTxt').innerText = fM(valorFinal);
 
-
-
-    if(economiaPromo > 0) {
-
-        document.getElementById('linhaDescontoPromo').classList.remove('hidden');
-
-        document.getElementById('labelPromo').innerText = `Desconto ${configEmpresa.nomePromo} -`;
-
-        document.getElementById('valorDescontoPromo').innerText = `- ${fM(economiaPromo)}`;
-
-    }
-
-
-
-    if(pagamento !== '') {
-
-        document.getElementById('linhaCondicao').classList.remove('hidden');
-
-        document.getElementById('precoBrutoRiscado').classList.remove('hidden');
-
-        document.getElementById('precoBrutoRiscado').innerText = fM(bruto);
-
-        if(pagamento === 'Pix') {
-
-            document.getElementById('labelCondicao').innerText = "Bônus Pagamento Pix";
-
-            document.getElementById('valorCondicao').innerText = `- ${fM(descPix)}`;
-
-        } else {
-
-            document.getElementById('labelCondicao').innerText = `Parcelamento em ${configEmpresa.parcelas}x`;
-
-            document.getElementById('valorCondicao').innerText = `${fM(valorFinal/configEmpresa.parcelas)} / mês`;
-
-        }
-
-    }
-
-    window.resumoFinal = { total: valorFinal };
-
+    window.resumoFinal = {
+        subtotal: bruto,
+        descontoPromo: economiaPromo,
+        descontoPix: descPix,
+        total: valorFinal
+    };
 }
 
+function recalcularComFrete() {
+
+    let valorFrete = parseFloat(document.getElementById('valorFrete').value) || 0;
+
+    document.getElementById('freteTxt').innerText = fM(valorFrete);
+
+    let novoTotal = window.resumoFinal.total + valorFrete;
+
+    document.getElementById('totalTxt').innerText = fM(novoTotal);
+
+    window.resumoFinal.totalComFrete = novoTotal;
+}
 
 
 function removerItem(i) {
@@ -559,104 +523,76 @@ function digitarQtd(i, valor) {
 async function finalizarPedido() {
 
     const nome = document.getElementById('nomeCliente').value;
-
     const telefone = document.getElementById('telefoneCliente').value;
-
     const nomeEntrega = document.getElementById('nomeEntrega').value;
-
     const rua = document.getElementById('rua').value;
-
     const num = document.getElementById('num').value;
-
     const bairro = document.getElementById('bairro').value;
-
     const cidade = document.getElementById('cidade').value;
-
     const cep = document.getElementById('cepEntrega').value;
 
+    if (!nome || !pagamento) {
+        alert("Preencha Nome e forma de Pagamento.");
+        return;
+    }
 
+    const valorFrete = parseFloat(document.getElementById('valorFrete').value) || 0;
+const tipoFrete = document.getElementById('tipoFrete').value || "";
 
-    if(!nome || !pagamento) return alert("Preencha Nome e forma de Pagamento.");
+const totalFinal = window.resumoFinal.total + valorFrete;
 
+const pedido = {
+    cliente: { nome, telefone },
 
+    entrega: {
+        nomeEntrega,
+        rua,
+        num,
+        bairro,
+        cidade,
+        cep
+    },
 
-    const pedido = {
+    pagamento,
+    itens: carrinho,
 
-        cliente: {
+    subtotal: window.resumoFinal.subtotal,
+    descontoPromo: window.resumoFinal.descontoPromo,
+    descontoPix: window.resumoFinal.descontoPix,
 
-            nome,
+    frete: 0,              // começa zerado
+    tipoFrete: "",         // vazio
+    total: window.resumoFinal.total, // ainda sem frete
 
-            telefone
-
-        },
-
-        entrega: {
-
-            nomeEntrega,
-
-            rua,
-
-            num,
-
-            bairro,
-
-            cidade,
-
-            cep
-
-        },
-
-        pagamento,
-
-        itens: carrinho,
-
-        resumo: {
-
-            total: window.resumoFinal.total
-
-        },
-
-        data: new Date().toLocaleString('pt-BR'),
-
-        status: "Novo"
-
-    };
+    data: new Date().toLocaleString('pt-BR'),
+    status: "Novo"
+};
 
 
 
     try {
 
-        // 🔥 SALVA O PEDIDO NO FIREBASE
-
         await db.ref('orders').push(pedido);
 
+        const totalTexto = fM(totalFinal);
 
 
-        // Mensagem WhatsApp
-
-        const totalTexto = fM(window.resumoFinal.total);
-
-        let msg = `Olá, meu nome é *${nome}*!\n\nAcabei de fazer um pedido pelo catálogo da Abella Joias.\n💰 *Total:* ${totalTexto}\n💳 *Pagamento:* ${pagamento}\n\nAguardando seu retorno para finalizar!`;
+        let msg = Olá, meu nome é *${nome}*!\n\nAcabei de fazer um pedido pelo catálogo da Abella Joias.\n💰 *Total:* ${totalTexto}\n💳 *Pagamento:* ${pagamento}\n\nAguardando seu retorno para finalizar!;
 
 
 
         localStorage.removeItem('carrinho');
 
-
-
         window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-
-
 
     } catch (erro) {
 
         alert("Erro ao salvar pedido. Tente novamente.");
-
         console.error(erro);
 
     }
-
 }
+
 
 
 
