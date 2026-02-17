@@ -434,49 +434,28 @@ function gerarRomaneio(id, tipo) {
       let html = `
       <style>
         @page { margin: 0.5cm; }
-        .print-body { font-family: Arial, sans-serif; color: #000; background: #fff; line-height: 1.1; }
+        .print-body { font-family: Arial, sans-serif; color: #000; background: #fff; line-height: 1.1; padding: 10px; }
         .lux-head { text-align: center; border-bottom: 1px solid #A68966; margin-bottom: 8px; padding-bottom: 5px; }
         .lux-head h1 { font-size: 18px; margin: 0; text-transform: uppercase; }
         .lux-head div { font-size: 10px; }
 
-        /* Blocos de Informação Compactos */
         .info-container { display: flex; gap: 10px; margin-bottom: 10px; }
         .info-box { flex: 1; border: 1px solid #ccc; padding: 5px; border-radius: 4px; font-size: 9px; }
         .info-box h3 { margin: 0 0 3px 0; font-size: 9px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
-        .info-box p { margin: 1px 0; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { background: #f4f4f4; border: 1px solid #ddd; padding: 4px; }
+        td { border: 1px solid #ddd; padding: 4px; }
 
-        /* Grid de 3 Colunas Ultra Compacto */
-        .grid-container { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 4px; 
-        }
-        .item-card { 
-            border: 1px solid #ddd; 
-            padding: 4px; 
-            border-radius: 2px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .sku-title { font-weight: bold; font-size: 9px; color: #A68966; white-space: nowrap; overflow: hidden; }
-        .item-name { font-size: 8px; color: #333; height: 18px; line-height: 9px; overflow: hidden; margin: 2px 0; }
-        .qtd-line { font-weight: bold; font-size: 10px; background: #f4f4f4; text-align: center; padding: 1px; }
-        .price-line { font-size: 8px; display: flex; justify-content: space-between; margin-top: 2px; border-top: 1px dotted #eee; }
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .item-card { border: 1px solid #ddd; padding: 4px; border-radius: 2px; }
+        .sku-title { font-weight: bold; font-size: 9px; color: #A68966; }
+        .item-name { font-size: 8px; height: 18px; overflow: hidden; margin: 2px 0; }
+        .qtd-line { font-weight: bold; font-size: 10px; background: #f4f4f4; text-align: center; }
 
-        /* Totais Financeiros */
-        .financeiro { 
-            margin-top: 10px; 
-            border-top: 1px solid #000; 
-            padding-top: 5px; 
-            text-align: right; 
-            font-size: 10px; 
-        }
-        .total-final { font-size: 14px; font-weight: bold; color: #000; margin-top: 3px; }
-
-        @media print { 
-            .item-card { break-inside: avoid; }
-        }
+        .financeiro { margin-top: 10px; border-top: 1px solid #000; padding-top: 5px; text-align: right; font-size: 10px; }
+        .total-final { font-size: 14px; font-weight: bold; margin-top: 3px; }
+        @media print { .item-card { break-inside: avoid; } }
       </style>
 
       <div class="print-body">
@@ -496,20 +475,61 @@ function gerarRomaneio(id, tipo) {
             <p>${p.entrega?.rua || '---'}, ${p.entrega?.num || ''} - ${p.entrega?.bairro || ''}</p>
             <p><b>${p.entrega?.cidade || ''}</b></p>
           </div>
-        </div>
-
-        <div class="grid-container">`;
+        </div>`;
 
       const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
       let subT = 0, pesoT = 0, qtdT = 0;
 
-<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_conferencia')">GRID CONFERÊNCIA</button>
-<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_cliente')">GRID CLIENTE</button>
-        </div>
-      </div>`;
+      // SE FOR TIPO GRID
+      if (tipo === 'grid_conferencia' || tipo === 'grid_cliente') {
+        html += `<div class="grid-container">`;
+        itensArr.forEach(i => {
+          const pr = Number(i.price || 0);
+          const q = Number(i.quantidade || 1);
+          subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
+          
+          html += `
+          <div class="item-card">
+            <div class="sku-title">${i.sku || 'S/SKU'}</div>
+            <div class="item-name">${i.name || ''}</div>
+            <div class="qtd-line">X${q}</div>
+            ${tipo === 'grid_cliente' ? `<div style="font-size:7px; text-align:right; margin-top:2px;">Un: ${fMoeda(pr)} | Total: ${fMoeda(pr*q)}</div>` : ''}
+          </div>`;
+        });
+        html += `</div>`;
+      } else {
+        // SE FOR MODELO TABELA (1, 2, 3)
+        html += `<table><thead><tr>${tipo===3?'<th>Foto</th>':''}<th>SKU</th><th>Produto</th><th>Qtd</th>${tipo>1?'<th>Total</th>':''}</tr></thead><tbody>`;
+        itensArr.forEach(i => {
+          const pr = Number(i.price || 0);
+          const q = Number(i.quantidade || 1);
+          subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
+          html += `<tr>
+            ${tipo===3?`<td><img src="${i.image}" style="width:30px"></td>`:''}
+            <td>${i.sku}</td><td>${i.name}</td><td>${q}</td>
+            ${tipo>1?`<td>${fMoeda(pr*q)}</td>`:''}
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+      }
+
+      // RODAPÉ FINANCEIRO
+      const descP = Number(p.descontoPromo || 0);
+      const descX = Number(p.descontoPix || 0);
+      const frete = Number(p.frete || 0);
+      const total = p.total || (subT - descP - descX + frete);
+
+      html += `<div class="financeiro">
+        <span>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso: ${fmtPeso(pesoT)}</span>
+        ${(tipo > 1 || tipo === 'grid_cliente') ? `
+          <div style="margin-top:5px;">
+            Subtotal: ${fMoeda(subT)} | Descontos: ${fMoeda(descP + descX)} | Frete: ${fMoeda(frete)}<br>
+            <div class="total-final">TOTAL: ${fMoeda(total)}</div>
+          </div>` : ''}
+      </div></div>`;
 
       document.getElementById('print-area').innerHTML = html;
-      setTimeout(() => window.print(), 1000);
+      setTimeout(() => { window.print(); }, 500);
     });
   });
 }
