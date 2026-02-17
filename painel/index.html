@@ -419,6 +419,7 @@ const item = {
 
 
 /* ROMANEIO */
+/* ROMANEIO ATUALIZADO */
 function gerarRomaneio(id, tipo = 1) {
   const fmtPeso = (g) => fPeso(g);
 
@@ -431,49 +432,64 @@ function gerarRomaneio(id, tipo = 1) {
 
       let html = `
       <style>
-        .print-body{font-family:Arial;padding:20px;font-size:11px}
-        .lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:15px}
+        .print-body{font-family:Arial, sans-serif;padding:20px;font-size:11px;color:#000}
+        .lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:20px;padding-bottom:10px}
+        
+        /* Blocos de Informação */
+        .info-container { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+        .info-box { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #f9f9f9; }
+        .info-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
+        .info-box p { margin: 2px 0; line-height: 1.4; }
+
         table{width:100%;border-collapse:collapse}
         th,td{border-bottom:1px solid #ddd;padding:6px;text-align:left}
-        .foto-prod{
-          width:55px;
-          height:55px;
-          object-fit:cover;
-          border:1px solid #ccc;
-          border-radius:4px;
-        }
+        .foto-prod{ width:55px; height:55px; object-fit:cover; border:1px solid #ccc; border-radius:4px; }
+        @media print { .info-box { background: #fff !important; } }
       </style>
 
       <div class="print-body">
-      <div class="lux-head">
-        <h1 style="font-size:24px;letter-spacing:2px;margin-bottom:4px;">
-          ${emp.nome || 'ABELLA JOIAS'}
-        </h1>
-        <div style="font-size:12px;">
-          ${emp.subtitulo || ''}<br>
-          WhatsApp: ${emp.whats || ''}
+        <div class="lux-head">
+          <h1 style="font-size:24px;letter-spacing:2px;margin-bottom:4px; color:#000">
+            ${emp.nome || 'ABELLA JOIAS'}
+          </h1>
+          <div style="font-size:12px;">
+            ${emp.subtitulo || ''}<br>
+            WhatsApp: ${emp.whats || ''}
+          </div>
         </div>
-      </div>
 
-      <p>
-        <b>CLIENTE:</b> ${p.cliente?.nome || p.cliente || ''} | 
-        <b>ENTREGA:</b> ${p.entrega?.cidade || ''}
-      </p>
+        <div class="info-container">
+          <div class="info-box">
+            <h3>Dados do Cliente</h3>
+            <p><b>Nome:</b> ${p.cliente?.nome || p.cliente || 'Não informado'}</p>
+            <p><b>WhatsApp:</b> ${p.cliente?.telefone || p.whatsapp || 'Não informado'}</p>
+            <p><b>Data do Pedido:</b> ${p.data || ''}</p>
+          </div>
 
-      <table>
-        <thead>
-          <tr>
-            ${tipo === 3 ? '<th>Foto</th>' : ''}
-            <th>SKU</th>
-            <th>Produto</th>
-            <th>Peso</th>
-            ${tipo > 1 ? '<th>Preço</th>' : ''}
-            <th>Qtd</th>
-            ${tipo > 1 ? '<th>Subtotal</th>' : ''}
-          </tr>
-        </thead>
-        <tbody>
+          <div class="info-box">
+            <h3>Local de Entrega</h3>
+            <p><b>Endereço:</b> ${p.entrega?.rua || '---'}, ${p.entrega?.num || 'S/N'}</p>
+            <p><b>Bairro:</b> ${p.entrega?.bairro || '---'}</p>
+            <p><b>Cidade:</b> ${p.entrega?.cidade || '---'}</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              ${tipo === 3 ? '<th>Foto</th>' : ''}
+              <th>SKU</th>
+              <th>Produto</th>
+              <th>Peso</th>
+              ${tipo > 1 ? '<th>Preço</th>' : ''}
+              <th>Qtd</th>
+              ${tipo > 1 ? '<th>Subtotal</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
       `;
+      
+      // O restante do código (itensArr.forEach, etc) continua igual...
 
       let subT = 0, pesoT = 0, qtdT = 0;
 
