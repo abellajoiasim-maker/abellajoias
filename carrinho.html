@@ -277,8 +277,18 @@ function fM(v) {
     return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function fP(p) {
-    return parseFloat(p || 0).toFixed(3) + " kg";
+function fP(pesoEmGramas) {
+
+    let pesoKg = (pesoEmGramas || 0) / 1000;
+
+    return pesoKg.toLocaleString('pt-BR', {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3
+    }) + " Kg";
+}
+
+}
+
 }
 
 function salvarCarrinho() {
@@ -353,7 +363,7 @@ function carregarCarrinho() {
         let pU = item.peso || item.weight || 0;
         if (typeof pU === 'string') pU = parseFloat(pU.replace(',', '.')) || 0;
 
-        peso += (pU * q);
+        peso += (pU * q); // continua somando em gramas
 
         box.innerHTML += `
         <div class="flex items-center gap-3 py-4 border-b border-[#222]">
