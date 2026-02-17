@@ -212,35 +212,7 @@
 
                     <b id="valorCondicao">R$ 0,00</b>
 
-                </div>
-
-            </div>
-            
-            <div class="pt-4 border-t border-dashed border-[#333] mt-4">
-
-    <h3 class="text-[10px] uppercase text-gray-400 font-bold mb-3">Frete</h3>
-
-    <select id="tipoFrete" class="w-full bg-black border border-[#333] text-white rounded-lg p-3 mb-3">
-        <option value="">Selecione o Tipo de Frete</option>
-        <option value="Sedex">Sedex</option>
-        <option value="PAC">PAC</option>
-        <option value="Entregar na Galvânica">Entregar na Galvânica</option>
-    </select>
-
-    <input 
-        type="number"
-        id="valorFrete"
-        placeholder="Valor do Frete (R$)"
-        min="0"
-        step="0.01"
-        oninput="recalcularComFrete()"
-    >
-
-    <div class="flex justify-between text-sm mt-3">
-        <span class="text-gray-400">Frete</span>
-        <b id="freteTxt" class="text-white">R$ 0,00</b>
-    </div>
-
+     </div>
 </div>
 
             <div class="mt-6 pt-6 border-t-2 border-[#caa85c] flex flex-col items-end">
@@ -426,39 +398,59 @@ function carregarCarrinho() {
         ? comPromo * (configEmpresa.descontoPix / 100)
         : 0;
 
-    const valorFinal = comPromo - descPix;
+    let totalProdutos = comPromo - descPix;
 
-    // Atualiza resumo
+   let totalFinal = totalProdutos;
+
+
+    // Atualiza blocos principais
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = fP(peso);
     document.getElementById('subtotalTxt').innerText = fM(bruto);
-    document.getElementById('descontoPromoTxt').innerText = fM(economiaPromo);
-    document.getElementById('descontoPixTxt').innerText = fM(descPix);
-    document.getElementById('totalTxt').innerText = fM(valorFinal);
 
-    // Parcelamento cartão
-    let parcelamentoBox = document.getElementById('parcelamentoBox');
-    parcelamentoBox.innerHTML = '';
-
-    if (pagamento === 'Cartao' && valorFinal > 0) {
-        let parcelas = configEmpresa.parcelas || 3;
-        let valorParcela = valorFinal / parcelas;
-
-        parcelamentoBox.innerHTML = `
-            ou ${parcelas}x de <b>${fM(valorParcela)}</b> sem juros
-        `;
+    // DESCONTO PROMOÇÃO
+    if (economiaPromo > 0) {
+        document.getElementById('linhaDescontoPromo').classList.remove('hidden');
+        document.getElementById('valorDescontoPromo').innerText = "- " + fM(economiaPromo);
+    } else {
+        document.getElementById('linhaDescontoPromo').classList.add('hidden');
     }
 
-    window.resumoFinal = {
-        subtotal: bruto,
-        descontoPromo: economiaPromo,
-        descontoPix: descPix,
-        total: valorFinal,
-        totalModelos: carrinho.length,
-        totalPecas: pecas,
-        totalPeso: peso
-    };
+    // DESCONTO PIX
+    if (descPix > 0) {
+        document.getElementById('linhaCondicao').classList.remove('hidden');
+        document.getElementById('labelCondicao').innerText = "Desconto Pix";
+        document.getElementById('valorCondicao').innerText = "- " + fM(descPix);
+    } else if (pagamento === "Cartão") {
+        document.getElementById('linhaCondicao').classList.remove('hidden');
+        let parcelas = configEmpresa.parcelas || 3;
+        let valorParcela = totalProdutos / parcelas;
+
+        document.getElementById('labelCondicao').innerText =
+            `Cartão em até ${parcelas}x`;
+        document.getElementById('valorCondicao').innerText =
+            `${parcelas}x de ${fM(valorParcela)} sem juros`;
+    } else {
+        document.getElementById('linhaCondicao').classList.add('hidden');
+    }
+
+    document.getElementById('totalTxt').innerText = fM(totalFinal);
+
+   window.resumoFinal = {
+    subtotal: bruto,
+    descontoPromo: economiaPromo,
+    descontoPix: descPix,
+    frete: 0,
+    total: totalFinal,
+    totalModelos: carrinho.length,
+    totalPecas: pecas,
+    totalPeso: peso
+};
+
+}
+function recalcularComFrete(){
+    carregarCarrinho();
 }
 
 async function finalizarPedido() {
