@@ -422,166 +422,89 @@ const item = {
 /* ROMANEIO */
 /* ROMANEIO ATUALIZADO */
 /* CABEÇALHO LUXUOSO ATUALIZADO */
+/* ROMANEIO ULTRA COMPACTO - 4 COLUNAS - LUXO */
 function gerarRomaneio(id, tipo) {
-  const fmtPeso = (g) => fPeso(g);
+  const fPeso = g => (Number(g) || 0).toLocaleString('pt-BR') + ' g';
+  const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
 
   db.ref('orders/' + id).once('value', s => {
-    const p = s.val(); 
-    if (!p) return;
-
+    const p = s.val(); if (!p) return;
     db.ref('settings/empresa').once('value', e => {
       const emp = e.val() || {};
+      const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+      let subT = 0, pesoT = 0, qtdT = 0;
 
       let html = `
       <style>
-        @page { margin: 0.8cm; }
-        .print-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1a1a1a; background: #fff; line-height: 1.2; padding: 0; }
+        @page { margin: 0.3cm; }
+        .print-body { font-family: 'Segoe UI', Arial; color: #000; background: #fff; font-size: 10px; }
+        .lux-head { text-align: center; border-bottom: 2px double #A68966; margin-bottom: 10px; padding-bottom: 5px; }
+        .lux-head h1 { font-family: 'Georgia', serif; font-size: 22px; text-transform: uppercase; letter-spacing: 4px; margin: 0; }
         
-        /* Cabeçalho Estilo Boutique */
-        .lux-head { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px double #A68966; }
-        .lux-head h1 { 
-            font-family: 'Georgia', serif; 
-            font-size: 28px; 
-            margin: 0; 
-            text-transform: uppercase; 
-            letter-spacing: 5px; 
-            color: #000;
-            font-weight: 400;
-        }
-        .lux-head .subtitle { 
-            font-size: 10px; 
-            letter-spacing: 2px; 
-            text-transform: uppercase; 
-            color: #A68966; 
-            margin-top: 5px;
-            font-weight: bold;
-        }
-        .lux-head .contact { font-size: 11px; margin-top: 8px; color: #555; }
-
-        /* Blocos de Informação Elegantes */
-        .info-container { display: flex; gap: 15px; margin-bottom: 20px; }
-        .info-box { 
-            flex: 1; 
-            border: 1px solid #e0e0e0; 
-            padding: 10px; 
-            border-radius: 0; /* Bordas retas são mais elegantes em papel */
-            font-size: 10px; 
-            position: relative;
-        }
-        .info-box h3 { 
-            margin: -10px -10px 10px -10px; 
-            font-size: 9px; 
-            background: #fcfaf7;
-            color: #A68966; 
-            text-transform: uppercase; 
-            padding: 5px 10px;
-            border-bottom: 1px solid #eee;
-            letter-spacing: 1px;
-        }
-        .info-box p { margin: 3px 0; }
-        .info-box b { color: #000; text-transform: uppercase; font-size: 9px; }
-
-        /* Grid e Tabela */
-        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .item-card { border: 1px solid #f0f0f0; padding: 6px; background: #fff; }
-        .sku-title { font-weight: bold; font-size: 10px; color: #A68966; border-bottom: 1px solid #f9f9f9; margin-bottom: 4px; }
-        .item-name { font-size: 9px; color: #444; height: 20px; overflow: hidden; }
-        .qtd-line { font-weight: bold; font-size: 11px; color: #000; margin-top: 5px; }
-
-        .financeiro { margin-top: 20px; border-top: 2px solid #A68966; padding-top: 10px; text-align: right; }
-        .total-final { font-size: 18px; font-family: 'Georgia', serif; font-weight: bold; color: #000; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .info-box { border: 1px solid #eee; padding: 5px; }
+        .info-box h3 { font-size: 8px; color: #A68966; text-transform: uppercase; margin: 0 0 3px 0; border-bottom: 1px solid #f5f5f5; }
         
-        @media print { .item-card { break-inside: avoid; } }
+        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .item-card { border: 1px solid #000; padding: 4px; display: flex; flex-direction: column; min-height: 65px; break-inside: avoid; }
+        .sku { font-weight: bold; font-size: 9px; color: #A68966; }
+        .name { font-size: 8px; height: 18px; overflow: hidden; line-height: 1.1; margin: 2px 0; }
+        .qtd-tag { background: #000; color: #fff; text-align: center; font-weight: 900; font-size: 12px; padding: 1px 0; }
+        .price-tag { font-size: 8px; text-align: center; font-weight: bold; margin-top: 2px; }
+        
+        .financeiro { margin-top: 10px; border-top: 1px solid #A68966; padding-top: 5px; text-align: right; font-size: 9px; }
+        .total-l { font-family: 'Georgia', serif; font-size: 14px; font-weight: bold; }
       </style>
 
       <div class="print-body">
         <div class="lux-head">
           <h1>${emp.nome || 'ABELLA JOIAS'}</h1>
-          <div class="subtitle">${emp.subtitulo || 'Excellence in Jewelry'}</div>
-          <div class="contact">WhatsApp: ${emp.whats || ''}</div>
+          <div style="font-size:9px; letter-spacing:1px;">${emp.subtitulo || ''} | WhatsApp: ${emp.whats || ''}</div>
         </div>
 
-        <div class="info-container">
+        <div class="info-grid">
           <div class="info-box">
             <h3>Proprietário / Cliente</h3>
-            <p><b>Nome:</b> ${p.cliente?.nome || p.cliente || ''}</p>
-            <p><b>Contato:</b> ${p.cliente?.telefone || p.whatsapp || ''}</p>
+            <b>${p.cliente?.nome || p.cliente || ''}</b><br>
+            Tel: ${p.cliente?.telefone || p.whatsapp || ''}
           </div>
           <div class="info-box">
             <h3>Destino da Remessa</h3>
-            <p><b>Logradouro:</b> ${p.entrega?.rua || '---'}, ${p.entrega?.num || ''}</p>
-            <p><b>Bairro:</b> ${p.entrega?.bairro || ''} | <b>Cidade:</b> ${p.entrega?.cidade || ''}</p>
+            ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>
+            ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}
+          </div>
+        </div>
+
+        <div class="grid-container">`;
+
+      itensArr.forEach(i => {
+        const pr = Number(i.price || 0);
+        const q = Number(i.quantidade || 1);
+        subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
+
+        html += `
+        <div class="item-card">
+          <div class="sku">${i.sku || 'S/SKU'}</div>
+          <div class="name">${i.name || ''}</div>
+          <div style="margin-top: auto;">
+            <div class="qtd-tag">X${q}</div>
+            ${tipo === 2 ? `<div class="price-tag">${fMoeda(pr * q)}</div>` : ''}
           </div>
         </div>`;
+      });
 
-      // ... O restante da lógica (itensArr.forEach, etc) continua igual ao código anterior
-
-      const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-      let subT = 0, pesoT = 0, qtdT = 0;
-
-// SE FOR TIPO GRID
-      if (tipo === 'grid_conferencia' || tipo === 'grid_cliente') {
-        html += `<div class="grid-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">`;
-        
-        itensArr.forEach(i => {
-          const pr = Number(i.price || 0);
-          const q = Number(i.quantidade || 1);
-          subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
-          
-          html += `
-          <div class="item-card" style="border: 1.5px solid #000; padding: 8px; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; background: #fff; min-height: 80px;">
-            <div>
-              <div class="sku-title" style="font-weight: bold; font-size: 11px; color: #A68966; border-bottom: 1px solid #eee; margin-bottom: 4px; padding-bottom: 2px;">
-                ${i.sku || 'S/SKU'}
-              </div>
-              <div class="item-name" style="font-size: 9px; color: #333; line-height: 1.2; height: 22px; overflow: hidden; font-weight: 500;">
-                ${i.name || ''}
-              </div>
-            </div>
-            
-            <div style="margin-top: 6px;">
-              <div class="qtd-line" style="font-weight: 900; font-size: 14px; background: #000; color: #fff; text-align: center; padding: 2px 0; border-radius: 2px;">
-                X${q}
-              </div>
-              ${tipo === 'grid_cliente' ? `
-                <div style="font-size: 8px; text-align: center; margin-top: 4px; color: #000; font-weight: bold;">
-                  Total: ${fMoeda(pr * q)}
-                </div>
-              ` : ''}
-            </div>
-          </div>`;
-        });
-        html += `</div>`;
-      } else {
-        // SE FOR MODELO TABELA (1, 2, 3)
-        html += `<table><thead><tr>${tipo===3?'<th>Foto</th>':''}<th>SKU</th><th>Produto</th><th>Qtd</th>${tipo>1?'<th>Total</th>':''}</tr></thead><tbody>`;
-        itensArr.forEach(i => {
-          const pr = Number(i.price || 0);
-          const q = Number(i.quantidade || 1);
-          subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
-          html += `<tr>
-            ${tipo===3?`<td><img src="${i.image}" style="width:30px"></td>`:''}
-            <td>${i.sku}</td><td>${i.name}</td><td>${q}</td>
-            ${tipo>1?`<td>${fMoeda(pr*q)}</td>`:''}
-          </tr>`;
-        });
-        html += `</tbody></table>`;
-      }
-
-      // RODAPÉ FINANCEIRO
-      const descP = Number(p.descontoPromo || 0);
-      const descX = Number(p.descontoPix || 0);
-      const frete = Number(p.frete || 0);
-      const total = p.total || (subT - descP - descX + frete);
-
-      html += `<div class="financeiro">
-        <span>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso: ${fmtPeso(pesoT)}</span>
-        ${(tipo > 1 || tipo === 'grid_cliente') ? `
-          <div style="margin-top:5px;">
-            Subtotal: ${fMoeda(subT)} | Descontos: ${fMoeda(descP + descX)} | Frete: ${fMoeda(frete)}<br>
-            <div class="total-final">TOTAL: ${fMoeda(total)}</div>
-          </div>` : ''}
-      </div></div>`;
+      html += `</div>
+        <div class="financeiro">
+          Itens: ${itensArr.length} | Peças: ${qtdT} | Peso: ${fPeso(pesoT)}<br>
+          ${tipo === 2 ? `
+            Subtotal: ${fMoeda(subT)} | 
+            Desc. Promo: -${fMoeda(p.descontoPromo || 0)} | 
+            Desc. Pix: -${fMoeda(p.descontoPix || 0)} | 
+            Frete: ${fMoeda(p.frete || 0)}<br>
+            <span class="total-l">TOTAL FINAL: ${fMoeda(p.total || subT)}</span>
+          ` : ''}
+        </div>
+      </div>`;
 
       document.getElementById('print-area').innerHTML = html;
       setTimeout(() => { window.print(); }, 500);
