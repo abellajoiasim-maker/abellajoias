@@ -420,40 +420,42 @@ const item = {
 
 
 function gerarRomaneio(id, tipo) {
-  const fmtPeso = (g) => fPeso(g);
-  
-  // Limpa a área antes de gerar para garantir que não duplique folhas
+  const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
+  const fmtPeso = g => (Number(g) || 0).toLocaleString('pt-BR') + ' g';
+
+  // 1. Limpeza total da área para evitar duplicidade de folhas
   const printArea = document.getElementById('print-area');
   printArea.innerHTML = "";
 
   db.ref('orders/' + id).once('value', s => {
     const p = s.val(); if (!p) return;
-
     db.ref('settings/empresa').once('value', e => {
       const emp = e.val() || {};
       const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+      
       let subT = 0, pesoT = 0, qtdT = 0;
 
       let html = `
       <style>
-        .print-body{font-family:Arial, sans-serif; padding:20px; font-size:11px; color:#000; background:#fff;}
-        .lux-head{text-align:center; border-bottom:2px solid #A68966; margin-bottom:15px; padding-bottom:10px}
+        .print-body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; color: #000; background: #fff; }
+        .lux-head { text-align: center; border-bottom: 2px solid #A68966; margin-bottom: 15px; padding-bottom: 10px; }
         
+        /* Blocos de Informação */
         .info-container { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
         .info-box { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
         .info-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
         .info-box p { margin: 2px 0; line-height: 1.4; }
 
-        table{width:100%; border-collapse:collapse; margin-top:10px;}
-        th,td{border-bottom:1px solid #ddd; padding:6px; text-align:left}
-        .foto-prod{ width:55px; height:55px; object-fit:cover; border:1px solid #ccc; border-radius:4px; }
+        /* Estilo Tabela (1, 2, 3) */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 6px; text-align: left; }
+        .foto-prod { width: 55px; height: 55px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; }
 
-        .grid-container { display: grid; gap: 8px; margin-top: 15px; }
-        .grid-3 { grid-template-columns: repeat(3, 1fr); } /* Grid Conferência */
-        .grid-2 { grid-template-columns: repeat(2, 1fr); } /* Grid Cliente */
-        .item-card { border: 1.5px solid #000; padding: 8px; text-align: center; border-radius: 4px; break-inside: avoid; }
-        .item-card b { display: block; color: #A68966; font-size: 11px; }
-        .item-card .qtd-box { font-weight: 900; font-size: 14px; margin-top: 5px; background: #000; color: #fff; padding: 2px; }
+        /* Estilo Grid (4, 5) */
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+        .item-card { border: 1px solid #000; padding: 8px; text-align: center; border-radius: 4px; break-inside: avoid; position: relative; }
+        .item-card b { display: block; color: #A68966; font-size: 10px; }
+        .qtd-box { font-weight: bold; font-size: 13px; margin-top: 5px; background: #000; color: #fff; padding: 3px; }
         
         @media print { 
           body { background: #fff; } 
@@ -463,102 +465,83 @@ function gerarRomaneio(id, tipo) {
 
       <div class="print-body">
         <div class="lux-head">
-          <h1 style="font-size:26px; letter-spacing:2px; margin-bottom:4px; font-family: Georgia, serif;">${emp.nome || 'ABELLA JOIAS'}</h1>
-          <div style="font-size:12px; color: #A68966; text-transform: uppercase; letter-spacing: 1px;">${emp.subtitulo || ''}</div>
-          <div style="font-size:12px; margin-top:5px;">WhatsApp: ${emp.whats || ''}</div>
+          <h1 style="font-size:26px; font-family: Georgia; margin:0;">${emp.nome || 'ABELLA JOIAS'}</h1>
+          <div style="font-size:12px; color:#A68966;">${emp.subtitulo || ''}</div>
+          <div style="font-size:11px;">WhatsApp: ${emp.whats || ''}</div>
         </div>
 
         <div class="info-container">
           <div class="info-box">
             <h3>Dados do Cliente</h3>
             <p><b>Nome:</b> ${p.cliente?.nome || p.cliente || ''}</p>
-            <p><b>Telefone:</b> ${p.cliente?.telefone || p.whatsapp || ''}</p>
+            <p><b>WhatsApp:</b> ${p.cliente?.telefone || p.whatsapp || ''}</p>
           </div>
           <div class="info-box">
             <h3>Local de Entrega</h3>
-            <p><b>Local:</b> ${p.entrega?.local || 'Residencial'}</p>
-            <p><b>Endereço:</b> ${p.entrega?.rua || '---'}, ${p.entrega?.num || 'S/N'}</p>
-            <p><b>Bairro:</b> ${p.entrega?.bairro || '---'} | <b>Cidade:</b> ${p.entrega?.cidade || '---'}</p>
+            <p><b>Endereço:</b> ${p.entrega?.rua || '---'}, ${p.entrega?.num || ''}</p>
+            <p><b>Bairro:</b> ${p.entrega?.bairro || ''} | <b>Cidade:</b> ${p.entrega?.cidade || ''}</p>
           </div>
         </div>`;
 
-      // --- LÓGICA DE RENDERIZAÇÃO (GRADE vs TABELA) ---
-      
-      if (tipo === 'grid1' || tipo === 'grid2') {
-          const colunas = tipo === 'grid1' ? 'grid-3' : 'grid-2';
-          html += `<div class="grid-container ${colunas}">`;
-          
-          itensArr.forEach(i => {
-              const preco = Number(i.price || 0);
-              const qtd = Number(i.quantidade || 0);
-              const peso = Number(i.peso || 0);
-              subT += (preco * qtd); pesoT += (peso * qtd); qtdT += qtd;
+      // --- RENDERIZAÇÃO ---
 
-              html += `
-                <div class="item-card">
-                    <b>${i.sku || '---'}</b>
-                    <div style="font-size:10px; height:24px; overflow:hidden; margin: 4px 0;">${i.name || ''}</div>
-                    <div style="font-size:9px; color: #666;">Peso Un: ${fmtPeso(peso)}</div>
-                    ${tipo === 'grid2' ? `<div style="font-size:10px; font-weight:bold; margin-top:2px;">Preço: ${fMoeda(preco)}</div>` : ''}
-                    <div class="qtd-box">X${qtd}</div>
-                    ${tipo === 'grid2' ? `<div style="font-size:11px; font-weight:bold; border-top:1px solid #000; margin-top:3px; padding-top:2px;">Total: ${fMoeda(preco*qtd)}</div>` : ''}
-                </div>`;
-          });
-          html += `</div>`;
-      } else {
+      if (tipo === 4 || tipo === 5) {
+        // MODO GRID (Conferência ou Cliente)
+        html += `<div class="grid-container">`;
+        itensArr.forEach(i => {
+          const pr = Number(i.price || 0); const q = Number(i.quantidade || 0);
+          subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
           html += `
-          <table>
-            <thead>
-              <tr>
-                ${tipo === 3 ? '<th>Foto</th>' : ''}
-                <th>SKU</th>
-                <th>Produto</th>
-                <th>Peso Un.</th>
-                ${tipo >= 2 ? '<th>Preço Un.</th>' : ''}
-                <th>Qtd</th>
-                ${tipo >= 2 ? '<th>Subtotal</th>' : ''}
-              </tr>
-            </thead>
-            <tbody>`;
+            <div class="item-card">
+              <b>${i.sku || '---'}</b>
+              <div style="font-size:9px; height:24px; overflow:hidden;">${i.name || ''}</div>
+              ${tipo === 5 ? `<div style="font-size:9px;">${fMoeda(pr)}</div>` : ''}
+              <div class="qtd-box">X${q}</div>
+              ${tipo === 5 ? `<div style="font-size:10px; font-weight:bold; border-top:1px solid #eee; margin-top:3px;">Total: ${fMoeda(pr*q)}</div>` : ''}
+            </div>`;
+        });
+        html += `</div>`;
+      } else {
+        // MODO TABELA (1: Conf, 2: Cliente, 3: Foto)
+        html += `<table><thead><tr>
+          ${tipo === 3 ? '<th>Foto</th>' : ''}
+          <th>SKU</th><th>Produto</th><th>Peso</th>
+          ${tipo >= 2 ? '<th>Preço</th><th>Subtotal</th>' : ''}
+          <th>Qtd</th>
+        </tr></thead><tbody>`;
 
-          itensArr.forEach(i => {
-              const preco = Number(i.price || 0);
-              const qtd = Number(i.quantidade || 0);
-              const peso = Number(i.peso || 0);
-              subT += (preco * qtd); pesoT += (peso * qtd); qtdT += qtd;
-
-              html += `
-                <tr>
-                  ${tipo === 3 ? `<td><img src="${i.image || ''}" class="foto-prod" onerror="this.src='https://via.placeholder.com/55'"></td>` : ''}
-                  <td><b>${i.sku || ''}</b></td>
-                  <td>${i.name || ''}</td>
-                  <td>${fmtPeso(peso)}</td>
-                  ${tipo >= 2 ? `<td>${fMoeda(preco)}</td>` : ''}
-                  <td><b>${qtd}</b></td>
-                  ${tipo >= 2 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}
-                </tr>`;
-          });
-          html += `</tbody></table>`;
+        itensArr.forEach(i => {
+          const pr = Number(i.price || 0); const q = Number(i.quantidade || 0);
+          subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
+          html += `<tr>
+            ${tipo === 3 ? `<td><img src="${i.image || ''}" class="foto-prod" onerror="this.src='https://via.placeholder.com/55'"></td>` : ''}
+            <td><b>${i.sku || ''}</b></td>
+            <td>${i.name || ''}</td>
+            <td>${fmtPeso(i.peso)}</td>
+            ${tipo >= 2 ? `<td>${fMoeda(pr)}</td><td>${fMoeda(pr*q)}</td>` : ''}
+            <td><b>${q}</b></td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
       }
 
-      // --- RODAPÉ DE TOTAIS ---
-      const mostrarFin = (tipo >= 2 || tipo === 'grid2' || tipo === 3);
-      
+      // --- RODAPÉ FINANCEIRO ---
+      const mostrarFin = (tipo === 2 || tipo === 3 || tipo === 5);
       html += `
         <div style="text-align:right; margin-top:20px; border-top:2px solid #A68966; padding-top:10px;">
-          <p>Itens: ${itensArr.length} | Peças Totais: ${qtdT} | Peso Total: ${fmtPeso(pesoT)}</p>
+          <p>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso Total: ${fmtPeso(pesoT)}</p>
           ${mostrarFin ? `
             <p>Subtotal: ${fMoeda(subT)}</p>
-            <p>Desconto Promo: -${fMoeda(p.descontoPromo || 0)}</p>
-            ${Number(p.descontoPix) > 0 ? `<p>Desconto PIX: -${fMoeda(p.descontoPix)}</p>` : ''}
+            <p>Desc. Promo: -${fMoeda(p.descontoPromo || 0)}</p>
+            ${Number(p.descontoPix) > 0 ? `<p>Desc. Pix: -${fMoeda(p.descontoPix)}</p>` : ''}
             <p>Frete: ${fMoeda(p.frete || 0)}</p>
-            <h2 style="color:#A68966; font-size:18px; margin:5px 0;">TOTAL FINAL: ${fMoeda(p.total || (subT + (p.frete || 0)))}</h2>
+            <h2 style="color:#A68966; margin:5px 0;">TOTAL FINAL: ${fMoeda(p.total || subT)}</h2>
           ` : ''}
         </div>
       </div>`;
 
       printArea.innerHTML = html;
-      setTimeout(() => window.print(), 800);
+      setTimeout(() => { window.print(); }, 800);
     });
   });
 }
