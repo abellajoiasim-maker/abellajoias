@@ -160,7 +160,19 @@ if (!firebase.apps.length) {
   });
 }
 const db = firebase.database();
-const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+const fMoeda = v =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(Number(v) || 0);
+const fPeso = g => {
+  const kg = (Number(g) || 0) / 1000;
+  return kg.toLocaleString('pt-BR', {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3
+  }) + ' Kg';
+};
+
 
 /* NAVEGAÇÃO */
 function showTab(id, btn) {
@@ -307,26 +319,64 @@ function adicionarItemEditor() { addItemEditor(); }
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 
 function salvarPedidoEditado(){
-  const itens=[]; let total=0, pesoTotal=0;
+
+  const itens = [];
+  let subtotal = 0;
+  let pesoTotal = 0;
+  let totalPecas = 0;
+
   document.querySelectorAll('#edItens > div.card').forEach(c=>{
     const ins = c.querySelectorAll('input');
-    const i={ sku:ins[0].value, name:ins[1].value, peso:+ins[2].value||0, price:+ins[3].value||0, quantidade:+ins[4].value||1 };
-    total+=(i.price*i.quantidade); pesoTotal += (i.peso * i.quantidade);
-    itens.push(i);
+
+    const item = {
+      sku: ins[0].value,
+      name: ins[1].value,
+      peso: Number(ins[2].value) || 0, // sempre gramas
+      price: Number(ins[3].value) || 0,
+      quantidade: Number(ins[4].value) || 1
+    };
+
+    subtotal += item.price * item.quantidade;
+    pesoTotal += item.peso * item.quantidade;
+    totalPecas += item.quantidade;
+
+    itens.push(item);
   });
-  const dp = +document.getElementById('edDescPromo').value||0;
-  const dx = +document.getElementById('edDescPix').value||0;
+
+  const descontoPromo = Number(document.getElementById('edDescPromo').value) || 0;
+  const descontoPix = Number(document.getElementById('edDescPix').value) || 0;
+
+  const totalFinal = subtotal - descontoPromo - descontoPix;
+
   db.ref('orders/'+pedidoEditando).update({
-    cliente:{ nome:document.getElementById('edClienteNome').value, telefone:document.getElementById('edClienteTel').value },
-    entrega:{ rua:document.getElementById('edRua').value, num:document.getElementById('edNum').value, bairro:document.getElementById('edBairro').value, cidade:document.getElementById('edCidade').value },
-    itens, pesoTotal: Number(pesoTotal.toFixed(2)), descontoPromo: dp, descontoPix: dx,
-    total: Number((total - dp - dx).toFixed(2)), ajustadoManualmente:true
-  }).then(()=>{ alert("Salvo!"); fecharEditorPedido(); });
+    cliente:{
+      nome:document.getElementById('edClienteNome').value,
+      telefone:document.getElementById('edClienteTel').value
+    },
+    entrega:{
+      rua:document.getElementById('edRua').value,
+      num:document.getElementById('edNum').value,
+      bairro:document.getElementById('edBairro').value,
+      cidade:document.getElementById('edCidade').value
+    },
+    itens,
+    subtotal: Number(subtotal.toFixed(2)),
+    pesoTotal: Number(pesoTotal.toFixed(0)), // salvo em gramas
+    totalPecas,
+    descontoPromo,
+    descontoPix,
+    total: Number(totalFinal.toFixed(2)),
+    ajustadoManualmente:true
+  }).then(()=>{
+    alert("Pedido atualizado com sucesso!");
+    fecharEditorPedido();
+  });
 }
+
 
 /* ROMANEIO */
 function gerarRomaneio(id, tipo = 1) {
-  const fmtPeso = (g) => g >= 1000 ? `${(g/1000).toFixed(3)} kg` : `${g.toFixed(2)} g`;
+const fmtPeso = (g) => fPeso(g);
   db.ref('orders/' + id).once('value', s => {
     const p = s.val(); if (!p) return;
     db.ref('settings/empresa').once('value', e => {
@@ -344,7 +394,15 @@ function gerarRomaneio(id, tipo = 1) {
         html += `<tr>${tipo === 3 ? `<td><img src="${i.image||''}" style="width:40px"></td>` : ''}<td>${i.sku||''}</td><td>${i.name||''}</td><td>${fmtPeso(peso)}</td>${tipo > 1 ? `<td>${fMoeda(preco)}</td>` : ''}<td>${qtd}</td>${tipo > 1 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}</tr>`;
       });
       html += `</tbody></table><div style="text-align:right;margin-top:10px">Qtd: ${qtdT} | Peso: ${fmtPeso(pesoT)}<br>`;
-      if(tipo > 1) html += `Subtotal: ${fMoeda(subT)}<br>Descontos: -${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))}<br><b>TOTAL: ${fMoeda(p.total || subT)}</b>`;
+if(tipo > 1){
+  html += `
+  Subtotal: ${fMoeda(p.subtotal || subT)}<br>
+  Desconto Promo: -${fMoeda(p.descontoPromo || 0)}<br>
+  Desconto Pix: -${fMoeda(p.descontoPix || 0)}<br>
+  <b>TOTAL FINAL: ${fMoeda(p.total || subT)}</b>
+  `;
+}
+
       html += `</div></div>`;
       document.getElementById('print-area').innerHTML = html;
       setTimeout(() => window.print(), 500);
