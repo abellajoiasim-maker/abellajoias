@@ -147,8 +147,8 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
     <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 1)">ROMANEIO 1</button>
     <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
     <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
-    <button class="btn bg-purple-900 border-purple-700" onclick="gerarRomaneio(pedidoEditando, 'grid1')">GRID CONFERÊNCIA</button>
-    <button class="btn bg-purple-900 border-purple-700" onclick="gerarRomaneio(pedidoEditando, 'grid2')">GRID CLIENTE</button>
+   <button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_conferencia')">GRID CONFERÊNCIA</button>
+<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_cliente')">GRID CLIENTE</button>
     <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR</button>
     </div>
   </div>
@@ -503,48 +503,8 @@ function gerarRomaneio(id, tipo) {
       const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
       let subT = 0, pesoT = 0, qtdT = 0;
 
-      itensArr.forEach(i => {
-          const preco = Number(i.price || 0);
-          const qtd = Number(i.quantidade || 0);
-          const peso = Number(i.peso || 0);
-          subT += (preco * qtd); 
-          pesoT += (peso * qtd); 
-          qtdT += qtd;
-
-          html += `
-            <div class="item-card">
-                <div class="sku-title">${i.sku || 'S/SKU'}</div>
-                <div class="item-name">${i.name || ''}</div>
-                <div class="qtd-line">X${qtd}</div>
-                ${tipo === 'grid_cliente' ? `
-                <div class="price-line">
-                    <span>Un: ${fMoeda(preco)}</span>
-                    <b>Total: ${fMoeda(preco * qtd)}</b>
-                </div>` : ''}
-            </div>`;
-      });
-
-      html += `</div>`;
-
-      // CÁLCULOS FINANCEIROS
-      const descP = Number(p.descontoPromo || 0);
-      const descX = Number(p.descontoPix || 0);
-      const frete = Number(p.frete || 0);
-      const total = p.total !== undefined ? p.total : (subT - descP - descX + frete);
-
-      html += `
-        <div class="financeiro">
-          <span>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso: ${fmtPeso(pesoT)}</span>
-          ${tipo === 'grid_cliente' ? `
-            <div style="margin-top:5px;">
-                Subtotal: ${fMoeda(p.subtotal || subT)}<br>
-                Desconto Promo: -${fMoeda(descP)} | Desconto PIX: -${fMoeda(descX)}<br>
-                Frete: ${fMoeda(frete)}<br>
-                <div class="total-final">VALOR TOTAL: ${fMoeda(total)}</div>
-            </div>
-          ` : `
-            <div style="font-weight:bold; margin-top:5px;">CONFERÊNCIA INTERNA - SEM VALORES</div>
-          `}
+<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_conferencia')">GRID CONFERÊNCIA</button>
+<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_cliente')">GRID CLIENTE</button>
         </div>
       </div>`;
 
