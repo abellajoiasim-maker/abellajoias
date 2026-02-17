@@ -433,124 +433,118 @@ function gerarRomaneio(id, tipo) {
 
       let html = `
       <style>
-        .print-body{font-family:Arial;padding:20px;font-size:11px;color:#000;background:#fff;}
-        .lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:15px;padding-bottom:10px}
-        
-        /* Blocos de Informação Superior */
-        .info-container { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
-        .info-box { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-        .info-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
-        .info-box p { margin: 2px 0; line-height: 1.4; }
+        @page { margin: 0.5cm; }
+        .print-body { font-family: Arial, sans-serif; color: #000; background: #fff; line-height: 1.1; }
+        .lux-head { text-align: center; border-bottom: 1px solid #A68966; margin-bottom: 8px; padding-bottom: 5px; }
+        .lux-head h1 { font-size: 18px; margin: 0; text-transform: uppercase; }
+        .lux-head div { font-size: 10px; }
 
-        /* Estilos da Tabela Tradicional */
-        table{width:100%;border-collapse:collapse; margin-top:10px;}
-        th,td{border-bottom:1px solid #ddd;padding:6px;text-align:left}
-        .foto-prod{ width:55px; height:55px; object-fit:cover; border:1px solid #ccc; border-radius:4px; }
+        /* Blocos de Informação Compactos */
+        .info-container { display: flex; gap: 10px; margin-bottom: 10px; }
+        .info-box { flex: 1; border: 1px solid #ccc; padding: 5px; border-radius: 4px; font-size: 9px; }
+        .info-box h3 { margin: 0 0 3px 0; font-size: 9px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
+        .info-box p { margin: 1px 0; }
 
-        /* Estilos da Grade (Grid) */
-        .grid-container { display: grid; gap: 8px; margin-top: 15px; }
-        .grid-3 { grid-template-columns: repeat(3, 1fr); }
-        .grid-2 { grid-template-columns: repeat(2, 1fr); }
-        .item-card { border: 1px solid #ccc; padding: 8px; text-align: center; border-radius: 4px; }
-        .item-card b { display: block; color: #A68966; }
-        .item-card .qtd-box { font-weight: bold; font-size: 12px; margin-top: 5px; background: #f0f0f0; padding: 2px; }
-        
-        @media print { body { background: #fff; } .info-box { background: #fff !important; } }
+        /* Grid de 3 Colunas Ultra Compacto */
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 4px; 
+        }
+        .item-card { 
+            border: 1px solid #ddd; 
+            padding: 4px; 
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .sku-title { font-weight: bold; font-size: 9px; color: #A68966; white-space: nowrap; overflow: hidden; }
+        .item-name { font-size: 8px; color: #333; height: 18px; line-height: 9px; overflow: hidden; margin: 2px 0; }
+        .qtd-line { font-weight: bold; font-size: 10px; background: #f4f4f4; text-align: center; padding: 1px; }
+        .price-line { font-size: 8px; display: flex; justify-content: space-between; margin-top: 2px; border-top: 1px dotted #eee; }
+
+        /* Totais Financeiros */
+        .financeiro { 
+            margin-top: 10px; 
+            border-top: 1px solid #000; 
+            padding-top: 5px; 
+            text-align: right; 
+            font-size: 10px; 
+        }
+        .total-final { font-size: 14px; font-weight: bold; color: #000; margin-top: 3px; }
+
+        @media print { 
+            .item-card { break-inside: avoid; }
+        }
       </style>
 
       <div class="print-body">
         <div class="lux-head">
-          <h1 style="font-size:24px;letter-spacing:2px;margin-bottom:4px;">${emp.nome || 'ABELLA JOIAS'}</h1>
-          <div style="font-size:12px;">${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</div>
+          <h1>${emp.nome || 'ABELLA JOIAS'}</h1>
+          <div>${emp.subtitulo || ''} | WhatsApp: ${emp.whats || ''}</div>
         </div>
 
         <div class="info-container">
           <div class="info-box">
-            <h3>Dados do Cliente</h3>
+            <h3>CLIENTE</h3>
             <p><b>Nome:</b> ${p.cliente?.nome || p.cliente || ''}</p>
             <p><b>WhatsApp:</b> ${p.cliente?.telefone || p.whatsapp || ''}</p>
-            <p><b>Data:</b> ${p.data || ''}</p>
           </div>
           <div class="info-box">
-            <h3>Local de Entrega</h3>
-            <p><b>Endereço:</b> ${p.entrega?.rua || '---'}, ${p.entrega?.num || 'S/N'}</p>
-            <p><b>Bairro:</b> ${p.entrega?.bairro || '---'}</p>
-            <p><b>Cidade:</b> ${p.entrega?.cidade || '---'}</p>
+            <h3>ENTREGA</h3>
+            <p>${p.entrega?.rua || '---'}, ${p.entrega?.num || ''} - ${p.entrega?.bairro || ''}</p>
+            <p><b>${p.entrega?.cidade || ''}</b></p>
           </div>
         </div>
-      `;
+
+        <div class="grid-container">`;
 
       const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
       let subT = 0, pesoT = 0, qtdT = 0;
 
-      // LÓGICA DE RENDERIZAÇÃO POR TIPO
-      if (tipo === 'grid1' || tipo === 'grid2') {
-          // --- VERSÃO EM GRADE ---
-          const colunas = tipo === 'grid1' ? 'grid-3' : 'grid-2';
-          html += `<div class="grid-container ${colunas}">`;
-          
-          itensArr.forEach(i => {
-              const preco = Number(i.price || 0);
-              const qtd = Number(i.quantidade || 0);
-              subT += (preco * qtd); pesoT += (Number(i.peso || 0) * qtd); qtdT += qtd;
+      itensArr.forEach(i => {
+          const preco = Number(i.price || 0);
+          const qtd = Number(i.quantidade || 0);
+          const peso = Number(i.peso || 0);
+          subT += (preco * qtd); 
+          pesoT += (peso * qtd); 
+          qtdT += qtd;
 
-              html += `
-                <div class="item-card">
-                    <b>${i.sku || '---'}</b>
-                    <div style="font-size:9px; height:24px; overflow:hidden;">${i.name || ''}</div>
-                    ${tipo === 'grid2' ? `<div style="font-size:9px;">${fMoeda(preco)}</div>` : ''}
-                    <div class="qtd-box">(X${qtd})</div>
-                    ${tipo === 'grid2' ? `<div style="font-size:10px; border-top:1px solid #eee; margin-top:3px;">Total: ${fMoeda(preco*qtd)}</div>` : ''}
-                </div>`;
-          });
-          html += `</div>`;
-      } else {
-          // --- VERSÃO EM TABELA (1, 2 e 3) ---
           html += `
-          <table>
-            <thead>
-              <tr>
-                ${tipo === 3 ? '<th>Foto</th>' : ''}
-                <th>SKU</th>
-                <th>Produto</th>
-                <th>Peso</th>
-                ${tipo > 1 ? '<th>Preço</th>' : ''}
-                <th>Qtd</th>
-                ${tipo > 1 ? '<th>Subtotal</th>' : ''}
-              </tr>
-            </thead>
-            <tbody>`;
+            <div class="item-card">
+                <div class="sku-title">${i.sku || 'S/SKU'}</div>
+                <div class="item-name">${i.name || ''}</div>
+                <div class="qtd-line">X${qtd}</div>
+                ${tipo === 'grid_cliente' ? `
+                <div class="price-line">
+                    <span>Un: ${fMoeda(preco)}</span>
+                    <b>Total: ${fMoeda(preco * qtd)}</b>
+                </div>` : ''}
+            </div>`;
+      });
 
-          itensArr.forEach(i => {
-              const preco = Number(i.price || 0);
-              const qtd = Number(i.quantidade || 0);
-              subT += (preco * qtd); pesoT += (Number(i.peso || 0) * qtd); qtdT += qtd;
-              let imgSrc = i.image || 'https://via.placeholder.com/55x55?text=Sem+Foto';
+      html += `</div>`;
 
-              html += `
-                <tr>
-                  ${tipo === 3 ? `<td><img src="${imgSrc}" class="foto-prod"></td>` : ''}
-                  <td>${i.sku || ''}</td>
-                  <td>${i.name || ''}</td>
-                  <td>${fmtPeso(i.peso || 0)}</td>
-                  ${tipo > 1 ? `<td>${fMoeda(preco)}</td>` : ''}
-                  <td>${qtd}</td>
-                  ${tipo > 1 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}
-                </tr>`;
-          });
-          html += `</tbody></table>`;
-      }
+      // CÁLCULOS FINANCEIROS
+      const descP = Number(p.descontoPromo || 0);
+      const descX = Number(p.descontoPix || 0);
+      const frete = Number(p.frete || 0);
+      const total = p.total !== undefined ? p.total : (subT - descP - descX + frete);
 
-      // RODAPÉ DE TOTAIS
       html += `
-        <div style="text-align:right; margin-top:20px; border-top:2px solid #eee; padding-top:10px;">
-          <p>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso: ${fmtPeso(pesoT)}</p>
-          ${(tipo > 1 || tipo === 'grid2') ? `
-            <p>Subtotal: ${fMoeda(p.subtotal || subT)}</p>
-            <p>Descontos: -${fMoeda((p.descontoPromo || 0) + (p.descontoPix || 0))}</p>
-            <p>Frete: ${fMoeda(p.frete || 0)}</p>
-            <h2 style="color:#A68966">TOTAL: ${fMoeda(p.total || (subT + (p.frete || 0)))}</h2>
-          ` : ''}
+        <div class="financeiro">
+          <span>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso: ${fmtPeso(pesoT)}</span>
+          ${tipo === 'grid_cliente' ? `
+            <div style="margin-top:5px;">
+                Subtotal: ${fMoeda(p.subtotal || subT)}<br>
+                Desconto Promo: -${fMoeda(descP)} | Desconto PIX: -${fMoeda(descX)}<br>
+                Frete: ${fMoeda(frete)}<br>
+                <div class="total-final">VALOR TOTAL: ${fMoeda(total)}</div>
+            </div>
+          ` : `
+            <div style="font-weight:bold; margin-top:5px;">CONFERÊNCIA INTERNA - SEM VALORES</div>
+          `}
         </div>
       </div>`;
 
