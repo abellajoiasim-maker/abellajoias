@@ -324,18 +324,22 @@ document.getElementById('edFrete').value =
 function addItemEditor(i={}){
   const div = document.createElement('div');
   div.className = "card bg-black/40 border-[#222] mb-2";
+  // Adicionamos um campo hidden para guardar a URL da imagem
   div.innerHTML = `
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
         <input placeholder="SKU" value="${i.sku||''}">
         <input placeholder="Nome" value="${i.name||''}">
         <input type="number" placeholder="Peso" value="${i.peso||i.weight||0}">
         <input type="number" placeholder="Preço" value="${i.price||i.precoFinal||0}">
         <input type="number" placeholder="Qtd" value="${i.quantidade||i.qtd||1}">
+        <input type="hidden" class="item-image" value="${i.image||''}">
+        <div class="flex items-center justify-center">
+            <img src="${i.image || 'https://via.placeholder.com/50'}" class="w-8 h-8 object-cover rounded">
+        </div>
     </div>
     <button class="text-red-500 text-[10px] uppercase font-bold" onclick="this.parentElement.remove()">Remover</button>`;
   document.getElementById('edItens').appendChild(div);
 }
-
 function adicionarItemEditor() { addItemEditor(); }
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 
@@ -347,15 +351,18 @@ function salvarPedidoEditado(){
   let totalPecas = 0;
 
   document.querySelectorAll('#edItens > div.card').forEach(c=>{
-    const ins = c.querySelectorAll('input');
+   // Dentro do document.querySelectorAll('#edItens > div.card').forEach(c=>{ ...
+const ins = c.querySelectorAll('input');
+const imgInput = c.querySelector('.item-image'); // Pega o hidden da imagem
 
-    const item = {
-      sku: ins[0].value,
-      name: ins[1].value,
-      peso: Number(ins[2].value) || 0, // sempre em gramas
-      price: Number(ins[3].value) || 0,
-      quantidade: Number(ins[4].value) || 1
-    };
+const item = {
+  sku: ins[0].value,
+  name: ins[1].value,
+  peso: Number(ins[2].value) || 0,
+  price: Number(ins[3].value) || 0,
+  quantidade: Number(ins[4].value) || 1,
+  image: imgInput ? imgInput.value : "" // Salva a URL da imagem de volta no banco
+};
 
     subtotal += item.price * item.quantidade;
     pesoTotal += item.peso * item.quantidade;
@@ -533,7 +540,9 @@ function gerarRomaneio(id, tipo = 1) {
 
       document.getElementById('print-area').innerHTML = html;
 
-      setTimeout(() => window.print(), 500);
+setTimeout(() => {
+    window.print();
+}, 1500); 
     });
   });
 }
