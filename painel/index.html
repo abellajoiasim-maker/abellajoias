@@ -143,12 +143,13 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
     </div>
     <div class="flex flex-wrap gap-2 justify-between mt-6 pt-4 border-t border-[#222]">
       <button class="btn px-6" onclick="fecharEditorPedido()">CANCELAR</button>
-      <div class="flex gap-2">
-          <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 1)">ROMANEIO 1</button>
-          <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
-          <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
-          <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR</button>
-      </div>
+     <div class="flex gap-2 flex-wrap">
+    <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 1)">ROMANEIO 1</button>
+    <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
+    <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
+    <button class="btn bg-purple-900 border-purple-700" onclick="gerarRomaneio(pedidoEditando, 'grid1')">GRID CONFERÊNCIA</button>
+    <button class="btn bg-purple-900 border-purple-700" onclick="gerarRomaneio(pedidoEditando, 'grid2')">GRID CLIENTE</button>
+    <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR</button>
     </div>
   </div>
 </div>
@@ -420,7 +421,7 @@ const item = {
 
 /* ROMANEIO */
 /* ROMANEIO ATUALIZADO */
-function gerarRomaneio(id, tipo = 1) {
+function gerarRomaneio(id, tipo) {
   const fmtPeso = (g) => fPeso(g);
 
   db.ref('orders/' + id).once('value', s => {
@@ -432,40 +433,44 @@ function gerarRomaneio(id, tipo = 1) {
 
       let html = `
       <style>
-        .print-body{font-family:Arial, sans-serif;padding:20px;font-size:11px;color:#000}
-        .lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:20px;padding-bottom:10px}
+        .print-body{font-family:Arial;padding:20px;font-size:11px;color:#000;background:#fff;}
+        .lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:15px;padding-bottom:10px}
         
-        /* Blocos de Informação */
-        .info-container { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
-        .info-box { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #f9f9f9; }
+        /* Blocos de Informação Superior */
+        .info-container { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+        .info-box { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
         .info-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
         .info-box p { margin: 2px 0; line-height: 1.4; }
 
-        table{width:100%;border-collapse:collapse}
+        /* Estilos da Tabela Tradicional */
+        table{width:100%;border-collapse:collapse; margin-top:10px;}
         th,td{border-bottom:1px solid #ddd;padding:6px;text-align:left}
         .foto-prod{ width:55px; height:55px; object-fit:cover; border:1px solid #ccc; border-radius:4px; }
-        @media print { .info-box { background: #fff !important; } }
+
+        /* Estilos da Grade (Grid) */
+        .grid-container { display: grid; gap: 8px; margin-top: 15px; }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .item-card { border: 1px solid #ccc; padding: 8px; text-align: center; border-radius: 4px; }
+        .item-card b { display: block; color: #A68966; }
+        .item-card .qtd-box { font-weight: bold; font-size: 12px; margin-top: 5px; background: #f0f0f0; padding: 2px; }
+        
+        @media print { body { background: #fff; } .info-box { background: #fff !important; } }
       </style>
 
       <div class="print-body">
         <div class="lux-head">
-          <h1 style="font-size:24px;letter-spacing:2px;margin-bottom:4px; color:#000">
-            ${emp.nome || 'ABELLA JOIAS'}
-          </h1>
-          <div style="font-size:12px;">
-            ${emp.subtitulo || ''}<br>
-            WhatsApp: ${emp.whats || ''}
-          </div>
+          <h1 style="font-size:24px;letter-spacing:2px;margin-bottom:4px;">${emp.nome || 'ABELLA JOIAS'}</h1>
+          <div style="font-size:12px;">${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</div>
         </div>
 
         <div class="info-container">
           <div class="info-box">
             <h3>Dados do Cliente</h3>
-            <p><b>Nome:</b> ${p.cliente?.nome || p.cliente || 'Não informado'}</p>
-            <p><b>WhatsApp:</b> ${p.cliente?.telefone || p.whatsapp || 'Não informado'}</p>
-            <p><b>Data do Pedido:</b> ${p.data || ''}</p>
+            <p><b>Nome:</b> ${p.cliente?.nome || p.cliente || ''}</p>
+            <p><b>WhatsApp:</b> ${p.cliente?.telefone || p.whatsapp || ''}</p>
+            <p><b>Data:</b> ${p.data || ''}</p>
           </div>
-
           <div class="info-box">
             <h3>Local de Entrega</h3>
             <p><b>Endereço:</b> ${p.entrega?.rua || '---'}, ${p.entrega?.num || 'S/N'}</p>
@@ -473,92 +478,84 @@ function gerarRomaneio(id, tipo = 1) {
             <p><b>Cidade:</b> ${p.entrega?.cidade || '---'}</p>
           </div>
         </div>
-
-        <table>
-          <thead>
-            <tr>
-              ${tipo === 3 ? '<th>Foto</th>' : ''}
-              <th>SKU</th>
-              <th>Produto</th>
-              <th>Peso</th>
-              ${tipo > 1 ? '<th>Preço</th>' : ''}
-              <th>Qtd</th>
-              ${tipo > 1 ? '<th>Subtotal</th>' : ''}
-            </tr>
-          </thead>
-          <tbody>
       `;
-      
-      // O restante do código (itensArr.forEach, etc) continua igual...
 
+      const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
       let subT = 0, pesoT = 0, qtdT = 0;
 
-      const itensArr = Array.isArray(p.itens) 
-        ? p.itens 
-        : Object.values(p.itens || {});
+      // LÓGICA DE RENDERIZAÇÃO POR TIPO
+      if (tipo === 'grid1' || tipo === 'grid2') {
+          // --- VERSÃO EM GRADE ---
+          const colunas = tipo === 'grid1' ? 'grid-3' : 'grid-2';
+          html += `<div class="grid-container ${colunas}">`;
+          
+          itensArr.forEach(i => {
+              const preco = Number(i.price || 0);
+              const qtd = Number(i.quantidade || 0);
+              subT += (preco * qtd); pesoT += (Number(i.peso || 0) * qtd); qtdT += qtd;
 
-      itensArr.forEach(i => {
+              html += `
+                <div class="item-card">
+                    <b>${i.sku || '---'}</b>
+                    <div style="font-size:9px; height:24px; overflow:hidden;">${i.name || ''}</div>
+                    ${tipo === 'grid2' ? `<div style="font-size:9px;">${fMoeda(preco)}</div>` : ''}
+                    <div class="qtd-box">(X${qtd})</div>
+                    ${tipo === 'grid2' ? `<div style="font-size:10px; border-top:1px solid #eee; margin-top:3px;">Total: ${fMoeda(preco*qtd)}</div>` : ''}
+                </div>`;
+          });
+          html += `</div>`;
+      } else {
+          // --- VERSÃO EM TABELA (1, 2 e 3) ---
+          html += `
+          <table>
+            <thead>
+              <tr>
+                ${tipo === 3 ? '<th>Foto</th>' : ''}
+                <th>SKU</th>
+                <th>Produto</th>
+                <th>Peso</th>
+                ${tipo > 1 ? '<th>Preço</th>' : ''}
+                <th>Qtd</th>
+                ${tipo > 1 ? '<th>Subtotal</th>' : ''}
+              </tr>
+            </thead>
+            <tbody>`;
 
-        const preco = Number(i.price || 0);
-        const qtd   = Number(i.quantidade || 0);
-        const peso  = Number(i.peso || 0);
+          itensArr.forEach(i => {
+              const preco = Number(i.price || 0);
+              const qtd = Number(i.quantidade || 0);
+              subT += (preco * qtd); pesoT += (Number(i.peso || 0) * qtd); qtdT += qtd;
+              let imgSrc = i.image || 'https://via.placeholder.com/55x55?text=Sem+Foto';
 
-        subT  += (preco * qtd);
-        pesoT += (peso * qtd);
-        qtdT  += qtd;
-
-        // 🔥 GARANTE IMAGEM VÁLIDA
-        let imgSrc = i.image && i.image !== '' 
-          ? i.image 
-          : 'https://via.placeholder.com/55x55?text=Sem+Foto';
-
-        html += `
-          <tr>
-            ${tipo === 3 ? `
-              <td>
-                <img src="${imgSrc}" class="foto-prod">
-              </td>` : ''}
-            <td>${i.sku || ''}</td>
-            <td>${i.name || ''}</td>
-            <td>${fmtPeso(peso)}</td>
-            ${tipo > 1 ? `<td>${fMoeda(preco)}</td>` : ''}
-            <td>${qtd}</td>
-            ${tipo > 1 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}
-          </tr>
-        `;
-      });
-
-      html += `
-        </tbody>
-      </table>
-
-      <div style="text-align:right;margin-top:10px">
-        Itens (SKUs): ${itensArr.length}<br>
-        Total Peças: ${qtdT}<br>
-        Peso Total: ${fmtPeso(pesoT)}<br>
-      `;
-
-      if(tipo > 1){
-        html += `
-          Subtotal: ${fMoeda(p.subtotal || subT)}<br>
-          Desconto Promo: -${fMoeda(p.descontoPromo || 0)}<br>
-          Desconto Pix: -${fMoeda(p.descontoPix || 0)}<br>
-          Frete: ${fMoeda(p.frete || 0)}<br>
-          <b style="font-size:14px">
-            TOTAL FINAL: ${fMoeda(
-              p.total !== undefined ? p.total : subT
-            )}
-          </b>
-        `;
+              html += `
+                <tr>
+                  ${tipo === 3 ? `<td><img src="${imgSrc}" class="foto-prod"></td>` : ''}
+                  <td>${i.sku || ''}</td>
+                  <td>${i.name || ''}</td>
+                  <td>${fmtPeso(i.peso || 0)}</td>
+                  ${tipo > 1 ? `<td>${fMoeda(preco)}</td>` : ''}
+                  <td>${qtd}</td>
+                  ${tipo > 1 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}
+                </tr>`;
+          });
+          html += `</tbody></table>`;
       }
 
-      html += `</div></div>`;
+      // RODAPÉ DE TOTAIS
+      html += `
+        <div style="text-align:right; margin-top:20px; border-top:2px solid #eee; padding-top:10px;">
+          <p>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso: ${fmtPeso(pesoT)}</p>
+          ${(tipo > 1 || tipo === 'grid2') ? `
+            <p>Subtotal: ${fMoeda(p.subtotal || subT)}</p>
+            <p>Descontos: -${fMoeda((p.descontoPromo || 0) + (p.descontoPix || 0))}</p>
+            <p>Frete: ${fMoeda(p.frete || 0)}</p>
+            <h2 style="color:#A68966">TOTAL: ${fMoeda(p.total || (subT + (p.frete || 0)))}</h2>
+          ` : ''}
+        </div>
+      </div>`;
 
       document.getElementById('print-area').innerHTML = html;
-
-setTimeout(() => {
-    window.print();
-}, 1500); 
+      setTimeout(() => window.print(), 1000);
     });
   });
 }
