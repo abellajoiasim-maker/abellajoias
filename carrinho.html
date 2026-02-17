@@ -284,64 +284,73 @@
 <script>
 
 if (!firebase.apps.length) {
-
     firebase.initializeApp({
-
-        apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-
-        databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
     });
-
 }
 
 const db = firebase.database();
 
-let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
-
+let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
 let pagamento = '';
-
 let foneLoja = '';
-
 let configEmpresa = { descontoPix: 0, parcelas: 3, nomePromo: "OFERTA" };
 
+function fM(v) {
+    return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
+function fP(p) {
+    return parseFloat(p || 0).toFixed(3) + " kg";
+}
 
-const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function salvarCarrinho() {
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+}
 
-const fP = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + 'g';
+function removerItem(index) {
+    carrinho.splice(index, 1);
+    salvarCarrinho();
+    carregarCarrinho();
+}
 
+function altQtd(i, d) {
+    let atual = parseInt(carrinho[i].quantidade) || 1;
+    let novaQtd = atual + d;
 
+    if (novaQtd < 1) {
+        removerItem(i);
+    } else {
+        carrinho[i].quantidade = novaQtd;
+        salvarCarrinho();
+        carregarCarrinho();
+    }
+}
 
-// BLOCO DE SINCRONIA INTELIGENTE
+function digitarQtd(i, valor) {
+    let novaQtd = parseInt(valor);
 
-db.ref('settings').on('value', s => { 
-
-    const data = s.val();
-
-    if(data) {
-
-        if(data.empresa) {
-
-            foneLoja = data.empresa.whats ? data.empresa.whats.replace(/\D/g,'') : '';
-
-            configEmpresa.descontoPix = parseFloat(data.empresa.descontoPix) || 0;
-
-            configEmpresa.parcelas = parseInt(data.empresa.parcelas) || 3;
-
-        }
-
-        let nomePromocaoPainel = (data.promocoes && data.promocoes.nome) || (data.empresa && data.empresa.nomePromo) || "OFERTA";
-
-        configEmpresa.nomePromo = nomePromocaoPainel.toUpperCase();
-
+    if (isNaN(novaQtd) || novaQtd < 1) {
+        novaQtd = 1;
     }
 
+    carrinho[i].quantidade = novaQtd;
+    salvarCarrinho();
     carregarCarrinho();
+}
 
-});
+function selecionarPagamento(tipo) {
+    pagamento = tipo;
+    carregarCarrinho();
+}
 
-
+function setPagamento(p, el) {
+    pagamento = p;
+    document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    carregarCarrinho();
+}
 
 function carregarCarrinho() {
 
@@ -375,15 +384,22 @@ function carregarCarrinho() {
 
         box.innerHTML += `
         <div class="flex items-center gap-3 py-4 border-b border-[#222]">
-            <button onclick="removerItem(${index})" class="btn-remove">✕</button>
+
+            <button onclick="removerItem(${index})"
+                class="w-7 h-7 bg-[#1a1a1a] border border-[#333] text-red-500 rounded-lg">
+                ✕
+            </button>
 
             <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
 
             <div class="flex-1">
-                <h3 class="text-[10px] font-bold text-white uppercase leading-tight">${item.name}</h3>
+                <h3 class="text-[10px] font-bold text-white uppercase leading-tight">
+                    ${item.name}
+                </h3>
 
                 <div class="flex items-center gap-2 mt-2">
-                    <button onclick="altQtd(${index},-1)" class="w-8 h-8 bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg">-</button>
+                    <button onclick="altQtd(${index},-1)"
+                        class="w-8 h-8 bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg">-</button>
 
                     <input type="number"
                         value="${q}"
@@ -391,13 +407,14 @@ function carregarCarrinho() {
                         onchange="digitarQtd(${index}, this.value)"
                         class="w-12 h-8 text-center bg-black border border-[#333] text-white text-xs rounded-lg !mb-0 !p-0">
 
-                    <button onclick="altQtd(${index},1)" class="w-8 h-8 bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg">+</button>
+                    <button onclick="altQtd(${index},1)"
+                        class="w-8 h-8 bg-[#1a1a1a] border border-[#333] text-[#caa85c] rounded-lg">+</button>
                 </div>
             </div>
 
             <div class="text-right">
                 ${pOrig > pProm ? `<span class="text-gray-600 line-through text-[9px]">${fM(pOrig*q)}</span>` : ''}
-                <b class="gold-text text-sm">${fM(pProm*q)}</b>
+                <b class="text-[#caa85c] text-sm">${fM(pProm*q)}</b>
             </div>
         </div>`;
     });
@@ -416,108 +433,11 @@ function carregarCarrinho() {
         subtotal: bruto,
         descontoPromo: economiaPromo,
         descontoPix: descPix,
-        total: valorFinal
+        total: valorFinal,
+        totalModelos: carrinho.length,
+        totalPecas: pecas,
+        totalPeso: peso
     };
-}
-
-function recalcularComFrete() {
-
-    let valorFrete = parseFloat(document.getElementById('valorFrete').value) || 0;
-
-    document.getElementById('freteTxt').innerText = fM(valorFrete);
-
-    let novoTotal = window.resumoFinal.total + valorFrete;
-
-    document.getElementById('totalTxt').innerText = fM(novoTotal);
-
-    window.resumoFinal.totalComFrete = novoTotal;
-}
-
-
-function removerItem(i) {
-
-    if(confirm("Deseja remover este item do carrinho?")) {
-
-        carrinho.splice(i, 1);
-
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-
-        carregarCarrinho();
-
-    }
-
-}
-
-
-
-function setPagamento(p, el) {
-
-    pagamento = p;
-
-    document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
-
-    el.classList.add('active');
-
-    carregarCarrinho();
-
-}
-
-
-
-function altQtd(i, d) {
-
-    // Pega a quantidade atual, soma a diferença (d) e garante que seja número
-
-    let atual = parseInt(carrinho[i].quantidade) || 1;
-
-    let novaQtd = atual + d;
-
-    
-
-    // Se a quantidade for menor que 1, chama a remoção
-
-    if (novaQtd < 1) {
-
-        removerItem(i);
-
-    } else {
-
-        carrinho[i].quantidade = novaQtd;
-
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-
-        carregarCarrinho();
-
-    }
-
-}
-
-
-
-// NOVA FUNÇÃO: Necessária para processar o valor quando o usuário digita no campo
-
-function digitarQtd(i, valor) {
-
-    let novaQtd = parseInt(valor);
-
-    
-
-    // Validação: se não for número ou for menor que 1, volta para 1
-
-    if (isNaN(novaQtd) || novaQtd < 1) {
-
-        novaQtd = 1;
-
-    }
-
-    
-
-    carrinho[i].quantidade = novaQtd;
-
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-
-    carregarCarrinho();
-
 }
 
 async function finalizarPedido() {
@@ -536,65 +456,53 @@ async function finalizarPedido() {
         return;
     }
 
-    const valorFrete = parseFloat(document.getElementById('valorFrete').value) || 0;
-const tipoFrete = document.getElementById('tipoFrete').value || "";
+    const pedido = {
+        cliente: { nome, telefone },
+        entrega: { nomeEntrega, rua, num, bairro, cidade, cep },
+        pagamento,
+        itens: carrinho,
 
-const totalFinal = window.resumoFinal.total + valorFrete;
+        subtotal: window.resumoFinal.subtotal,
+        descontoPromo: window.resumoFinal.descontoPromo,
+        descontoPix: window.resumoFinal.descontoPix,
+        total: window.resumoFinal.total,
 
-const pedido = {
-    cliente: { nome, telefone },
+        totalModelos: window.resumoFinal.totalModelos,
+        totalPecas: window.resumoFinal.totalPecas,
+        pesoTotal: window.resumoFinal.totalPeso,
 
-    entrega: {
-        nomeEntrega,
-        rua,
-        num,
-        bairro,
-        cidade,
-        cep
-    },
+        frete: 0,
+        tipoFrete: "",
 
-    pagamento,
-    itens: carrinho,
-
-    subtotal: window.resumoFinal.subtotal,
-    descontoPromo: window.resumoFinal.descontoPromo,
-    descontoPix: window.resumoFinal.descontoPix,
-
-    frete: 0,              // começa zerado
-    tipoFrete: "",         // vazio
-    total: window.resumoFinal.total, // ainda sem frete
-
-    data: new Date().toLocaleString('pt-BR'),
-    status: "Novo"
-};
-
-
+        data: new Date().toLocaleString('pt-BR'),
+        status: "Novo"
+    };
 
     try {
 
         await db.ref('orders').push(pedido);
 
-        const totalTexto = fM(totalFinal);
+        let msg = `Olá, meu nome é *${nome}*!
 
+Acabei de fazer um pedido pelo catálogo da Abella Joias.
 
-        let msg = Olá, meu nome é *${nome}*!\n\nAcabei de fazer um pedido pelo catálogo da Abella Joias.\n💰 *Total:* ${totalTexto}\n💳 *Pagamento:* ${pagamento}\n\nAguardando seu retorno para finalizar!;
+💰 *Subtotal:* ${fM(window.resumoFinal.subtotal)}
+💳 *Pagamento:* ${pagamento}
 
-
+Aguardando retorno com o valor do frete e total final.`;
 
         localStorage.removeItem('carrinho');
 
-        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+        window.location.href =
+            `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
 
     } catch (erro) {
-
         alert("Erro ao salvar pedido. Tente novamente.");
         console.error(erro);
-
     }
 }
 
-
-
+carregarCarrinho();
 
 </script>
 
