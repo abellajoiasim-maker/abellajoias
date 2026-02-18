@@ -100,7 +100,7 @@
                 <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Informações do Cliente</h3>
                 <input id="edClienteNome" placeholder="Nome do Cliente">
                 <input id="edClienteTel" placeholder="WhatsApp">
-                <input id="edLocal" placeholder="Local de Entrega (Ex: Residencial, Loja, etc)">
+                <input id="edLocal" placeholder="Local de Entrega (Ex: Residencial, Loja)">
             </div>
             <div class="card bg-black/40">
                 <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Endereço de Entrega</h3>
@@ -121,18 +121,9 @@
         <button class="btn w-full mb-6 border-dashed border-gray-600" onclick="adicionarItemEditor()">+ ADICIONAR NOVO PRODUTO</button>
 
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-black rounded-xl border border-[#222]">
-            <div>
-                <label class="text-[10px] text-gray-400">DESC. PROMO (R$)</label>
-                <input id="edDescPromo" class="money" placeholder="0,00">
-            </div>
-            <div>
-                <label class="text-[10px] text-gray-400">DESC. PIX (R$)</label>
-                <input id="edDescPix" class="money" placeholder="0,00">
-            </div>
-            <div>
-                <label class="text-[10px] text-gray-400">FRETE (R$)</label>
-                <input id="edFrete" class="money" placeholder="0,00">
-            </div>
+            <div><label class="text-[10px] text-gray-400">DESC. PROMO (R$)</label><input id="edDescPromo" class="money"></div>
+            <div><label class="text-[10px] text-gray-400">DESC. PIX (R$)</label><input id="edDescPix" class="money"></div>
+            <div><label class="text-[10px] text-gray-400">FRETE (R$)</label><input id="edFrete" class="money"></div>
         </div>
 
         <div class="mt-8 flex flex-col gap-4">
@@ -154,7 +145,6 @@
 <div id="print-area"></div>
 
 <script>
-/* CONFIGURAÇÃO FIREBASE */
 if (!firebase.apps.length) {
     firebase.initializeApp({
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -166,21 +156,17 @@ let pedidoEditando = null;
 
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-/* NAVEGAÇÃO */
 function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     if (btn) btn.classList.add('active');
-    
     if (id === 'pedidos') carregarPedidos();
     if (id === 'empresa') carregarEmpresaSeExistir();
     if (id === 'categorias') carregarCategorias();
-    if (id === 'produtos') carregarProdutos();
-    if (id === 'promocoes') carregarPromocoes();
 }
 
-/* GESTÃO DE CATEGORIAS */
+/* CATEGORIAS */
 function carregarCategorias() {
     db.ref('categories').on('value', s => {
         const lista = document.getElementById('listaCategorias');
@@ -200,22 +186,6 @@ function novaCategoria() {
 }
 function removerCat(id) { if(confirm('Excluir categoria?')) db.ref('categories/'+id).remove(); }
 
-/* GESTÃO DE PRODUTOS/PROMOÇÕES (Simplificado para o exemplo, restaure suas lógicas de lista se necessário) */
-function carregarProdutos() {
-    db.ref('products').limitToLast(20).on('value', s => {
-        const lista = document.getElementById('listaProdutos');
-        lista.innerHTML = '<h2 class="p-2 text-gold">Últimos 20 Produtos</h2>';
-        s.forEach(p => {
-            const val = p.val();
-            lista.innerHTML += `<div class="card text-xs">${val.sku} - ${val.name}</div>`;
-        });
-    });
-}
-
-function carregarPromocoes() {
-    document.getElementById('listaPromocoes').innerHTML = '<div class="card text-center">Módulo de promoções ativo.</div>';
-}
-
 /* PEDIDOS */
 function carregarPedidos() {
     db.ref('orders').on('value', s => {
@@ -229,13 +199,21 @@ function carregarPedidos() {
                         <b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente}</b>
                         <p class="text-[10px] text-gray-400">${p.data || ''}</p>
                     </div>
-                    <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
+                    <div class="flex gap-2">
+                        <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
+                        <button class="btn bg-red-900 text-[10px]" onclick="excluirPedido('${ped.key}')">EXCLUIR</button>
+                    </div>
                 </div>`;
         });
     });
 }
 
-/* EDITOR */
+function excluirPedido(id) {
+    if(confirm("Tem certeza que deseja excluir este pedido permanentemente?")) {
+        db.ref('orders/' + id).remove().then(() => alert("Pedido excluído!"));
+    }
+}
+
 function abrirEditorPedido(id) {
     db.ref('orders/'+id).once('value', s => {
         const p = s.val(); if (!p) return;
@@ -313,7 +291,6 @@ function salvarPedidoEditado() {
     }).then(() => alert("Pedido Salvo!"));
 }
 
-/* IMPRESSÃO (CABEÇALHO, GRID E FOTOS CORRIGIDOS) */
 function imprimir(tipo) {
     db.ref('orders/' + pedidoEditando).once('value', s => {
         const p = s.val();
@@ -323,21 +300,18 @@ function imprimir(tipo) {
             
             let html = `
             <style>
-                .p-container { font-family: Arial, sans-serif; color: #000; padding: 0; }
+                .p-container { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
                 .p-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
                 .p-header h1 { font-family: 'Cinzel', serif; font-size: 24px; margin: 0; }
                 .p-header .sub { font-weight: bold; font-size: 11px; text-transform: uppercase; margin: 2px 0; }
                 .p-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
                 .p-box { border: 1px solid #000; padding: 8px; border-radius: 4px; }
                 .p-box b { font-size: 8px; color: #666; text-transform: uppercase; display: block; border-bottom: 1px solid #eee; margin-bottom: 4px; }
-                
-                /* GRID CORRIGIDO */
                 .grid-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
                 .grid-cell { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 6px; text-align: center; page-break-inside: avoid; }
-                
                 table { width: 100%; border-collapse: collapse; }
                 th { border-bottom: 1px solid #000; padding: 5px; text-align: left; font-size: 9px; }
-                td { border-bottom: 1px solid #eee; padding: 5px; font-size: 10px; }
+                td { border-bottom: 1px solid #eee; padding: 5px; }
                 .img-mini { width: 40px; height: 40px; object-fit: contain; border: 1px solid #eee; }
                 .p-footer { margin-top: 15px; text-align: right; border-top: 2px solid #000; padding-top: 8px; }
             </style>
@@ -392,7 +366,8 @@ function imprimir(tipo) {
                 <p>Itens: ${itens.length} | Peças: ${p.totalPecas || 0} | Peso: ${p.pesoTotal || 0}g</p>`;
             if (tipo === 2 || tipo === 3 || tipo === 5) {
                 html += `<p>Subtotal: ${fMoeda(p.subtotal)} | Frete: ${fMoeda(p.frete)}</p>
-                <p style="color:red">Desconto Promo: -${fMoeda(p.descontoPromo || 0)}</p>
+                <p>Desconto Promo: -${fMoeda(p.descontoPromo || 0)}</p>
+                ${p.descontoPix > 0 ? `<p>Desconto PIX: <span style="color:green">-${fMoeda(p.descontoPix)}</span></p>` : ''}
                 <div style="font-size:16px; font-weight:bold;">TOTAL FINAL: ${fMoeda(p.total)}</div>`;
             }
             html += `</div></div>`;
@@ -403,7 +378,6 @@ function imprimir(tipo) {
     });
 }
 
-/* SUPORTE EMPRESA */
 function carregarEmpresaSeExistir() {
     db.ref('settings/empresa').once('value', s => {
         const v = s.val(); if (!v) return;
@@ -424,7 +398,6 @@ function salvarEmpresa() {
     }).then(() => alert("Dados salvos!"));
 }
 
-/* MÁSCARA MOEDA */
 document.addEventListener('input', e => {
     if(e.target.classList.contains('money')) {
         let v = e.target.value.replace(/\D/g,'');
