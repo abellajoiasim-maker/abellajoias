@@ -162,8 +162,6 @@ function showTab(id, btn) {
     document.getElementById(id).classList.add('active');
     if (btn) btn.classList.add('active');
     if (id === 'pedidos') carregarPedidos();
-    if (id === 'empresa') carregarEmpresaSeExistir();
-    if (id === 'categorias') carregarCategorias();
 }
 
 /* CATEGORIAS */
@@ -209,8 +207,8 @@ function carregarPedidos() {
 }
 
 function excluirPedido(id) {
-    if(confirm("Tem certeza que deseja excluir este pedido permanentemente?")) {
-        db.ref('orders/' + id).remove().then(() => alert("Pedido excluído!"));
+    if(confirm("Tem certeza que deseja excluir este pedido?")) {
+        db.ref('orders/' + id).remove();
     }
 }
 
@@ -252,7 +250,7 @@ function addItemEditor(i = {}) {
             <input type="number" placeholder="Qtd" value="${i.quantidade || 1}">
             <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 font-bold">✕</button>
         </div>
-        <input type="hidden" value="${i.image || ''}">
+        <input type="hidden" class="item-img" value="${i.image || ''}">
     `;
     document.getElementById('edItens').appendChild(div);
 }
@@ -291,90 +289,112 @@ function salvarPedidoEditado() {
     }).then(() => alert("Pedido Salvo!"));
 }
 
-function imprimir(tipo) {
-    db.ref('orders/' + pedidoEditando).once('value', s => {
+/* IMPRESSÃO */
+async function imprimir(tipo) {
+    db.ref('orders/' + pedidoEditando).once('value', async s => {
         const p = s.val();
-        db.ref('settings/empresa').once('value', e => {
-            const emp = e.val() || {};
-            const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+        
+        let html = `
+        <style>
+            .p-container { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
+            .p-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            .p-header h1 { font-family: 'Cinzel', serif; font-size: 24px; margin: 0; }
+            .p-header .sub { font-weight: bold; font-size: 11px; text-transform: uppercase; margin: 2px 0; }
+            .p-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+            .p-box { border: 1px solid #000; padding: 8px; border-radius: 4px; }
+            .p-box b { font-size: 8px; color: #666; text-transform: uppercase; display: block; border-bottom: 1px solid #eee; margin-bottom: 4px; }
             
-            let html = `
-            <style>
-                .p-container { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
-                .p-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-                .p-header h1 { font-family: 'Cinzel', serif; font-size: 24px; margin: 0; }
-                .p-header .sub { font-weight: bold; font-size: 11px; text-transform: uppercase; margin: 2px 0; }
-                .p-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-                .p-box { border: 1px solid #000; padding: 8px; border-radius: 4px; }
-                .p-box b { font-size: 8px; color: #666; text-transform: uppercase; display: block; border-bottom: 1px solid #eee; margin-bottom: 4px; }
-                .grid-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
-                .grid-cell { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 6px; text-align: center; page-break-inside: avoid; }
-                table { width: 100%; border-collapse: collapse; }
-                th { border-bottom: 1px solid #000; padding: 5px; text-align: left; font-size: 9px; }
-                td { border-bottom: 1px solid #eee; padding: 5px; }
-                .img-mini { width: 40px; height: 40px; object-fit: contain; border: 1px solid #eee; }
-                .p-footer { margin-top: 15px; text-align: right; border-top: 2px solid #000; padding-top: 8px; }
-            </style>
+            /* TABELA PLANILHA */
+            table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+            th { background: #f2f2f2; border: 1px solid #000; padding: 6px; text-align: left; font-size: 9px; text-transform: uppercase; }
+            td { border: 1px solid #000; padding: 6px; font-size: 10px; vertical-align: middle; }
+            
+            .img-mini { width: 50px; height: 50px; object-fit: contain; display: block; margin: 0 auto; }
+            
+            .grid-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
+            .grid-cell { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 6px; text-align: center; page-break-inside: avoid; }
+            .p-footer { margin-top: 15px; text-align: right; border-top: 2px solid #000; padding-top: 8px; }
+        </style>
 
-            <div class="p-container">
-                <div class="p-header">
-                    <h1>Abella Joias</h1>
-                    <div class="sub">ATACADO DE JOIAS NO BRUTO</div>
-                    <div>Whatsapp: (19) 98820-7658</div>
+        <div class="p-container">
+            <div class="p-header">
+                <h1>Abella Joias</h1>
+                <div class="sub">ATACADO DE JOIAS NO BRUTO</div>
+                <div>Whatsapp: (19) 98820-7658</div>
+            </div>
+
+            <div class="p-info">
+                <div class="p-box">
+                    <b>Dados do Cliente</b>
+                    <strong>${p.cliente?.nome || ''}</strong><br>${p.cliente?.telefone || ''}
                 </div>
+                <div class="p-box">
+                    <b>Local de Entrega</b>
+                    <strong>${p.entrega?.local || 'Não Informado'}</strong><br>
+                    ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>
+                    ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}
+                </div>
+            </div>`;
 
-                <div class="p-info">
-                    <div class="p-box">
-                        <b>Dados do Cliente</b>
-                        <strong>${p.cliente?.nome || ''}</strong><br>${p.cliente?.telefone || ''}
-                    </div>
-                    <div class="p-box">
-                        <b>Local de Entrega</b>
-                        <strong>${p.entrega?.local || 'Não Informado'}</strong><br>
-                        ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>
-                        ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}
-                    </div>
+        if (tipo >= 4) {
+            html += `<div class="grid-wrapper">`;
+            itens.forEach(i => {
+                html += `<div class="grid-cell">
+                    <div style="font-weight:bold;">${i.sku}</div>
+                    <div style="font-size:8px;">${i.name}</div>
+                    <div style="font-size:12px; font-weight:bold;">(X ${i.quantidade})</div>
                 </div>`;
-
-            if (tipo >= 4) {
-                html += `<div class="grid-wrapper">`;
-                itens.forEach(i => {
-                    html += `<div class="grid-cell">
-                        <div style="font-weight:bold;">${i.sku}</div>
-                        <div style="font-size:8px;">${i.name}</div>
-                        <div style="font-size:12px; font-weight:bold;">(X ${i.quantidade})</div>
-                    </div>`;
-                });
-                html += `</div>`;
-            } else {
-                html += `<table><thead><tr>
-                    ${tipo === 3 ? '<th>Foto</th>' : ''}
-                    <th>SKU</th><th>Produto</th><th>Peso</th>
-                    ${tipo >= 2 ? '<th>Unit.</th><th>Subtotal</th>' : ''}
-                    <th align="center">Qtd</th></tr></thead><tbody>`;
-                itens.forEach(i => {
-                    html += `<tr>
-                        ${tipo === 3 ? `<td><img src="${i.image}" class="img-mini" onerror="this.src='https://via.placeholder.com/40'"></td>` : ''}
-                        <td><b>${i.sku}</b></td><td>${i.name}</td><td>${i.peso}g</td>
-                        ${tipo >= 2 ? `<td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
-                        <td align="center"><b>${i.quantidade}</b></td></tr>`;
-                });
-                html += `</tbody></table>`;
-            }
-
-            html += `<div class="p-footer">
-                <p>Itens: ${itens.length} | Peças: ${p.totalPecas || 0} | Peso: ${p.pesoTotal || 0}g</p>`;
-            if (tipo === 2 || tipo === 3 || tipo === 5) {
-                html += `<p>Subtotal: ${fMoeda(p.subtotal)} | Frete: ${fMoeda(p.frete)}</p>
-                <p>Desconto Promo: -${fMoeda(p.descontoPromo || 0)}</p>
-                ${p.descontoPix > 0 ? `<p>Desconto PIX: <span style="color:green">-${fMoeda(p.descontoPix)}</span></p>` : ''}
-                <div style="font-size:16px; font-weight:bold;">TOTAL FINAL: ${fMoeda(p.total)}</div>`;
-            }
-            html += `</div></div>`;
+            });
+            html += `</div>`;
+        } else {
+            html += `<table><thead><tr>
+                ${tipo === 3 ? '<th style="text-align:center">Foto</th>' : ''}
+                <th>SKU</th><th>Produto</th><th>Peso</th>
+                ${tipo >= 2 ? '<th>Unit.</th><th>Subtotal</th>' : ''}
+                <th style="text-align:center">Qtd</th></tr></thead><tbody>`;
             
-            document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 1000);
+            itens.forEach(i => {
+                const imgSrc = i.image && i.image !== "" ? i.image : "https://via.placeholder.com/50?text=Sem+Foto";
+                html += `<tr>
+                    ${tipo === 3 ? `<td style="width:60px;"><img src="${imgSrc}" class="img-mini" crossorigin="anonymous"></td>` : ''}
+                    <td style="font-weight:bold;">${i.sku || '---'}</td>
+                    <td>${i.name}</td>
+                    <td>${i.peso}g</td>
+                    ${tipo >= 2 ? `<td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
+                    <td align="center" style="font-weight:bold; font-size:12px;">${i.quantidade}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+        }
+
+        html += `<div class="p-footer">
+            <p>Itens Diferentes: ${itens.length} | Peças Totais: ${p.totalPecas || 0} | Peso Total: ${p.pesoTotal || 0}g</p>`;
+        
+        if (tipo === 2 || tipo === 3 || tipo === 5) {
+            html += `<p>Subtotal: ${fMoeda(p.subtotal)} | Frete: ${fMoeda(p.frete)}</p>`;
+            if(p.descontoPromo > 0) html += `<p style="color:red">Desconto Promo: -${fMoeda(p.descontoPromo)}</p>`;
+            if(p.descontoPix > 0) html += `<p style="color:green">Desconto PIX: -${fMoeda(p.descontoPix)}</p>`;
+            html += `<div style="font-size:16px; font-weight:bold;">TOTAL FINAL: ${fMoeda(p.total)}</div>`;
+        }
+        html += `</div></div>`;
+        
+        const printDiv = document.getElementById('print-area');
+        printDiv.innerHTML = html;
+
+        // Pré-carregamento das imagens para garantir que apareçam na impressão
+        const images = printDiv.getElementsByTagName('img');
+        const promises = Array.from(images).map(img => {
+            return new Promise(resolve => {
+                if (img.complete) resolve();
+                else {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                }
+            });
         });
+
+        await Promise.all(promises);
+        setTimeout(() => { window.print(); }, 500);
     });
 }
 
@@ -388,6 +408,7 @@ function carregarEmpresaSeExistir() {
         document.getElementById('empParc').value = v.parcelas || 0;
     });
 }
+
 function salvarEmpresa() {
     db.ref('settings/empresa').update({
         nome: document.getElementById('empNome').value,
