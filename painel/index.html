@@ -24,17 +24,23 @@
         /* ÁREA DE IMPRESSÃO - OCULTA NA TELA */
         #print-area { display: none; }
 
-        @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { 
-                display: block !important; 
-                position: absolute; left: 0; top: 0; width: 100%; 
-                background: white !important; color: black !important;
-            }
-            @page { margin: 1cm; size: portrait; }
-            .no-print { display: none !important; }
-        }
+@media print {
+    /* Esconde absolutamente tudo do painel administrativo */
+    body * { visibility: hidden !important; }
+    /* Mostra apenas a área de impressão e remove fundos escuros */
+    #print-area, #print-area * { visibility: visible !important; }
+    #print-area { 
+        display: block !important; 
+        position: absolute !important; 
+        left: 0 !important; 
+        top: 0 !important; 
+        width: 100% !important; 
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    @page { size: portrait; margin: 1cm; }
+}
 
         /* ESTILOS LUXO ROMANEIO */
         .print-container { font-family: 'Inter', sans-serif; padding: 0; color: #000; }
@@ -316,85 +322,96 @@ function imprimir(tipo) {
             const emp = e.val() || {};
             const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
             
-            let html = `<div class="print-container">
-                <div class="lux-header">
-                    <h1>${emp.nome || 'ABELLA JOIAS'}</h1>
-                    <p>${emp.subtitulo || ''}</p>
-                    <p>WhatsApp: ${emp.whats || ''}</p>
-                    <h2 style="font-size:14px; margin-top:10px; border:1px solid #000; display:inline-block; padding:2px 15px;">
-                        ${tipo === 1 || tipo === 4 ? 'ROMANEIO DE CONFERÊNCIA' : 'ROMANEIO DO CLIENTE'}
-                    </h2>
+            // Início do HTML - Cabeçalho Limpo
+            let html = `<div class="print-container" style="background:white; color:black;">
+                <div class="lux-header" style="text-align:center; border-bottom:2px solid #caa85c; padding-bottom:15px; margin-bottom:20px;">
+                    <h1 style="font-family:'Cinzel', serif; font-size:32px; margin:0; letter-spacing:5px;">${emp.nome || 'ABELLA JOIAS'}</h1>
+                    <p style="color:#caa85c; font-size:12px; letter-spacing:3px;">${emp.subtitulo || ''}</p>
+                    <p style="font-size:10px; margin-top:5px;">WhatsApp: ${emp.whats || ''}</p>
                 </div>
 
-                <div class="box-container">
-                    <div class="info-box">
-                        <h3>DADOS DO CLIENTE</h3>
-                        <p><b>NOME:</b> ${p.cliente?.nome || ''}</p>
-                        <p><b>FONE:</b> ${p.cliente?.telefone || ''}</p>
+                <div class="box-container" style="display:flex; gap:15px; margin-bottom:20px;">
+                    <div class="info-box" style="flex:1; border:1px solid #eee; padding:10px; border-radius:8px;">
+                        <h3 style="font-size:9px; color:#caa85c; border-bottom:1px solid #eee; margin-bottom:5px;">CLIENTE</h3>
+                        <p style="font-size:13px; font-weight:bold;">${p.cliente?.nome || ''}</p>
+                        <p style="font-size:11px;">${p.cliente?.telefone || ''}</p>
                     </div>
-                    <div class="info-box">
-                        <h3>LOCAL DE ENTREGA</h3>
-                        <p>${p.entrega?.rua || ''}, ${p.entrega?.num || ''}</p>
-                        <p>${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}</p>
+                    <div class="info-box" style="flex:1.5; border:1px solid #eee; padding:10px; border-radius:8px;">
+                        <h3 style="font-size:9px; color:#caa85c; border-bottom:1px solid #eee; margin-bottom:5px;">LOCAL DE ENTREGA</h3>
+                        <p style="font-size:11px; line-height:1.4;">
+                            ${p.entrega?.rua || ''}, ${p.entrega?.num || 'S/N'}<br>
+                            ${p.entrega?.bairro || ''} ${p.entrega?.complemento ? '- ' + p.entrega.complemento : ''}<br>
+                            ${p.entrega?.cidade || ''} ${p.entrega?.cep ? '| CEP: ' + p.entrega.cep : ''}
+                        </p>
                     </div>
                 </div>`;
 
-            // SE TIPO GRID (4 ou 5)
-            if (tipo >= 4) {
+            // CONTEÚDO BASEADO NO TIPO
+            if (tipo === 3) {
+                // MODELO FOTO PREMIUM (ESTILO LISTA/CATÁLOGO)
+                itens.forEach(i => {
+                    html += `
+                    <div style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:10px 0; gap:15px; page-break-inside:avoid;">
+                        <img src="${i.image || ''}" style="width:80px; height:80px; object-fit:cover; border-radius:5px; border:1px solid #ddd;">
+                        <div style="flex-grow:1;">
+                            <b style="font-size:10px; color:#caa85c;">SKU: ${i.sku}</b>
+                            <h4 style="margin:2px 0; font-size:13px;">${i.name}</h4>
+                            <p style="font-size:10px; color:#666;">Peso: ${i.peso}g</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:18px; font-weight:bold;">X ${i.quantidade}</div>
+                            <div style="font-size:11px; color:#caa85c;">${fMoeda(i.price * i.quantidade)}</div>
+                        </div>
+                    </div>`;
+                });
+            } else if (tipo >= 4) {
+                // MODO GRID
                 html += `<div class="grid-layout">`;
                 itens.forEach(i => {
                     html += `
                     <div class="grid-item">
                         <div class="grid-sku">${i.sku}</div>
                         <div class="grid-name">${i.name}</div>
-                        <div class="grid-qty">Qtd: ${i.quantidade}</div>
-                        ${tipo === 5 ? `<div style="font-size:9px; text-align:right; margin-top:5px;">Preço: ${fMoeda(i.price)}</div>` : ''}
+                        <div class="grid-qty">X ${i.quantidade}</div>
+                        ${tipo === 5 ? `<div style="font-size:10px; text-align:right; font-weight:bold;">${fMoeda(i.price * i.quantidade)}</div>` : ''}
                     </div>`;
                 });
                 html += `</div>`;
             } else {
-                // TIPO TABELA (1, 2, 3)
+                // MODO TABELA PADRÃO (1 e 2)
                 html += `<table><thead><tr>
-                    ${tipo === 3 ? '<th>Foto</th>' : ''}
-                    <th>SKU</th>
-                    <th>Produto</th>
-                    <th>Peso Unit.</th>
-                    ${tipo >= 2 ? '<th>Preço Un.</th>' : ''}
-                    <th>Qtd</th>
-                    ${tipo >= 2 ? '<th>Subtotal</th>' : ''}
+                    <th>SKU</th><th>Produto</th><th>Peso</th>
+                    ${tipo === 2 ? '<th>Preço</th><th>Subtotal</th>' : ''}
+                    <th style="text-align:center">Qtd</th>
                 </tr></thead><tbody>`;
-                
                 itens.forEach(i => {
                     html += `<tr>
-                        ${tipo === 3 ? `<td><img src="${i.image}" style="width:45px; height:45px; object-fit:cover;"></td>` : ''}
-                        <td>${i.sku}</td>
+                        <td><b>${i.sku}</b></td>
                         <td>${i.name}</td>
                         <td>${i.peso}g</td>
-                        ${tipo >= 2 ? `<td>${fMoeda(i.price)}</td>` : ''}
-                        <td style="font-weight:bold; font-size:13px; text-align:center;">${i.quantidade}</td>
-                        ${tipo >= 2 ? `<td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
+                        ${tipo === 2 ? `<td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
+                        <td align="center" style="font-size:14px; font-weight:bold;">${i.quantidade}</td>
                     </tr>`;
                 });
                 html += `</tbody></table>`;
             }
 
-            // RODAPÉ COM CÁLCULOS
-            html += `<div class="footer-total">
-                <p>Total de Itens: ${itens.length} | Total de Peças: ${p.totalPecas || 0} | Peso Total: ${p.pesoTotal || 0}g</p>`;
+            // RODAPÉ FINANCEIRO
+            const mostrarFinanceiro = (tipo === 2 || tipo === 3 || tipo === 5);
+            html += `<div class="footer-total" style="margin-top:20px; text-align:right; border-top:2px solid #000; padding-top:10px;">
+                <p style="font-size:11px;">Itens: ${itens.length} | Peças: ${p.totalPecas || 0} | Peso: ${p.pesoTotal || 0}g</p>`;
             
-            if (tipo === 2 || tipo === 3 || tipo === 5) {
+            if (mostrarFinanceiro) {
                 html += `
-                <p>Subtotal: ${fMoeda(p.subtotal)}</p>
-                <p>Desconto Promo: - ${fMoeda(p.descontoPromo)}</p>
-                ${p.descontoPix > 0 ? `<p>Desconto PIX: - ${fMoeda(p.descontoPix)}</p>` : ''}
-                <p>Frete: ${fMoeda(p.frete)}</p>
-                <div class="total-highlight">TOTAL A PAGAR: ${fMoeda(p.total)}</div>`;
+                <p style="font-size:11px; margin-top:5px;">Subtotal: ${fMoeda(p.subtotal)} | Frete: ${fMoeda(p.frete)}</p>
+                <p style="font-size:11px;">Descontos: - ${fMoeda((p.descontoPromo || 0) + (p.descontoPix || 0))}</p>
+                <div class="total-highlight" style="font-size:22px; color:#caa85c; font-family:'Georgia', serif;">TOTAL: ${fMoeda(p.total)}</div>`;
             }
 
             html += `</div></div>`;
             
             document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 300);
+            setTimeout(() => { window.print(); }, 500);
         });
     });
 }
