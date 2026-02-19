@@ -514,7 +514,8 @@ function imprimirRomaneio(id, tipo) {
         html += `</tbody></table>`;
       }
 
-      function imprimirRomaneio(id, tipo) {
+function imprimirRomaneio(id, tipo) {
+
   db.ref('orders/' + id).once('value', sPed => {
     const p = sPed.val();
     if (!p) return;
@@ -530,17 +531,32 @@ function imprimirRomaneio(id, tipo) {
       const comFoto = [3, 6].includes(tipo);
       const emGrid = tipo >= 4;
 
+      const fMoeda = v =>
+        Number(v || 0).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        });
+
+      const descPromo = Number(p.descontoPromo || 0);
+      const descPix = Number(p.descontoPix || 0);
+      const totalDescontos = descPromo + descPix;
+      const subtotal = Number(p.subtotal || 0);
+      const frete = Number(p.frete || 0);
+      const totalFinal = Number(p.total || 0);
+
       let html = `
-      <div style="padding:10mm; font-family:Arial; color:#000;">
-        
+      <div style="padding:10mm; font-family:Arial; color:#000; page-break-after:avoid;">
+
         <!-- CABEÇALHO -->
         <div style="text-align:center; margin-bottom:18px; border-bottom:2px solid #e5e5e5; padding-bottom:8px;">
           <h1 style="margin:0; font-size:26px; letter-spacing:2px;">${emp.nome}</h1>
-          <div style="font-size:10px; font-weight:bold;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
+          <div style="font-size:10px; font-weight:bold;">
+            ATACADO DE JOIAS NO BRUTO | ${emp.whats}
+          </div>
         </div>
 
         <!-- DADOS -->
-        <table style="width:100%; border-collapse:separate; border-spacing:10px; margin-bottom:20px;">
+        <table style="width:100%; border-collapse:separate; border-spacing:10px; margin-bottom:18px;">
           <tr>
             <td style="border:1px solid #ddd; border-radius:12px; padding:10px; width:50%;">
               <b style="font-size:9px; color:#caa85c;">CLIENTE</b><br>
@@ -555,16 +571,24 @@ function imprimirRomaneio(id, tipo) {
             </td>
           </tr>
         </table>
+
+        ${p.mensagemWhatsApp ? `
+        <div style="border:1px dashed #ccc; border-radius:10px; padding:10px; font-size:10px; margin-bottom:18px;">
+          <b>Mensagem do Cliente:</b><br>
+          ${p.mensagemWhatsApp}
+        </div>` : ''}
+
       `;
 
       /* ================= PRODUTOS ================= */
 
       if (emGrid) {
+
         html += `<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">`;
 
         itens.forEach(i => {
           html += `
-          <div style="border:1px solid #ddd; border-radius:14px; padding:10px; background:#fff;">
+          <div style="border:1px solid #ddd; border-radius:14px; padding:10px; background:#fff; page-break-inside:avoid;">
             ${comFoto ? `
               <img src="${i.image || i.foto || ''}"
                    style="width:100%; height:90px; object-fit:contain; margin-bottom:6px; border-radius:8px;">
@@ -579,7 +603,9 @@ function imprimirRomaneio(id, tipo) {
         });
 
         html += `</div>`;
+
       } else {
+
         html += `
         <table style="width:100%; border-collapse:collapse; font-size:11px;">
           <thead>
@@ -614,30 +640,44 @@ function imprimirRomaneio(id, tipo) {
       /* ================= RODAPÉ ================= */
 
       html += `
-      <div style="margin-top:25px; border:2px solid #d4af37; border-radius:14px; padding:14px;">
+      <div style="margin-top:22px; border:2px solid #d4af37; border-radius:14px; padding:14px; page-break-inside:avoid;">
       `;
 
       if (!isFin) {
+
         html += `
         <div style="display:flex; justify-content:space-around; font-weight:bold;">
           <span>MODELOS: ${itens.length}</span>
           <span>PEÇAS: ${p.totalPecas || 0}</span>
           <span>PESO: ${(p.pesoTotal || 0).toFixed(2)}g</span>
         </div>`;
+
       } else {
+
         html += `
-        <div style="display:flex; justify-content:space-between;">
-          <div style="font-size:11px;">
+        <div style="display:flex; justify-content:space-between; gap:20px;">
+
+          <div style="font-size:11px; line-height:1.6;">
+            <b>Resumo do Pedido</b><br>
             Modelos: ${itens.length}<br>
             Peças: ${p.totalPecas || 0}<br>
-            Peso: ${(p.pesoTotal || 0).toFixed(2)}g
+            Peso: ${(p.pesoTotal || 0).toFixed(2)}g<br>
+            <b>Pagamento:</b> ${p.pagamento || 'Não informado'}<br>
+            ${p.parcelas ? `<b>Parcelas:</b> ${p.parcelas}x` : ''}
           </div>
-          <div style="text-align:right; font-size:11px;">
-            Subtotal: ${fMoeda(p.subtotal)}<br>
-            Descontos: -${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))}<br>
-            Frete: ${fMoeda(p.frete||0)}<br>
-            <b style="font-size:18px;">TOTAL: ${fMoeda(p.total)}</b>
+
+          <div style="text-align:right; font-size:11px; min-width:220px;">
+            Total Bruto: ${fMoeda(subtotal)}<br>
+            Desconto Promo: -${fMoeda(descPromo)}<br>
+            Desconto PIX: -${fMoeda(descPix)}<br>
+            <b>Total de Descontos:</b> -${fMoeda(totalDescontos)}<br>
+            Frete: ${fMoeda(frete)}
+            <div style="margin-top:6px; border-top:1px solid #000; padding-top:4px;">
+              <span style="font-size:10px;">TOTAL A PAGAR</span><br>
+              <b style="font-size:18px;">${fMoeda(totalFinal)}</b>
+            </div>
           </div>
+
         </div>`;
       }
 
@@ -645,15 +685,11 @@ function imprimirRomaneio(id, tipo) {
 
       const area = document.getElementById('print-area');
       area.innerHTML = html;
-      setTimeout(() => window.print(), 700);
-    });
-  });
-}
 
+      setTimeout(() => {
+        window.print();
+      }, 500);
 
-      const area = document.getElementById('print-area');
-      area.innerHTML = html;
-      setTimeout(() => window.print(), 700);
     });
   });
 }
