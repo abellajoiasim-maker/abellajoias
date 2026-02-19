@@ -545,92 +545,102 @@ function imprimirRomaneio(id, tipo) {
         });
     });
 }
-/* PROMOÇÕES COMPLETO COM COR DE TEXTO */
+/* PROMOÇÕES COMPLETO COM COR DE TEXTO E CAMPANHA PERSONALIZADA */
 async function abrirPainelPromocoes() {
-    const [snapPromo, snapCats] = await Promise.all([
-        db.ref('settings/promocao').once('value'), 
-        db.ref('categories').once('value')
-    ]);
-    
-    const promoGeral = snapPromo.val() || { ativa: false };
-    let listaCats = '';
+    try {
+        const [snapPromo, snapCats] = await Promise.all([
+            db.ref('settings/promocao').once('value'), 
+            db.ref('categories').once('value')
+        ]);
+        
+        const promoGeral = snapPromo.val() || { ativa: false };
+        let listaCats = '';
 
-    snapCats.forEach(cat => {
-        const c = cat.val();
-        const pct = c.promoPct || 0;
-        const nomePromo = c.promoName || '';
-        const tagColor = c.promoColor || '#caa85c';
-        const textColor = c.promoTextColor || '#ffffff'; // Cor do texto
-        const tagText = c.promoTag || 'OFERTA';
+        snapCats.forEach(cat => {
+            const c = cat.val();
+            // Carrega os dados salvos ou define valores padrão para evitar campos vazios
+            const pct = c.promoPct || 0;
+            const nomePromo = c.promoName || '';
+            const tagColor = c.promoColor || '#caa85c';
+            const textColor = c.promoTextColor || '#ffffff';
+            const tagText = c.promoTag || 'OFERTA';
 
-        listaCats += `
-        <div class="card bg-black/40 p-3 mb-3 border border-[#222]">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-xs uppercase font-black text-[#caa85c]">${c.name}</span>
+            listaCats += `
+            <div class="card bg-black/40 p-3 mb-3 border border-[#222]">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs uppercase font-black text-[#caa85c]">${c.name}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="col-span-2">
+                        <label class="text-[9px] text-gray-500 uppercase font-bold">Nome da Campanha (Ex: Queima Total)</label>
+                        <input type="text" id="p_name_${cat.key}" value="${nomePromo}" placeholder="Substitua o Carnaval de Ofertas aqui" class="!mb-1 !p-1 text-xs bg-black border border-[#333] w-full rounded">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-500 uppercase font-bold">Texto da Tag</label>
+                        <input type="text" id="p_tag_${cat.key}" value="${tagText}" placeholder="Ex: 20% OFF" class="!mb-1 !p-1 text-xs bg-black border border-[#333] w-full rounded">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-500 uppercase font-bold">Desconto (%)</label>
+                        <input type="number" id="p_pct_${cat.key}" value="${pct}" class="!mb-1 !p-1 text-xs bg-black border border-[#333] w-full rounded">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-500 uppercase font-bold text-center block">Fundo Tag</label>
+                        <input type="color" id="p_color_${cat.key}" value="${tagColor}" class="!h-8 !p-0 border-none cursor-pointer w-full bg-transparent">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-500 uppercase font-bold text-center block">Texto Tag</label>
+                        <input type="color" id="p_tcolor_${cat.key}" value="${textColor}" class="!h-8 !p-0 border-none cursor-pointer w-full bg-transparent">
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        const html = `
+        <div class="space-y-4">
+            <div class="flex justify-between items-center bg-[#1a1a1a] p-3 rounded-xl border border-[#333]">
+                <div>
+                    <span class="text-sm font-bold block">Status da Promoção</span>
+                    <small class="text-[9px] text-gray-400 uppercase">Ativar selos no catálogo</small>
+                </div>
+                <button onclick="togglePromoStatus()" id="btnStatusPromo" 
+                    class="px-6 py-2 rounded-lg text-[10px] font-bold transition-all ${promoGeral.ativa ? 'bg-green-600' : 'bg-red-600'}">
+                    ${promoGeral.ativa ? 'ATIVA' : 'INATIVA'}
+                </button>
             </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div class="col-span-2">
-                    <label class="text-[9px] text-gray-500 uppercase">Campanha (Nome interno)</label>
-                    <input type="text" id="p_name_${cat.key}" value="${nomePromo}" placeholder="Ex: Black Friday" class="!mb-1 !p-1 text-xs bg-black border-[#333] w-full">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase">Texto da Tag</label>
-                    <input type="text" id="p_tag_${cat.key}" value="${tagText}" placeholder="Ex: 20% OFF" class="!mb-1 !p-1 text-xs bg-black border-[#333] w-full">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label>
-                    <input type="number" id="p_pct_${cat.key}" value="${pct}" class="!mb-1 !p-1 text-xs bg-black border-[#333] w-full">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase">Fundo Tag</label>
-                    <input type="color" id="p_color_${cat.key}" value="${tagColor}" class="!h-8 !p-0 border-none cursor-pointer w-full bg-transparent">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase">Texto Tag</label>
-                    <input type="color" id="p_tcolor_${cat.key}" value="${textColor}" class="!h-8 !p-0 border-none cursor-pointer w-full bg-transparent">
-                </div>
+            <div class="max-h-[50vh] overflow-y-auto custom-scroll pr-2">
+                ${listaCats}
             </div>
         </div>`;
-    });
 
-    const html = `
-    <div class="space-y-4">
-        <div class="flex justify-between items-center bg-[#1a1a1a] p-3 rounded-xl border border-[#333]">
-            <div>
-                <span class="text-sm font-bold block">Status da Promoção</span>
-                <small class="text-[9px] text-gray-400 uppercase">Ativar selos no catálogo</small>
-            </div>
-            <button onclick="togglePromoStatus()" id="btnStatusPromo" 
-                class="px-6 py-2 rounded-lg text-[10px] font-bold transition-all ${promoGeral.ativa ? 'bg-green-600' : 'bg-red-600'}">
-                ${promoGeral.ativa ? 'ATIVA' : 'INATIVA'}
-            </button>
-        </div>
-        <div class="max-h-[50vh] overflow-y-auto custom-scroll pr-2">
-            ${listaCats}
-        </div>
-    </div>`;
+        document.getElementById('modalTitle').innerText = '🎨 CONFIGURAR OFERTAS POR CATEGORIA';
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('mainModal').classList.add('active');
 
-    document.getElementById('modalTitle').innerText = 'CONFIGURAR OFERTAS';
-    document.getElementById('modalBody').innerHTML = html;
-    document.getElementById('mainModal').classList.add('active');
+        // LÓGICA DE SALVAMENTO
+        document.getElementById('modalSaveBtn').onclick = () => {
+            const updates = {};
+            updates['settings/promocao/ativa'] = document.getElementById('btnStatusPromo').innerText === 'ATIVA';
+            
+            snapCats.forEach(cat => {
+                updates['categories/' + cat.key + '/promoPct'] = +document.getElementById('p_pct_' + cat.key).value || 0;
+                updates['categories/' + cat.key + '/promoName'] = document.getElementById('p_name_' + cat.key).value;
+                updates['categories/' + cat.key + '/promoTag'] = document.getElementById('p_tag_' + cat.key).value;
+                updates['categories/' + cat.key + '/promoColor'] = document.getElementById('p_color_' + cat.key).value;
+                updates['categories/' + cat.key + '/promoTextColor'] = document.getElementById('p_tcolor_' + cat.key).value;
+            });
 
-    document.getElementById('modalSaveBtn').onclick = () => {
-        const updates = {};
-        updates['settings/promocao/ativa'] = document.getElementById('btnStatusPromo').innerText === 'ATIVA';
-        
-        snapCats.forEach(cat => {
-            updates['categories/' + cat.key + '/promoPct'] = +document.getElementById('p_pct_' + cat.key).value || 0;
-            updates['categories/' + cat.key + '/promoName'] = document.getElementById('p_name_' + cat.key).value;
-            updates['categories/' + cat.key + '/promoTag'] = document.getElementById('p_tag_' + cat.key).value;
-            updates['categories/' + cat.key + '/promoColor'] = document.getElementById('p_color_' + cat.key).value;
-            updates['categories/' + cat.key + '/promoTextColor'] = document.getElementById('p_tcolor_' + cat.key).value;
-        });
-
-        db.ref().update(updates).then(() => {
-            alert("Promoções salvas com sucesso!");
-            fecharModal();
-        });
-    };
+            db.ref().update(updates).then(() => {
+                alert("Promoções salvas com sucesso!");
+                fecharModal();
+            }).catch(err => {
+                console.error(err);
+                alert("Erro ao salvar promoções.");
+            });
+        };
+    } catch (error) {
+        console.error("Erro ao abrir painel:", error);
+        alert("Erro ao carregar promoções. Verifique o console.");
+    }
 }
 
 function togglePromoStatus() {
