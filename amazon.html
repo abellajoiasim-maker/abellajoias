@@ -3,45 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luary Shop | Chaveiros Temáticos</title>
+    <title>Abella Joias | Estilo Amazon</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --navy: #1a2a3a; --accent: #d4af37; --bg: #fcfcfc; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--navy); }
-        .serif { font-family: 'Playfair Display', serif; }
+        body { font-family: 'Montserrat', sans-serif; background: #fff; color: #0F1111; }
         
-        .card-luary { background: #fff; border-radius: 20px; border: 1px solid #f0f0f0; transition: all 0.3s ease; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        /* Cores Amazon */
+        .amz-orange { color: #C45500; }
+        .amz-gold { background: #FFD814; border-color: #FCD200; }
+        .amz-gold:hover { background: #F7CA00; }
+        .amz-dark-orange { background: #FFA41C; border-color: #FF8F00; }
+        .amz-dark-orange:hover { background: #FA8914; }
         
-        /* Ajuste do Carrossel */
-        .carousel-container { width: 100%; aspect-ratio: 1/1; overflow-x: scroll; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; background: #fff; }
-        .carousel-container::-webkit-scrollbar { display: none; }
-        .carousel-item { min-width: 100%; scroll-snap-align: start; padding: 10px; }
-        .carousel-item img { width: 100%; height: 100%; object-fit: contain; border-radius: 15px; }
+        /* Buy Box (Card Lateral) */
+        .buy-box { border: 1px solid #D5D9D9; border-radius: 8px; padding: 16px; position: sticky; top: 100px; }
         
-        .indicator { position: absolute; bottom: 170px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
-        .dot { width: 6px; height: 6px; background: rgba(0,0,0,0.2); border-radius: 50%; }
+        /* Thumbnails laterais */
+        .thumb-img { width: 40px; height: 50px; border: 1px solid #D5D9D9; border-radius: 4px; cursor: pointer; object-fit: cover; }
+        .thumb-img:hover { border-color: #e77600; box-shadow: 0 0 3px 2px rgba(228,121,17,.5); }
 
-        .btn-add { background: var(--navy); color: #fff; width: 100%; padding: 14px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; transition: 0.3s; margin-top: auto; }
-        .btn-add:hover { background: var(--accent); }
+        .price-large { font-size: 28px; line-height: 32px; font-weight: 500; }
+        .badge-discount { color: #CC0C39; font-size: 28px; font-weight: 300; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-in; }
     </style>
 </head>
 <body>
 
-<header class="bg-white border-b border-gray-100 p-6 text-center sticky top-0 z-50">
-    <h1 class="serif text-4xl cursor-pointer" onclick="carregarInicio()">LUARY <span class="text-[#d4af37]">SHOP</span></h1>
-    <div class="flex justify-center gap-8 mt-4">
-        <button onclick="carregarInicio()" class="text-[11px] font-bold uppercase hover:text-[#d4af37]">Coleções</button>
-        <a href="carrinho.html" class="text-[11px] font-bold uppercase text-[#d4af37]">Carrinho (<span id="cart-total">R$ 0,00</span>)</a>
+<header class="bg-[#131921] p-4 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <h1 class="text-white text-2xl font-bold cursor-pointer" onclick="carregarInicio()">ABELLA <span class="text-[#FF9900]">JOIAS</span></h1>
+        <div class="text-white text-sm font-bold flex items-center gap-2">
+            <i class="fas fa-shopping-cart text-2xl text-[#FF9900]"></i>
+            <span id="cart-total">R$ 0,00</span>
+        </div>
     </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-6 md:p-10">
-    <div id="grid-content" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
+<main class="max-w-7xl mx-auto p-4 md:p-8">
+    <div id="main-content">
+        <div id="grid-content" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+    </div>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -49,131 +54,130 @@
 
 <script>
     const firebaseConfig = {
-            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let configLoja = {};
-
-    // Função auxiliar para formatar moeda
+    
     const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    function carregarConfig() {
-        db.ref('settings').on('value', snap => {
-            configLoja = snap.val() || {};
-            carregarInicio();
-            atualizarTotalCarrinho();
-        });
-    }
-
+    // Carrega a Vitrine Inicial
     function carregarInicio() {
-        const grid = document.getElementById('grid-content');
-        grid.classList.remove('grid-cols-1');
-        grid.classList.add('grid-cols-2', 'md:grid-cols-4');
+        const main = document.getElementById('main-content');
+        main.innerHTML = `<div id="grid-content" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>`;
         
         db.ref('categories').on('value', snap => {
-            grid.innerHTML = '';
+            const grid = document.getElementById('grid-content');
             snap.forEach(s => {
                 const cat = s.val();
                 grid.innerHTML += `
-                    <div class="card-luary cursor-pointer group" onclick="verProdutos('${s.key}', '${cat.name}')">
-                        <div class="carousel-item"><img src="${cat.image || 'https://via.placeholder.com/500'}"></div>
-                        <div class="p-6 text-center"><h3 class="serif text-xl">${cat.name}</h3></div>
+                    <div class="border border-gray-200 rounded p-4 cursor-pointer hover:shadow-lg transition bg-white" onclick="verProdutos('${s.key}')">
+                        <img src="${cat.image}" class="w-full aspect-square object-contain mb-4">
+                        <h3 class="font-bold text-center text-blue-600">${cat.name}</h3>
                     </div>`;
             });
         });
     }
 
-    function exibirDetalhesProduto(p) {
-        window.scrollTo({top: 0, behavior: 'smooth'});
-        const grid = document.getElementById('grid-content');
-        
-        grid.classList.remove('grid-cols-2', 'md:grid-cols-4');
-        grid.classList.add('grid-cols-1'); 
-        
-        grid.innerHTML = `
-            <button onclick="carregarInicio()" class="mb-4 text-sm text-gray-500 hover:text-navy flex items-center gap-2">
-                <i class="fas fa-arrow-left"></i> Voltar para a loja
-            </button>
-            <div class="flex flex-col md:flex-row gap-8 bg-white p-4 animate-fadeIn">
-                <div class="flex flex-row gap-4 md:w-1/2">
-                    <div class="flex flex-col gap-2 w-16">
-                        <img src="${p.image}" class="border border-[#d4af37] rounded p-1 cursor-pointer">
-                    </div>
-                    <div class="flex-1">
-                        <img src="${p.image}" class="w-full object-contain max-h-[500px]" id="main-img">
-                    </div>
-                </div>
-
-                <div class="flex-1 border-b md:border-b-0 pb-6">
-                    <h1 class="text-2xl font-medium leading-tight mb-1 text-navy">${p.name}</h1>
-                    <p class="text-sm text-blue-600 hover:underline cursor-pointer mb-2 italic">Visite a loja Abella Joias</p>
-                    <div class="flex items-center gap-1 mb-4 text-[#FFA41C]">
-                        <span class="text-sm font-bold">4.8</span> <span>★★★★★</span>
-                        <span class="text-blue-600 text-sm ml-2 underline">128 avaliações</span>
-                    </div>
-                    <hr class="my-4">
-                    
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-red-600 text-2xl font-light">-${p.promoPct || 0}%</span>
-                        <span class="text-3xl font-semibold">${fM(p.price)}</span>
-                    </div>
-                    <p class="text-gray-500 text-xs uppercase mb-4">De: <span class="line-through">${fM(p.price * 1.25)}</span></p>
-
-                    <div class="flex items-center gap-2 bg-orange-50 border border-orange-200 p-2 rounded w-fit mb-6">
-                        <input type="checkbox" class="w-4 h-4 accent-orange-600">
-                        <span class="text-sm">Aplicar cupom de <span class="font-bold text-green-700">R$ 5,00</span></span>
-                    </div>
-
-                    <h3 class="font-bold text-sm mb-2">Sobre este item:</h3>
-                    <ul class="list-disc ml-5 text-sm space-y-1 text-gray-800">
-                        <li>Alta qualidade e acabamento Premium.</li>
-                        <li>Design exclusivo Luary Shop.</li>
-                        <li>Ideal para presentear quem você ama.</li>
-                    </ul>
-                </div>
-
-                <div class="w-full md:w-[260px] border border-gray-300 rounded-xl p-4 shadow-sm h-fit">
-                    <div class="text-2xl font-medium mb-1">${fM(p.price)}</div>
-                    <p class="text-sm text-green-700 font-bold mb-4 italic">Entrega GRÁTIS disponível</p>
-                    <p class="text-sm mb-1">Entrega <span class="font-bold">2 a 5 dias úteis</span></p>
-                    <div class="text-lg text-green-600 font-bold mb-4">Em estoque.</div>
-                    <button onclick='addCart(${JSON.stringify(p)})' class="w-full bg-[#FFD814] hover:bg-[#F7CA00] py-2 rounded-full mb-2 text-sm shadow-sm transition">Adicionar ao Carrinho</button>
-                    <button class="w-full bg-[#FFA41C] hover:bg-[#FA8914] py-2 rounded-full text-sm shadow-sm transition font-medium">Comprar agora</button>
-                </div>
-            </div>`;
-    }
-
-    function verProdutos(catId, catName) {
+    // Lista Produtos da Categoria
+    function verProdutos(catId) {
         db.ref('products').once('value', snap => {
             const grid = document.getElementById('grid-content');
             grid.innerHTML = '';
-            const promoAtiva = configLoja.promocoes?.ativa || false;
-
             snap.forEach(s => {
                 const p = s.val();
                 if(p.category === catId) {
-                    db.ref(`categories/${catId}`).once('value', catSnap => {
-                        const catData = catSnap.val() || {};
-                        let desconto = promoAtiva ? (p.promoPct || catData.promoPct || 0) : 0;
-                        const precoComDesconto = p.price * (1 - (desconto/100));
-
-                        grid.innerHTML += `
-                            <div class="card-luary p-4 cursor-pointer" onclick='exibirDetalhesProduto(${JSON.stringify({...p, price: precoComDesconto, id: s.key})})'>
-                                <div class="carousel-container">
-                                    <div class="carousel-item"><img src="${p.image}"></div>
-                                </div>
-                                <div class="flex-1 mt-2 px-1 text-center">
-                                    <h3 class="text-[11px] font-bold uppercase h-8 overflow-hidden text-navy">${p.name}</h3>
-                                    <div class="text-xl font-black text-navy mt-2">${fM(precoComDesconto)}</div>
-                                </div>
-                                <button class="btn-add mt-4">Ver Detalhes</button>
-                            </div>`;
-                    });
-                }
+                    grid.innerHTML += `
+                        <div class="border border-gray-100 p-4 cursor-pointer hover:shadow-md" onclick='exibirPaginaAmazon(${JSON.stringify({...p, id: s.key})})'>
+                            <img src="${p.image}" class="w-full aspect-square object-contain mb-2">
+                            <h2 class="text-sm text-gray-700 line-clamp-2 mb-2">${p.name}</h2>
+                            <div class="text-lg font-bold">${fM(p.price)}</div>
+                        </div>`;
             });
         });
+    }
+
+    // A MÁGICA: PÁGINA FORMATO AMAZON
+    function exibirPaginaAmazon(p) {
+        window.scrollTo(0,0);
+        const main = document.getElementById('main-content');
+        
+        main.innerHTML = `
+            <div class="flex flex-col md:flex-row gap-10 animate-fadeIn">
+                
+                <div class="hidden md:flex flex-col gap-2">
+                    <img src="${p.image}" class="thumb-img border-orange-400">
+                    <div class="thumb-img flex items-center justify-center text-[8px] text-gray-400 text-center">VÍDEO</div>
+                </div>
+
+                <div class="flex-1">
+                    <img src="${p.image}" class="w-full max-h-[500px] object-contain">
+                </div>
+
+                <div class="flex-[1.5]">
+                    <h1 class="text-2xl font-normal mb-1">${p.name}</h1>
+                    <p class="text-sm text-[#007185] hover:text-[#C45500] cursor-pointer">Marca: Abella Joias</p>
+                    
+                    <div class="flex items-center gap-1 my-2">
+                        <span class="text-[#F19D05] text-sm">4.8</span>
+                        <div class="flex text-[#F19D05] text-xs">★★★★★</div>
+                        <span class="text-[#007185] text-sm ml-2">1.450 avaliações</span>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="flex items-baseline gap-2">
+                        <span class="badge-discount">-${p.promoPct || 15}%</span>
+                        <div class="flex flex-col">
+                            <div class="flex items-start">
+                                <span class="text-sm mt-1">R$</span>
+                                <span class="price-large">${Math.floor(p.price)}</span>
+                                <span class="text-sm mt-1">,${(p.price % 1).toFixed(2).substring(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-sm">De: <span class="line-through">${fM(p.price * 1.2)}</span></p>
+
+                    <div class="flex items-center gap-2 my-4">
+                        <span class="bg-[#96F2D7] text-[#004B3E] text-[12px] font-bold px-2 py-0.5 rounded-sm">Cupom</span>
+                        <span class="text-sm">Aplique o cupom de R$ 10,00. <span class="text-[#007185] cursor-pointer">Detalhes</span></span>
+                    </div>
+
+                    <h3 class="font-bold text-sm mt-6">Sobre este item</h3>
+                    <ul class="list-disc ml-5 text-sm space-y-2 mt-2 text-[#0F1111]">
+                        <li><strong>Qualidade Premium:</strong> Banho de ouro 18k com acabamento de joalheria.</li>
+                        <li><strong>Hipoalergênico:</strong> 100% livre de níquel, ideal para peles sensíveis.</li>
+                        <li><strong>Presente Ideal:</strong> Acompanha embalagem luxuosa da Abella Joias.</li>
+                    </ul>
+                </div>
+
+                <div class="md:w-[260px]">
+                    <div class="buy-box bg-white">
+                        <div class="text-2xl mb-4">${fM(p.price)}</div>
+                        
+                        <p class="text-sm mb-4">Entrega <span class="font-bold">GRÁTIS</span>: <span class="font-bold">26 - 28 de Fev</span></p>
+                        
+                        <div class="text-[#007600] font-bold text-lg mb-4">Em estoque.</div>
+
+                        <select class="w-full bg-[#F0F2F2] border border-[#D5D9D9] rounded-lg p-1 text-sm shadow-sm mb-4 focus:ring-1 focus:ring-[#007185]">
+                            <option>Qtd: 1</option><option>Qtd: 2</option><option>Qtd: 3</option>
+                        </select>
+
+                        <button onclick='addCart(${JSON.stringify(p)})' class="w-full amz-gold py-2 rounded-full shadow-md text-sm mb-2 transition border">Adicionar ao Carrinho</button>
+                        <button class="w-full amz-dark-orange py-2 rounded-full shadow-md text-sm font-medium transition border">Comprar agora</button>
+
+                        <div class="text-xs text-gray-500 mt-4 space-y-1">
+                            <div class="flex justify-between"><span>Enviado por</span><span class="text-black underline">Abella Joias</span></div>
+                            <div class="flex justify-between"><span>Vendido por</span><span class="text-black underline">Abella Joias</span></div>
+                        </div>
+
+                        <hr class="my-4">
+                        <button onclick="carregarInicio()" class="text-xs text-[#007185] hover:text-[#C45500]">Voltar para a loja</button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     function addCart(p) {
@@ -181,7 +185,7 @@
         cart.push(p);
         localStorage.setItem('luary_cart', JSON.stringify(cart));
         atualizarTotalCarrinho();
-        alert("Adicionado ao carrinho!");
+        alert("Item adicionado ao seu carrinho da Abella!");
     }
 
     function atualizarTotalCarrinho() {
@@ -190,7 +194,7 @@
         document.getElementById('cart-total').innerText = fM(total);
     }
 
-    window.onload = carregarConfig;
+    window.onload = carregarInicio;
 </script>
 </body>
 </html>
