@@ -3,58 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abella Joias | Experiência de Compra Fluida</title>
+    <title>Abella Joias | Portal de Atacado</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Montserrat', sans-serif; background: #fff; color: #0F1111; scroll-behavior: smooth; }
-        .amz-gold { background: #FFD814; border: 1px solid #FCD200; border-radius: 20px; }
-        .amz-orange { background: #FFA41C; border: 1px solid #FF8F00; border-radius: 20px; }
-        .buy-box { border: 1px solid #D5D9D9; border-radius: 8px; padding: 16px; background: white; }
-        .zoom-container { position: relative; overflow: hidden; cursor: crosshair; }
-        .zoom-container img { transition: transform 0.1s ease-out; }
-        .hidden-section { display: none; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-        .animate-slide { animation: slideIn 0.3s ease-out; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #333; }
+        .sticky-cart { position: sticky; bottom: 0; background: white; border-top: 2px solid #e2e8f0; z-index: 50; }
+        .qty-input::-webkit-inner-spin-button { opacity: 1; }
+        .promo-tag { background: #fee2e2; color: #dc2626; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header class="bg-[#131921] p-3 sticky top-0 z-[100]">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <h1 class="text-white text-xl font-bold cursor-pointer" onclick="irParaInicio()">ABELLA <span class="text-[#FF9900]">JOIAS</span></h1>
-        <div class="text-white flex items-center gap-4">
-            <div id="cart-info" class="flex items-center gap-1 cursor-pointer">
-                <i class="fas fa-shopping-cart text-[#FF9900]"></i>
-                <span id="cart-total" class="font-bold">R$ 0,00</span>
+<header class="bg-white border-b p-4 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+        <h1 class="text-xl font-bold tracking-tighter" onclick="location.reload()">ABELLA <span class="text-amber-600">ATACADO</span></h1>
+        <div class="text-right">
+            <p class="text-[10px] text-gray-500 uppercase">Pedido Mínimo: R$ 500,00</p>
+            <div class="w-32 h-2 bg-gray-200 rounded-full mt-1">
+                <div id="min-order-bar" class="h-full bg-green-500 rounded-full transition-all" style="width: 0%"></div>
             </div>
         </div>
     </div>
 </header>
 
-<nav class="bg-[#f3f3f3] p-2 text-xs border-b">
-    <div class="max-w-7xl mx-auto flex gap-2 text-gray-600" id="breadcrumb">
-        <span class="cursor-pointer hover:underline" onclick="irParaInicio()">Loja</span>
-    </div>
-</nav>
+<main class="max-w-6xl mx-auto p-4 pb-32">
+    <div id="cat-nav" class="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide"></div>
 
-<main class="max-w-7xl mx-auto p-4">
-    <section id="sec-categorias" class="animate-slide">
-        <h2 class="text-xl font-bold mb-6">Navegue por Coleções</h2>
-        <div id="grid-categorias" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-    </section>
-
-    <section id="sec-produtos" class="hidden-section animate-slide">
-        <div class="flex items-center gap-4 mb-6">
-            <button onclick="irParaInicio()" class="text-sm text-blue-600 font-medium"><i class="fas fa-chevron-left"></i> Voltar</button>
-            <h2 id="cat-title" class="text-xl font-bold">Produtos</h2>
+    <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         </div>
-        <div id="grid-produtos" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-    </section>
-
-    <section id="sec-detalhe" class="hidden-section animate-slide"></section>
 </main>
+
+<footer class="sticky-cart p-4 shadow-2xl">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+        <div>
+            <p class="text-sm text-gray-600"><span id="items-count">0</span> itens selecionados</p>
+            <p class="text-xl font-bold text-gray-900" id="cart-total">R$ 0,00</p>
+        </div>
+        <button onclick="enviarPedido()" id="btn-finalizar" disabled 
+            class="bg-gray-400 text-white px-8 py-3 rounded-lg font-bold transition-all">
+            Finalizar Pedido
+        </button>
+    </div>
+</footer>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -66,129 +58,119 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    
+    let carrinho = {};
+    const PEDIDO_MINIMO = 500.00;
+
     const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    let categoriaAtualNome = "";
-
-    // --- CONTROLE DE NAVEGAÇÃO ---
-    function mostrarSecao(id) {
-        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden-section'));
-        document.getElementById(id).classList.remove('hidden-section');
-        window.scrollTo(0,0);
+    // Iniciar Sistema
+    function init() {
+        carregarCategorias();
+        carregarTodosProdutos();
     }
 
-    function irParaInicio() {
-        document.getElementById('breadcrumb').innerHTML = `<span onclick="irParaInicio()" class="cursor-pointer">Loja</span>`;
-        mostrarSecao('sec-categorias');
-    }
-
-    // --- LOGICA DE CARREGAMENTO ---
     function carregarCategorias() {
         db.ref('categories').once('value', snap => {
-            const grid = document.getElementById('grid-categorias');
-            grid.innerHTML = '';
+            const nav = document.getElementById('cat-nav');
+            nav.innerHTML = `<button onclick="carregarTodosProdutos()" class="whitespace-nowrap px-4 py-2 bg-black text-white rounded-full text-sm">Todos</button>`;
             snap.forEach(s => {
                 const cat = s.val();
-                grid.innerHTML += `
-                    <div class="bg-white border rounded-lg cursor-pointer hover:shadow-md transition" onclick="irParaProdutos('${s.key}', '${cat.name}')">
-                        <img src="${cat.image}" class="w-full aspect-square object-cover rounded-t-lg">
-                        <p class="p-3 text-center font-bold text-sm">${cat.name}</p>
-                    </div>`;
+                nav.innerHTML += `<button onclick="filtrarCategoria('${s.key}')" class="whitespace-nowrap px-4 py-2 bg-white border rounded-full text-sm hover:bg-gray-50">${cat.name}</button>`;
             });
         });
     }
 
-    function irParaProdutos(id, nome) {
-        categoriaAtualNome = nome;
-        document.getElementById('cat-title').innerText = nome;
-        document.getElementById('breadcrumb').innerHTML = `
-            <span onclick="irParaInicio()" class="cursor-pointer">Loja</span> 
-            <span>/</span> 
-            <span class="font-bold">${nome}</span>`;
-        
-        const grid = document.getElementById('grid-produtos');
-        grid.innerHTML = '<p class="col-span-full text-center py-10">Carregando...</p>';
-        
-        db.ref('products').once('value', snap => {
-            grid.innerHTML = '';
-            snap.forEach(s => {
-                const p = s.val();
-                if(p.category === id) {
-                    grid.innerHTML += `
-                        <div class="border p-3 cursor-pointer hover:shadow-sm" onclick='irParaDetalhe(${JSON.stringify({...p, id: s.key})})'>
-                            <img src="${p.image}" class="w-full aspect-square object-contain mb-2">
-                            <h3 class="text-xs text-gray-700 h-8 overflow-hidden">${p.name}</h3>
-                            <p class="text-lg font-bold mt-2">${fM(p.price)}</p>
-                        </div>`;
-                }
-            });
-            mostrarSecao('sec-produtos');
+    function carregarTodosProdutos() {
+        db.ref('products').once('value', snap => renderizarProdutos(snap));
+    }
+
+    function filtrarCategoria(catId) {
+        db.ref('products').orderByChild('category').equalTo(catId).once('value', snap => renderizarProdutos(snap));
+    }
+
+    function renderizarProdutos(snap) {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = '';
+        snap.forEach(s => {
+            const p = s.val();
+            const id = s.key;
+            const temPromo = p.promoPct > 0;
+
+            grid.innerHTML += `
+                <div class="bg-white border rounded-xl p-4 flex items-center gap-4 hover:border-amber-300 transition">
+                    <img src="${p.image}" class="w-20 h-20 object-contain bg-gray-50 rounded-lg">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-sm leading-tight">${p.name}</h3>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-lg font-bold">${fM(p.price)}</span>
+                            ${temPromo ? `<span class="promo-tag">-${p.promoPct}%</span>` : ''}
+                        </div>
+                        <p class="text-[10px] text-gray-400 uppercase mt-1">Preço Sugerido: ${fM(p.price * 2)}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" min="0" value="${carrinho[id]?.qtd || 0}" 
+                            onchange="atualizarQtd('${id}', this.value, ${p.price}, '${p.name}')"
+                            class="w-16 p-2 border rounded-md text-center font-bold focus:ring-2 focus:ring-amber-500">
+                    </div>
+                </div>`;
         });
     }
 
-    function irParaDetalhe(p) {
-        document.getElementById('breadcrumb').innerHTML = `
-            <span onclick="irParaInicio()" class="cursor-pointer">Loja</span> 
-            <span>/</span> 
-            <span onclick="mostrarSecao('sec-produtos')" class="cursor-pointer">${categoriaAtualNome}</span>
-            <span>/</span>
-            <span class="font-bold text-gray-400 text-xs">${p.name.substring(0,20)}...</span>`;
-
-        const detalhe = document.getElementById('sec-detalhe');
-        detalhe.innerHTML = `
-            <div class="flex flex-col md:flex-row gap-8">
-                <div class="md:w-1/2 zoom-container" id="zoom-box">
-                    <img src="${p.image}" id="main-img-zoom" class="w-full object-contain max-h-[500px]">
-                </div>
-                <div class="flex-1">
-                    <h1 class="text-2xl font-normal">${p.name}</h1>
-                    <div class="flex text-[#F19D05] text-xs my-2">★★★★★ <span class="text-blue-600 ml-2 text-sm">850 avaliações</span></div>
-                    <hr class="my-4">
-                    <div class="text-3xl font-medium">${fM(p.price)}</div>
-                    <p class="text-green-700 font-bold text-sm my-2">Em estoque.</p>
-                    
-                    <div class="buy-box mt-6">
-                        <button onclick="addCart(${JSON.stringify(p)})" class="w-full amz-gold py-2 font-medium mb-3">Adicionar ao Carrinho</button>
-                        <button onclick="finalizarWhatsApp('${p.name}', ${p.price})" class="w-full amz-orange py-2 font-medium">Comprar agora</button>
-                        <p class="text-[10px] text-gray-500 mt-4 text-center"><i class="fas fa-lock"></i> Pagamento processado de forma segura</p>
-                    </div>
-
-                    <div class="mt-8">
-                        <h3 class="font-bold text-sm">Descrição</h3>
-                        <p class="text-sm text-gray-600 mt-2">Peça exclusiva banhada a Ouro 18k com tecnologia hipoalergênica. Acompanha certificado de garantia.</p>
-                    </div>
-                </div>
-            </div>
-        `;
-        mostrarSecao('sec-detalhe');
-        initZoom();
+    function atualizarQtd(id, qtd, preco, nome) {
+        qtd = parseInt(qtd);
+        if (qtd > 0) {
+            carrinho[id] = { qtd, preco, nome };
+        } else {
+            delete carrinho[id];
+        }
+        calcularTotais();
     }
 
-    // --- UTILITARIOS ---
-    function initZoom() {
-        const box = document.getElementById('zoom-box');
-        const img = document.getElementById('main-img-zoom');
-        box.onmousemove = (e) => {
-            const x = e.clientX - box.offsetLeft;
-            const y = e.clientY - box.offsetTop;
-            img.style.transformOrigin = `${x}px ${y}px`;
-            img.style.transform = "scale(2)";
-        };
-        box.onmouseleave = () => img.style.transform = "scale(1)";
+    function calcularTotais() {
+        let total = 0;
+        let itens = 0;
+        for (let key in carrinho) {
+            total += carrinho[key].qtd * carrinho[key].preco;
+            itens += carrinho[key].qtd;
+        }
+
+        document.getElementById('cart-total').innerText = fM(total);
+        document.getElementById('items-count').innerText = itens;
+
+        // Barra de progresso
+        const perc = Math.min((total / PEDIDO_MINIMO) * 100, 100);
+        document.getElementById('min-order-bar').style.width = perc + '%';
+
+        // Habilitar botão
+        const btn = document.getElementById('btn-finalizar');
+        if (total >= PEDIDO_MINIMO) {
+            btn.disabled = false;
+            btn.classList.replace('bg-gray-400', 'bg-green-600');
+        } else {
+            btn.disabled = true;
+            btn.classList.replace('bg-green-600', 'bg-gray-400');
+        }
     }
 
-    function addCart(p) {
-        alert("Produto adicionado ao carrinho!");
-        // Logica de carrinho aqui
+    function enviarPedido() {
+        let texto = `*NOVO PEDIDO ATACADO - ABELLA JOIAS*\n\n`;
+        let totalGeral = 0;
+        
+        for (let key in carrinho) {
+            const item = carrinho[key];
+            const sub = item.qtd * item.preco;
+            texto += `• ${item.qtd}x ${item.nome} - ${fM(sub)}\n`;
+            totalGeral += sub;
+        }
+
+        texto += `\n*TOTAL DO PEDIDO: ${fM(totalGeral)}*`;
+        
+        const fone = "5511999999999";
+        window.open(`https://wa.me/${fone}?text=${encodeURIComponent(texto)}`, '_blank');
     }
 
-    function finalizarWhatsApp(nome, preco) {
-        const fone = "5511999999999"; // Seu WhatsApp aqui
-        const msg = encodeURIComponent(`Olá! Quero comprar o produto: ${nome} no valor de ${fM(preco)}`);
-        window.open(`https://wa.me/${fone}?text=${msg}`, '_blank');
-    }
-
-    window.onload = carregarCategorias;
+    window.onload = init;
 </script>
 </body>
 </html>
