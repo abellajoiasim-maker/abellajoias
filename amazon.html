@@ -3,252 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abella Joias | Ultra Performance</title>
-
+    <title>Abella Joias | Business Intelligence Atacado</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
+        :root { --gold: #caa85c; --dark: #1a1a1a; --light: #f8f9fa; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--light); color: var(--dark); overflow-x: hidden; }
         .serif { font-family: 'Cinzel', serif; }
         
-        /* Otimização de Renderização */
-        #gridLoja { content-visibility: auto; contain-intrinsic-size: 300px; }
+        .app-container { display: grid; grid-template-columns: 280px 1px 1fr; min-height: 100vh; }
+        .sidebar { position: sticky; top: 70px; height: calc(100vh - 70px); overflow-y: auto; }
 
-        .card-enterprise { 
-            background: #ffffff; border-radius: 16px; border: 1px solid #f1f5f9; 
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card-enterprise:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.05); }
+        /* Enterprise Card UI */
+        .product-card { background: #fff; border-radius: 24px; border: 1px solid #f1f1f1; transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
         
-        .img-box { aspect-ratio: 1/1; background: #f8fafc; border-radius: 12px; margin: 8px; overflow: hidden; }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        /* Qty Control do Modus Operandi */
+        .qty-control { display: grid; grid-template-columns: 35px 1fr 35px; border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff; }
+        .qty-btn { background: #fff; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer; }
+        .qty-btn:hover { background: var(--dark); color: #fff; }
 
-        /* Esconder scrollbar mas manter funcionalidade */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .active-cat { background: white; color: #b89552; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-color: #b89552 !important; }
+        .cat-link { padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 500; color: #666; transition: 0.3s; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+        .cat-link:hover, .cat-link.active { background: #fff; color: var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
+
+        /* Badge de Promoção Dinâmica */
+        .promo-badge { position: absolute; top: 12px; right: 12px; z-index: 10; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-<header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-slate-100">
-    <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
-        <div>
-            <h1 class="serif text-xl font-bold tracking-tighter uppercase">ABELLA <span class="text-[#b89552]">ATACADO</span></h1>
-            <p id="statusInfo" class="text-[9px] font-bold text-slate-400 tracking-[2px] uppercase">Carregando catálogo...</p>
+<header class="h-[80px] bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-[200] px-6">
+    <div class="max-w-[1800px] mx-auto h-full flex items-center justify-between">
+        <div class="flex items-center gap-8">
+            <div class="flex flex-col">
+                <span class="serif text-xl font-bold tracking-[3px] uppercase" id="nomeLoja text-gray-900">Abella Joias</span>
+                <span class="text-[9px] tracking-[4px] text-gray-400 font-bold uppercase" id="sloganLoja">Atacado de Brutos</span>
+            </div>
+            <div class="hidden lg:flex bg-gray-50 rounded-2xl px-4 py-2.5 border border-gray-100 items-center gap-3 w-[400px]">
+                <i class="fas fa-search text-gray-300"></i>
+                <input type="text" id="main-search" placeholder="Buscar joia ou referência..." class="bg-transparent border-none outline-none text-sm w-full font-medium">
+            </div>
         </div>
 
-        <div class="flex items-center gap-4">
-            <div id="resumoCart" class="hidden md:flex flex-col items-end pr-4 border-r border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400">SEU PEDIDO</span>
-                <span id="valorTotalHeader" class="text-sm font-black tracking-tighter">R$ 0,00</span>
+        <div class="flex items-center gap-6">
+            <div class="hidden sm:flex flex-col items-end border-r pr-6 border-gray-100">
+                <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Investimento</span>
+                <span id="header-total" class="text-sm font-black text-gray-900 tracking-tighter">R$ 0,00</span>
             </div>
-            <button onclick="window.location.href='carrinho.html'" class="bg-slate-900 text-white p-3 md:px-6 rounded-2xl flex items-center gap-2 hover:bg-[#b89552] transition-all">
-                <i class="fas fa-shopping-bag text-sm"></i>
-                <span class="hidden md:block font-bold text-xs uppercase tracking-widest">Finalizar</span>
-            </button>
+            <div class="bg-black text-white px-6 py-3 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-gold-600 transition-all shadow-lg shadow-black/10">
+                <i class="fas fa-shopping-bag text-sm text-[#caa85c]"></i>
+                <span id="contadorCarrinho" class="text-xs font-bold uppercase tracking-widest">Carrinho</span>
+            </div>
         </div>
     </div>
 </header>
 
-<div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row p-6 gap-8">
-    <aside class="w-full lg:w-64 shrink-0">
-        <div class="sticky top-28">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Categorias</h3>
-            <nav id="menuLateral" class="flex flex-row lg:flex-col gap-2 overflow-x-auto no-scrollbar pb-4 lg:pb-0">
-                </nav>
+<div class="max-w-[1800px] mx-auto app-container">
+    <aside class="sidebar p-8 bg-[#fafafa]">
+        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">Categorias Premium</h3>
+        <nav id="gridCategorias" class="flex flex-col">
+            </nav>
+        
+        <div class="mt-12 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+            <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-gem text-[#caa85c]"></i>
+            </div>
+            <h4 class="serif text-xs font-bold mb-2">Qualidade Abella</h4>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Peças no bruto polidas, prontas para receberem banhos de 10 a 20 milésimos.</p>
         </div>
     </aside>
 
-    <main class="flex-1">
-        <div id="gridLoja" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
-            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
-            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
-            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
+    <div class="bg-gray-200/50 w-[1px]"></div>
+
+    <main class="p-8 pb-32">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+            <div>
+                <h2 id="cat-title" class="serif text-3xl font-bold text-gray-900 tracking-tight">Todas as Joias</h2>
+                <div class="flex items-center gap-3 mt-2">
+                    <span id="min-warning" class="text-[11px] font-bold text-red-500 uppercase tracking-tighter bg-red-50 px-2 py-0.5 rounded">Faltam R$ 800,00</span>
+                    <div class="w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="min-progress" class="h-full bg-[#caa85c] w-0 transition-all duration-1000"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="ordenar('menor')" class="px-4 py-2 bg-white border border-gray-100 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-[#caa85c]">Menor Preço</button>
+                <button onclick="ordenar('maior')" class="px-4 py-2 bg-white border border-gray-100 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-[#caa85c]">Maior Preço</button>
+            </div>
         </div>
 
-        <div id="loadMore" class="h-20 flex items-center justify-center mt-10 text-slate-400 text-xs font-bold uppercase tracking-widest">
-            <i class="fas fa-circle-notch animate-spin mr-2"></i> Buscando mais produtos...
-        </div>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            </div>
     </main>
 </div>
 
-<div id="modalCompra" class="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl scale-95 transition-transform duration-300">
-        <div id="mImg" class="w-full aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-6 border border-slate-100"></div>
-        <h3 id="mNome" class="serif text-lg font-bold text-slate-900 uppercase tracking-tight">Nome</h3>
-        <p id="mPreco" class="text-[#b89552] font-black text-2xl mt-1">R$ 0,00</p>
-        
-        <div class="flex items-center justify-between bg-slate-50 p-2 rounded-2xl my-6">
-            <button onclick="mudarQtd(-1)" class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center active:scale-90 transition"><i class="fas fa-minus"></i></button>
-            <span id="mVal" class="text-2xl font-black">1</span>
-            <button onclick="mudarQtd(1)" class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center active:scale-90 transition"><i class="fas fa-plus"></i></button>
+<footer class="fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 p-6 z-[300] shadow-[0_-10px_50px_rgba(0,0,0,0.05)]">
+    <div class="max-w-[1800px] mx-auto flex items-center justify-between">
+        <div class="flex gap-12">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Total de Peças</span>
+                <span id="footer-count" class="text-2xl font-black text-gray-900">0 itens</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Subtotal</span>
+                <span id="footer-total" class="text-2xl font-black text-[#caa85c]">R$ 0,00</span>
+            </div>
         </div>
         
-        <button id="btnAdd" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#b89552] transition-colors shadow-lg">Adicionar ao Carrinho</button>
-        <button onclick="fecharModal()" class="w-full text-slate-400 text-[10px] uppercase font-bold mt-4">Fechar</button>
+        <button id="btn-finalizar" disabled onclick="enviarWhatsApp()" class="bg-black text-white px-12 py-5 rounded-2xl font-bold uppercase tracking-widest text-[11px] hover:bg-[#caa85c] disabled:opacity-20 transition-all shadow-2xl shadow-black/20">
+            Finalizar Pedido via WhatsApp
+        </button>
     </div>
-</div>
+</footer>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
     const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
+    
+    // Inicialização Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp({
+            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+        });
+    }
     const db = firebase.database();
 
-    let dbItems = [];
-    let displayedItems = [];
-    let itemsPerPage = 20;
-    let currentPage = 1;
+    let allProducts = [];
+    let cart = JSON.parse(localStorage.getItem('abella_cart') || '{}');
+    let configPromo = { ativa: false };
+    let categoriasAtivas = {};
+    const VALOR_MINIMO = 800.00;
 
-    // --- CARREGAMENTO OTIMIZADO ---
     async function init() {
-        // Categorias (Carrega uma vez)
-        db.ref('categories').once('value', snap => {
-            const menu = document.getElementById('menuLateral');
-            menu.innerHTML = `<button onclick="filterCat('all')" id="cat-all" class="cat-btn active-cat border border-transparent whitespace-nowrap">Todos os Brutos</button>`;
+        await carregarConfiguracoes();
+        carregarCategorias();
+        carregarProdutos();
+        escutarBusca();
+        atualizarUI();
+    }
+
+    async function carregarConfiguracoes() {
+        // Lógica Anuladora: Settings da Empresa e Promoção
+        db.ref('settings').on('value', snap => {
+            const data = snap.val();
+            if(data?.empresa) {
+                document.getElementById('nomeLoja').innerText = data.empresa.nome || 'Abella Joias';
+                document.getElementById('sloganLoja').innerText = data.empresa.subtitulo || 'Atacado de Brutos';
+            }
+            if(data?.promocao) configPromo = data.promocao;
+        });
+    }
+
+    function carregarCategorias() {
+        db.ref('categories').on('value', snap => {
+            const grid = document.getElementById('gridCategorias');
+            grid.innerHTML = `<a href="javascript:void(0)" onclick="filtrar('all')" class="cat-link active" id="cat-all">Ver Todos <i class="fas fa-chevron-right text-[9px]"></i></a>`;
+            
             snap.forEach(s => {
-                const c = s.val();
-                if(!c.paused) {
-                    menu.innerHTML += `<button onclick="filterCat('${s.key}')" id="cat-${s.key}" class="cat-btn border border-slate-100 lg:border-transparent whitespace-nowrap lg:w-full">${c.name}</button>`;
-                }
+                const cat = s.val();
+                if (cat.paused) return;
+                categoriasAtivas[s.key] = cat; // Guarda info da categoria para lógica de promo
+                
+                grid.innerHTML += `
+                    <a href="javascript:void(0)" onclick="filtrar('${s.key}')" class="cat-link" id="cat-${s.key}">
+                        ${cat.name} 
+                        <i class="fas fa-chevron-right text-[9px]"></i>
+                    </a>`;
             });
         });
+    }
 
-        // Produtos (Busca os dados mas não renderiza todos de uma vez)
+    function carregarProdutos() {
         db.ref('products').on('value', snap => {
-            dbItems = [];
-            snap.forEach(s => dbItems.push({id: s.key, ...s.val()}));
-            document.getElementById('statusInfo').innerText = `${dbItems.length} Peças Disponíveis`;
-            resetAndRender();
-        });
-
-        // Listener de Scroll para Infinite Scroll
-        window.addEventListener('scroll', () => {
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-                loadMoreItems();
-            }
+            allProducts = [];
+            snap.forEach(s => allProducts.push({id: s.key, ...s.val()}));
+            renderizar(allProducts);
         });
     }
 
-    function resetAndRender() {
-        currentPage = 1;
-        document.getElementById('gridLoja').innerHTML = '';
-        renderPage();
-    }
-
-    function renderPage() {
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const pageItems = dbItems.slice(start, end);
-        
-        const grid = document.getElementById('gridLoja');
-        
-        pageItems.forEach(p => {
-            const div = document.createElement('div');
-            div.className = "card-enterprise flex flex-col cursor-pointer";
-            div.onclick = () => abrirCompra(p.id);
-            div.innerHTML = `
-                <div class="img-box relative">
-                    <img src="${p.image}" loading="lazy">
-                </div>
-                <div class="p-4 pt-0 text-center">
-                    <p class="text-[8px] text-slate-400 font-bold uppercase mb-1">Ref: ${p.id.substring(0,6)}</p>
-                    <h3 class="text-[10px] font-bold text-slate-700 uppercase leading-tight h-8 overflow-hidden mb-2">${p.name}</h3>
-                    <span class="text-base font-black text-slate-900 tracking-tight">${fM(p.price)}</span>
+    function renderizar(items) {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = items.map(p => {
+            const catInfo = categoriasAtivas[p.category] || {};
+            // LOGICA ANULADORA DO SEU CÓDIGO
+            const temPromo = configPromo.ativa && (catInfo.promoPct > 0);
+            
+            return `
+                <div class="product-card p-4 relative group">
+                    ${temPromo ? `
+                        <span class="promo-badge" style="background: ${catInfo.promoColor || '#caa85c'}; color: ${catInfo.promoTextColor || '#fff'};">
+                            ${catInfo.promoTag || 'OFERTA'}
+                        </span>
+                    ` : ''}
+                    
+                    <div class="aspect-[1/1] rounded-[1.5rem] overflow-hidden bg-gray-50 mb-6 border border-gray-50">
+                        <img src="${p.image}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" loading="lazy">
+                    </div>
+                    
+                    <div class="px-2">
+                        <h3 class="text-xs font-bold text-gray-800 uppercase tracking-tight line-clamp-1 mb-1">${p.name}</h3>
+                        <p class="text-[9px] text-gray-400 font-bold mb-4 tracking-widest">REF: ${p.id.substring(0,8).toUpperCase()}</p>
+                        
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-[#caa85c] font-black tracking-tighter">${fM(p.price)}</span>
+                                <span class="text-[8px] text-gray-400 font-bold uppercase">No Bruto</span>
+                            </div>
+                            
+                            <div class="qty-control w-28 h-10 shadow-sm">
+                                <button onclick="updateCart('${p.id}', -1, ${p.price}, '${p.name.replace(/'/g, "")}')" class="qty-btn"><i class="fas fa-minus text-[10px]"></i></button>
+                                <div class="flex items-center justify-center text-xs font-black text-gray-900">${cart[p.id]?.qty || 0}</div>
+                                <button onclick="updateCart('${p.id}', 1, ${p.price}, '${p.name.replace(/'/g, "")}')" class="qty-btn"><i class="fas fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
-            grid.appendChild(div);
-        });
+        }).join('');
+    }
 
-        if (end >= dbItems.length) {
-            document.getElementById('loadMore').classList.add('hidden');
+    function updateCart(id, delta, price, name) {
+        if(!cart[id]) cart[id] = { qty: 0, price, name };
+        cart[id].qty = Math.max(0, cart[id].qty + delta);
+        if(cart[id].qty === 0) delete cart[id];
+        
+        localStorage.setItem('abella_cart', JSON.stringify(cart));
+        atualizarUI();
+        renderizar(allProducts);
+    }
+
+    function atualizarUI() {
+        let total = 0;
+        let count = 0;
+        for(let k in cart) {
+            total += cart[k].qty * cart[k].price;
+            count += cart[k].qty;
+        }
+
+        document.getElementById('header-total').innerText = fM(total);
+        document.getElementById('footer-total').innerText = fM(total);
+        document.getElementById('footer-count').innerText = `${count} peças`;
+
+        const falta = VALOR_MINIMO - total;
+        const prog = Math.min((total/VALOR_MINIMO)*100, 100);
+        document.getElementById('min-progress').style.width = prog + '%';
+        
+        const warning = document.getElementById('min-warning');
+        const btn = document.getElementById('btn-finalizar');
+
+        if(falta > 0) {
+            warning.innerText = `Faltam ${fM(falta)} para o atacado`;
+            warning.className = "text-[11px] font-bold text-red-500 uppercase tracking-tighter bg-red-50 px-2 py-0.5 rounded";
+            btn.disabled = true;
         } else {
-            document.getElementById('loadMore').classList.remove('hidden');
+            warning.innerText = `Pedido Mínimo Atingido!`;
+            warning.className = "text-[11px] font-bold text-green-600 uppercase tracking-tighter bg-green-50 px-2 py-0.5 rounded";
+            btn.disabled = false;
         }
     }
 
-    function loadMoreItems() {
-        if ((currentPage * itemsPerPage) < dbItems.length) {
-            currentPage++;
-            renderPage();
-        }
-    }
-
-    // --- DINÂMICA DE COMPRA ---
-    function abrirCompra(id) {
-        const p = dbItems.find(x => x.id === id);
-        document.getElementById('mNome').innerText = p.name;
-        document.getElementById('mPreco').innerText = fM(p.price);
-        document.getElementById('mImg').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
-        document.getElementById('mVal').innerText = "1";
+    function filtrar(catId) {
+        document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('cat-'+catId).classList.add('active');
         
-        document.getElementById('btnAdd').onclick = () => {
-            const qtd = parseInt(document.getElementById('mVal').innerText);
-            let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-            const idx = cart.findIndex(i => i.id === p.id);
-            if(idx > -1) cart[idx].quantidade += qtd;
-            else cart.push({...p, quantidade: qtd});
-            localStorage.setItem('carrinho', JSON.stringify(cart));
-            fecharModal();
-            atualizarHeader();
-        };
-        
-        document.getElementById('modalCompra').classList.remove('hidden');
-        setTimeout(() => document.querySelector('#modalCompra > div').classList.replace('scale-95', 'scale-100'), 10);
-    }
-
-    function mudarQtd(v) {
-        let el = document.getElementById('mVal');
-        el.innerText = Math.max(1, parseInt(el.innerText) + v);
-    }
-
-    function fecharModal() {
-        document.querySelector('#modalCompra > div').classList.replace('scale-100', 'scale-95');
-        setTimeout(() => document.getElementById('modalCompra').classList.add('hidden'), 200);
-    }
-
-    function filterCat(catId) {
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active-cat'));
-        document.getElementById('cat-' + catId).classList.add('active-cat');
-
         if(catId === 'all') {
-            db.ref('products').once('value', snap => {
-                dbItems = [];
-                snap.forEach(s => dbItems.push({id: s.key, ...s.val()}));
-                resetAndRender();
-            });
+            document.getElementById('cat-title').innerText = "Todas as Joias";
+            renderizar(allProducts);
         } else {
-            db.ref('products').once('value', snap => {
-                dbItems = [];
-                snap.forEach(s => {
-                    const p = s.val();
-                    if(p.category === catId) dbItems.push({id: s.key, ...p});
-                });
-                resetAndRender();
-            });
+            document.getElementById('cat-title').innerText = categoriasAtivas[catId]?.name;
+            const filtered = allProducts.filter(p => p.category === catId);
+            renderizar(filtered);
         }
     }
 
-    function atualizarHeader() {
-        const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        const total = cart.reduce((acc, i) => acc + (i.price * i.quantidade), 0);
-        document.getElementById('valorTotalHeader').innerText = fM(total);
-        if(total > 0) document.getElementById('resumoCart').classList.remove('hidden');
+    function escutarBusca() {
+        document.getElementById('main-search').addEventListener('input', (e) => {
+            const t = e.target.value.toLowerCase();
+            const f = allProducts.filter(p => p.name.toLowerCase().includes(t) || p.id.toLowerCase().includes(t));
+            renderizar(f);
+        });
     }
 
-    window.onload = () => {
-        init();
-        atualizarHeader();
-    };
+    function enviarWhatsApp() {
+        let msg = `*NOVO PEDIDO - ABELLA JOIAS*\n\n`;
+        for(let k in cart) {
+            msg += `• ${cart[k].qty}x ${cart[k].name}\n`;
+        }
+        msg += `\n*INVESTIMENTO TOTAL: ${fM(Object.values(cart).reduce((a,b)=>a+(b.qty*b.price),0))}*`;
+        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(msg)}`);
+    }
+
+    window.onload = init;
 </script>
+
 </body>
 </html>
