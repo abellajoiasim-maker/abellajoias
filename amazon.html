@@ -125,14 +125,20 @@ const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL'
 
 // 1. CARREGAMENTO INICIAL
 function init() {
+    // Carrega categorias e armazena o nome delas para busca alternativa
     db.ref('categories').on('value', snap => {
         state.allCats = snap.val() || {};
         renderCats();
     });
 
+    // Carrega produtos
     db.ref('products').on('value', snap => {
         state.allProducts = [];
-        snap.forEach(s => state.allProducts.push({id: s.key, ...s.val()}));
+        snap.forEach(s => {
+            const data = s.val();
+            state.allProducts.push({ id: s.key, ...data });
+        });
+        console.log("Total de produtos carregados:", state.allProducts.length);
         atualizarHeader();
     });
 }
@@ -157,31 +163,38 @@ function renderCats() {
 // ... (mantenha o início do script igual)
 
 // 3. RENDER PRODUTOS (CORREÇÃO DE FILTRO)
-function verCategoria(catId, nome) {
-    console.log("Filtrando pela categoria ID:", catId); // Para debug no F12
+function verCategoria(catId, nomeCat) {
+    console.log("Tentando filtrar produtos para:", nomeCat, " (ID:", catId, ")");
     
-    // Esconde Home, Mostra Produtos
     document.getElementById('viewCategorias').classList.add('hidden');
     document.getElementById('viewProdutos').classList.remove('hidden');
-    document.getElementById('currentCatTitle').innerText = nome;
+    document.getElementById('currentCatTitle').innerText = nomeCat;
     
-    // Garante que a página comece no topo
     window.scrollTo(0, 0);
 
-    // FILTRO CORRIGIDO: 
-    // Compara o ID da categoria do produto com o ID clicado
+    // FILTRO MULTI-CAMADA
     const prodsFiltrados = state.allProducts.filter(p => {
-        // Verifica se o campo é 'category' ou 'categoryId' e garante que são strings
-        const pCat = String(p.category || p.categoryId || "");
-        return pCat === String(catId);
+        // 1. Tenta pelo ID exato (comum no Firebase)
+        const matchID = String(p.category) === String(catId) || String(p.categoryId) === String(catId);
+        
+        // 2. Tenta pelo Nome da Categoria (caso seu banco salve o texto em vez do ID)
+        const matchNome = String(p.category).toLowerCase() === String(nomeCat).toLowerCase();
+        
+        return matchID || matchNome;
     });
 
+    console.log("Produtos encontrados:", prodsFiltrados.length);
+
+    const grid = document.getElementById('gridProds');
     if (prodsFiltrados.length === 0) {
-        document.getElementById('gridProds').innerHTML = `
+        grid.innerHTML = `
             <div class="col-span-full py-20 text-center">
-                <i class="fas fa-box-open text-4xl text-gray-200 mb-4"></i>
-                <p class="text-gray-400 font-medium">Nenhum produto encontrado nesta categoria.</p>
-                <button onclick="voltarHome()" class="mt-4 text-[#b89552] font-bold uppercase text-xs">Voltar para coleções</button>
+                <div class="mb-4 text-gray-200">
+                    <i class="fas fa-search text-6xl"></i>
+                </div>
+                <h3 class="text-gray-500 font-bold">Nenhum produto vinculado a "${nomeCat}"</h3>
+                <p class="text-gray-400 text-sm mb-6">Verifique se os produtos estão associados corretamente a esta categoria no banco de dados.</p>
+                <button onclick="voltarHome()" class="px-6 py-2 border-2 border-[#b89552] text-[#b89552] rounded-full text-xs font-bold uppercase">Voltar para Coleções</button>
             </div>`;
     } else {
         renderProds(prodsFiltrados);
