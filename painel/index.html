@@ -513,45 +513,144 @@ function salvarPedidoEditado() {
     }).then(() => { alert("Pedido atualizado!"); fecharEditorPedido(); });
 }
 
+/* IMPRESSÃO ROMANEIO ATUALIZADA - ABELLA JOIAS LUXO */
 function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', sPed => {
         const p = sPed.val();
+        if (!p) return alert("Pedido não encontrado!");
+
         db.ref('settings/empresa').once('value', sEmp => {
-            const emp = sEmp.val() || { nome: "Abella Joias" };
+            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
             const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-            const isGrid = tipo >= 4;
-            let html = `<div class="header-luxo"><h1>${emp.nome.toUpperCase()}</h1><small>${emp.subtitulo || ''} | ${emp.whats || ''}</small></div>
-                <table class="caixa-dados"><tr><td><span class="titulo-box">Cliente</span><b>${p.cliente?.nome || ''}</b><br>${p.cliente?.telefone || ''}</td>
-                <td><span class="titulo-box">Logística</span>${p.entrega?.rua || ''}<br>${p.entrega?.cidade || ''}</td></tr></table>`;
-            if (isGrid) {
-                html += `<div class="grid-romaneio">`;
-                itens.forEach(i => { html += `<div class="grid-item"><img src="${i.image || ''}"><br><b>${i.sku}</b><br><span style="font-size:8px">${i.name}</span><br><b>${i.quantidade} un</b></div>`; });
+            
+            const isFin = [2, 3, 5, 6].includes(tipo); 
+            const comFoto = [3, 6].includes(tipo);    
+            const emGrid = tipo >= 4;                  
+
+            const subtotal = itens.reduce((acc, i) => acc + ((Number(i.price) || 0) * (Number(i.quantidade) || 0)), 0);
+            const descPromo = Number(p.descontoPromo || 0);
+            const descPix = Number(p.descontoPix || 0);
+            const frete = Number(p.frete || 0);
+            const totalFinal = subtotal - descPromo - descPix + frete;
+
+            let html = `
+            <div style="padding:8mm; font-family:Arial, sans-serif; color:#000; background:#fff;">
+                <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
+                    <h1 style="margin:0; font-size:22px; text-transform:uppercase; letter-spacing:3px;">${emp.nome}</h1>
+                    <div style="font-size:9px; font-weight:bold; color: #444;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
+                </div>
+
+                <table style="width:100%; border-collapse: separate; border-spacing: 5px 0; margin-bottom:15px;">
+                    <tr>
+                        <td style="width:50%; border: 1px solid #ccc; border-radius: 8px; padding:8px; vertical-align:top; font-size:10px; line-height:1.2;">
+                            <b style="color:#caa85c; font-size:8px; text-transform:uppercase;">Identificação Cliente</b><br>
+                            <b>${p.cliente?.nome || '---'}</b><br>
+                            ${p.cliente?.telefone || '---'}
+                        </td>
+                        <td style="width:50%; border: 1px solid #ccc; border-radius: 8px; padding:8px; vertical-align:top; font-size:10px; line-height:1.2;">
+                            <b style="color:#caa85c; font-size:8px; text-transform:uppercase;">Dados de Entrega</b><br>
+                            <b>${p.entrega?.nomeEntrega || p.cliente?.nome}</b><br>
+                            ${p.entrega?.rua || ''} - ${p.entrega?.bairro || ''}<br>${p.entrega?.cidade || ''}
+                        </td>
+                    </tr>
+                </table>`;
+
+            if (emGrid) {
+                html += `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">`;
+                itens.forEach(i => {
+                    html += `
+                    <div style="border: 1px solid #ddd; border-radius: 10px; padding: 8px; background:#fff; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid;">
+                        <div>
+                            ${comFoto ? `<img src="${i.image || ''}" style="width: 100%; height: 80px; object-fit: contain; margin-bottom: 5px; border-radius: 5px;">` : ''}
+                            <div style="font-size: 10px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 2px;">${i.sku || 'S/SKU'}</div>
+                            <div style="font-size: 9px; color: #333; text-transform: uppercase; margin-top: 3px; line-height:1.1;">${i.name || ''}</div>
+                            <div style="font-size: 8px; color: #777; margin-top: 2px;">Peso U: <b>${(i.peso || 0).toFixed(2)}g</b></div>
+                        </div>
+                        <div style="margin-top: 6px; background: #f4f4f4; padding: 4px; border-radius: 6px; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size: 9px; font-weight: bold;">QTD: ${i.quantidade}</span>
+                            ${isFin ? `<span style="font-size: 10px; font-weight: bold; color:#96793a;">${fMoeda(i.price * i.quantidade)}</span>` : ''}
+                        </div>
+                    </div>`;
+                });
                 html += `</div>`;
             } else {
-                html += `<table class="tab-romaneio"><thead><tr><th>SKU</th><th>DESCRIÇÃO</th><th>QTD</th><th>UN.</th><th>TOTAL</th></tr></thead><tbody>`;
-                itens.forEach(i => { html += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${i.quantidade}</td><td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td></tr>`; });
+                html += `
+                <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                    <thead style="background:#eee;">
+                        <tr>
+                            ${comFoto ? '<th style="padding:4px; border:1px solid #ccc; width:50px;">Foto</th>' : ''}
+                            <th style="padding:4px; border:1px solid #ccc; text-align:left;">Produto / SKU</th>
+                            <th style="padding:4px; border:1px solid #ccc; text-align:center; width:60px;">Peso U.</th>
+                            <th style="padding:4px; border:1px solid #ccc; text-align:center; width:40px;">Qtd</th>
+                            ${isFin ? '<th style="padding:4px; border:1px solid #ccc; text-align:right; width:80px;">Subtotal</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                itens.forEach(i => {
+                    html += `<tr>
+                        ${comFoto ? `<td style="padding:2px; border:1px solid #ccc; text-align:center;"><img src="${i.image || ''}" style="width:35px; height:35px; object-fit:contain;"></td>` : ''}
+                        <td style="padding:4px; border:1px solid #ccc;"><b>${i.sku}</b> - ${i.name}</td>
+                        <td style="padding:4px; border:1px solid #ccc; text-align:center;">${(i.peso || 0).toFixed(2)}g</td>
+                        <td style="padding:4px; border:1px solid #ccc; text-align:center;"><b>${i.quantidade}</b></td>
+                        ${isFin ? `<td style="padding:4px; border:1px solid #ccc; text-align:right;">${fMoeda(i.price * i.quantidade)}</td>` : ''}
+                    </tr>`;
+                });
                 html += `</tbody></table>`;
             }
-            html += `<div style="margin-top:20px; text-align:right; font-family:Arial;">
-                <div style="font-size:10px">Subtotal: ${fMoeda(p.subtotal)}</div>
-                <div style="font-size:10px">Descontos: - ${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))}</div>
-                <div style="font-size:10px">Frete: + ${fMoeda(p.frete||0)}</div>
-                <div style="font-size:18px; font-weight:bold; color:#d4af37; margin-top:5px">TOTAL: ${fMoeda(p.total)}</div></div>`;
-            document.getElementById('print-area').innerHTML = html;
-            window.print();
+
+            html += `
+            <div style="margin-top: 15px; border: 1.5px solid #caa85c; border-radius: 10px; padding: 12px; background: #fff; page-break-inside: avoid;">
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="font-size: 10px; line-height: 1.5; width: 45%;">
+                        <b style="color:#caa85c; font-size:11px; text-transform:uppercase;">Resumo da Mercadoria</b><br>
+                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Modelos:</span> <b>${itens.length}</b></div>
+                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Total de Peças:</span> <b>${p.totalPecas || 0}</b></div>
+                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Peso Total:</span> <b>${(p.pesoTotal || 0).toFixed(2)}g</b></div>
+                        <div style="margin-top:5px;"><b>Pagamento:</b> ${p.pagamento || 'A definir'}</div>
+                    </div>
+                    <div style="width: 50%; text-align: right;">
+                        ${isFin ? `
+                            <table style="width:100%; font-size:10px; border-collapse:collapse;">
+                                <tr><td style="text-align:right; padding:2px;">Subtotal Itens:</td><td style="width:80px;">${fMoeda(subtotal)}</td></tr>
+                                <tr><td style="text-align:right; padding:2px;">Desconto Promocional:</td><td style="color:red;">-${fMoeda(descPromo)}</td></tr>
+                                <tr><td style="text-align:right; padding:2px;">Desconto PIX:</td><td style="color:red;">-${fMoeda(descPix)}</td></tr>
+                                <tr><td style="text-align:right; padding:2px;">Frete/Envio:</td><td>${fMoeda(frete)}</td></tr>
+                                <tr>
+                                    <td style="text-align:right; padding:5px 2px; font-weight:bold; font-size:12px;">TOTAL DO PEDIDO:</td>
+                                    <td style="padding:5px 0; font-weight:bold; font-size:16px; border-top:1px solid #000;">${fMoeda(totalFinal)}</td>
+                                </tr>
+                            </table>
+                        ` : `
+                            <div style="height:100%; display:flex; align-items:center; justify-content:flex-end;">
+                                <span style="font-size:14px; font-weight:bold; color:#caa85c;">ROMANEIO DE CONFERÊNCIA</span>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+            </div>`;
+
+            const area = document.getElementById('print-area');
+            area.innerHTML = html;
+            setTimeout(() => { window.print(); }, 700);
         });
     });
 }
 
 function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+
 function duplicarPedido(id) {
     db.ref('orders/'+id).once('value', s => {
-        const n = s.val(); n.data = new Date().toLocaleString();
+        const n = s.val(); 
+        n.data = new Date().toLocaleString();
         db.ref('orders').push(n).then(() => alert("Pedido duplicado!"));
     });
 }
-function excluirPedido(id) { if(confirm("Remover este pedido permanentemente?")) db.ref('orders/'+id).remove(); }
+
+function excluirPedido(id) { 
+    if(confirm("Remover este pedido permanentemente?")) db.ref('orders/'+id).remove(); 
+}
 
 window.onload = carregarEmpresa;
 </script>
