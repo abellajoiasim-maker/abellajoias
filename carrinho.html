@@ -18,9 +18,13 @@
         input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; font-size: 14px; }
         .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; transition: 0.3s; }
         .pay-btn.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.05); }
-        .price-anchor-highlight { text-decoration: line-through; color: #ff4d4d; font-size: 1.5rem; font-weight: bold; }
+        
+        /* Estilos Barra de Progresso Atacado */
+        #barraAtacado { background: #000; border: 1px solid #caa85c/20; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
+        .progress-bg { background: #222; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { background: #caa85c; height: 100%; width: 0%; transition: 0.5s ease; box-shadow: 0 0 10px #caa85c; }
+
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body>
@@ -33,6 +37,16 @@
 </header>
 
 <main class="max-w-xl mx-auto p-4 pb-40">
+    
+    <div id="barraAtacado" class="hidden">
+        <div class="flex justify-between items-center text-[10px] font-bold uppercase">
+            <span id="txtProgresso" class="text-gray-400">Analizando vantagens...</span>
+            <span id="percAtual" class="gold-text">0% OFF</span>
+        </div>
+        <div class="progress-bg"><div id="fillAtacado" class="progress-fill"></div></div>
+        <p id="msgProximaFaixa" class="text-[9px] text-center text-gray-500 italic mt-1"></p>
+    </div>
+
     <div class="card">
         <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest opacity-70 text-center">Itens no Carrinho</h2>
         <div id="listaItens" class="space-y-4"></div>
@@ -68,7 +82,6 @@
             <input id="bairro" placeholder="Bairro" class="col-span-3">
         </div>
         <input id="cidade" placeholder="Cidade">
-        <input id="cepEntrega" placeholder="CEP">
     </div>
 
     <div class="card">
@@ -94,7 +107,7 @@
             </div>
             <div id="containerDescontos" class="space-y-3 pt-3 border-t border-dashed border-[#333]">
                 <div id="linhaDescontoPromo" class="flex justify-between text-emerald-500 italic text-sm hidden">
-                    <span id="labelPromo">Desconto Progressivo</span>
+                    <span id="labelPromo">Desconto Atacado</span>
                     <b id="valorDescontoPromo">- R$ 0,00</b>
                 </div>
                 <div id="linhaCondicao" class="flex justify-between text-blue-300 italic text-sm hidden">
@@ -111,7 +124,7 @@
 
 <footer class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
     <div class="max-w-xl mx-auto">
-        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase tracking-widest active:scale-95 transition shadow-lg">
+        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase tracking-widest shadow-lg">
             Finalizar via WhatsApp
         </button>
     </div>
@@ -132,7 +145,6 @@ let configEmpresa = { descontoPix: 5, parcelas: 3, fone: '5511999999999' };
 const fM = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 async function inicializar() {
-    // Carrega dados da empresa
     const snapEmp = await db.ref('settings/empresa').once('value');
     if(snapEmp.exists()){
         const d = snapEmp.val();
@@ -141,8 +153,8 @@ async function inicializar() {
         configEmpresa.fone = d.whats || configEmpresa.fone;
     }
     
-    document.getElementById('labelTxtPix').innerText = configEmpresa.descontoPix > 0 ? `${configEmpresa.descontoPix}% de Desconto` : 'Pagamento à vista';
-    document.getElementById('labelTxtCartao').innerText = `Até ${configEmpresa.parcelas}x sem juros`;
+    document.getElementById('labelTxtPix').innerText = configEmpresa.descontoPix + "% OFF";
+    document.getElementById('labelTxtCartao').innerText = `Até ${configEmpresa.parcelas}x s/ juros`;
     
     carregarCarrinho();
 }
@@ -159,60 +171,77 @@ async function carregarCarrinho() {
     box.innerHTML = '';
     let bruto = 0, pesoTotal = 0, pecas = 0;
 
-    carrinho.forEach((item, index) => {
+    carrinho.forEach(item => {
         let q = parseInt(item.quantidade) || 1;
-        let p = Number(item.price || item.precoFinal || 0);
-        bruto += Math.round((p * q) * 100) / 100;
+        let p = Number(item.precoFinal || item.price || 0);
+        bruto += (p * q);
         pecas += q;
         pesoTotal += (Number(item.peso || item.weight || 0) * q);
 
         box.innerHTML += `
         <div class="flex items-center gap-3 py-4 border-b border-[#222]">
-            <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
+            <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg">
             <div class="flex-1">
                 <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
-                <div class="text-[#caa85c] text-xs font-bold mt-1">${q}x ${fM(p)}</div>
+                <div class="text-[#caa85c] text-xs font-bold">${q}x ${fM(p)}</div>
             </div>
             <div class="text-right font-bold text-white text-sm">${fM(p * q)}</div>
         </div>`;
     });
 
-    // BUSCA REGRAS DE DESCONTO POR VALOR
-    const snapRegras = await db.ref('settings/promocoes_valor').once('value');
-    const regras = snapRegras.val() || [];
-    let economiaPromo = 0;
+    // LÓGICA DE ATACADO (PROGRESSIVO)
+    const snapAtacado = await db.ref('settings/promocoesValor').once('value');
+    const configAtacado = snapAtacado.val();
+    let economiaAtacado = 0;
+    let percExibicao = 0;
 
-    // Regras devem estar ordenadas do maior valor mínimo para o menor
-    const regrasOrdenadas = Object.values(regras).sort((a, b) => b.minimo - a.minimo);
-    
-    for (let r of regrasOrdenadas) {
-        if (bruto >= r.minimo) {
-            if (r.desconto < 100) {
-                // Se o valor for menor que 100, aplica %
-                economiaPromo = Math.round((bruto * (r.desconto / 100)) * 100) / 100;
-            } else {
-                // Se for maior ou igual a 100, aplica valor fixo R$
-                economiaPromo = r.desconto;
-            }
-            break; 
+    if (configAtacado && configAtacado.status === 'ATIVA' && configAtacado.regras) {
+        document.getElementById('barraAtacado').classList.remove('hidden');
+        const regras = Object.values(configAtacado.regras).sort((a, b) => a.min - b.min);
+        
+        let regraAtual = null;
+        let proximaRegra = null;
+
+        regras.forEach(r => {
+            if (bruto >= r.min) regraAtual = r;
+            else if (!proximaRegra) proximaRegra = r;
+        });
+
+        if (regraAtual) {
+            percExibicao = regraAtual.desc;
+            economiaAtacado = (bruto * (regraAtual.desc / 100));
+            document.getElementById('percAtual').innerText = `${regraAtual.label || regraAtual.desc + '% OFF'}`;
+        }
+
+        const fill = document.getElementById('fillAtacado');
+        const msg = document.getElementById('msgProximaFaixa');
+        
+        if (proximaRegra) {
+            const falta = proximaRegra.min - bruto;
+            const progresso = (bruto / proximaRegra.min) * 100;
+            fill.style.width = `${progresso}%`;
+            msg.innerText = `Faltam ${fM(falta)} para você ganhar ${proximaRegra.desc}% de desconto!`;
+            document.getElementById('txtProgresso').innerText = "Vantagem de Atacado";
+        } else {
+            fill.style.width = '100%';
+            msg.innerText = "Parabéns! Você atingiu o desconto máximo de atacado.";
+            document.getElementById('txtProgresso').innerText = "Desconto Máximo Atingido";
         }
     }
 
-    const subtotalAposPromo = Math.round((bruto - economiaPromo) * 100) / 100;
-    const descPix = (pagamento === 'Pix') ? Math.round((subtotalAposPromo * (configEmpresa.descontoPix / 100)) * 100) / 100 : 0;
-    const totalFinal = Math.round((subtotalAposPromo - descPix) * 100) / 100;
+    const subtotalComAtacado = bruto - economiaAtacado;
+    const descPix = (pagamento === 'Pix') ? (subtotalComAtacado * (configEmpresa.descontoPix / 100)) : 0;
+    const totalFinal = subtotalComAtacado - descPix;
 
-    // Interface
+    // Interface Resumo
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + "g";
     document.getElementById('subtotalTxt').innerText = fM(bruto);
 
-    if (economiaPromo > 0) {
+    if (economiaAtacado > 0) {
         document.getElementById('linhaDescontoPromo').classList.remove('hidden');
-        document.getElementById('valorDescontoPromo').innerText = "- " + fM(economiaPromo);
-    } else {
-        document.getElementById('linhaDescontoPromo').classList.add('hidden');
+        document.getElementById('valorDescontoPromo').innerText = "- " + fM(economiaAtacado);
     }
 
     if (descPix > 0) {
@@ -221,21 +250,18 @@ async function carregarCarrinho() {
         document.getElementById('valorCondicao').innerText = "- " + fM(descPix);
     } else if (pagamento === 'Cartão') {
         document.getElementById('linhaCondicao').classList.remove('hidden');
-        document.getElementById('labelCondicao').innerText = `${configEmpresa.parcelas}x no Cartão`;
-        document.getElementById('valorCondicao').innerText = `${fM(totalFinal / configEmpresa.parcelas)} p/ mês`;
-    } else {
-        document.getElementById('linhaCondicao').classList.add('hidden');
+        document.getElementById('labelCondicao').innerText = `${configEmpresa.parcelas}x s/ juros`;
+        document.getElementById('valorCondicao').innerText = `${fM(totalFinal / configEmpresa.parcelas)} / mês`;
     }
 
     document.getElementById('totalTxt').innerText = fM(totalFinal);
-
-    window.resumoFinal = { bruto, economiaPromo, descPix, totalFinal, pecas, pesoTotal };
+    window.resumoFinal = { bruto, economiaAtacado, descPix, totalFinal };
 }
 
 async function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
     const fone = document.getElementById('telefoneCliente').value;
-    if (!nome || !pagamento) return alert("Por favor, preencha seu nome e escolha a forma de pagamento.");
+    if (!nome || !pagamento) return alert("Preencha seu nome e escolha o pagamento.");
 
     const pedido = {
         cliente: { nome, telefone: fone },
@@ -248,7 +274,7 @@ async function finalizarPedido() {
         pagamento,
         itens: carrinho,
         subtotal: window.resumoFinal.bruto,
-        descontoPromo: window.resumoFinal.economiaPromo,
+        descontoAtacado: window.resumoFinal.economiaAtacado,
         descontoPix: window.resumoFinal.descPix,
         total: window.resumoFinal.totalFinal,
         data: new Date().toLocaleString('pt-BR'),
@@ -260,9 +286,7 @@ async function finalizarPedido() {
         let msg = `Olá! Sou *${nome}*.\nFiz um pedido na Abella Joias!\n\n*Total:* ${fM(window.resumoFinal.totalFinal)}\n*Pagamento:* ${pagamento}`;
         localStorage.removeItem('carrinho');
         window.location.href = `https://api.whatsapp.com/send?phone=${configEmpresa.fone}&text=${encodeURIComponent(msg)}`;
-    } catch (e) {
-        alert("Erro ao enviar pedido.");
-    }
+    } catch (e) { alert("Erro ao enviar pedido."); }
 }
 
 inicializar();
