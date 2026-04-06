@@ -15,112 +15,102 @@
         .gold-text { color: #caa85c; }
         .gold-bg { background: #caa85c; }
         .card { background: #141414; border-radius: 18px; border: 1px solid #2a2a2a; padding: 20px; margin-bottom: 20px; }
-        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; font-size: 14px; }
+        
+        /* Ajuste Visual da Barra de Progresso no Carrinho */
+        .progress-wrapper { background: #222; border-radius: 50px; height: 10px; width: 100%; overflow: hidden; margin-top: 8px; border: 1px solid #333; }
+        .progress-fill { background: linear-gradient(90deg, #caa85c, #f1d592); height: 100%; transition: width 0.6s ease-in-out; width: 0%; }
+        
+        .pulse-save { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; }
         .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; transition: 0.3s; }
         .pay-btn.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.05); }
-        .btn-qty { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: #222; border: 1px solid #444; border-radius: 6px; color: #caa85c; font-weight: bold; }
-        
-        /* Estilo da régua de progresso */
-        .progress-container { background: #222; border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin: 10px 0; }
-        .progress-bar { background: #caa85c; height: 100%; transition: width 0.5s ease; width: 0%; }
-        .banner-info { background: rgba(202, 168, 92, 0.1); border: 1px dashed #caa85c; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-[#222]">
     <div class="max-w-xl mx-auto p-4 flex justify-between items-center">
-        <button onclick="history.back()" class="text-[10px] font-bold uppercase gold-text">← Voltar</button>
-        <h1 class="serif gold-text uppercase text-sm tracking-widest">Finalizar Pedido</h1>
+        <button onclick="history.back()" class="text-[10px] font-bold uppercase gold-text">← Continuar Comprando</button>
+        <h1 class="serif gold-text uppercase text-sm tracking-widest">Meu Carrinho</h1>
     </div>
 </header>
 
 <main class="max-w-xl mx-auto p-4 pb-40">
 
-    <div id="bannerProgresso" class="banner-info hidden">
-        <div class="flex justify-between items-center mb-1">
-            <span id="msgProgresso" class="text-[10px] gold-text font-bold uppercase tracking-wider">Carregando ofertas...</span>
-            <span id="pctProxima" class="text-[10px] text-white font-bold">0%</span>
-        </div>
-        <div class="progress-container">
-            <div id="barraProgresso" class="progress-bar"></div>
-        </div>
-        <p id="subMsgProgresso" class="text-[9px] text-gray-400 italic text-center mt-1">Adicione mais itens para ganhar desconto!</p>
-    </div>
-
-    <div class="card">
-        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest opacity-70 text-center">Itens no Carrinho</h2>
-        <div id="listaItens" class="space-y-4"></div>
-
-        <div class="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-[#222]">
-            <div class="bg-black p-3 rounded-xl border border-[#222] text-center">
-                <span class="block text-[8px] uppercase text-gray-500 font-bold mb-1">Modelos</span>
-                <b id="totalSkus" class="text-white">0</b>
+    <div class="card border-dashed border-[#caa85c]/50">
+        <div id="infoProgresso">
+            <div class="flex justify-between items-end">
+                <span id="labelProgresso" class="text-[10px] uppercase font-bold text-gray-400">Calculando vantagens...</span>
+                <span id="pctAtual" class="text-xs font-bold gold-text">0%</span>
             </div>
-            <div class="bg-black p-3 rounded-xl border border-[#222] text-center">
-                <span class="block text-[8px] uppercase text-gray-500 font-bold mb-1">Peças</span>
-                <b id="totalPecas" class="text-white">0</b>
+            <div class="progress-wrapper">
+                <div id="barraProgresso" class="progress-fill"></div>
             </div>
-            <div class="bg-black p-3 rounded-xl border border-[#caa85c]/20 text-center">
-                <span class="block text-[8px] uppercase gold-text font-bold mb-1">Peso Total</span>
-                <b id="pesoTotal" class="text-white text-xs">0,00g</b>
-            </div>
+            <p id="fraseMotivacional" class="text-[9px] italic text-gray-500 mt-2 text-center"></p>
         </div>
     </div>
 
-    <div class="card">
-        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">Identificação</h2>
-        <input id="nomeCliente" placeholder="Seu Nome Completo *">
-        <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
-    </div>
+    <div id="listaItens" class="space-y-4 mb-6"></div>
 
     <div class="card">
-        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">Forma de Pagamento</h2>
-        <div class="grid grid-cols-2 gap-4">
-            <div class="pay-btn" onclick="setPagamento('Pix', this)">
-                <span class="block text-white font-bold">PIX</span>
-                <span id="labelTxtPix" class="text-[10px] text-green-500 font-bold uppercase">...</span>
-            </div>
-            <div class="pay-btn" onclick="setPagamento('Cartão', this)">
-                <span class="block text-white font-bold">CARTÃO</span>
-                <span id="labelTxtCartao" class="text-[10px] text-blue-400 font-bold uppercase">...</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2 class="serif gold-text uppercase text-[10px] mb-6 tracking-widest text-center border-b border-[#222] pb-2">Resumo Financeiro</h2>
-        <div class="space-y-4">
-            <div class="flex justify-between text-gray-500 text-sm">
-                <span>Subtotal Bruto</span>
+        <h2 class="serif gold-text uppercase text-[10px] mb-6 tracking-widest text-center">Resumo do Pedido</h2>
+        <div class="space-y-3">
+            <div class="flex justify-between text-sm text-gray-400">
+                <span>Subtotal dos Produtos</span>
                 <b id="subtotalTxt" class="text-white">R$ 0,00</b>
             </div>
-            <div id="containerDescontos" class="space-y-3 pt-3 border-t border-dashed border-[#333]">
-                <div id="linhaDescontoPromo" class="flex justify-between text-emerald-500 italic text-sm hidden">
-                    <span id="labelPromo">Desconto Atacado</span>
-                    <b id="valorDescontoPromo">- R$ 0,00</b>
-                </div>
-                <div id="linhaCondicao" class="flex justify-between text-blue-300 italic text-sm hidden">
-                    <span id="labelCondicao">Condição</span>
-                    <b id="valorCondicao">R$ 0,00</b>
-                </div>
+            
+            <div id="linhaDescontoAtacado" class="flex justify-between text-sm text-emerald-500 font-bold hidden">
+                <span id="labelAtacado">Desconto de Atacado</span>
+                <b id="valorAtacado">- R$ 0,00</b>
             </div>
-            <div class="mt-6 pt-6 border-t-2 border-[#caa85c] flex flex-col items-end">
-                <div id="totalTxt" class="text-3xl font-bold gold-text">R$ 0,00</div>
+
+            <div id="linhaDescontoPix" class="flex justify-between text-sm text-sky-400 font-bold hidden">
+                <span>Bônus Pagamento Pix</span>
+                <b id="valorPix">- R$ 0,00</b>
+            </div>
+
+            <div class="pt-4 mt-2 border-t border-[#333] flex justify-between items-center">
+                <span class="serif gold-text text-sm">Total a Pagar</span>
+                <div class="text-right">
+                    <div id="totalFinalTxt" class="text-3xl font-bold text-white">R$ 0,00</div>
+                    <div id="totalEconomizado" class="text-[10px] uppercase text-emerald-500 font-bold pulse-save"></div>
+                </div>
             </div>
         </div>
+    </div>
+
+    <div class="card">
+        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2 text-center">Forma de Pagamento</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="pay-btn" onclick="setPagamento('Pix', this)">
+                <span class="block text-white font-bold text-sm">PIX</span>
+                <span class="text-[9px] text-emerald-500 font-bold uppercase" id="pixInfo">---</span>
+            </div>
+            <div class="pay-btn" onclick="setPagamento('Cartão', this)">
+                <span class="block text-white font-bold text-sm">CARTÃO</span>
+                <span class="text-[9px] text-gray-500 uppercase">Sem juros</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <input id="nomeCliente" placeholder="Seu Nome Completo">
+        <input id="telefoneCliente" placeholder="Seu WhatsApp">
+        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase tracking-widest shadow-lg mt-2">
+            Finalizar Pedido via WhatsApp
+        </button>
     </div>
 </main>
 
-<footer class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
-    <div class="max-w-xl mx-auto">
-        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase tracking-widest active:scale-95 transition shadow-lg">
-            Finalizar via WhatsApp
-        </button>
-    </div>
-</footer>
-
 <script>
+// Configurações e Firebase (Mantendo sua chave)
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -129,133 +119,133 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-let pagamento = '';
-let configEmpresa = { descontoPix: 0, fone: '' };
+let formaPagamento = '';
+let configEmpresa = { descontoPix: 0, whats: '' };
+
 const fM = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 async function inicializar() {
-    const snapEmp = await db.ref('settings/empresa').once('value');
-    if(snapEmp.exists()){
-        const d = snapEmp.val();
-        configEmpresa.descontoPix = Number(d.descontoPix) || 0;
-        configEmpresa.fone = d.whats || '';
+    const snap = await db.ref('settings/empresa').once('value');
+    if(snap.exists()){
+        configEmpresa = snap.val();
+        document.getElementById('pixInfo').innerText = `${configEmpresa.descontoPix}% DESCONTO`;
     }
-    document.getElementById('labelTxtPix').innerText = `${configEmpresa.descontoPix}% de Desconto`;
-    document.getElementById('labelTxtCartao').innerText = `Sem juros no Cartão`;
-    carregarCarrinho();
+    renderCarrinho();
 }
 
-function alterarQtd(index, delta) {
-    carrinho[index].quantidade = (parseInt(carrinho[index].quantidade) || 1) + delta;
-    if (carrinho[index].quantidade <= 0) carrinho.splice(index, 1);
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-    carregarCarrinho();
-}
-
-function setPagamento(p, el) {
-    pagamento = p;
+function setPagamento(tipo, el) {
+    formaPagamento = tipo;
     document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
-    if (el) el.classList.add('active');
-    carregarCarrinho();
+    el.classList.add('active');
+    renderCarrinho();
 }
 
-async function carregarCarrinho() {
-    let box = document.getElementById('listaItens');
-    box.innerHTML = '';
-    let bruto = 0, pesoTotal = 0, pecas = 0;
+async function renderCarrinho() {
+    const lista = document.getElementById('listaItens');
+    lista.innerHTML = '';
+    let bruto = 0;
 
     carrinho.forEach((item, index) => {
-        let q = parseInt(item.quantidade) || 1;
-        let p = Number(item.precoFinal || item.price || 0);
-        bruto += (p * q);
-        pecas += q;
-        pesoTotal += (Number(item.peso || 0) * q);
-        box.innerHTML += `<div class="flex items-center gap-3 py-4 border-b border-[#222]">
-            <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
-            <div class="flex-1">
-                <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
-                <div class="flex items-center gap-3 mt-2">
-                    <button onclick="alterarQtd(${index}, -1)" class="btn-qty">-</button>
-                    <span class="text-xs font-bold text-white">${q}</span>
-                    <button onclick="alterarQtd(${index}, 1)" class="btn-qty">+</button>
+        let preco = parseFloat(item.precoFinal || item.price || 0);
+        let qtd = parseInt(item.quantidade || 1);
+        bruto += (preco * qtd);
+
+        lista.innerHTML += `
+            <div class="flex items-center gap-4 bg-[#141414] p-3 rounded-xl border border-[#222]">
+                <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg border border-[#333]">
+                <div class="flex-1">
+                    <h4 class="text-[10px] font-bold text-white uppercase">${item.name}</h4>
+                    <div class="text-xs gold-text font-bold mt-1">${fM(preco)}</div>
+                    <div class="flex items-center gap-3 mt-2">
+                        <button onclick="alterarQtd(${index},-1)" class="w-6 h-6 bg-[#222] rounded border border-[#444]">-</button>
+                        <span class="text-xs font-bold">${qtd}</span>
+                        <button onclick="alterarQtd(${index},1)" class="w-6 h-6 bg-[#222] rounded border border-[#444]">+</button>
+                    </div>
                 </div>
-            </div>
-            <div class="text-right font-bold text-white text-sm">${fM(p * q)}</div>
-        </div>`;
+                <div class="text-right font-bold text-sm text-white">${fM(preco * qtd)}</div>
+            </div>`;
     });
 
-    // LÓGICA DE DESCONTO PROGRESSIVO E BANNER
-    const snapRegras = await db.ref('settings/promocaoValor').once('value');
-    let economiaPromo = 0;
-    let maiorPctGanha = 0;
+    // LÓGICA DE PROGRESSO E GATILHOS
+    const snapPromo = await db.ref('settings/promocaoValor').once('value');
+    let economiaAtacado = 0;
+    let pctAplicada = 0;
 
-    if (snapRegras.exists()) {
-        const regras = Object.values(snapRegras.val()).sort((a, b) => a.minimo - b.minimo);
-        let proximaRegra = null;
+    if (snapPromo.exists()) {
+        const regras = Object.values(snapPromo.val()).sort((a, b) => a.minimo - b.minimo);
+        let proxima = null;
 
         regras.forEach(r => {
             if (bruto >= r.minimo) {
-                maiorPctGanha = Number(r.porcentagem);
-                economiaPromo = (bruto * (maiorPctGanha / 100));
-            } else if (!proximaRegra) {
-                proximaRegra = r;
+                pctAplicada = Number(r.porcentagem);
+                economiaAtacado = bruto * (pctAplicada / 100);
+            } else if (!proxima) {
+                proxima = r;
             }
         });
 
-        const banner = document.getElementById('bannerProgresso');
-        if (proximaRegra) {
-            banner.classList.remove('hidden');
-            let falta = proximaRegra.minimo - bruto;
-            let porcentagemBarra = (bruto / proximaRegra.minimo) * 100;
-            
-            document.getElementById('msgProgresso').innerText = `Faltam ${fM(falta)} para você ganhar ${proximaRegra.porcentagem}% de desconto!`;
-            document.getElementById('pctProxima').innerText = proximaRegra.porcentagem + "%";
-            document.getElementById('barraProgresso').style.width = Math.min(porcentagemBarra, 100) + "%";
-            document.getElementById('subMsgProgresso').innerText = `Você já possui ${maiorPctGanha}% de desconto.`;
-        } else if (maiorPctGanha > 0) {
-            banner.classList.remove('hidden');
-            document.getElementById('msgProgresso').innerText = `PARABÉNS! VOCÊ ATINGIU O DESCONTO MÁXIMO!`;
-            document.getElementById('pctProxima').innerText = maiorPctGanha + "%";
-            document.getElementById('barraProgresso').style.width = "100%";
-            document.getElementById('subMsgProgresso').innerText = `Você ganhou ${fM(economiaPromo)} de desconto no atacado.`;
+        const barra = document.getElementById('barraProgresso');
+        const frase = document.getElementById('fraseMotivacional');
+        const label = document.getElementById('labelProgresso');
+
+        if (proxima) {
+            let falta = proxima.minimo - bruto;
+            let percentBarra = (bruto / proxima.minimo) * 100;
+            barra.style.width = percentBarra + "%";
+            label.innerText = `Faltam ${fM(falta)} para o próximo nível`;
+            document.getElementById('pctAtual').innerText = pctAplicada + "%";
+            frase.innerText = `Adicione mais itens para liberar ${proxima.porcentagem}% de desconto!`;
+        } else {
+            barra.style.width = "100%";
+            label.innerText = "Nível máximo de desconto atingido!";
+            document.getElementById('pctAtual').innerText = pctAplicada + "%";
+            frase.innerText = "🔥 Você desbloqueou a melhor condição do catálogo!";
         }
     }
 
-    const subtotalAposPromo = bruto - economiaPromo;
-    const descPix = (pagamento === 'Pix') ? (subtotalAposPromo * (configEmpresa.descontoPix / 100)) : 0;
-    const totalFinal = subtotalAposPromo - descPix;
+    // RESUMO FINAL
+    let subtotalAposAtacado = bruto - economiaAtacado;
+    let descPix = (formaPagamento === 'Pix') ? (subtotalAposAtacado * (configEmpresa.descontoPix / 100)) : 0;
+    let totalFinal = subtotalAposAtacado - descPix;
+    let economiaTotal = economiaAtacado + descPix;
 
-    // Atualiza Resumo Financeiro
-    document.getElementById('totalSkus').innerText = carrinho.length;
-    document.getElementById('totalPecas').innerText = pecas;
-    document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + "g";
     document.getElementById('subtotalTxt').innerText = fM(bruto);
-
-    if (economiaPromo > 0) {
-        document.getElementById('linhaDescontoPromo').classList.remove('hidden');
-        document.getElementById('labelPromo').innerText = `Desconto Atacado (${maiorPctGanha}%)`;
-        document.getElementById('valorDescontoPromo').innerText = "- " + fM(economiaPromo);
+    
+    if (economiaAtacado > 0) {
+        document.getElementById('linhaDescontoAtacado').classList.remove('hidden');
+        document.getElementById('labelAtacado').innerText = `Desconto Atacado (${pctAplicada}%)`;
+        document.getElementById('valorAtacado').innerText = "- " + fM(economiaAtacado);
     } else {
-        document.getElementById('linhaDescontoPromo').classList.add('hidden');
+        document.getElementById('linhaDescontoAtacado').classList.add('hidden');
     }
 
     if (descPix > 0) {
-        document.getElementById('linhaCondicao').classList.remove('hidden');
-        document.getElementById('labelCondicao').innerText = `Desconto PIX (${configEmpresa.descontoPix}%)`;
-        document.getElementById('valorCondicao').innerText = "- " + fM(descPix);
+        document.getElementById('linhaDescontoPix').classList.remove('hidden');
+        document.getElementById('valorPix').innerText = "- " + fM(descPix);
     } else {
-        document.getElementById('linhaCondicao').classList.add('hidden');
+        document.getElementById('linhaDescontoPix').classList.add('hidden');
     }
 
-    document.getElementById('totalTxt').innerText = fM(totalFinal);
-    window.resumoFinal = { bruto, economiaPromo, descPix, totalFinal };
+    document.getElementById('totalFinalTxt').innerText = fM(totalFinal);
+    document.getElementById('totalEconomizado').innerText = economiaTotal > 0 ? `Você está economizando ${fM(economiaTotal)}` : "";
+
+    // Global para o WhatsApp
+    window.resumoFinal = { totalFinal, economiaTotal, bruto };
 }
 
-async function finalizarPedido() {
+function alterarQtd(idx, d) {
+    carrinho[idx].quantidade = (carrinho[idx].quantidade || 1) + d;
+    if (carrinho[idx].quantidade <= 0) carrinho.splice(idx, 1);
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    renderCarrinho();
+}
+
+function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if (!nome || !pagamento) return alert("Preencha seu nome e pagamento.");
-    let msg = `Olá! Pedido de *${nome}*.\n*Total:* ${fM(window.resumoFinal.totalFinal)}\n*Pagamento:* ${pagamento}`;
-    window.location.href = `https://api.whatsapp.com/send?phone=${configEmpresa.fone}&text=${encodeURIComponent(msg)}`;
+    if (!nome || !formaPagamento) return alert("Por favor, preencha seu nome e escolha o pagamento.");
+    
+    let msg = `Olá! Meu nome é ${nome}.\nQuero finalizar meu pedido na Abella Joias:\n\n*Total:* ${fM(window.resumoFinal.totalFinal)}\n*Economia total:* ${fM(window.resumoFinal.economiaTotal)}\n*Pagamento:* ${formaPagamento}`;
+    window.location.href = `https://api.whatsapp.com/send?phone=${configEmpresa.whats}&text=${encodeURIComponent(msg)}`;
 }
 
 inicializar();
