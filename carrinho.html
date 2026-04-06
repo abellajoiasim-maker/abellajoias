@@ -172,7 +172,7 @@ async function carregarCarrinho() {
     box.innerHTML = '';
     let bruto = 0, pesoTotal = 0, pecas = 0;
 
-    carrinho.forEach((item, index) => {
+    carrinho.forEach((item) => {
         let q = parseInt(item.quantidade) || 1;
         let p = Number(item.price || item.precoFinal || 0);
         bruto += (p * q);
@@ -190,18 +190,19 @@ async function carregarCarrinho() {
         </div>`;
     });
 
-    // CORREÇÃO: Caminho alterado para 'promocaoValor' conforme o banco de dados
+    // CORREÇÃO 1: Caminho exato do banco conforme seu painel (promocaoValor)
     const snapRegras = await db.ref('settings/promocaoValor').once('value');
     const regras = snapRegras.val() || {};
     let economiaPromo = 0;
     let porcentagemAplicada = 0;
 
-    // Ordena do maior valor mínimo para o menor para aplicar o melhor desconto
+    // Converte objeto em array e ordena do maior valor mínimo para o menor
     const regrasOrdenadas = Object.values(regras).sort((a, b) => b.minimo - a.minimo);
 
     for (let r of regrasOrdenadas) {
         if (bruto >= r.minimo) {
-            porcentagemAplicada = r.porcentagem || r.desconto; // Aceita os dois nomes de campo
+            // CORREÇÃO 2: Usa o campo 'porcentagem' que vem do seu painel
+            porcentagemAplicada = r.porcentagem || r.desconto || 0;
             economiaPromo = bruto * (porcentagemAplicada / 100);
             break;
         }
@@ -211,7 +212,7 @@ async function carregarCarrinho() {
     const descPix = (pagamento === 'Pix') ? (subtotalAposPromo * (configEmpresa.descontoPix / 100)) : 0;
     const totalFinal = subtotalAposPromo - descPix;
 
-    // Atualização da Interface
+    // Atualização da Interface [cite: 108, 109, 115]
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + "g";
