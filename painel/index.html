@@ -2,29 +2,13 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Catálogo em Manutenção • Abella Joias</title>
+    <title>Painel Administrativo • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <script>
-        // Redirecionamento Automático Imediato para WhatsApp
-        (function() {
-            const seuNumero = "5519988207658";
-            const mensagem = "Olá! O catálogo está em manutenção técnica, mas estou disponível para atendimento por aqui.";
-            window.location.href = `https://api.whatsapp.com/send?phone=${seuNumero}&text=${encodeURIComponent(mensagem)}`;
-        })();
-    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
     <style>
-        body { background: #0b0b0b; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #caa85c; font-family: sans-serif; }
-    </style>
-</head>
-<body>
-    <div style="text-align: center; padding: 20px;">
-        <h2 style="text-transform: uppercase; letter-spacing: 2px;">Abellize Semijoias</h2>
-        <p style="color: #eee;">Redirecionando para atendimento no WhatsApp...</p>
-    </div>
-</body>
-</html>
         body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
         nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
         section { display:none; min-height:300px; }
@@ -32,643 +16,398 @@
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
         .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
         .btn:hover { background:#333; }
-        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; }
-        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
-        #mainModal.active { display: flex; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:bold; }
+        input, select, textarea { background:#000; border:1px solid #333; color:#fff; padding:8px; border-radius:8px; width:100%; font-size:12px; margin-bottom:10px; }
+        .grid-orders { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:15px; }
+        .status-badge { padding:2px 8px; border-radius:20px; font-size:10px; text-transform:uppercase; font-weight:bold; }
         
-        #print-area { display: none; }
+        #mainModal, #editorPedido { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100; display:flex; align-items:center; justify-content:center; visibility:hidden; opacity:0; transition:0.3s; }
+        #mainModal.active, #editorPedido:not(.hidden) { visibility:visible; opacity:1; }
+        .modal-content { background:#141414; width:90%; max-width:500px; border-radius:20px; padding:20px; max-height:90vh; overflow-y:auto; border:1px solid #caa85c; }
 
-        @media print {
-            @page { size: A4; margin: 10mm; }
-            html, body { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; }
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: #fff; }
-            .header-luxo { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px; }
-            .header-luxo h1 { font-size: 35px; letter-spacing: 5px; margin: 0; font-weight: 900; color: #000; }
-            .caixa-dados { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 15px; }
-            .caixa-dados td { border: 1.5px solid #d4af37; padding: 12px; vertical-align: top; width: 50%; font-size: 11px; border-radius: 10px; position: relative; color: #000; }
-            .titulo-box { position: absolute; top: -9px; left: 10px; background: #fff; padding: 0 5px; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #d4af37; }
-            .grid-romaneio { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
-            .grid-item { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; }
-            .grid-item img { max-width: 80px; max-height: 80px; object-fit: contain; margin-bottom: 5px; }
-            .tab-romaneio { width: 100%; border-collapse: collapse; font-size: 11px; color: #000; }
-            .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; }
-            .tab-romaneio th { background: #f2f2f2; font-size: 10px; }
-        }
+        @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { position: absolute; left: 0; top: 0; width:100%; } }
     </style>
 </head>
 <body>
 
-<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
-    Abella Joias • Gestão Total
+<header class="p-4 border-bottom border-[#222] flex justify-between items-center">
+    <h1 class="text-[#caa85c] font-bold text-lg">Abella Joias Admin</h1>
+    <div id="userInfo" class="text-[10px] text-gray-400">Carregando...</div>
 </header>
 
-<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
-    <button type="button" class="btn active" onclick="showTab('empresa', this)">Empresa</button>
-    <button type="button" class="btn" onclick="showTab('categorias', this)">Categorias</button>
-    <button type="button" class="btn" onclick="showTab('produtos', this)">Produtos</button>
-    <button type="button" class="btn" onclick="showTab('promocoes', this)">Promoções</button>
-    <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
+<nav class="flex overflow-x-auto gap-4 px-4 bg-[#111] border-b border-[#222]">
+    <button onclick="tab('pedidos')" id="tab-pedidos" class="py-3 px-2 text-xs font-bold active uppercase">Pedidos</button>
+    <button onclick="tab('produtos')" id="tab-produtos" class="py-3 px-2 text-xs font-bold uppercase">Produtos</button>
+    <button onclick="tab('categorias')" id="tab-categorias" class="py-3 px-2 text-xs font-bold uppercase">Categorias</button>
+    <button onclick="tab('config')" id="tab-config" class="py-3 px-2 text-xs font-bold uppercase">Configurações</button>
 </nav>
 
-<main class="p-6 max-w-4xl mx-auto">
-    <section id="promocoes">
-        <div class="grid md:grid-cols-2 gap-4">
-            <div class="card text-center border-[#caa85c]/30">
-                <h2 class="text-[#caa85c] font-bold uppercase text-xs mb-4 tracking-widest">Descontos por Categoria</h2>
-                <p class="text-[10px] text-gray-500 mb-4">Gerencie etiquetas, cores e descontos específicos para cada tipo de joia.</p>
-                <button class="btn-gold w-full" onclick="abrirPainelPromocoes()">GERENCIAR CATEGORIAS</button>
-            </div>
-            <div class="card text-center border-blue-900/30">
-                <h2 class="text-blue-400 font-bold uppercase text-xs mb-4 tracking-widest">Descontos por Valor (Atacado)</h2>
-                <p class="text-[10px] text-gray-500 mb-4">Configure faixas automáticas de desconto baseadas no valor total do carrinho.</p>
-                <button class="btn bg-blue-900 text-white w-full border-none" onclick="abrirPainelPromocoesValor()">CONFIGURAR FAIXAS</button>
+<div class="p-4">
+    <section id="pedidos" class="active">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-sm font-bold uppercase italic text-[#caa85c]">Gestão de Pedidos</h2>
+            <div class="flex gap-2">
+                <input type="text" id="searchOrder" placeholder="Buscar pedido..." class="m-0 w-40 h-8 text-[10px]" onkeyup="renderPedidos()">
             </div>
         </div>
-    </section>
-
-    <section id="empresa" class="active">
-        <div class="card space-y-3" id="formEmpresa">
-            <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
-            <input id="empNome" placeholder="Nome da Empresa">
-            <input id="empSub" placeholder="Slogan / Subtítulo">
-            <input id="empWhats" placeholder="WhatsApp da Loja">
-            <div class="grid grid-cols-2 gap-2">
-                <div><label class="text-[10px] text-gray-400">DESC. PIX %</label><input id="empDesc" type="number"></div>
-                <div><label class="text-[10px] text-gray-400">PARCELAS MÁX</label><input id="empParc" type="number"></div>
-            </div>
-            <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
-        </div>
-    </section>
-
-    <section id="categorias">
-        <div class="card mb-4">
-            <input id="newCatName" placeholder="Nome da Nova Categoria">
-            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
-        </div>
-        <div id="listaCategorias" class="grid gap-2"></div>
+        <div id="listaPedidos" class="grid-orders"></div>
     </section>
 
     <section id="produtos">
-        <div id="listaProdutos" class="grid gap-2"></div>
-    </section>
-
-    <section id="pedidos">
-        <div id="listaPedidos" class="grid gap-4"></div>
-    </section>
-</main>
-
-<div id="mainModal" class="fixed inset-0 bg-black/95 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-        <div class="p-4 border-b border-[#222] flex justify-between items-center">
-            <h3 id="modalTitle" class="text-[#caa85c] font-bold uppercase text-sm tracking-widest">Painel</h3>
-            <button onclick="fecharModal()" class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-sm font-bold uppercase italic text-[#caa85c]">Catálogo de Produtos</h2>
+            <button onclick="abrirModalProduto()" class="btn btn-gold">Novo Produto</button>
         </div>
-        <div id="modalBody" class="p-6 overflow-y-auto custom-scroll" style="max-height: 70vh;"></div>
-        <div class="p-4 border-t border-[#222] flex gap-3">
-            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button>
-            <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">Salvar Alterações</button>
+        <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+    </section>
+
+    <section id="categorias">
+        <div class="flex justify-between mb-4">
+            <h2 class="text-sm font-bold uppercase italic text-[#caa85c]">Categorias & Promoções</h2>
+            <button onclick="abrirModalCategoria()" class="btn btn-gold">Nova Categoria</button>
+        </div>
+        <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </section>
+
+    <section id="config">
+        <h2 class="text-sm font-bold uppercase italic text-[#caa85c] mb-4">Configurações Gerais</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="card">
+                <h3 class="text-xs font-bold mb-3 uppercase text-gray-400">Dados da Loja</h3>
+                <label class="text-[10px]">Nome da Loja</label>
+                <input type="text" id="conf-nome" placeholder="Abella Joias">
+                <label class="text-[10px]">WhatsApp (com DDD)</label>
+                <input type="text" id="conf-whatsapp" placeholder="5511999999999">
+                <label class="text-[10px]">% Desconto no PIX</label>
+                <input type="number" id="conf-pix" placeholder="Ex: 5">
+                <button onclick="salvarConfigGeral()" class="btn btn-gold w-full mt-2">Salvar Configurações</button>
+            </div>
+
+            <div class="card">
+                <h3 class="text-xs font-bold mb-3 uppercase text-gray-400">Desconto por Valor (Atacado)</h3>
+                <div class="flex items-center gap-2 mb-4 p-2 bg-[#000] rounded">
+                    <input type="checkbox" id="statusPromoValor" style="width:20px; margin:0;">
+                    <label for="statusPromoValor" class="text-[11px] font-bold">Ativar Desconto Progressivo</label>
+                </div>
+                
+                <div id="containerFaixas">
+                    </div>
+                
+                <button onclick="addFaixa()" class="btn w-full mb-3">+ Adicionar Faixa de Valor</button>
+                <button onclick="salvarPromoValor()" class="btn btn-gold w-full">Salvar Regras de Atacado</button>
+                <p class="text-[9px] text-gray-500 mt-2">* O sistema aplicará automaticamente o maior desconto alcançado pelo cliente no carrinho.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="mainModal">
+    <div class="modal-content">
+        <h2 id="modalTitle" class="text-sm font-bold gold-text uppercase mb-4">Produto</h2>
+        <input type="hidden" id="prod-id">
+        <label class="text-[10px]">Nome do Produto</label>
+        <input type="text" id="prod-nome">
+        <label class="text-[10px]">Preço (R$)</label>
+        <input type="number" step="0.01" id="prod-preco">
+        <label class="text-[10px]">SKU / Código</label>
+        <input type="text" id="prod-sku">
+        <label class="text-[10px]">Peso (gramas)</label>
+        <input type="number" step="0.01" id="prod-peso">
+        <label class="text-[10px]">Categoria</label>
+        <select id="prod-cat"></select>
+        <label class="text-[10px]">URL da Imagem</label>
+        <input type="text" id="prod-img">
+        <label class="text-[10px]">Descrição</label>
+        <textarea id="prod-desc" rows="3"></textarea>
+        
+        <div class="flex gap-2 mt-4">
+            <button onclick="fecharModal()" class="btn flex-1">Cancelar</button>
+            <button onclick="salvarProduto()" class="btn btn-gold flex-1">Salvar</button>
         </div>
     </div>
 </div>
 
-<div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[101] p-4">
-  <div class="bg-[#111] w-full max-w-5xl rounded-2xl p-6 overflow-auto max-h-[95vh] border border-[#333] custom-scroll">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-[#caa85c] font-bold text-xl uppercase tracking-widest">Editor de Pedido</h2>
-        <div id="totalPreview" class="text-right text-[#caa85c] font-bold text-2xl">R$ 0,00</div>
-    </div>
-    
-    <div class="grid md:grid-cols-2 gap-6 mb-6">
-      <div class="card">
-        <h3 class="text-[10px] text-gray-400 uppercase font-bold mb-3">Cliente</h3>
-        <input id="edClienteNome" placeholder="Nome do Cliente">
-        <input id="edClienteTel" placeholder="WhatsApp">
-      </div>
-      <div class="card">
-        <h3 class="text-[10px] text-gray-400 uppercase font-bold mb-3">Logística</h3>
-        <input id="edNomeEntrega" placeholder="Destinatário">
-        <input id="edRua" placeholder="Rua, Número, Complemento">
-        <div class="grid grid-cols-2 gap-2">
-            <input id="edBairro" placeholder="Bairro">
-            <input id="edCidade" placeholder="Cidade/UF">
-        </div>
-      </div>
-    </div>
-
-    <div id="edItens" class="space-y-2 mb-4"></div>
-    <button class="btn w-full mb-6 border-dashed border-gray-700 text-gray-500" onclick="addItemEditor()">+ ADICIONAR ITEM MANUAL</button>
-
-    <div class="grid grid-cols-3 gap-4 p-4 bg-black/60 rounded-xl mb-6 border border-[#222]">
-        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
-        <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
-        <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
-    </div>
-
-    <div class="flex flex-wrap gap-2 justify-center border-t border-[#222] pt-6 mb-6">
-        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
-        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
-        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
-        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
-        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
-        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
-    </div>
-
-    <div class="flex gap-4">
-        <button class="flex-1 btn border-red-900 text-red-500" onclick="fecharEditorPedido()">DESCARTAR</button>
-        <button class="flex-1 btn-gold" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
-    </div>
-  </div>
-</div>
-
-<div id="print-area"></div>
+<div id="print-area" class="hidden"></div>
 
 <script>
+// CONFIGURAÇÃO FIREBASE - (Substitua pelos seus dados se necessário)
 const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    apiKey: "AIzaSyB...",
+    authDomain: "loja-joias-62725.firebaseapp.com",
+    databaseURL: "https://loja-joias-62725-default-rtdb.firebaseio.com",
+    projectId: "loja-joias-62725",
+    storageBucket: "loja-joias-62725.appspot.com",
+    messagingSenderId: "360060012543",
+    appId: "1:360060012543:web:757367c06eb7042858b456"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let pedidoEditando = null;
+let orders = [], products = [], categories = [], configEmpresa = {};
 
-const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v.toFixed(2)) || 0);
-
-function showTab(id, btn) {
-    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+// NAVEGAÇÃO
+function tab(id) {
+    document.querySelectorAll('section, nav button').forEach(el => el.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    btn.classList.add('active');
-    if (id === 'categorias') carregarCategorias();
-    if (id === 'produtos') carregarProdutos();
-    if (id === 'pedidos') carregarPedidos();
+    document.getElementById('tab-'+id).classList.add('active');
 }
 
-async function abrirPainelPromocoes() {
-    try {
-        const snapshot = await db.ref('categories').once('value');
-        const settingsSnap = await db.ref('settings/promocao').once('value');
-        const configGeral = settingsSnap.val() || { ativa: false };
+// FORMATADOR DE MOEDA
+const fMoeda = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        const modalBody = document.getElementById('modalBody');
-        document.getElementById('modalTitle').innerText = "PROMOÇÕES POR CATEGORIA";
-        
-        let html = `
-            <div class="card mb-6 border-emerald-500/30 bg-emerald-950/10 flex justify-between items-center">
-                <div>
-                    <b class="text-emerald-500 uppercase text-xs">Exibição de Etiquetas</b>
-                    <p class="text-[9px] text-gray-500">Ative para mostrar as etiquetas de oferta nos produtos.</p>
-                </div>
-                <button id="statusGlobalBtn" onclick="toggleGlobalPromo(this)" 
-                        class="px-6 py-2 rounded-full text-[10px] font-bold ${configGeral.ativa ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}">
-                    ${configGeral.ativa ? 'ATIVADO' : 'DESATIVADO'}
-                </button>
-            </div>
-            <div class="space-y-4">
-        `;
+// INICIALIZAÇÃO
+window.onload = () => {
+    carregarDados();
+};
 
-        snapshot.forEach(cat => {
-            const c = cat.val();
-            const id = cat.key;
-            const isAtiva = c.promoStatus === 'ATIVA';
-            html += `
-                <div class="card border-[#222] bg-black/40">
-                    <div class="flex justify-between items-center mb-4">
-                        <b class="text-[#caa85c] uppercase text-xs">${c.name}</b>
-                        <button onclick="togglePromoStatus('${id}', this)" 
-                                class="px-4 py-1 rounded-full text-[9px] font-bold ${isAtiva ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}">
-                            ${isAtiva ? 'ATIVA' : 'INATIVA'}
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="col-span-2"><label class="text-[9px] text-gray-500 uppercase">Texto da Etiqueta</label><input id="p_tag_${id}" value="${c.promoTag || ''}"></div>
-                        <div><label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label><input type="number" id="p_pct_${id}" value="${c.promoPct || 0}"></div>
-                        <div><label class="text-[9px] text-gray-500 uppercase">Cor Etiqueta</label><input type="color" id="p_color_${id}" value="${c.promoColor || '#caa85c'}" class="h-10"></div>
-                    </div>
-                </div>`;
-        });
-
-        modalBody.innerHTML = html + `</div>`;
-        document.getElementById('mainModal').classList.add('active');
-
-        document.getElementById('modalSaveBtn').onclick = () => {
-            const updates = {};
-            const isGlobalAtiva = document.getElementById('statusGlobalBtn').innerText === 'ATIVADO';
-            updates['settings/promocao/ativa'] = isGlobalAtiva;
-            snapshot.forEach(cat => {
-                const id = cat.key;
-                updates[`categories/${id}/promoTag`] = document.getElementById(`p_tag_${id}`).value;
-                updates[`categories/${id}/promoPct`] = Number(document.getElementById(`p_pct_${id}`).value);
-                updates[`categories/${id}/promoColor`] = document.getElementById(`p_color_${id}`).value;
-            });
-            db.ref().update(updates).then(() => { alert("Salvo!"); fecharModal(); });
-        };
-    } catch (e) { console.error(e); }
-}
-
-function togglePromoStatus(id, btn) {
-    const isAtiva = btn.innerText === 'ATIVA';
-    const newStatus = isAtiva ? 'INATIVA' : 'ATIVA';
-    db.ref(`categories/${id}/promoStatus`).set(newStatus).then(() => {
-        btn.innerText = newStatus;
-        btn.className = `px-4 py-1 rounded-full text-[9px] font-bold ${newStatus === 'ATIVA' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
+function carregarDados() {
+    db.ref('settings/general').on('value', s => {
+        configEmpresa = s.val() || {};
+        document.getElementById('conf-nome').value = configEmpresa.nome || '';
+        document.getElementById('conf-whatsapp').value = configEmpresa.whatsapp || '';
+        document.getElementById('conf-pix').value = configEmpresa.descontoPix || 0;
+        document.getElementById('userInfo').innerText = configEmpresa.nome || 'Painel Admin';
     });
-}
-    function toggleGlobalPromo(btn) {
-    const isAtiva = btn.innerText === 'ATIVADO';
-    btn.innerText = isAtiva ? 'DESATIVADO' : 'ATIVADO';
-    btn.className = `px-6 py-2 rounded-full text-[10px] font-bold ${!isAtiva ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
-}
 
-/* --- AJUSTE CIRÚRGICO: PROMOÇÕES POR VALOR COM BOTÃO ATIVAR/DESATIVAR --- */
-function abrirPainelPromocoesValor() {
-    const modalBody = document.getElementById('modalBody');
-    document.getElementById('modalTitle').innerText = "DESCONTOS POR VALOR DE COMPRA";
+    db.ref('orders').on('value', s => { orders = s.val(); renderPedidos(); });
+    db.ref('products').on('value', s => { products = s.val(); renderProdutos(); });
+    db.ref('categories').on('value', s => { 
+        categories = s.val(); 
+        renderCategorias(); 
+        atualizarSelectCategorias(); 
+    });
     
-    modalBody.innerHTML = `
-        <div class="card mb-4 border-blue-900/50 bg-blue-950/20 flex justify-between items-center">
-            <div>
-                <b class="text-blue-400 uppercase text-xs">Status da Promoção de Atacado</b>
-                <p class="text-[9px] text-gray-500">Ative para aplicar descontos progressivos no carrinho.</p>
-            </div>
-            <button id="statusAtacadoBtn" onclick="toggleAtacadoStatus(this)" class="px-6 py-2 rounded-full text-[10px] font-bold bg-gray-700 text-gray-400">CARREGANDO...</button>
-        </div>
-        <div id="listaRegras" class="space-y-3"></div>
-        <button class="btn w-full mt-4 border-blue-900 text-blue-400" onclick="addRegraHTML()">+ ADICIONAR NOVA FAIXA</button>`;
-
-    db.ref('settings/promocoesValor').once('value', s => {
-        const data = s.val() || { status: 'INATIVA', regras: [] };
-        const status = (typeof data === 'object' && data.status) ? data.status : 'INATIVA';
-        const regras = Array.isArray(data) ? data : (data.regras || []);
-        
-        const btn = document.getElementById('statusAtacadoBtn');
-        btn.innerText = status;
-        btn.className = `px-6 py-2 rounded-full text-[10px] font-bold ${status === 'ATIVA' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
-        
-        regras.forEach(r => addRegraHTML(r));
-        document.getElementById('mainModal').classList.add('active');
+    // Carregar Promoções de Atacado
+    db.ref('settings/promocoesValor').on('value', s => {
+        const p = s.val() || { ativa: false, regras: [] };
+        document.getElementById('statusPromoValor').checked = p.ativa;
+        const container = document.getElementById('containerFaixas');
+        container.innerHTML = '';
+        if(p.regras) {
+            p.regras.forEach(r => addFaixa(r.min, r.desc));
+        }
     });
-
-    document.getElementById('modalSaveBtn').onclick = () => {
-        const btn = document.getElementById('statusAtacadoBtn');
-        const novasRegras = [];
-        document.querySelectorAll('#listaRegras > .regra-item').forEach(div => {
-            const ins = div.querySelectorAll('input');
-            novasRegras.push({ 
-                min: Number(ins[0].value), 
-                desc: Number(ins[1].value),
-                label: ins[2].value,
-                color: ins[3].value
-            });
-        });
-        
-        db.ref('settings/promocoesValor').set({
-            status: btn.innerText,
-            regras: novasRegras
-        }).then(() => { alert("Configurações de Atacado salvas!"); fecharModal(); });
-    };
 }
 
-function toggleAtacadoStatus(btn) {
-    const isAtiva = btn.innerText === 'ATIVA';
-    const newStatus = isAtiva ? 'INATIVA' : 'ATIVA';
-    btn.innerText = newStatus;
-    btn.className = `px-6 py-2 rounded-full text-[10px] font-bold ${newStatus === 'ATIVA' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
-}
-
-function addRegraHTML(r = {min:0, desc:0, label:'', color:'#1e3a8a'}) {
+// GESTÃO DE PROMOÇÃO POR VALOR (ATACADO)
+function addFaixa(min = '', desc = '') {
     const div = document.createElement('div');
-    div.className = "card bg-black/60 border-blue-900/30 regra-item";
+    div.className = "faixa-item bg-[#222] p-2 rounded mb-2 flex items-center gap-2";
     div.innerHTML = `
-        <div class="grid grid-cols-2 gap-2 mb-2">
-            <div><label class="text-[9px] text-gray-500 uppercase">Mínimo (R$)</label><input type="number" value="${r.min}"></div>
-            <div><label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label><input type="number" value="${r.desc}"></div>
-            <div><label class="text-[9px] text-gray-500 uppercase">Nome Faixa</label><input type="text" value="${r.label || ''}"></div>
-            <div><label class="text-[9px] text-gray-500 uppercase">Cor</label><input type="color" value="${r.color || '#1e3a8a'}" class="h-10"></div>
+        <div class="flex-1">
+            <label class="text-[9px] text-gray-400">A partir de R$</label>
+            <input type="number" class="val-min m-0 h-7" value="${min}" placeholder="0.00">
         </div>
-        <button onclick="this.parentElement.remove()" class="text-red-500 text-[9px] font-bold uppercase">× Remover</button>`;
-    document.getElementById('listaRegras').appendChild(div);
+        <div class="flex-1">
+            <label class="text-[9px] text-gray-400">Desconto %</label>
+            <input type="number" class="val-pct m-0 h-7" value="${desc}" placeholder="5">
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-red-500 font-bold px-2 mt-3">×</button>
+    `;
+    document.getElementById('containerFaixas').appendChild(div);
 }
 
-/* --- RESTANTE DAS FUNÇÕES MANTIDAS --- */
-
-function carregarEmpresa() {
-    db.ref('settings/empresa').once('value', s => {
-        const v = s.val() || {};
-        document.getElementById('empNome').value = v.nome || '';
-        document.getElementById('empSub').value = v.subtitulo || '';
-        document.getElementById('empWhats').value = v.whats || '';
-        document.getElementById('empDesc').value = v.descontoPix || 0;
-        document.getElementById('empParc').value = v.parcelas || 0;
+function salvarPromoValor() {
+    const ativa = document.getElementById('statusPromoValor').checked;
+    const faixas = [];
+    document.querySelectorAll('.faixa-item').forEach(item => {
+        const min = parseFloat(item.querySelector('.val-min').value);
+        const desc = parseFloat(item.querySelector('.val-pct').value);
+        if(!isNaN(min) && !isNaN(desc)) {
+            faixas.push({ min, desc });
+        }
     });
-}
-function salvarEmpresa() {
-    db.ref('settings/empresa').update({
-        nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value,
-        whats: document.getElementById('empWhats').value,
-        descontoPix: +document.getElementById('empDesc').value,
-        parcelas: +document.getElementById('empParc').value
-    }).then(() => alert('Empresa atualizada!'));
+
+    // Ordenar faixas por valor mínimo para evitar erros de cálculo no cliente
+    faixas.sort((a, b) => a.min - b.min);
+
+    db.ref('settings/promocoesValor').set({
+        ativa: ativa,
+        regras: faixas
+    }).then(() => alert("Regras de Atacado salvas com sucesso!"));
 }
 
-function carregarCategorias() {
-    db.ref('categories').on('value', s => {
-        const lista = document.getElementById('listaCategorias');
-        lista.innerHTML = '';
-        s.forEach(c => {
-            lista.innerHTML += `<div class="card flex justify-between items-center">
-                <span class="uppercase text-xs font-bold tracking-widest">${c.val().name}</span>
-                <div class="flex gap-2">
-                    <button class="btn text-blue-400" onclick="editarCat('${c.key}','${c.val().name}')">✎</button>
-                    <button class="btn text-red-500" onclick="excluirCat('${c.key}')">🗑</button>
+// GESTÃO DE PRODUTOS
+function renderProdutos() {
+    const list = document.getElementById('listaProdutos');
+    list.innerHTML = '';
+    for(let key in products) {
+        const p = products[key];
+        list.innerHTML += `
+            <div class="card relative group">
+                <img src="${p.image}" class="w-full h-24 object-cover rounded-lg mb-2">
+                <h3 class="text-[10px] font-bold truncate uppercase">${p.name}</h3>
+                <p class="text-[11px] gold-text font-bold">${fMoeda(p.price)}</p>
+                <div class="flex gap-1 mt-2">
+                    <button onclick="editarProduto('${key}')" class="btn flex-1 py-1 text-[9px]">Editar</button>
+                    <button onclick="excluirProduto('${key}')" class="btn border-red-900 text-red-500 py-1 text-[9px]">×</button>
                 </div>
             </div>`;
-        });
-    });
+    }
 }
 
-function carregarProdutos() {
-    const lista = document.getElementById('listaProdutos');
-    lista.innerHTML = '<p class="text-center p-8 text-gray-600">Sincronizando estoque...</p>';
-    db.ref('categories').once('value', sCats => {
-        db.ref('products').once('value', sProds => {
-            lista.innerHTML = '';
-            sCats.forEach(cat => {
-                let prodsHtml = '';
-                sProds.forEach(p => {
-                    const prod = p.val();
-                    if(prod.category === cat.key) {
-                        prodsHtml += `
-                            <div class="flex justify-between items-center py-2 px-3 bg-[#0d0d0d] mb-1 rounded-lg border border-[#222] text-[11px]">
-                                <div class="flex items-center gap-3">
-                                    <img src="${prod.image || ''}" class="w-8 h-8 object-cover rounded bg-white">
-                                    <span><b class="text-[#caa85c]">[${prod.sku || '---'}]</b> ${prod.name}</span>
-                                </div>
-                                <div class="flex gap-3 items-center">
-                                    <span class="text-gray-400 font-bold">${fMoeda(prod.price)}</span>
-                                    <button class="text-[#caa85c]" onclick="editarProduto('${p.key}')">✎</button>
-                                </div>
-                            </div>`;
-                    }
-                });
-                if(prodsHtml) {
-                    lista.innerHTML += `<div class="mb-6"><h4 class="text-[10px] text-[#caa85c] font-bold uppercase mb-2 ml-2 tracking-widest">${cat.val().name}</h4>${prodsHtml}</div>`;
-                }
-            });
-        });
-    });
+function abrirModalProduto() {
+    document.getElementById('prod-id').value = '';
+    document.getElementById('prod-nome').value = '';
+    document.getElementById('prod-preco').value = '';
+    document.getElementById('prod-sku').value = '';
+    document.getElementById('prod-peso').value = '';
+    document.getElementById('prod-img').value = '';
+    document.getElementById('prod-desc').value = '';
+    document.getElementById('modalTitle').innerText = 'Novo Produto';
+    document.getElementById('mainModal').classList.add('active');
 }
 
-function carregarPedidos() {
-    db.ref('orders').on('value', s => {
-        const lista = document.getElementById('listaPedidos');
-        lista.innerHTML = '';
-        s.forEach(ped => {
-            const p = ped.val();
-            lista.innerHTML += `
-                <div class="card border-l-4 border-[#caa85c] hover:bg-[#1a1a1a] transition-colors">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente Sem Nome'}</b><br>
-                            <span class="text-[10px] text-gray-500">${p.data || ''} • ${p.totalPecas || 0} peças</span>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-bold text-sm text-white">${fMoeda(p.total)}</div>
-                            <div class="flex gap-1 mt-2">
-                                <button class="btn p-1 bg-blue-950 text-white" onclick="duplicarPedido('${ped.key}')">📑</button>
-                                <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">ABRIR</button>
-                                <button class="btn p-1 bg-red-950 text-red-500" onclick="excluirPedido('${ped.key}')">🗑</button>
-                            </div>
+function editarProduto(key) {
+    const p = products[key];
+    document.getElementById('prod-id').value = key;
+    document.getElementById('prod-nome').value = p.name;
+    document.getElementById('prod-preco').value = p.price;
+    document.getElementById('prod-sku').value = p.sku || '';
+    document.getElementById('prod-peso').value = p.peso || p.weight || '';
+    document.getElementById('prod-cat').value = p.category;
+    document.getElementById('prod-img').value = p.image;
+    document.getElementById('prod-desc').value = p.description || '';
+    document.getElementById('modalTitle').innerText = 'Editar Produto';
+    document.getElementById('mainModal').classList.add('active');
+}
+
+function salvarProduto() {
+    const id = document.getElementById('prod-id').value;
+    const p = {
+        name: document.getElementById('prod-nome').value,
+        price: parseFloat(document.getElementById('prod-preco').value),
+        sku: document.getElementById('prod-sku').value,
+        peso: parseFloat(document.getElementById('prod-peso').value),
+        category: document.getElementById('prod-cat').value,
+        image: document.getElementById('prod-img').value,
+        description: document.getElementById('prod-desc').value
+    };
+    
+    if(id) db.ref('products/'+id).update(p);
+    else db.ref('products').push(p);
+    
+    fecharModal();
+}
+
+function excluirProduto(key) {
+    if(confirm("Deseja remover este produto?")) db.ref('products/'+key).remove();
+}
+
+// CATEGORIAS
+function renderCategorias() {
+    const list = document.getElementById('listaCategorias');
+    list.innerHTML = '';
+    for(let key in categories) {
+        const c = categories[key];
+        list.innerHTML += `
+            <div class="card">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold uppercase gold-text">${c.name}</h3>
+                    <button onclick="excluirCategoria('${key}')" class="text-red-500 text-xs">Excluir</button>
+                </div>
+                <div class="bg-[#000] p-2 rounded border border-[#222]">
+                    <p class="text-[9px] text-gray-500 mb-1 uppercase">Promoção da Categoria</p>
+                    <div class="flex gap-2 items-center">
+                        <input type="number" id="promo-${key}" value="${c.promoPct || 0}" class="m-0 h-8 w-16 text-center" onchange="atualizarPromoCat('${key}', this.value)">
+                        <span class="text-xs">% de desconto</span>
+                    </div>
+                </div>
+            </div>`;
+    }
+}
+
+function atualizarPromoCat(key, val) {
+    db.ref('categories/'+key).update({ promoPct: parseFloat(val) || 0 });
+}
+
+function abrirModalCategoria() {
+    const n = prompt("Nome da Categoria:");
+    if(n) db.ref('categories').push({ name: n, promoPct: 0 });
+}
+
+function excluirCategoria(key) {
+    if(confirm("Remover esta categoria?")) db.ref('categories/'+key).remove();
+}
+
+function atualizarSelectCategorias() {
+    const sel = document.getElementById('prod-cat');
+    sel.innerHTML = '<option value="">Sem Categoria</option>';
+    for(let key in categories) {
+        sel.innerHTML += `<option value="${categories[key].name}">${categories[key].name}</option>`;
+    }
+}
+
+// PEDIDOS
+function renderPedidos() {
+    const list = document.getElementById('listaPedidos');
+    const search = document.getElementById('searchOrder').value.toLowerCase();
+    list.innerHTML = '';
+    
+    const arr = [];
+    for(let key in orders) arr.push({ id: key, ...orders[key] });
+    arr.reverse(); // Mais novos primeiro
+
+    arr.forEach(o => {
+        if(o.cliente.nome.toLowerCase().includes(search) || o.id.includes(search)) {
+            list.innerHTML += `
+                <div class="card border-l-4 ${o.status === 'Novo' ? 'border-blue-500' : 'border-green-500'}">
+                    <div class="flex justify-between text-[10px] mb-2">
+                        <span class="text-gray-400">#${o.id.slice(-6)}</span>
+                        <span class="status-badge ${o.status === 'Novo' ? 'bg-blue-900 text-blue-200' : 'bg-green-900 text-green-200'}">${o.status}</span>
+                    </div>
+                    <div class="text-xs font-bold uppercase mb-1">${o.cliente.nome}</div>
+                    <div class="text-[10px] text-gray-400 mb-3">${o.data}</div>
+                    <div class="flex justify-between items-center">
+                        <span class="gold-text font-bold">${fMoeda(o.total)}</span>
+                        <div class="flex gap-2">
+                            <button onclick="imprimirPedido('${o.id}')" class="btn text-[9px]">Imprimir</button>
+                            <button onclick="excluirPedido('${o.id}')" class="btn text-red-500 text-[9px]">×</button>
                         </div>
                     </div>
                 </div>`;
-        });
+        }
     });
 }
 
-function abrirEditorPedido(id) {
-    pedidoEditando = id;
-    db.ref('orders/'+id).once('value', s => {
-        const p = s.val();
-        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
-        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
-        document.getElementById('edNomeEntrega').value = p.entrega?.nomeEntrega || '';
-        document.getElementById('edRua').value = p.entrega?.rua || '';
-        document.getElementById('edBairro').value = p.entrega?.bairro || '';
-        document.getElementById('edCidade').value = p.entrega?.cidade || '';
-        document.getElementById('edDescPromo').value = p.descontoPromo || 0;
-        document.getElementById('edDescPix').value = p.descontoPix || 0;
-        document.getElementById('edFrete').value = p.frete || 0;
-        document.getElementById('edItens').innerHTML = '';
-        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-        itens.forEach(addItemEditor);
-        recalcularTotalEd();
-        document.getElementById('editorPedido').classList.remove('hidden');
-    });
-}
-
-function addItemEditor(i={}) {
-    const div = document.createElement('div');
-    div.className = "card bg-black/40 border-[#222] p-3";
-    div.innerHTML = `
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 items-end">
-            <div><label class="text-[8px] text-gray-600">SKU</label><input value="${i.sku||''}" class="!mb-0 text-[10px]"></div>
-            <div><label class="text-[8px] text-gray-600">PRODUTO</label><input value="${i.name||''}" class="!mb-0 text-[10px]"></div>
-            <div><label class="text-[8px] text-gray-600">PESO (G)</label><input type="number" value="${i.peso||i.weight||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()"></div>
-            <div><label class="text-[8px] text-gray-600">VALOR UN.</label><input type="number" value="${i.price||i.precoFinal||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()"></div>
-            <div><label class="text-[8px] text-gray-600">QTD</label><input type="number" value="${i.quantidade||i.qtd||1}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()"></div>
-        </div>
-        <button class="text-red-900 text-[8px] font-bold uppercase mt-2" onclick="this.parentElement.remove();recalcularTotalEd();">Remover Item</button>`;
-    document.getElementById('edItens').appendChild(div);
-}
-
-function recalcularTotalEd() {
-    let sub = 0;
-    document.querySelectorAll('#edItens > div').forEach(div => {
-        const ins = div.querySelectorAll('input');
-        sub += (Number(ins[3].value) * Number(ins[4].value));
-    });
-    const dPr = Number(document.getElementById('edDescPromo').value) || 0;
-    const dPx = Number(document.getElementById('edDescPix').value) || 0;
-    const fre = Number(document.getElementById('edFrete').value) || 0;
-    const total = Number((sub - dPr - dPx + fre).toFixed(2));
-    document.getElementById('totalPreview').innerText = fMoeda(total);
-}
-
-function salvarPedidoEditado() {
-    const itens = [];
-    let subtotal = 0, pesoTotal = 0, totalPecas = 0;
-    document.querySelectorAll('#edItens > div').forEach(div => {
-        const ins = div.querySelectorAll('input');
-        const item = {
-            sku: ins[0].value,
-            name: ins[1].value,
-            peso: Number(ins[2].value),
-            price: Number(ins[3].value),
-            quantidade: Number(ins[4].value)
-        };
-        subtotal += (item.price * item.quantidade);
-        pesoTotal += (item.peso * item.quantidade);
-        totalPecas += item.quantidade;
-        itens.push(item);
-    });
-    const dPr = Number(document.getElementById('edDescPromo').value);
-    const dPx = Number(document.getElementById('edDescPix').value);
-    const fre = Number(document.getElementById('edFrete').value);
-    db.ref('orders/'+pedidoEditando).update({
-        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
-        entrega: { nomeEntrega: document.getElementById('edNomeEntrega').value, rua: document.getElementById('edRua').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value },
-        itens, subtotal, pesoTotal, totalPecas,
-        descontoPromo: dPr, descontoPix: dPx, frete,
-        total: Number((subtotal - dPr - dPx + fre).toFixed(2))
-    }).then(() => { alert("Pedido atualizado!"); fecharEditorPedido(); });
-}
-
-/* IMPRESSÃO ROMANEIO ATUALIZADA - ABELLA JOIAS LUXO */
-function imprimirRomaneio(id, tipo) {
-    db.ref('orders/' + id).once('value', sPed => {
-        const p = sPed.val();
-        if (!p) return alert("Pedido não encontrado!");
-
-        db.ref('settings/empresa').once('value', sEmp => {
-            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
-            const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-            
-            const isFin = [2, 3, 5, 6].includes(tipo); 
-            const comFoto = [3, 6].includes(tipo);    
-            const emGrid = tipo >= 4;                  
-
-            const subtotal = itens.reduce((acc, i) => acc + ((Number(i.price) || 0) * (Number(i.quantidade) || 0)), 0);
-            const descPromo = Number(p.descontoPromo || 0);
-            const descPix = Number(p.descontoPix || 0);
-            const frete = Number(p.frete || 0);
-            const totalFinal = subtotal - descPromo - descPix + frete;
-
-            let html = `
-            <div style="padding:8mm; font-family:Arial, sans-serif; color:#000; background:#fff;">
-                <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
-                    <h1 style="margin:0; font-size:22px; text-transform:uppercase; letter-spacing:3px;">${emp.nome}</h1>
-                    <div style="font-size:9px; font-weight:bold; color: #444;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
-                </div>
-
-                <table style="width:100%; border-collapse: separate; border-spacing: 5px 0; margin-bottom:15px;">
-                    <tr>
-                        <td style="width:50%; border: 1px solid #ccc; border-radius: 8px; padding:8px; vertical-align:top; font-size:10px; line-height:1.2;">
-                            <b style="color:#caa85c; font-size:8px; text-transform:uppercase;">Identificação Cliente</b><br>
-                            <b>${p.cliente?.nome || '---'}</b><br>
-                            ${p.cliente?.telefone || '---'}
-                        </td>
-                        <td style="width:50%; border: 1px solid #ccc; border-radius: 8px; padding:8px; vertical-align:top; font-size:10px; line-height:1.2;">
-                            <b style="color:#caa85c; font-size:8px; text-transform:uppercase;">Dados de Entrega</b><br>
-                            <b>${p.entrega?.nomeEntrega || p.cliente?.nome}</b><br>
-                            ${p.entrega?.rua || ''} - ${p.entrega?.bairro || ''}<br>${p.entrega?.cidade || ''}
-                        </td>
-                    </tr>
-                </table>`;
-
-            if (emGrid) {
-                html += `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">`;
-                itens.forEach(i => {
-                    html += `
-                    <div style="border: 1px solid #ddd; border-radius: 10px; padding: 8px; background:#fff; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid;">
-                        <div>
-                            ${comFoto ? `<img src="${i.image || ''}" style="width: 100%; height: 80px; object-fit: contain; margin-bottom: 5px; border-radius: 5px;">` : ''}
-                            <div style="font-size: 10px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 2px;">${i.sku || 'S/SKU'}</div>
-                            <div style="font-size: 9px; color: #333; text-transform: uppercase; margin-top: 3px; line-height:1.1;">${i.name || ''}</div>
-                            <div style="font-size: 8px; color: #777; margin-top: 2px;">Peso U: <b>${(i.peso || 0).toFixed(2)}g</b></div>
-                        </div>
-                        <div style="margin-top: 6px; background: #f4f4f4; padding: 4px; border-radius: 6px; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size: 9px; font-weight: bold;">QTD: ${i.quantidade}</span>
-                            ${isFin ? `<span style="font-size: 10px; font-weight: bold; color:#96793a;">${fMoeda(i.price * i.quantidade)}</span>` : ''}
-                        </div>
-                    </div>`;
-                });
-                html += `</div>`;
-            } else {
-                html += `
-                <table style="width:100%; border-collapse:collapse; font-size:10px;">
-                    <thead style="background:#eee;">
-                        <tr>
-                            ${comFoto ? '<th style="padding:4px; border:1px solid #ccc; width:50px;">Foto</th>' : ''}
-                            <th style="padding:4px; border:1px solid #ccc; text-align:left;">Produto / SKU</th>
-                            <th style="padding:4px; border:1px solid #ccc; text-align:center; width:60px;">Peso U.</th>
-                            <th style="padding:4px; border:1px solid #ccc; text-align:center; width:40px;">Qtd</th>
-                            ${isFin ? '<th style="padding:4px; border:1px solid #ccc; text-align:right; width:80px;">Subtotal</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody>`;
-                itens.forEach(i => {
-                    html += `<tr>
-                        ${comFoto ? `<td style="padding:2px; border:1px solid #ccc; text-align:center;"><img src="${i.image || ''}" style="width:35px; height:35px; object-fit:contain;"></td>` : ''}
-                        <td style="padding:4px; border:1px solid #ccc;"><b>${i.sku}</b> - ${i.name}</td>
-                        <td style="padding:4px; border:1px solid #ccc; text-align:center;">${(i.peso || 0).toFixed(2)}g</td>
-                        <td style="padding:4px; border:1px solid #ccc; text-align:center;"><b>${i.quantidade}</b></td>
-                        ${isFin ? `<td style="padding:4px; border:1px solid #ccc; text-align:right;">${fMoeda(i.price * i.quantidade)}</td>` : ''}
-                    </tr>`;
-                });
-                html += `</tbody></table>`;
-            }
-
-            html += `
-            <div style="margin-top: 15px; border: 1.5px solid #caa85c; border-radius: 10px; padding: 12px; background: #fff; page-break-inside: avoid;">
-                <div style="display: flex; justify-content: space-between;">
-                    <div style="font-size: 10px; line-height: 1.5; width: 45%;">
-                        <b style="color:#caa85c; font-size:11px; text-transform:uppercase;">Resumo da Mercadoria</b><br>
-                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Modelos:</span> <b>${itens.length}</b></div>
-                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Total de Peças:</span> <b>${p.totalPecas || 0}</b></div>
-                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Peso Total:</span> <b>${(p.pesoTotal || 0).toFixed(2)}g</b></div>
-                        <div style="margin-top:5px;"><b>Pagamento:</b> ${p.pagamento || 'A definir'}</div>
-                    </div>
-                    <div style="width: 50%; text-align: right;">
-                        ${isFin ? `
-                            <table style="width:100%; font-size:10px; border-collapse:collapse;">
-                                <tr><td style="text-align:right; padding:2px;">Subtotal Itens:</td><td style="width:80px;">${fMoeda(subtotal)}</td></tr>
-                                <tr><td style="text-align:right; padding:2px;">Desconto Promocional:</td><td style="color:red;">-${fMoeda(descPromo)}</td></tr>
-                                <tr><td style="text-align:right; padding:2px;">Desconto PIX:</td><td style="color:red;">-${fMoeda(descPix)}</td></tr>
-                                <tr><td style="text-align:right; padding:2px;">Frete/Envio:</td><td>${fMoeda(frete)}</td></tr>
-                                <tr>
-                                    <td style="text-align:right; padding:5px 2px; font-weight:bold; font-size:12px;">TOTAL DO PEDIDO:</td>
-                                    <td style="padding:5px 0; font-weight:bold; font-size:16px; border-top:1px solid #000;">${fMoeda(totalFinal)}</td>
-                                </tr>
-                            </table>
-                        ` : `
-                            <div style="height:100%; display:flex; align-items:center; justify-content:flex-end;">
-                                <span style="font-size:14px; font-weight:bold; color:#caa85c;">ROMANEIO DE CONFERÊNCIA</span>
-                            </div>
-                        `}
-                    </div>
-                </div>
-            </div>
-            </div>`;
-
-            const area = document.getElementById('print-area');
-            area.innerHTML = html;
-            setTimeout(() => { window.print(); }, 700);
-        });
-    });
+function salvarConfigGeral() {
+    const data = {
+        nome: document.getElementById('conf-nome').value,
+        whatsapp: document.getElementById('conf-whatsapp').value,
+        descontoPix: parseFloat(document.getElementById('conf-pix').value) || 0
+    };
+    db.ref('settings/general').set(data).then(() => alert("Configurações salvas!"));
 }
 
 function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
-function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+function excluirPedido(id) { if(confirm("Remover este pedido?")) db.ref('orders/'+id).remove(); }
 
-function duplicarPedido(id) {
+function imprimirPedido(id) {
     db.ref('orders/'+id).once('value', s => {
-        const n = s.val(); 
-        n.data = new Date().toLocaleString();
-        db.ref('orders').push(n).then(() => alert("Pedido duplicado!"));
+        const o = s.val();
+        let itensHtml = '';
+        o.itens.forEach(i => {
+            itensHtml += `<tr><td style="padding:5px; border-bottom:1px solid #eee;">${i.qnt}x ${i.name}</td><td style="text-align:right;">${fMoeda(i.price * i.qnt)}</td></tr>`;
+        });
+
+        const html = `
+            <div style="padding:20px; color:#000; background:#fff; font-family:Arial;">
+                <h2 style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px;">${configEmpresa.nome || 'COMPROVANTE DE PEDIDO'}</h2>
+                <p><strong>CLIENTE:</strong> ${o.cliente.nome}</p>
+                <p><strong>DATA:</strong> ${o.data}</p>
+                <table style="width:100%; border-collapse:collapse; margin:20px 0;">
+                    <thead><tr style="background:#f4f4f4;"><th style="text-align:left; padding:5px;">ITEM</th><th style="text-align:right; padding:5px;">SUBTOTAL</th></tr></thead>
+                    <tbody>${itensHtml}</tbody>
+                </table>
+                <div style="text-align:right; font-size:18px;"><strong>TOTAL: ${fMoeda(o.total)}</strong></div>
+                <div style="margin-top:20px; font-size:10px; color:#666; text-align:center;">Pedido gerado via Abella Joias Admin</div>
+            </div>`;
+        
+        const area = document.getElementById('print-area');
+        area.innerHTML = html;
+        setTimeout(() => { window.print(); }, 500);
     });
 }
-
-function excluirPedido(id) { 
-    if(confirm("Remover este pedido permanentemente?")) db.ref('orders/'+id).remove(); 
-}
-
-window.onload = carregarEmpresa;
 </script>
 </body>
 </html>
