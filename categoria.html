@@ -14,7 +14,7 @@
         .gold-text { color: #caa85c; }
         .gold-bg { background: #caa85c; }
         #bannerProgressoAtacado { background: #1a1a1a; border-bottom: 2px solid #caa85c; padding: 12px; text-align: center; position: sticky; top: 0; z-index: 60; display: none; }
-        .card-prod { background:#141414; border-radius:15px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; height:100%; overflow:hidden; position: relative; }
+        .card-prod { background:#141414; border-radius:15px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; height:100%; overflow:hidden; position: relative; cursor: pointer; }
         .tag-atacado-flash { position: absolute; top: 8px; right: 8px; background: linear-gradient(45deg, #caa85c, #f1d592); color: #000; font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 6px; z-index: 20; animation: pulse-gold 2s infinite; }
         @keyframes pulse-gold { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; padding: 20px; }
@@ -64,12 +64,13 @@ const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", data
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 let produtoAtual = null;
+let produtosCache = {}; // Cache para evitar erro de aspas no HTML
 
 const fM = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 async function atualizarVantagens() {
     const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const subtotal = carrinho.reduce((acc, i) => acc + (parseFloat(i.precoFinal || i.price) * i.quantidade), 0);
+    const subtotal = carrinho.reduce((acc, i) => acc + (parseFloat(i.precoFinal || i.price || 0) * i.quantidade), 0);
     document.getElementById('contadorCarrinho').innerText = fM(subtotal);
 
     const snap = await db.ref('settings/promocaoValor').once('value');
@@ -91,18 +92,19 @@ async function atualizarVantagens() {
     }
 }
 
-function prepararAdd(p) {
-    produtoAtual = p;
-    document.getElementById('modalNomeProd').innerText = p.name;
+function prepararAdd(id) {
+    produtoAtual = produtosCache[id];
+    document.getElementById('modalNomeProd').innerText = produtoAtual.name;
     const container = document.getElementById('containerOpcoes');
-    if(p.variacaoTipo === 'Aro'){
+    
+    if(produtoAtual.variacaoTipo === 'Aro'){
         let html = '<div class="grid-variacoes">';
         ["12","14","16","18","20","22","24"].forEach(a => {
-            html += `<div class="bg-black p-2 rounded"> <span class="text-[9px] gold-text">Aro ${a}</span> <input type="number" class="input-var" data-var="${a}" value="0"> </div>`;
+            html += `<div class="bg-black p-2 rounded"> <span class="text-[9px] gold-text">Aro ${a}</span> <input type="number" class="input-var" data-var="${a}" value="0" min="0"> </div>`;
         });
         container.innerHTML = html + '</div>';
     } else {
-        container.innerHTML = `<input type="number" id="qtdSimples" value="1" class="w-20 bg-black border border-gray-700 p-2 text-center text-xl mt-4">`;
+        container.innerHTML = `<input type="number" id="qtdSimples" value="1" min="1" class="w-20 bg-black border border-gray-700 p-2 text-center text-xl mt-4">`;
     }
     document.getElementById('modalQtd').classList.add('active');
 }
@@ -110,11 +112,33 @@ function prepararAdd(p) {
 document.getElementById('btnConfirmarAdd').onclick = () => {
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
     const inputsVar = document.querySelectorAll('.input-var');
+    
+    const adicionarAoCarrinho = (prod, nomeFinal, qtd) => {
+        let existente = carrinho.find(item => item.name === nomeFinal);
+        if(existente) {
+            existente.quantidade += qtd;
+        } else {
+            carrinho.push({
+                ...prod, 
+                name: nomeFinal, 
+                quantidade: qtd, 
+                precoFinal: prod.price,
+                sku: prod.sku || 'N/A',
+                peso: prod.peso || prod.weight || 0
+            });
+        }
+    };
+
     if(inputsVar.length > 0){
-        inputsVar.forEach(i => { if(i.value > 0) carrinho.push({...produtoAtual, name: `${produtoAtual.name} (${i.dataset.var})`, quantidade: parseInt(i.value)}); });
+        inputsVar.forEach(i => { 
+            let qtd = parseInt(i.value);
+            if(qtd > 0) adicionarAoCarrinho(produtoAtual, `${produtoAtual.name} (${i.dataset.var})`, qtd); 
+        });
     } else {
-        carrinho.push({...produtoAtual, quantidade: parseInt(document.getElementById('qtdSimples').value)});
+        let qtd = parseInt(document.getElementById('qtdSimples').value);
+        if(qtd > 0) adicionarAoCarrinho(produtoAtual, produtoAtual.name, qtd);
     }
+    
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     document.getElementById('modalQtd').classList.remove('active');
     atualizarVantagens();
@@ -129,8 +153,9 @@ async function carregar() {
         snap.forEach(s => {
             const p = s.val();
             if(p.category === catId && !p.paused){
+                produtosCache[s.key] = p; // Armazena no cache
                 grid.innerHTML += `
-                <div class="card-prod p-4" onclick='prepararAdd(${JSON.stringify({...p, key: s.key, precoFinal: p.price})})'>
+                <div class="card-prod p-4" onclick="prepararAdd('${s.key}')">
                     <div class="tag-atacado-flash">ATACADO</div>
                     <img src="${p.image}" class="w-full aspect-square object-cover rounded-lg mb-2">
                     <h3 class="text-[10px] font-bold uppercase mb-2 h-8 overflow-hidden">${p.name}</h3>
