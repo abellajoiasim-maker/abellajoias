@@ -23,38 +23,24 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
         
         #print-area { display: none; }
-@media print {
-    @page { size: A4; margin: 10mm; }
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
-    
-    /* Cabeçalho Luxo */
-    .header-luxo { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px; }
-    .header-luxo h1 { font-size: 35px; letter-spacing: 5px; margin: 0; font-weight: 900; }
 
-    /* Boxes Luxuosos */
-    .caixa-dados { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 15px; }
-    .caixa-dados td { 
-        border: 1.5px solid #d4af37; padding: 12px; vertical-align: top; width: 50%; font-size: 11px; 
-        border-radius: 10px; position: relative;
-    }
-    .titulo-box { 
-        position: absolute; top: -9px; left: 10px; background: #fff; padding: 0 5px;
-        font-weight: bold; text-transform: uppercase; font-size: 9px; color: #d4af37;
-    }
-
-    /* Layout Grid */
-    .grid-romaneio { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
-    .grid-item { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; }
-    .grid-item img { max-width: 80px; max-height: 80px; object-fit: contain; margin-bottom: 5px; }
-
-    /* Layout Tabela */
-    .tab-romaneio { width: 100%; border-collapse: collapse; font-size: 11px; }
-    .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; }
-    .tab-romaneio th { background: #f2f2f2; font-size: 10px; text-transform: uppercase; }
-}
-</style>
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            html, body { height: auto; overflow: visible; background: #fff !important; color: #000 !important; }
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                display: block !important; 
+                background: #fff; 
+                page-break-after: avoid !important;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
 </head>
 <body>
 
@@ -138,9 +124,9 @@
         <input id="edClienteNome" placeholder="Nome">
         <input id="edClienteTel" placeholder="WhatsApp">
       </div>
-<div class="card">
+      <div class="card">
         <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest">Endereço de Entrega</h3>
-        <input id="edNomeEntrega" placeholder="Nome do Destinatário (Quem recebe)">
+        <input id="edNomeEntrega" placeholder="Nome do Destinatário">
         <input id="edRua" placeholder="Rua e Número">
         <div class="grid grid-cols-2 gap-2">
             <input id="edBairro" placeholder="Bairro">
@@ -154,22 +140,20 @@
     <button class="btn w-full mt-2 border-dashed border-gray-600 text-gray-400" onclick="addItemEditor()">+ ADICIONAR ITEM MANUAL</button>
 
     <div class="grid grid-cols-3 gap-3 mt-6 p-4 bg-black/40 rounded-xl">
-        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">PROMO (R$ ou %)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
         <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
         <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
     </div>
 
-<div class="mt-6 pt-4 border-t border-[#222]">
+    <div class="mt-6 pt-4 border-t border-[#222]">
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
         <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
         <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
         <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
-        
         <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
         <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
         <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
       </div>
-
       <div class="flex flex-wrap gap-2 justify-between">
         <button class="btn px-8 border-red-900/50 text-red-400" onclick="fecharEditorPedido()">SAIR</button>
         <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
@@ -179,8 +163,8 @@
 </div>
 
 <div id="print-area"></div>
+
 <script>
-/* CONFIGURAÇÃO */
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -190,9 +174,8 @@ const db = firebase.database();
 
 let pedidoEditando = null;
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
-const fPeso = g => (Number(g) || 0).toLocaleString('pt-BR') + ' g';
+const fPeso = g => (Number(g) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' g';
 
-/* NAVEGAÇÃO */
 function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -204,7 +187,6 @@ function showTab(id, btn) {
     if (id === 'empresa') carregarEmpresa();
 }
 
-/* EMPRESA */
 function carregarEmpresa() {
     db.ref('settings/empresa').once('value', s => {
         const v = s.val() || {};
@@ -215,6 +197,7 @@ function carregarEmpresa() {
         document.getElementById('empParc').value = v.parcelas || 0;
     });
 }
+
 function salvarEmpresa() {
     db.ref('settings/empresa').update({
         nome: document.getElementById('empNome').value,
@@ -225,7 +208,6 @@ function salvarEmpresa() {
     }).then(() => alert('Configurações atualizadas!'));
 }
 
-/* CATEGORIAS & PRODUTOS */
 function carregarCategorias() {
     db.ref('categories').on('value', s => {
         const lista = document.getElementById('listaCategorias');
@@ -241,10 +223,12 @@ function carregarCategorias() {
         });
     });
 }
+
 function novaCategoria() {
     const n = document.getElementById('newCatName').value;
     if(n) db.ref('categories').push({name:n}).then(() => document.getElementById('newCatName').value = '');
 }
+
 function excluirCat(id) { if(confirm("Excluir categoria?")) db.ref('categories/'+id).remove(); }
 
 function carregarProdutos() {
@@ -284,7 +268,6 @@ function editarProduto(id) {
     });
 }
 
-/* PEDIDOS */
 function carregarPedidos() {
     db.ref('orders').on('value', s => {
         const lista = document.getElementById('listaPedidos');
@@ -300,7 +283,7 @@ function carregarPedidos() {
                     <div class="text-right">
                         <div class="font-bold text-xs">${fMoeda(p.total)}</div>
                         <div class="flex gap-1 mt-2">
-                             <button class="btn p-1 bg-blue-900" onclick="duplicarPedido('${ped.key}')" title="Duplicar">📑</button>
+                            <button class="btn p-1 bg-blue-900" onclick="duplicarPedido('${ped.key}')" title="Duplicar">📑</button>
                              <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
                              <button class="btn p-1 bg-red-900" onclick="excluirPedido('${ped.key}')">🗑</button>
                         </div>
@@ -321,7 +304,7 @@ function abrirEditorPedido(id) {
         document.getElementById('edRua').value = p.entrega?.rua || '';
         document.getElementById('edBairro').value = p.entrega?.bairro || '';
         document.getElementById('edCidade').value = p.entrega?.cidade || '';
-        document.getElementById('edDescPromo').value = p.descontoPromo || 0;
+        document.getElementById('edDescPromo').value = p.descontoPromoOriginal || p.descontoPromo || 0;
         document.getElementById('edDescPix').value = p.descontoPix || 0;
         document.getElementById('edFrete').value = p.frete || 0;
         document.getElementById('edItens').innerHTML = '';
@@ -329,7 +312,6 @@ function abrirEditorPedido(id) {
         itens.forEach(addItemEditor);
         recalcularTotalEd();
         document.getElementById('editorPedido').classList.remove('hidden');
-
     });
 }
 
@@ -354,12 +336,20 @@ function recalcularTotalEd() {
         const inputs = div.querySelectorAll('input');
         const preco = Number(inputs[3].value) || 0;
         const qtd = Number(inputs[4].value) || 0;
-        subtotal += (preco * qtd);
+        subtotal += Math.round((preco * qtd) * 100) / 100;
     });
-    const descP = Number(document.getElementById('edDescPromo').value) || 0;
-    const descX = Number(document.getElementById('edDescPix').value) || 0;
+
+    let valPromo = Number(document.getElementById('edDescPromo').value) || 0;
+    const descPix = Number(document.getElementById('edDescPix').value) || 0;
     const frete = Number(document.getElementById('edFrete').value) || 0;
-    const total = subtotal - descP - descX + frete;
+
+    // Lógica de Desconto: Se < 100 assume-se PORCENTAGEM (%), senão VALOR FIXO (R$)
+    let descPromoCalculado = valPromo;
+    if (valPromo > 0 && valPromo < 100) {
+        descPromoCalculado = Math.round((subtotal * (valPromo / 100)) * 100) / 100;
+    }
+
+    const total = subtotal - descPromoCalculado - descPix + frete;
     document.getElementById('totalPreview').innerText = fMoeda(total);
 }
 
@@ -374,7 +364,13 @@ function salvarPedidoEditado() {
         totalPecas += item.quantidade;
         itens.push(item);
     });
-    const dPromo = Number(document.getElementById('edDescPromo').value);
+
+    const valPromoInput = Number(document.getElementById('edDescPromo').value);
+    let descPromoFinal = valPromoInput;
+    if (valPromoInput > 0 && valPromoInput < 100) {
+        descPromoFinal = Math.round((subtotal * (valPromoInput / 100)) * 100) / 100;
+    }
+
     const dPix = Number(document.getElementById('edDescPix').value);
     const frete = Number(document.getElementById('edFrete').value);
 
@@ -384,19 +380,20 @@ function salvarPedidoEditado() {
             telefone: document.getElementById('edClienteTel').value 
         },
         entrega: { 
-            nomeEntrega: document.getElementById('edNomeEntrega').value, // NOVO CAMPO
+            nomeEntrega: document.getElementById('edNomeEntrega').value,
             rua: document.getElementById('edRua').value, 
             bairro: document.getElementById('edBairro').value, 
             cidade: document.getElementById('edCidade').value 
         },
         itens, 
-        subtotal, 
-        pesoTotal, 
+        subtotal: Math.round(subtotal * 100) / 100, 
+        pesoTotal: Math.round(pesoTotal * 100) / 100, 
         totalPecas, 
-        descontoPromo: dPromo, 
-        descontoPix: dPix, 
+        descontoPromoOriginal: valPromoInput,
+        descontoPromo: Math.round(descPromoFinal * 100) / 100, 
+        descontoPix: Math.round(dPix * 100) / 100, 
         frete, 
-        total: (subtotal - dPromo - dPix + frete)
+        total: Math.round((subtotal - descPromoFinal - dPix + frete) * 100) / 100
     }).then(() => { 
         alert("Pedido Salvo com Sucesso!"); 
         fecharEditorPedido(); 
@@ -416,7 +413,6 @@ function excluirPedido(id) { if(confirm("Excluir pedido permanentemente?")) db.r
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
 
-/* IMPRESSÃO ROMANEIO ATUALIZADA - ABELLA JOIAS LUXO */
 function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', sPed => {
         const p = sPed.val();
@@ -430,14 +426,14 @@ function imprimirRomaneio(id, tipo) {
             const comFoto = [3, 6].includes(tipo);    
             const emGrid = tipo >= 4;                  
 
-            const subtotal = itens.reduce((acc, i) => acc + ((Number(i.price) || 0) * (Number(i.quantidade) || 0)), 0);
+            const subtotal = Math.round(itens.reduce((acc, i) => acc + ((Number(i.price) || 0) * (Number(i.quantidade) || 0)), 0) * 100) / 100;
             const descPromo = Number(p.descontoPromo || 0);
             const descPix = Number(p.descontoPix || 0);
             const frete = Number(p.frete || 0);
-            const totalFinal = subtotal - descPromo - descPix + frete;
+            const totalFinal = Math.round((subtotal - descPromo - descPix + frete) * 100) / 100;
 
             let html = `
-            <div style="padding:8mm; font-family:Arial, sans-serif; color:#000; background:#fff;">
+            <div style="padding:5mm; font-family:Arial, sans-serif; color:#000; background:#fff;">
                 <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
                     <h1 style="margin:0; font-size:22px; text-transform:uppercase; letter-spacing:3px;">${emp.nome}</h1>
                     <div style="font-size:9px; font-weight:bold; color: #444;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
@@ -459,7 +455,6 @@ function imprimirRomaneio(id, tipo) {
                 </table>`;
 
             if (emGrid) {
-                // MODELO GRID (MOLDURAS E CANTOS ARREDONDADOS)
                 html += `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">`;
                 itens.forEach(i => {
                     html += `
@@ -478,7 +473,6 @@ function imprimirRomaneio(id, tipo) {
                 });
                 html += `</div>`;
             } else {
-                // MODELO TABELA (MAIS COMPACTO - VERSÃO ANTERIOR)
                 html += `
                 <table style="width:100%; border-collapse:collapse; font-size:10px;">
                     <thead style="background:#eee;">
@@ -503,41 +497,29 @@ function imprimirRomaneio(id, tipo) {
                 html += `</tbody></table>`;
             }
 
-            // --- RESUMO FINANCEIRO ORGANIZADO ---
             html += `
             <div style="margin-top: 15px; border: 1.5px solid #caa85c; border-radius: 10px; padding: 12px; background: #fff; page-break-inside: avoid;">
                 <div style="display: flex; justify-content: space-between;">
-                    
                     <div style="font-size: 10px; line-height: 1.5; width: 45%;">
                         <b style="color:#caa85c; font-size:11px; text-transform:uppercase;">Resumo da Mercadoria</b><br>
                         <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Modelos:</span> <b>${itens.length}</b></div>
                         <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Total de Peças:</span> <b>${p.totalPecas || 0}</b></div>
                         <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:2px 0;"><span>Peso Total:</span> <b>${(p.pesoTotal || 0).toFixed(2)}g</b></div>
-                        <div style="margin-top:5px;"><b>Pagamento:</b> ${p.pagamento || 'A definir'}</div>
                     </div>
-
                     <div style="width: 50%; text-align: right;">
                         ${isFin ? `
                             <table style="width:100%; font-size:10px; border-collapse:collapse;">
-                                <tr><td style="text-align:right; padding:2px;">Subtotal Itens:</td><td style="width:80px;">${fMoeda(subtotal)}</td></tr>
-                                <tr><td style="text-align:right; padding:2px;">Desconto Promocional:</td><td style="color:red;">-${fMoeda(descPromo)}</td></tr>
-                                <tr><td style="text-align:right; padding:2px;">Desconto PIX:</td><td style="color:red;">-${fMoeda(descPix)}</td></tr>
-                                <tr><td style="text-align:right; padding:2px;">Frete/Envio:</td><td>${fMoeda(frete)}</td></tr>
-                                <tr>
-                                    <td style="text-align:right; padding:5px 2px; font-weight:bold; font-size:12px;">TOTAL DO PEDIDO:</td>
-                                    <td style="padding:5px 0; font-weight:bold; font-size:16px; border-top:1px solid #000;">${fMoeda(totalFinal)}</td>
-                                </tr>
+                                <tr><td style="text-align:right; padding:2px;">Subtotal:</td><td style="width:80px;">${fMoeda(subtotal)}</td></tr>
+                                <tr><td style="text-align:right; padding:2px;">Desc. Promo:</td><td style="color:red;">-${fMoeda(descPromo)}</td></tr>
+                                <tr><td style="text-align:right; padding:2px;">Desc. PIX:</td><td style="color:red;">-${fMoeda(descPix)}</td></tr>
+                                <tr><td style="text-align:right; padding:2px;">Frete:</td><td>${fMoeda(frete)}</td></tr>
+                                <tr><td style="text-align:right; padding:5px 2px; font-weight:bold; font-size:12px;">TOTAL:</td>
+                                    <td style="padding:5px 0; font-weight:bold; font-size:16px; border-top:1px solid #000;">${fMoeda(totalFinal)}</td></tr>
                             </table>
-                        ` : `
-                            <div style="height:100%; display:flex; align-items:center; justify-content:flex-end;">
-                                <span style="font-size:14px; font-weight:bold; color:#caa85c;">ROMANEIO DE CONFERÊNCIA</span>
-                            </div>
-                        `}
+                        ` : `<div style="height:100%; display:flex; align-items:center; justify-content:flex-end;"><span style="font-size:14px; font-weight:bold; color:#caa85c;">ROMANEIO DE CONFERÊNCIA</span></div>`}
                     </div>
-
                 </div>
-            </div>
-            </div>`;
+            </div></div>`;
 
             const area = document.getElementById('print-area');
             area.innerHTML = html;
@@ -545,52 +527,28 @@ function imprimirRomaneio(id, tipo) {
         });
     });
 }
-/* PROMOÇÕES COMPLETO COM COR DE TEXTO E CAMPANHA PERSONALIZADA */
+
 async function abrirPainelPromocoes() {
     try {
         const [snapPromo, snapCats] = await Promise.all([
             db.ref('settings/promocao').once('value'), 
             db.ref('categories').once('value')
         ]);
-        
         const promoGeral = snapPromo.val() || { ativa: false };
         let listaCats = '';
 
         snapCats.forEach(cat => {
             const c = cat.val();
-            // Carrega os dados salvos ou define valores padrão para evitar campos vazios
-            const pct = c.promoPct || 0;
-            const nomePromo = c.promoName || '';
-            const tagColor = c.promoColor || '#caa85c';
-            const textColor = c.promoTextColor || '#ffffff';
-            const tagText = c.promoTag || 'OFERTA';
-
             listaCats += `
             <div class="card bg-black/40 p-3 mb-3 border border-[#222]">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs uppercase font-black text-[#caa85c]">${c.name}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
+                <span class="text-xs uppercase font-black text-[#caa85c]">${c.name}</span>
+                <div class="grid grid-cols-2 gap-2 mt-2">
                     <div class="col-span-2">
-                        <label class="text-[9px] text-gray-500 uppercase font-bold">Nome da Campanha (Ex: Queima Total)</label>
-                        <input type="text" id="p_name_${cat.key}" value="${nomePromo}" placeholder="Substitua o Carnaval de Ofertas aqui" class="!mb-1 !p-1 text-xs bg-black border border-[#333] w-full rounded">
+                        <label class="text-[9px] text-gray-500 uppercase font-bold">Campanha</label>
+                        <input type="text" id="p_name_${cat.key}" value="${c.promoName || ''}" class="!p-1 text-xs bg-black">
                     </div>
-                    <div>
-                        <label class="text-[9px] text-gray-500 uppercase font-bold">Texto da Tag</label>
-                        <input type="text" id="p_tag_${cat.key}" value="${tagText}" placeholder="Ex: 20% OFF" class="!mb-1 !p-1 text-xs bg-black border border-[#333] w-full rounded">
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-gray-500 uppercase font-bold">Desconto (%)</label>
-                        <input type="number" id="p_pct_${cat.key}" value="${pct}" class="!mb-1 !p-1 text-xs bg-black border border-[#333] w-full rounded">
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-gray-500 uppercase font-bold text-center block">Fundo Tag</label>
-                        <input type="color" id="p_color_${cat.key}" value="${tagColor}" class="!h-8 !p-0 border-none cursor-pointer w-full bg-transparent">
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-gray-500 uppercase font-bold text-center block">Texto Tag</label>
-                        <input type="color" id="p_tcolor_${cat.key}" value="${textColor}" class="!h-8 !p-0 border-none cursor-pointer w-full bg-transparent">
-                    </div>
+                    <div><label class="text-[9px] text-gray-500 uppercase">Tag</label><input type="text" id="p_tag_${cat.key}" value="${c.promoTag || 'OFERTA'}" class="!p-1 text-xs bg-black"></div>
+                    <div><label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label><input type="number" id="p_pct_${cat.key}" value="${c.promoPct || 0}" class="!p-1 text-xs bg-black"></div>
                 </div>
             </div>`;
         });
@@ -598,49 +556,27 @@ async function abrirPainelPromocoes() {
         const html = `
         <div class="space-y-4">
             <div class="flex justify-between items-center bg-[#1a1a1a] p-3 rounded-xl border border-[#333]">
-                <div>
-                    <span class="text-sm font-bold block">Status da Promoção</span>
-                    <small class="text-[9px] text-gray-400 uppercase">Ativar selos no catálogo</small>
-                </div>
-                <button onclick="togglePromoStatus()" id="btnStatusPromo" 
-                    class="px-6 py-2 rounded-lg text-[10px] font-bold transition-all ${promoGeral.ativa ? 'bg-green-600' : 'bg-red-600'}">
+                <span class="text-sm font-bold">Status da Promoção</span>
+                <button onclick="togglePromoStatus()" id="btnStatusPromo" class="px-6 py-2 rounded-lg text-[10px] font-bold ${promoGeral.ativa ? 'bg-green-600' : 'bg-red-600'}">
                     ${promoGeral.ativa ? 'ATIVA' : 'INATIVA'}
                 </button>
             </div>
-            <div class="max-h-[50vh] overflow-y-auto custom-scroll pr-2">
-                ${listaCats}
-            </div>
+            <div class="max-h-[50vh] overflow-y-auto custom-scroll pr-2">${listaCats}</div>
         </div>`;
-
-        document.getElementById('modalTitle').innerText = '🎨 CONFIGURAR OFERTAS POR CATEGORIA';
+        document.getElementById('modalTitle').innerText = '🎨 CONFIGURAR OFERTAS';
         document.getElementById('modalBody').innerHTML = html;
         document.getElementById('mainModal').classList.add('active');
-
-        // LÓGICA DE SALVAMENTO
         document.getElementById('modalSaveBtn').onclick = () => {
             const updates = {};
             updates['settings/promocao/ativa'] = document.getElementById('btnStatusPromo').innerText === 'ATIVA';
-            
             snapCats.forEach(cat => {
                 updates['categories/' + cat.key + '/promoPct'] = +document.getElementById('p_pct_' + cat.key).value || 0;
                 updates['categories/' + cat.key + '/promoName'] = document.getElementById('p_name_' + cat.key).value;
                 updates['categories/' + cat.key + '/promoTag'] = document.getElementById('p_tag_' + cat.key).value;
-                updates['categories/' + cat.key + '/promoColor'] = document.getElementById('p_color_' + cat.key).value;
-                updates['categories/' + cat.key + '/promoTextColor'] = document.getElementById('p_tcolor_' + cat.key).value;
             });
-
-            db.ref().update(updates).then(() => {
-                alert("Promoções salvas com sucesso!");
-                fecharModal();
-            }).catch(err => {
-                console.error(err);
-                alert("Erro ao salvar promoções.");
-            });
+            db.ref().update(updates).then(() => { alert("Promoções salvas!"); fecharModal(); });
         };
-    } catch (error) {
-        console.error("Erro ao abrir painel:", error);
-        alert("Erro ao carregar promoções. Verifique o console.");
-    }
+    } catch (error) { console.error(error); }
 }
 
 function togglePromoStatus() {
@@ -650,10 +586,7 @@ function togglePromoStatus() {
     btn.className = `px-6 py-2 rounded-lg text-[10px] font-bold transition-all ${!isAtiva ? 'bg-green-600' : 'bg-red-600'}`;
 }
 
-// Inicialização Correta
-window.onload = () => {
-    carregarEmpresa();
-};
+window.onload = () => carregarEmpresa();
 </script>
 </body>
 </html>
