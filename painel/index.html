@@ -16,275 +16,300 @@
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
         .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
         .btn:hover { background:#333; }
-        .btn-gold { background:#caa85c; color:#000; font-weight:bold; }
-        input, select, textarea { background:#1a1a1a; border:1px solid #333; padding:10px; border-radius:10px; color:#fff; width:100%; outline:none; font-size:12px; }
+        .btn-gold { background:#caa85c; color:#000; border:none; font-weight:700; }
+        .btn-gold:hover { background:#b8964d; }
+        input, select, textarea { background:#1a1a1a; border:1px solid #333; color:#fff; padding:8px; border-radius:8px; outline:none; font-size:13px; }
+        input:focus { border-color:#caa85c; }
+        .grid-admin { display:grid; grid-template-columns: 240px 1fr; min-height:100vh; }
+        aside { background:#111; border-right:1px solid #222; padding:20px; }
+        .status-badge { padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; }
         
-        @media print {
-            body * { visibility: hidden; }
-            #areaImpressao, #areaImpressao * { visibility: visible; }
-            #areaImpressao { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; padding: 20px; }
-            .no-print { display: none !important; }
+        /* Modal Styles */
+        #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding:20px; }
+        .modal-content { background:#141414; width:100%; max-width:600px; border-radius:20px; border:1px solid #333; max-height:90vh; overflow-y:auto; }
+
+        @media (max-width: 768px) {
+            .grid-admin { grid-template-columns: 1fr; }
+            aside { display:none; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="flex justify-around bg-black border-b border-[#222] sticky top-0 z-50">
-        <button onclick="tab('pedidos')" class="p-4 text-[10px] font-bold uppercase active" id="btn-pedidos">Pedidos</button>
-        <button onclick="tab('produtos')" class="p-4 text-[10px] font-bold uppercase" id="btn-produtos">Produtos</button>
-        <button onclick="tab('categorias')" class="p-4 text-[10px] font-bold uppercase" id="btn-categorias">Categorias</button>
-        <button onclick="tab('empresa')" class="p-4 text-[10px] font-bold uppercase" id="btn-empresa">Empresa</button>
-        <button onclick="location.href='ofertas.html'" class="p-4 text-[10px] font-bold uppercase text-[#caa85c]">Marketing ⚡</button>
-    </nav>
-
-    <section id="pedidos" class="p-4 active">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-[#caa85c] font-bold uppercase tracking-tighter">Gestão de Vendas</h2>
-            <button onclick="limparPedidos()" class="btn text-red-500 text-[9px]">Limpar Histórico</button>
+<div class="grid-admin">
+    <aside>
+        <div class="mb-10">
+            <h1 class="text-[#caa85c] font-bold text-xl tracking-tighter">ABELLA JOIAS</h1>
+            <p class="text-[10px] text-gray-500 uppercase font-bold">Painel de Gestão</p>
         </div>
-        <div id="lista-pedidos" class="space-y-3"></div>
-    </section>
+        
+        <nav class="flex flex-col gap-2">
+            <button onclick="showSection('produtos')" class="nav-btn active flex items-center gap-3 p-3 rounded-xl hover:bg-[#1a1a1a] transition-all text-sm">
+                <span>📦 Produtos</span>
+            </button>
+            <button onclick="showSection('categorias')" class="nav-btn flex items-center gap-3 p-3 rounded-xl hover:bg-[#1a1a1a] transition-all text-sm">
+                <span>📁 Categorias</span>
+            </button>
+            <button onclick="showSection('banners')" class="nav-btn flex items-center gap-3 p-3 rounded-xl hover:bg-[#1a1a1a] transition-all text-sm">
+                <span>🖼️ Banners</span>
+            </button>
+        </nav>
+    </aside>
 
-    <section id="produtos" class="p-4">
-        <button onclick="abrirModalProduto()" class="btn-gold w-full p-3 rounded-xl text-[10px] uppercase mb-4">Novo Produto</button>
-        <input type="text" id="buscaProduto" oninput="filtrarProdutos()" placeholder="Buscar produto..." class="mb-4">
-        <div id="lista-produtos" class="space-y-2"></div>
-    </section>
-
-    <section id="categorias" class="p-4">
-        <div class="card space-y-4">
-            <h3 class="gold-text font-bold uppercase text-xs">Categorias do Catálogo</h3>
-            <div class="flex gap-2">
-                <input type="text" id="nova-categoria" placeholder="Nome da Categoria">
-                <button onclick="adicionarCategoria()" class="btn-gold px-4 rounded-lg text-xs">Adicionar</button>
+    <main class="p-6 md:p-10">
+        <header class="flex justify-between items-center mb-8">
+            <h2 id="sectionTitle" class="text-2xl font-bold italic">Produtos</h2>
+            <div class="flex gap-3">
+                <button onclick="abrirModalAdd()" class="btn btn-gold px-6">+ Novo Item</button>
             </div>
-            <div id="lista-categorias" class="space-y-2 mt-4"></div>
-        </div>
-    </section>
+        </header>
 
-    <section id="empresa" class="p-4">
-        <div class="card space-y-4">
-            <h3 class="gold-text font-bold uppercase text-xs">Configurações da Loja</h3>
-            <input type="text" id="conf-nome" placeholder="Nome da Marca">
-            <input type="text" id="conf-whatsapp" placeholder="WhatsApp (Ex: 5519...)">
-            <textarea id="conf-msg" placeholder="Mensagem de boas-vindas do WhatsApp" rows="3"></textarea>
-            <button onclick="salvarConfigEmpresa()" class="btn-gold w-full p-3 rounded-xl uppercase text-[10px]">Salvar Dados</button>
-        </div>
-    </section>
+        <section id="produtos" class="active">
+            <div class="mb-6 flex gap-4">
+                <input type="text" id="searchProd" placeholder="Buscar produto..." class="flex-1" onkeyup="filtrarProdutos()">
+                <select id="filterCat" onchange="filtrarProdutos()">
+                    <option value="">Todas Categorias</option>
+                </select>
+            </div>
+            <div id="listaProdutos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+        </section>
 
-    <div id="modalPedido" class="fixed inset-0 bg-black/95 z-[60] hidden overflow-y-auto p-4">
-        <div class="max-w-3xl mx-auto bg-[#141414] border border-[#333] rounded-3xl p-6 shadow-2xl">
-            <div id="areaImpressao">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h3 class="gold-text font-bold uppercase text-lg" id="det-nome-cliente"></h3>
-                        <p class="text-xs text-gray-500" id="det-data"></p>
+        <section id="categorias">
+            <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                </div>
+        </section>
+
+        <section id="banners">
+            <div class="card p-6 border-dashed border-2 border-[#333]">
+                <h3 class="font-bold mb-4">Gerenciar Banners Principais</h3>
+                <div id="listaBanners" class="space-y-4">
                     </div>
-                    <button onclick="fecharPedido()" class="no-print text-gray-500 text-xl">✕</button>
-                </div>
-                <div id="det-corpo" class="text-xs space-y-4"></div>
             </div>
-            <div class="flex gap-2 mt-8 no-print">
-                <button onclick="window.print()" class="flex-1 bg-white text-black p-3 rounded-xl font-bold uppercase text-[9px]">Imprimir Romaneio</button>
-            </div>
-        </div>
-    </div>
+        </section>
+    </main>
+</div>
 
-    <div id="modalProduto" class="fixed inset-0 bg-black/95 z-[60] hidden overflow-y-auto p-4">
-        <div class="max-w-xl mx-auto bg-[#141414] border border-[#333] rounded-3xl p-6">
-            <h3 class="gold-text font-bold mb-4 uppercase text-sm" id="prodModalTitle">Editar Produto</h3>
-            <div class="space-y-3">
-                <input type="text" id="p-name" placeholder="Nome do Produto">
-                <input type="text" id="p-image" placeholder="URL da Imagem">
-                <input type="number" id="p-price" placeholder="Preço (R$)">
-                <input type="number" id="p-weight" placeholder="Peso em gramas (ex: 15.5)">
-                <select id="p-category"></select>
-                <textarea id="p-variations" placeholder="Variações separadas por vírgula (ex: 14, 16, 18 ou P, M, G)" rows="2"></textarea>
-                <div class="flex gap-2 pt-4">
-                    <button onclick="fecharModalProduto()" class="flex-1 btn">Cancelar</button>
-                    <button onclick="salvarProduto()" class="flex-1 btn-gold">Confirmar</button>
-                </div>
+<div id="modal">
+    <div class="modal-content">
+        <div class="p-6 border-b border-white/5 flex justify-between items-center">
+            <h3 id="modalTitle" class="font-bold text-lg">Editar Item</h3>
+            <button onclick="fecharModal()" class="text-gray-500 hover:text-white">✕</button>
+        </div>
+        <div id="modalBody" class="p-6">
             </div>
+        <div class="p-6 border-t border-white/5 flex justify-end gap-3">
+            <button onclick="fecharModal()" class="btn">Cancelar</button>
+            <button id="btnSalvar" class="btn btn-gold px-8">Salvar Alterações</button>
         </div>
     </div>
+</div>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let idEdicao = null;
-
-function tab(name) {
-    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById(name).classList.add('active');
-    document.getElementById('btn-'+name).classList.add('active');
-    if(name === 'categorias') carregarCategorias();
-    if(name === 'produtos') filtrarProdutos();
-}
-
-// --- PEDIDOS ---
-db.ref('orders').on('value', snap => {
-    const list = document.getElementById('lista-pedidos');
-    list.innerHTML = '';
-    snap.forEach(child => {
-        const p = child.val();
-        list.innerHTML += `
-            <div class="card flex justify-between items-center mb-2" onclick="verPedido('${child.key}')">
-                <div><p class="font-bold text-[11px] uppercase">${p.cliente.nome}</p><p class="text-[9px] text-gray-500">${p.data}</p></div>
-                <p class="gold-text font-bold">R$ ${p.total.toFixed(2)}</p>
-            </div>`;
-    });
-});
-
-async function verPedido(id) {
-    const snap = await db.ref('orders/'+id).once('value');
-    const p = snap.val();
-    document.getElementById('det-nome-cliente').innerText = p.cliente.nome;
-    document.getElementById('det-data').innerText = `Pedido ID: ${id} | ${p.data}`;
-    
-    let itens = '';
-    p.itens.forEach(i => {
-        itens += `<div class="flex justify-between border-b border-[#222] py-2">
-            <span>${i.quantidade}x ${i.name}</span>
-            <span class="font-bold">R$ ${(i.price * i.quantidade).toFixed(2)}</span>
-        </div>`;
-    });
-
-    document.getElementById('det-corpo').innerHTML = `
-        <div class="bg-black/40 p-4 rounded-xl text-[10px] mb-4">
-            <p><strong>Whats:</strong> ${p.cliente.telefone}</p>
-            <p><strong>Cidade:</strong> ${p.entrega.cidade} - ${p.entrega.bairro}</p>
-            <p><strong>Endereço:</strong> ${p.entrega.rua}</p>
-        </div>
-        ${itens}
-        <div class="bg-black/60 p-4 rounded-xl mt-4 space-y-1">
-            <div class="flex justify-between"><span>Subtotal</span><span>R$ ${p.subtotal.toFixed(2)}</span></div>
-            <div class="flex justify-between text-green-500"><span>Descontos</span><span>- R$ ${(p.descontoPromo || 0).toFixed(2)}</span></div>
-            <div class="flex justify-between gold-text font-bold text-sm pt-1 border-t border-[#333]"><span>TOTAL LÍQUIDO</span><span>R$ ${p.total.toFixed(2)}</span></div>
-        </div>`;
-    document.getElementById('modalPedido').classList.remove('hidden');
-}
-
-function fecharPedido() { document.getElementById('modalPedido').classList.add('hidden'); }
-function limparPedidos() { if(confirm("Deseja apagar todos os pedidos?")) db.ref('orders').remove(); }
-
-// --- CATEGORIAS ---
-function carregarCategorias() {
-    db.ref('categories').once('value', snap => {
-        const list = document.getElementById('lista-categorias');
-        list.innerHTML = '';
-        snap.forEach(c => {
-            list.innerHTML += `<div class="flex justify-between items-center bg-black p-3 rounded-lg border border-[#222]">
-                <span class="text-xs uppercase">${c.val().name}</span>
-                <button onclick="excluirCategoria('${c.key}')" class="text-red-500">Excluir</button>
-            </div>`;
-        });
-    });
-}
-
-function adicionarCategoria() {
-    const name = document.getElementById('nova-categoria').value;
-    if(name) db.ref('categories').push({ name }).then(() => {
-        document.getElementById('nova-categoria').value = '';
-        carregarCategorias();
-    });
-}
-
-function excluirCategoria(id) { if(confirm("Excluir esta categoria?")) db.ref('categories/'+id).remove().then(carregarCategorias); }
-
-// --- PRODUTOS ---
-function filtrarProdutos() {
-    const termo = document.getElementById('buscaProduto').value.toLowerCase();
-    db.ref('products').once('value', snap => {
-        const list = document.getElementById('lista-produtos');
-        list.innerHTML = '';
-        snap.forEach(child => {
-            const p = child.val();
-            if(p.name.toLowerCase().includes(termo)) {
-                list.innerHTML += `
-                <div class="card flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <img src="${p.image}" class="w-10 h-10 object-cover rounded">
-                        <div><p class="text-[10px] font-bold uppercase">${p.name}</p><p class="gold-text text-[10px]">R$ ${p.price.toFixed(2)}</p></div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="editarProduto('${child.key}')" class="btn">✏️</button>
-                        <button onclick="excluirProduto('${child.key}')" class="btn text-red-500">🗑️</button>
-                    </div>
-                </div>`;
-            }
-        });
-    });
-}
-
-async function abrirModalProduto() {
-    idEdicao = null;
-    document.getElementById('prodModalTitle').innerText = "Novo Produto";
-    document.querySelectorAll('#modalProduto input, #modalProduto textarea').forEach(i => i.value = '');
-    await popularSelectCategorias();
-    document.getElementById('modalProduto').classList.remove('hidden');
-}
-
-async function popularSelectCategorias() {
-    const snap = await db.ref('categories').once('value');
-    const sel = document.getElementById('p-category');
-    sel.innerHTML = '';
-    snap.forEach(c => { sel.innerHTML += `<option value="${c.key}">${c.val().name}</option>`; });
-}
-
-async function editarProduto(id) {
-    idEdicao = id;
-    const snap = await db.ref('products/'+id).once('value');
-    const p = snap.val();
-    await popularSelectCategorias();
-    document.getElementById('p-name').value = p.name;
-    document.getElementById('p-image').value = p.image;
-    document.getElementById('p-price').value = p.price;
-    document.getElementById('p-weight').value = p.weight || '';
-    document.getElementById('p-category').value = p.category;
-    document.getElementById('p-variations').value = p.variations || '';
-    document.getElementById('modalProduto').classList.remove('hidden');
-}
-
-function salvarProduto() {
-    const p = {
-        name: document.getElementById('p-name').value,
-        image: document.getElementById('p-image').value,
-        price: parseFloat(document.getElementById('p-price').value),
-        weight: parseFloat(document.getElementById('p-weight').value) || 0,
-        category: document.getElementById('p-category').value,
-        variations: document.getElementById('p-variations').value
+    // CONFIGURAÇÃO FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyD62Yef2ggoAFSc-qKPlBTaRPRn20D91ug",
+        databaseURL: "https://luary-shop-default-rtdb.firebaseio.com"
     };
-    const ref = idEdicao ? db.ref('products/'+idEdicao) : db.ref('products').push();
-    ref.set(p).then(() => { fecharModalProduto(); filtrarProdutos(); });
-}
 
-function fecharModalProduto() { document.getElementById('modalProduto').classList.add('hidden'); }
-function excluirProduto(id) { if(confirm("Excluir permanentemente?")) db.ref('products/'+id).remove().then(filtrarProdutos); }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-// --- EMPRESA ---
-function salvarConfigEmpresa() {
-    const c = { 
-        nome: document.getElementById('conf-nome').value, 
-        whatsapp: document.getElementById('conf-whatsapp').value, 
-        mensagem: document.getElementById('conf-msg').value 
+    let dataCache = { produtos: {}, categorias: {}, banners: {} };
+
+    // INICIALIZAÇÃO
+    window.onload = () => {
+        carregarDados();
     };
-    db.ref('settings/empresa').set(c).then(() => alert("Dados da empresa atualizados!"));
-}
 
-window.onload = () => {
-    tab('pedidos');
-    db.ref('settings/empresa').once('value', snap => {
-        const c = snap.val();
-        if(c) {
-            document.getElementById('conf-nome').value = c.nome || '';
-            document.getElementById('conf-whatsapp').value = c.whatsapp || '';
-            document.getElementById('conf-msg').value = c.mensagem || '';
+    function carregarDados() {
+        db.ref().on('value', snapshot => {
+            const data = snapshot.val() || {};
+            dataCache.produtos = data.products || {};
+            dataCache.categorias = data.categories || {};
+            dataCache.banners = data.banners || {};
+            
+            renderizarProdutos();
+            renderizarCategorias();
+            renderizarBanners();
+            atualizarSelects();
+        });
+    }
+
+    function showSection(id) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        document.getElementById('sectionTitle').innerText = id.charAt(0).toUpperCase() + id.slice(1);
+    }
+
+    // PRODUTOS
+    function renderizarProdutos() {
+        const container = document.getElementById('listaProdutos');
+        const search = document.getElementById('searchProd').value.toLowerCase();
+        const catFilter = document.getElementById('filterCat').value;
+        
+        container.innerHTML = '';
+        
+        Object.entries(dataCache.produtos).forEach(([id, p]) => {
+            if(search && !p.name.toLowerCase().includes(search)) return;
+            if(catFilter && p.category !== catFilter) return;
+
+            const card = document.createElement('div');
+            card.className = 'card flex gap-4 items-center';
+            card.innerHTML = `
+                <img src="${p.image}" class="w-16 h-16 rounded-lg object-cover bg-black">
+                <div class="flex-1">
+                    <h4 class="font-bold text-sm line-clamp-1">${p.name}</h4>
+                    <p class="text-[#caa85c] font-bold text-xs">R$ ${parseFloat(p.price).toFixed(2)}</p>
+                    <p class="text-[10px] text-gray-500">${p.category || 'Sem categoria'}</p>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <button onclick="editarProduto('${id}')" class="btn p-2">✏️</button>
+                    <button onclick="excluirItem('products/${id}')" class="btn p-2 text-red-500">🗑️</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function filtrarProdutos() {
+        renderizarProdutos();
+    }
+
+    function editarProduto(id) {
+        const p = dataCache.produtos[id];
+        const modalBody = document.getElementById('modalBody');
+        modalBody.innerHTML = `
+            <div class="grid gap-4">
+                <div><label class="text-[10px] uppercase font-bold text-gray-500">Nome do Produto</label>
+                <input id="edit_name" value="${p.name}" class="w-full"></div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] uppercase font-bold text-gray-500">Preço (R$)</label>
+                    <input type="number" step="0.01" id="edit_price" value="${p.price}" class="w-full"></div>
+                    <div><label class="text-[10px] uppercase font-bold text-gray-500">Categoria</label>
+                    <select id="edit_cat" class="w-full">${gerarOptionsCategorias(p.category)}</select></div>
+                </div>
+
+                <div><label class="text-[10px] uppercase font-bold text-gray-500">URL da Imagem</label>
+                <input id="edit_img" value="${p.image}" class="w-full"></div>
+
+                <div><label class="text-[10px] uppercase font-bold text-gray-500">Descrição</label>
+                <textarea id="edit_desc" class="w-full h-24">${p.description || ''}</textarea></div>
+            </div>
+        `;
+        
+        document.getElementById('modalTitle').innerText = "Editar Produto";
+        document.getElementById('modal').style.display = 'flex';
+        document.getElementById('btnSalvar').onclick = () => salvarProduto(id);
+    }
+
+    function salvarProduto(id) {
+        const updates = {
+            name: document.getElementById('edit_name').value,
+            price: document.getElementById('edit_price').value,
+            category: document.getElementById('edit_cat').value,
+            image: document.getElementById('edit_img').value,
+            description: document.getElementById('edit_desc').value
+        };
+        db.ref('products/' + id).update(updates).then(() => fecharModal());
+    }
+
+    // CATEGORIAS
+    function renderizarCategorias() {
+        const container = document.getElementById('listaCategorias');
+        container.innerHTML = '';
+        
+        Object.entries(dataCache.categorias).forEach(([id, c]) => {
+            const card = document.createElement('div');
+            card.className = 'card text-center';
+            card.innerHTML = `
+                <div class="w-12 h-12 bg-[#222] rounded-full flex items-center justify-center mx-auto mb-3 text-xl">${c.icon || '📁'}</div>
+                <h4 class="font-bold uppercase text-xs tracking-widest">${c.name}</h4>
+                <div class="mt-4 flex justify-center gap-2">
+                    <button onclick="editarCategoria('${id}')" class="btn px-4">Editar</button>
+                    <button onclick="excluirItem('categories/${id}')" class="btn text-red-500">✕</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function editarCategoria(id) {
+        const c = dataCache.categorias[id];
+        const modalBody = document.getElementById('modalBody');
+        modalBody.innerHTML = `
+            <div class="grid gap-4">
+                <div><label>Nome da Categoria</label>
+                <input id="cat_name" value="${c.name}" class="w-full"></div>
+                <div><label>Emoji/Ícone</label>
+                <input id="cat_icon" value="${c.icon || ''}" class="w-full" placeholder="Ex: 💍"></div>
+            </div>
+        `;
+        document.getElementById('modalTitle').innerText = "Editar Categoria";
+        document.getElementById('modal').style.display = 'flex';
+        document.getElementById('btnSalvar').onclick = () => {
+            db.ref('categories/' + id).update({
+                name: document.getElementById('cat_name').value,
+                icon: document.getElementById('cat_icon').value
+            }).then(() => fecharModal());
+        };
+    }
+
+    // BANNERS
+    function renderizarBanners() {
+        const container = document.getElementById('listaBanners');
+        container.innerHTML = '';
+        
+        Object.entries(dataCache.banners).forEach(([id, b]) => {
+            const item = document.createElement('div');
+            item.className = 'flex gap-4 items-center p-3 bg-black/30 rounded-lg';
+            item.innerHTML = `
+                <img src="${b.image}" class="w-32 h-12 object-cover rounded border border-[#333]">
+                <input class="flex-1 text-xs" value="${b.image}" onchange="db.ref('banners/${id}/image').set(this.value)">
+                <button onclick="excluirItem('banners/${id}')" class="text-red-500">✕</button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    // AUXILIARES
+    function abrirModalAdd() {
+        const section = document.querySelector('section.active').id;
+        if(section === 'produtos') editarProduto(Date.now());
+        else if(section === 'categorias') editarCategoria(Date.now());
+        else if(section === 'banners') {
+            const id = Date.now();
+            db.ref('banners/' + id).set({ image: 'https://via.placeholder.com/1200x400' });
         }
-    });
-};
+    }
+
+    function fecharModal() {
+        document.getElementById('modal').style.display = 'none';
+    }
+
+    function excluirItem(path) {
+        if(confirm("Deseja realmente excluir este item?")) {
+            db.ref(path).remove();
+        }
+    }
+
+    function gerarOptionsCategorias(selected) {
+        let html = '<option value="">Sem Categoria</option>';
+        Object.values(dataCache.categorias).forEach(c => {
+            html += `<option value="${c.name}" ${selected === c.name ? 'selected' : ''}>${c.name}</option>`;
+        });
+        return html;
+    }
+
+    function atualizarSelects() {
+        const filter = document.getElementById('filterCat');
+        const current = filter.value;
+        filter.innerHTML = '<option value="">Todas Categorias</option>' + gerarOptionsCategorias(current);
+    }
 </script>
+
 </body>
 </html>
