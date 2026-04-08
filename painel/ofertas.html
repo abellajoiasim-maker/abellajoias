@@ -2,254 +2,241 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Central de Estratégias • Abella Joias</title>
+    <title>Painel de Ofertas • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 120px; }
-        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; }
-        .card:hover { border-color: #444; }
-        .card.active { border-color: #caa85c; background: #1a1a14; cursor: default; }
-        
-        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:12px; border-radius:8px; cursor:pointer; width: 100%; transition: 0.3s; }
-        .btn-gold:hover { background: #e2bc6a; transform: translateY(-2px); }
-        
-        input, select { background:#111; border:1px solid #333; padding:10px; border-radius:8px; width:100%; color:#fff; outline:none; font-size: 13px; margin-top: 5px; }
-        
-        .status-badge { font-size: 9px; padding: 4px 10px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
-        .on { background: #059669; color: #fff; }
-        .off { background: #374151; color: #9ca3af; }
-
-        /* Esconde o conteúdo por padrão, mostra só se o card for .active */
-        .module-content { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #2a2a2a; cursor: default; }
-        .card.active .module-content { display: block; }
-        
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 100px; }
+        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; margin-bottom: 12px; }
+        .card.modulo-inativo { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:12px; border-radius:8px; cursor:pointer; }
+        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; color:#fff; outline:none; font-size: 12px; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
+        .tab-btn { padding: 10px; border-radius: 8px; background: #1a1a1a; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; border: 1px solid #333; flex: 1; text-align: center; }
+        .tab-btn.active { background: #caa85c; color: #000; border-color: #caa85c; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-6">
 
     <div class="max-w-3xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-tighter">Estratégias de Venda</h1>
-            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Ative apenas um módulo por vez para o catálogo</p>
+            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-widest">Estratégias de Venda</h1>
+            <p class="text-gray-500 text-xs mt-2 uppercase">Abella Joias • Gestão de Promoções</p>
         </header>
 
-        <div id="modulosContainer">
-            <div class="card" id="mod_categorias" onclick="selecionarCard('categorias')">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">1. Ofertas por Categorias</h3>
-                        <p class="text-[10px] text-gray-500">Desconto em grupos inteiros (Ex: Anéis).</p>
-                    </div>
-                    <span class="status-badge off" id="badge_categorias">Inativo</span>
-                </div>
-                <div class="module-content" onclick="event.stopPropagation()">
-                    <div id="listaCategorias" class="space-y-3"></div>
-                </div>
+        <div class="mb-6">
+            <label class="text-[10px] text-gray-500 uppercase font-bold mb-2 block">Selecione a Estratégia Ativa no Catálogo:</label>
+            <div class="flex flex-wrap gap-2" id="seletorModulos">
+                <div class="tab-btn active" onclick="switchTab('categorias')">Categorias</div>
+                <div class="tab-btn" onclick="switchTab('saldao')">Saldão</div>
+                <div class="tab-btn" onclick="switchTab('progressivo')">Progressivo</div>
+                <div class="tab-btn" onclick="switchTab('combos')">Leve 3 Pague 2</div>
+                <div class="tab-btn" onclick="switchTab('brindes')">Brindes</div>
+                <div class="tab-btn" onclick="switchTab('cupons')">Cupons</div>
+                <div class="tab-btn" onclick="switchTab('frete')">Frete</div>
+                <div class="tab-btn" onclick="switchTab('relampago')">Relâmpago</div>
             </div>
+        </div>
 
-            <div class="card" id="mod_progressivo" onclick="selecionarCard('progressivo')">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">2. Desconto Progressivo</h3>
-                        <p class="text-[10px] text-gray-500">Gatilho por valor total do carrinho.</p>
-                    </div>
-                    <span class="status-badge off" id="badge_progressivo">Inativo</span>
-                </div>
-                <div class="module-content space-y-4" onclick="event.stopPropagation()">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] text-gray-500 uppercase">Mínimo R$</label>
-                            <input type="number" id="prog_min_1" placeholder="500">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-gray-500 uppercase">Desconto %</label>
-                            <input type="number" id="prog_desc_1" placeholder="5">
-                        </div>
-                    </div>
-                </div>
+        <div id="tab_categorias" class="tab-content">
+            <div id="listaCategoriasPromo" class="space-y-4 max-h-[60vh] overflow-y-auto custom-scroll pr-2">
+                <p class="text-center text-gray-600">Carregando categorias...</p>
             </div>
+        </div>
 
-            <div class="card" id="mod_produtos" onclick="selecionarCard('produtos')">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">3. Saldão / Peças Avulsas</h3>
-                        <p class="text-[10px] text-gray-500">Liquidação de itens específicos fora de linha.</p>
-                    </div>
-                    <span class="status-badge off" id="badge_produtos">Inativo</span>
-                </div>
-                <div class="module-content" onclick="event.stopPropagation()">
-                    <div id="listaProdutosSaldao" class="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scroll">
-                        <p class="text-center text-xs py-4 text-gray-600">Carregando estoque...</p>
-                    </div>
-                </div>
+        <div id="tab_saldao" class="tab-content hidden">
+            <div class="card bg-[#1a1a1a] border-[#caa85c]/30 mb-4">
+                <p class="text-[10px] uppercase text-gray-400">Aqui você define descontos para peças específicas paradas no estoque.</p>
             </div>
+            <div id="listaProdutosSaldao" class="space-y-2 max-h-[60vh] overflow-y-auto custom-scroll pr-2">
+                <p class="text-center text-gray-600">Carregando produtos...</p>
+            </div>
+        </div>
 
-            <div class="card" id="mod_brinde" onclick="selecionarCard('brinde')">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">4. Brinde por Compra</h3>
-                        <p class="text-[10px] text-gray-500">Ganhe um presente acima de X valor.</p>
-                    </div>
-                    <span class="status-badge off" id="badge_brinde">Inativo</span>
+        <div id="tab_progressivo" class="tab-content hidden card">
+            <h3 class="text-[#caa85c] font-bold text-sm uppercase mb-4">Desconto Progressivo</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[9px] text-gray-500 uppercase">Se comprar acima de (R$)</label>
+                    <input type="number" id="prog_min_1" placeholder="Ex: 500">
                 </div>
-                <div class="module-content space-y-3" onclick="event.stopPropagation()">
-                    <input type="number" id="brinde_min" placeholder="Valor Mínimo">
-                    <input type="text" id="brinde_nome" placeholder="Nome do Brinde">
+                <div>
+                    <label class="text-[9px] text-gray-500 uppercase">Ganha Desconto de (%)</label>
+                    <input type="number" id="prog_desc_1" placeholder="Ex: 5">
                 </div>
             </div>
-            
-            </div>
+        </div>
 
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black border-t border-[#222] z-50">
-            <div class="max-w-3xl mx-auto flex gap-3">
-                <button onclick="window.history.back()" class="flex-1 bg-gray-800 py-4 rounded-xl text-xs font-bold uppercase">Sair</button>
-                <button onclick="salvarConfiguracoes()" class="flex-1 btn-gold py-4 rounded-xl text-xs uppercase">Salvar Estratégia</button>
+        <div id="tab_combos" class="tab-content hidden card">
+            <h3 class="text-[#caa85c] font-bold text-sm uppercase mb-2">Leve 3 e Pague 2</h3>
+            <p class="text-xs text-gray-400">Ao ativar esta opção, o sistema descontará automaticamente o valor da peça mais barata a cada 3 itens no carrinho.</p>
+        </div>
+
+        <div id="tab_brindes" class="tab-content hidden card space-y-4">
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase">Valor Mínimo p/ Ganhar Brinde</label>
+                <input type="number" id="brinde_min" placeholder="Ex: 1000">
+            </div>
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase">Nome do Brinde</label>
+                <input type="text" id="brinde_nome" placeholder="Ex: Flanela Mágica ou Limpa Joias">
+            </div>
+        </div>
+
+        <div id="tab_cupons" class="tab-content hidden card space-y-4">
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase">Código do Cupom</label>
+                <input type="text" id="cupom_code" placeholder="Ex: BEMVINDA10">
+            </div>
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase">Desconto do Cupom (%)</label>
+                <input type="number" id="cupom_desc" placeholder="Ex: 10">
+            </div>
+        </div>
+
+        <div id="tab_frete" class="tab-content hidden card">
+            <label class="text-[9px] text-gray-500 uppercase">Valor Mínimo para Frete Grátis (R$)</label>
+            <input type="number" id="frete_min" placeholder="Ex: 300">
+        </div>
+
+        <div id="tab_relampago" class="tab-content hidden card space-y-4">
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase">Data/Hora de Término</label>
+                <input type="datetime-local" id="relampago_data">
+            </div>
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase">Desconto Geral (%)</label>
+                <input type="number" id="relampago_desc" placeholder="Ex: 15">
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
+            <div class="max-w-3xl mx-auto flex gap-4">
+                <button onclick="window.history.back()" class="flex-1 bg-gray-800 text-white font-bold py-4 rounded-xl uppercase text-xs">Voltar</button>
+                <button onclick="salvarTodasOfertas()" class="flex-1 btn-gold py-4 rounded-xl uppercase text-xs shadow-lg shadow-[#caa85c]/20">Salvar Estratégia Ativa</button>
             </div>
         </div>
     </div>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
-};
+const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let moduloAtivoGlobal = '';
+let tabAtiva = 'categorias';
 
-async function inicializar() {
-    try {
-        const [snapCats, snapProds, snapConfig] = await Promise.all([
-            db.ref('categories').once('value'),
-            db.ref('products').once('value'),
-            db.ref('settings/promocao').once('value')
-        ]);
-
-        const config = snapConfig.val() || {};
-        moduloAtivoGlobal = config.moduloAtivo || '';
-
-        // Renderizar Categorias
-        const boxCat = document.getElementById('listaCategorias');
-        boxCat.innerHTML = '';
-        snapCats.forEach(c => {
-            const cat = c.val();
-            boxCat.innerHTML += `
-                <div class="bg-black/40 p-3 rounded-lg border border-[#222]">
-                    <span class="text-[10px] font-bold text-[#caa85c] uppercase">${cat.name}</span>
-                    <div class="grid grid-cols-2 gap-2 mt-2">
-                        <input type="number" class="cat_pct" data-key="${c.key}" value="${cat.promoPct || 0}" placeholder="% Off">
-                        <input type="text" class="cat_tag" data-key="${c.key}" value="${cat.promoTag || 'OFERTA'}" placeholder="Selo">
-                    </div>
-                </div>`;
-        });
-
-        // Renderizar Produtos (Saldão)
-        const boxProd = document.getElementById('listaProdutosSaldao');
-        boxProd.innerHTML = '';
-        snapProds.forEach(p => {
-            const prod = p.val();
-            boxProd.innerHTML += `
-                <div class="flex items-center justify-between bg-black/40 p-2 rounded-lg border border-[#222]">
-                    <div class="flex items-center gap-2">
-                        <img src="${prod.image}" class="w-8 h-8 rounded object-cover">
-                        <span class="text-[9px] uppercase font-medium">${prod.name}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[8px] text-gray-500 uppercase">Desc %</span>
-                        <input type="number" class="prod_desc w-16 !p-1" data-key="${p.key}" value="${prod.promoPct || 0}">
-                    </div>
-                </div>`;
-        });
-
-        // Preencher outros campos se existirem
-        if(config.progressivo) {
-            document.getElementById('prog_min_1').value = config.progressivo.min1 || '';
-            document.getElementById('prog_desc_1').value = config.progressivo.desc1 || '';
-        }
-        if(config.brinde) {
-            document.getElementById('brinde_min').value = config.brinde.min || '';
-            document.getElementById('brinde_nome').value = config.brinde.nome || '';
-        }
-
-        if(moduloAtivoGlobal) atualizarInterface(moduloAtivoGlobal);
-
-    } catch (e) {
-        console.error("Erro ao carregar:", e);
-        alert("Erro de conexão com o banco de dados.");
-    }
+function switchTab(tab) {
+    tabAtiva = tab;
+    // UI dos botões
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    // UI dos conteúdos
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById('tab_' + tab).classList.remove('hidden');
 }
 
-function selecionarCard(slug) {
-    moduloAtivoGlobal = slug;
-    atualizarInterface(slug);
-}
+async function carregarDados() {
+    const [snapCats, snapProds, snapPromo] = await Promise.all([
+        db.ref('categories').once('value'),
+        db.ref('products').once('value'),
+        db.ref('settings/promocao').once('value')
+    ]);
 
-function atualizarInterface(slug) {
-    // 1. Remove classe ativa de todos
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    const promoData = snapPromo.val() || {};
     
-    // 2. Reseta todos os badges para cinza/inativo
-    document.querySelectorAll('.status-badge').forEach(b => {
-        b.innerText = 'Inativo';
-        b.className = 'status-badge off';
+    // 1. Renderizar Categorias (Módulo Atual)
+    const boxCat = document.getElementById('listaCategoriasPromo');
+    boxCat.innerHTML = '';
+    snapCats.forEach(cat => {
+        const c = cat.val();
+        boxCat.innerHTML += `
+        <div class="card border border-[#222]">
+            <span class="text-xs uppercase font-black text-[#caa85c]">${c.name}</span>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+                <div class="col-span-2">
+                    <input type="text" data-key="${cat.key}" class="cat_name" value="${c.promoName || ''}" placeholder="Título (Ex: Ofertas da Semana)">
+                </div>
+                <div>
+                    <label class="text-[9px] text-gray-500 uppercase">Selo</label>
+                    <input type="text" data-key="${cat.key}" class="cat_tag" value="${c.promoTag || 'OFF'}" placeholder="Ex: 20%">
+                </div>
+                <div>
+                    <label class="text-[9px] text-gray-500 uppercase">Desconto %</label>
+                    <input type="number" data-key="${cat.key}" class="cat_pct" value="${c.promoPct || 0}">
+                </div>
+            </div>
+        </div>`;
     });
 
-    // 3. Ativa o selecionado
-    const card = document.getElementById('mod_' + slug);
-    const badge = document.getElementById('badge_' + slug);
-    if(card && badge) {
-        card.classList.add('active');
-        badge.innerText = 'Ativo';
-        badge.className = 'status-badge on';
+    // 2. Renderizar Produtos (Saldão)
+    const boxProd = document.getElementById('listaProdutosSaldao');
+    boxProd.innerHTML = '';
+    snapProds.forEach(p => {
+        const prod = p.val();
+        boxProd.innerHTML += `
+        <div class="flex items-center justify-between bg-[#111] p-3 rounded-xl border border-[#222]">
+            <div class="flex items-center gap-3">
+                <img src="${prod.image}" class="w-10 h-10 object-cover rounded-lg border border-[#333]">
+                <div>
+                    <p class="text-[10px] font-bold uppercase">${prod.name}</p>
+                    <p class="text-[9px] text-[#caa85c]">${prod.sku || ''}</p>
+                </div>
+            </div>
+            <div class="w-20">
+                <label class="text-[8px] text-gray-500 uppercase">Desc %</label>
+                <input type="number" data-key="${p.key}" class="prod_pct" value="${prod.promoPct || 0}">
+            </div>
+        </div>`;
+    });
+
+    // 3. Carregar Valores Globais
+    if(promoData.progressivo) {
+        document.getElementById('prog_min_1').value = promoData.progressivo.min || '';
+        document.getElementById('prog_desc_1').value = promoData.progressivo.desc || '';
+    }
+    if(promoData.brinde) {
+        document.getElementById('brinde_min').value = promoData.brinde.min || '';
+        document.getElementById('brinde_nome').value = promoData.brinde.nome || '';
     }
 }
 
-async function salvarConfiguracoes() {
-    if(!moduloAtivoGlobal) return alert("Selecione um módulo antes de salvar.");
-
+function salvarTodasOfertas() {
     const updates = {};
-    updates['settings/promocao/moduloAtivo'] = moduloAtivoGlobal;
+    updates['settings/promocao/moduloAtivo'] = tabAtiva;
 
-    // Dados Categorias
+    // Salvar Categorias
     document.querySelectorAll('.cat_pct').forEach(el => {
         const key = el.dataset.key;
         updates[`categories/${key}/promoPct`] = +el.value;
+        updates[`categories/${key}/promoName`] = document.querySelector(`.cat_name[data-key="${key}"]`).value;
         updates[`categories/${key}/promoTag`] = document.querySelector(`.cat_tag[data-key="${key}"]`).value;
     });
 
-    // Dados Saldão (Produtos)
-    document.querySelectorAll('.prod_desc').forEach(el => {
+    // Salvar Saldão (Produtos)
+    document.querySelectorAll('.prod_pct').forEach(el => {
         const key = el.dataset.key;
         updates[`products/${key}/promoPct`] = +el.value;
     });
 
-    // Dados Progressivo
+    // Salvar Progressivo
     updates['settings/promocao/progressivo'] = {
-        min1: +document.getElementById('prog_min_1').value,
-        desc1: +document.getElementById('prog_desc_1').value
+        min: +document.getElementById('prog_min_1').value,
+        desc: +document.getElementById('prog_desc_1').value
     };
 
-    // Dados Brinde
+    // Salvar Brinde
     updates['settings/promocao/brinde'] = {
         min: +document.getElementById('brinde_min').value,
         nome: document.getElementById('brinde_nome').value
     };
 
-    try {
-        await db.ref().update(updates);
-        alert("Estratégia aplicada com sucesso!");
-    } catch(e) {
-        alert("Erro ao salvar no banco.");
-    }
+    db.ref().update(updates).then(() => alert("Estratégia salva com sucesso!")).catch(e => alert("Erro ao salvar"));
 }
 
-window.onload = inicializar;
+window.onload = carregarDados;
 </script>
 </body>
 </html>
