@@ -2,45 +2,155 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel de Ofertas • Abella Joias</title>
+    <title>Central de Estratégias • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
-        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
-        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:12px; border-radius:8px; cursor:pointer; }
-        input { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; color:#fff; outline:none; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
+        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 100px; }
+        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; margin-bottom: 12px; transition: 0.3s; }
+        .card.active { border-color: #caa85c; background: #1a1a14; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:12px; border-radius:8px; cursor:pointer; width: 100%; }
+        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; color:#fff; outline:none; font-size: 12px; }
+        .module-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .status-badge { font-size: 9px; padding: 2px 8px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
+        .on { background: #059669; color: #fff; }
+        .off { background: #374151; color: #9ca3af; }
+        .module-content { display: none; margin-top: 15px; padding-top: 15px; border-t: 1px solid #222; }
+        .card.active .module-content { display: block; }
     </style>
 </head>
-<body class="p-6">
+<body class="p-4 md:p-8">
 
-    <div class="max-w-2xl mx-auto">
+    <div class="max-w-3xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-widest">Painel de Ofertas</h1>
-            <p class="text-gray-500 text-xs mt-2 uppercase">Gestão Independente de Promoções</p>
+            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-tighter">Central de Ofertas</h1>
+            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Selecione uma modalidade ativa para o catálogo</p>
         </header>
 
-        <div class="card flex justify-between items-center bg-[#1a1a1a] mb-6 border-[#caa85c]/30">
-            <div>
-                <span class="text-sm font-bold block uppercase">Exibir Selos no Catálogo</span>
-                <small class="text-[9px] text-gray-400 uppercase">Ativa ou desativa todas as ofertas visuais</small>
+        <div id="modulosContainer">
+            <div class="card" id="mod_categorias">
+                <div class="module-header" onclick="ativarModulo('categorias')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">1. Ofertas por Categorias</h3>
+                        <p class="text-[10px] text-gray-500">Selo e desconto aplicado em grupos inteiros.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content" id="listaCategorias">
+                    </div>
             </div>
-            <button onclick="togglePromoStatus()" id="btnStatusPromo" class="px-8 py-3 rounded-xl text-[10px] font-black transition-all">
-                CARREGANDO...
-            </button>
+
+            <div class="card" id="mod_progressivo">
+                <div class="module-header" onclick="ativarModulo('progressivo')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">2. Desconto Progressivo</h3>
+                        <p class="text-[10px] text-gray-500">Quanto maior o valor do carrinho, maior o desconto.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="prog_min_1" placeholder="Valor Mínimo (Ex: 500)">
+                        <input type="number" id="prog_desc_1" placeholder="% Desconto">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="prog_min_2" placeholder="Valor Mínimo (Ex: 1000)">
+                        <input type="number" id="prog_desc_2" placeholder="% Desconto">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="mod_combo">
+                <div class="module-header" onclick="ativarModulo('combo')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">3. Combo Leve 3 Pague 2</h3>
+                        <p class="text-[10px] text-gray-500">A peça de menor valor sai de graça em trios.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content">
+                    <p class="text-[10px] text-gray-400">Este módulo não requer configuração extra. Ao ativar, o carrinho aplicará a regra automaticamente.</p>
+                </div>
+            </div>
+
+            <div class="card" id="mod_brinde">
+                <div class="module-header" onclick="ativarModulo('brinde')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">4. Brinde por Compra</h3>
+                        <p class="text-[10px] text-gray-500">Ofereça um presente acima de determinado valor.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content space-y-2">
+                    <input type="number" id="brinde_min" placeholder="Valor Mínimo para ganhar">
+                    <input type="text" id="brinde_nome" placeholder="Nome do Brinde (Ex: Flanela Mágica)">
+                </div>
+            </div>
+
+            <div class="card" id="mod_cupom">
+                <div class="module-header" onclick="ativarModulo('cupom')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">5. Cupom de Desconto</h3>
+                        <p class="text-[10px] text-gray-500">Crie um código para divulgar no Instagram.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content space-y-2">
+                    <input type="text" id="cupom_codigo" placeholder="Código (Ex: BEMVINDA10)">
+                    <input type="number" id="cupom_valor" placeholder="% de desconto do cupom">
+                </div>
+            </div>
+
+            <div class="card" id="mod_frete">
+                <div class="module-header" onclick="ativarModulo('frete')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">6. Frete Grátis</h3>
+                        <p class="text-[10px] text-gray-500">Zere o frete para compras de alto valor.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content">
+                    <input type="number" id="frete_min" placeholder="Valor Mínimo p/ Frete Grátis">
+                </div>
+            </div>
+
+            <div class="card" id="mod_relampago">
+                <div class="module-header" onclick="ativarModulo('relampago')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">7. Oferta Relâmpago</h3>
+                        <p class="text-[10px] text-gray-500">Cronômetro de urgência no catálogo.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content space-y-2">
+                    <label class="text-[9px] text-gray-500 uppercase">Data/Hora Final</label>
+                    <input type="datetime-local" id="relampago_fim">
+                    <input type="number" id="relampago_desc" placeholder="% de desconto em tudo">
+                </div>
+            </div>
+
+            <div class="card" id="mod_produtos">
+                <div class="module-header" onclick="ativarModulo('produtos')">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase">8. Saldão de Peças (Individual)</h3>
+                        <p class="text-[10px] text-gray-500">Liquide itens específicos parados no estoque.</p>
+                    </div>
+                    <span class="status-badge off">Inativo</span>
+                </div>
+                <div class="module-content">
+                    <div id="listaProdutosSaldao" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                        </div>
+                </div>
+            </div>
         </div>
 
-        <div id="listaCategoriasPromo" class="space-y-4 max-h-[60vh] overflow-y-auto custom-scroll pr-2">
-            <p class="text-center text-gray-600">Carregando categorias...</p>
-        </div>
-
-        <div class="mt-8 flex gap-4">
-            <button onclick="window.history.back()" class="flex-1 bg-gray-800 text-white font-bold py-4 rounded-xl uppercase text-xs">Voltar</button>
-            <button onclick="salvarTodasOfertas()" class="flex-1 btn-gold py-4 rounded-xl uppercase text-xs shadow-lg shadow-[#caa85c]/20">Salvar Promoções</button>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
+            <div class="max-w-3xl mx-auto flex gap-3">
+                <button onclick="window.history.back()" class="flex-1 bg-gray-800 py-4 rounded-xl text-xs font-bold uppercase">Voltar</button>
+                <button onclick="salvarConfiguracoes()" class="flex-1 btn-gold py-4 rounded-xl text-xs uppercase shadow-lg shadow-[#caa85c]/20">Salvar Estratégia</button>
+            </div>
         </div>
     </div>
 
@@ -49,81 +159,114 @@ const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", data
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let statusAtiva = false;
+let moduloAtivo = '';
 
-async function carregarOfertas() {
-    const [snapPromo, snapCats] = await Promise.all([
-        db.ref('settings/promocao').once('value'), 
-        db.ref('categories').once('value')
+async function carregarDados() {
+    const [snapCats, snapProds, snapConfig] = await Promise.all([
+        db.ref('categories').once('value'),
+        db.ref('products').once('value'),
+        db.ref('settings/promocao').once('value')
     ]);
-    
-    statusAtiva = snapPromo.val()?.ativa || false;
-    atualizarBotaoStatus();
 
-    const box = document.getElementById('listaCategoriasPromo');
-    box.innerHTML = '';
+    const config = snapConfig.val() || {};
+    moduloAtivo = config.moduloAtivo || '';
+    if(moduloAtivo) atualizarInterfaceModulo(moduloAtivo);
 
-    snapCats.forEach(cat => {
-        const c = cat.val();
-        box.innerHTML += `
-        <div class="card border border-[#222]">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-xs uppercase font-black text-[#caa85c]">${c.name}</span>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2">
-                    <label class="text-[9px] text-gray-500 uppercase font-bold">Título da Campanha</label>
-                    <input type="text" data-key="${cat.key}" class="p_name" value="${c.promoName || ''}" placeholder="Ex: Queima de Estoque">
+    // Renderizar Categorias para Módulo 1
+    const boxCat = document.getElementById('listaCategorias');
+    snapCats.forEach(c => {
+        const cat = c.val();
+        boxCat.innerHTML += `
+            <div class="bg-black/50 p-3 rounded-lg mb-2 border border-[#333]">
+                <span class="text-[10px] font-bold text-[#caa85c] uppercase">${cat.name}</span>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <input type="number" class="cat_pct" data-key="${c.key}" value="${cat.promoPct || 0}" placeholder="% Off">
+                    <input type="text" class="cat_tag" data-key="${c.key}" value="${cat.promoTag || 'OFERTA'}" placeholder="Selo">
                 </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase font-bold">Texto do Selo</label>
-                    <input type="text" data-key="${cat.key}" class="p_tag" value="${c.promoTag || 'OFERTA'}" placeholder="Ex: 20% OFF">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase font-bold">Desconto (%)</label>
-                    <input type="number" data-key="${cat.key}" class="p_pct" value="${c.promoPct || 0}">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase font-bold block">Cor do Selo</label>
-                    <input type="color" data-key="${cat.key}" class="p_color !h-10 !p-1" value="${c.promoColor || '#caa85c'}">
-                </div>
-                <div>
-                    <label class="text-[9px] text-gray-500 uppercase font-bold block">Cor do Texto</label>
-                    <input type="color" data-key="${cat.key}" class="p_tcolor !h-10 !p-1" value="${c.promoTextColor || '#ffffff'}">
-                </div>
-            </div>
-        </div>`;
+            </div>`;
     });
+
+    // Renderizar Produtos para Módulo 8 (Saldão)
+    const boxProd = document.getElementById('listaProdutosSaldao');
+    snapProds.forEach(p => {
+        const prod = p.val();
+        boxProd.innerHTML += `
+            <div class="flex items-center justify-between bg-black/50 p-2 rounded-lg border border-[#222]">
+                <div class="flex items-center gap-2">
+                    <img src="${prod.image}" class="w-8 h-8 rounded object-cover">
+                    <span class="text-[9px] uppercase font-bold">${prod.name}</span>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="text-[9px] text-gray-500">DESC %</span>
+                    <input type="number" class="prod_desc w-16" data-key="${p.key}" value="${prod.promoPct || 0}">
+                </div>
+            </div>`;
+    });
+
+    // Carregar outros campos da config
+    if(config.progressivo) {
+        document.getElementById('prog_min_1').value = config.progressivo.min1;
+        document.getElementById('prog_desc_1').value = config.progressivo.desc1;
+    }
 }
 
-function atualizarBotaoStatus() {
-    const btn = document.getElementById('btnStatusPromo');
-    btn.innerText = statusAtiva ? 'OFERTAS ATIVAS' : 'OFERTAS INATIVAS';
-    btn.className = `px-8 py-3 rounded-xl text-[10px] font-black transition-all ${statusAtiva ? 'bg-green-600' : 'bg-red-600'}`;
+function ativarModulo(slug) {
+    moduloAtivo = slug;
+    atualizarInterfaceModulo(slug);
 }
 
-function togglePromoStatus() {
-    statusAtiva = !statusAtiva;
-    atualizarBotaoStatus();
+function atualizarInterfaceModulo(slug) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.status-badge').forEach(b => {
+        b.innerText = 'Inativo';
+        b.className = 'status-badge off';
+    });
+
+    const cardAtivo = document.getElementById('mod_' + slug);
+    if(cardAtivo) {
+        cardAtivo.classList.add('active');
+        const badge = cardAtivo.querySelector('.status-badge');
+        badge.innerText = 'Ativo';
+        badge.className = 'status-badge on';
+    }
 }
 
-function salvarTodasOfertas() {
+async function salvarConfiguracoes() {
     const updates = {};
-    updates['settings/promocao/ativa'] = statusAtiva;
+    updates['settings/promocao/moduloAtivo'] = moduloAtivo;
 
-    document.querySelectorAll('.p_pct').forEach(el => {
-        const key = el.dataset.key;
-        updates[`categories/${key}/promoPct`] = +el.value;
-        updates[`categories/${key}/promoName`] = document.querySelector(`.p_name[data-key="${key}"]`).value;
-        updates[`categories/${key}/promoTag`] = document.querySelector(`.p_tag[data-key="${key}"]`).value;
-        updates[`categories/${key}/promoColor`] = document.querySelector(`.p_color[data-key="${key}"]`).value;
-        updates[`categories/${key}/promoTextColor`] = document.querySelector(`.p_tcolor[data-key="${key}"]`).value;
-    });
+    // Se categoria ativa, salva os dados delas
+    if(moduloAtivo === 'categorias') {
+        document.querySelectorAll('.cat_pct').forEach(el => {
+            const key = el.dataset.key;
+            updates[`categories/${key}/promoPct`] = +el.value;
+            updates[`categories/${key}/promoTag`] = document.querySelector(`.cat_tag[data-key="${key}"]`).value;
+        });
+    }
 
-    db.ref().update(updates).then(() => alert("Ofertas salvas!")).catch(e => alert("Erro ao salvar"));
+    // Se produtos/saldão ativo, salva nos produtos
+    if(moduloAtivo === 'produtos') {
+        document.querySelectorAll('.prod_desc').forEach(el => {
+            const key = el.dataset.key;
+            updates[`products/${key}/promoPct`] = +el.value;
+        });
+    }
+
+    // Salva lógica progressiva
+    updates['settings/promocao/progressivo'] = {
+        min1: +document.getElementById('prog_min_1').value,
+        desc1: +document.getElementById('prog_desc_1').value,
+        min2: +document.getElementById('prog_min_2').value,
+        desc2: +document.getElementById('prog_desc_2').value
+    };
+
+    try {
+        await db.ref().update(updates);
+        alert("Estratégia salva e aplicada no catálogo!");
+    } catch(e) { alert("Erro ao salvar."); }
 }
 
-window.onload = carregarOfertas;
+window.onload = carregarDados;
 </script>
 </body>
 </html>
