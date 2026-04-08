@@ -16,300 +16,447 @@
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
         .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
         .btn:hover { background:#333; }
-        .btn-gold { background:#caa85c; color:#000; border:none; font-weight:700; }
-        .btn-gold:hover { background:#b8964d; }
-        input, select, textarea { background:#1a1a1a; border:1px solid #333; color:#fff; padding:8px; border-radius:8px; outline:none; font-size:13px; }
-        input:focus { border-color:#caa85c; }
-        .grid-admin { display:grid; grid-template-columns: 240px 1fr; min-height:100vh; }
-        aside { background:#111; border-right:1px solid #222; padding:20px; }
-        .status-badge { padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; }
+        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
+        #mainModal.active { display: flex; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
         
-        /* Modal Styles */
-        #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding:20px; }
-        .modal-content { background:#141414; width:100%; max-width:600px; border-radius:20px; border:1px solid #333; max-height:90vh; overflow-y:auto; }
-
-        @media (max-width: 768px) {
-            .grid-admin { grid-template-columns: 1fr; }
-            aside { display:none; }
+        #print-area { display: none; }
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
+            .header-luxo { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px; }
+            .header-luxo h1 { font-size: 35px; letter-spacing: 5px; margin: 0; font-weight: 900; }
+            .caixa-dados { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 15px; }
+            .caixa-dados td { border: 1.5px solid #d4af37; padding: 12px; vertical-align: top; width: 50%; font-size: 11px; border-radius: 10px; position: relative; }
+            .titulo-box { position: absolute; top: -9px; left: 10px; background: #fff; padding: 0 5px; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #d4af37; }
+            .grid-romaneio { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
+            .grid-item { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; }
+            .grid-item img { max-width: 80px; max-height: 80px; object-fit: contain; margin-bottom: 5px; }
+            .tab-romaneio { width: 100%; border-collapse: collapse; font-size: 11px; }
+            .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; }
+            .tab-romaneio th { background: #f2f2f2; font-size: 10px; text-transform: uppercase; }
         }
     </style>
 </head>
 <body>
 
-<div class="grid-admin">
-    <aside>
-        <div class="mb-10">
-            <h1 class="text-[#caa85c] font-bold text-xl tracking-tighter">ABELLA JOIAS</h1>
-            <p class="text-[10px] text-gray-500 uppercase font-bold">Painel de Gestão</p>
+<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
+    Abella Joias • Gestão Total
+</header>
+
+<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
+    <button type="button" class="btn active" onclick="showTab('empresa', this)">Empresa</button>
+    <button type="button" class="btn" onclick="showTab('categorias', this)">Categorias</button>
+    <button type="button" class="btn" onclick="showTab('produtos', this)">Produtos</button>
+    <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
+</nav>
+
+<main class="p-6 max-w-4xl mx-auto">
+    <section id="empresa" class="active">
+        <div class="card space-y-3">
+            <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
+            <input id="empNome" placeholder="Nome da Empresa">
+            <input id="empSub" placeholder="Slogan / Subtítulo">
+            <input id="empWhats" placeholder="WhatsApp da Loja">
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] text-gray-400">DESC. PIX %</label><input id="empDesc" type="number"></div>
+                <div><label class="text-[10px] text-gray-400">PARCELAS MÁX</label><input id="empParc" type="number"></div>
+            </div>
+            <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
         </div>
-        
-        <nav class="flex flex-col gap-2">
-            <button onclick="showSection('produtos')" class="nav-btn active flex items-center gap-3 p-3 rounded-xl hover:bg-[#1a1a1a] transition-all text-sm">
-                <span>📦 Produtos</span>
-            </button>
-            <button onclick="showSection('categorias')" class="nav-btn flex items-center gap-3 p-3 rounded-xl hover:bg-[#1a1a1a] transition-all text-sm">
-                <span>📁 Categorias</span>
-            </button>
-            <button onclick="showSection('banners')" class="nav-btn flex items-center gap-3 p-3 rounded-xl hover:bg-[#1a1a1a] transition-all text-sm">
-                <span>🖼️ Banners</span>
-            </button>
-        </nav>
-    </aside>
+    </section>
 
-    <main class="p-6 md:p-10">
-        <header class="flex justify-between items-center mb-8">
-            <h2 id="sectionTitle" class="text-2xl font-bold italic">Produtos</h2>
-            <div class="flex gap-3">
-                <button onclick="abrirModalAdd()" class="btn btn-gold px-6">+ Novo Item</button>
-            </div>
-        </header>
-
-        <section id="produtos" class="active">
-            <div class="mb-6 flex gap-4">
-                <input type="text" id="searchProd" placeholder="Buscar produto..." class="flex-1" onkeyup="filtrarProdutos()">
-                <select id="filterCat" onchange="filtrarProdutos()">
-                    <option value="">Todas Categorias</option>
-                </select>
-            </div>
-            <div id="listaProdutos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                </div>
-        </section>
-
-        <section id="categorias">
-            <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                </div>
-        </section>
-
-        <section id="banners">
-            <div class="card p-6 border-dashed border-2 border-[#333]">
-                <h3 class="font-bold mb-4">Gerenciar Banners Principais</h3>
-                <div id="listaBanners" class="space-y-4">
-                    </div>
-            </div>
-        </section>
-    </main>
-</div>
-
-<div id="modal">
-    <div class="modal-content">
-        <div class="p-6 border-b border-white/5 flex justify-between items-center">
-            <h3 id="modalTitle" class="font-bold text-lg">Editar Item</h3>
-            <button onclick="fecharModal()" class="text-gray-500 hover:text-white">✕</button>
+    <section id="categorias">
+        <div class="card mb-4">
+            <input id="newCatName" placeholder="Nome da Nova Categoria">
+            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
         </div>
-        <div id="modalBody" class="p-6">
-            </div>
-        <div class="p-6 border-t border-white/5 flex justify-end gap-3">
-            <button onclick="fecharModal()" class="btn">Cancelar</button>
-            <button id="btnSalvar" class="btn btn-gold px-8">Salvar Alterações</button>
+        <div id="listaCategorias" class="grid gap-2"></div>
+    </section>
+
+    <section id="produtos">
+        <div id="listaProdutos" class="grid gap-2"></div>
+    </section>
+
+    <section id="pedidos">
+        <div id="listaPedidos" class="grid gap-4"></div>
+    </section>
+</main>
+
+<div id="mainModal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-4 border-b border-[#222] flex justify-between items-center">
+            <h3 id="modalTitle" class="text-[#caa85c] font-bold uppercase text-sm">Título</h3>
+            <button onclick="fecharModal()" class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="modalBody" class="p-6 max-h-[70vh] overflow-y-auto"></div>
+        <div class="p-4 border-t border-[#222] flex gap-3">
+            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button>
+            <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">Salvar</button>
         </div>
     </div>
 </div>
 
+<div id="editorPedido" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+  <div class="bg-[#111] w-full max-w-4xl rounded-2xl p-5 overflow-auto max-h-[95vh] border border-[#333] custom-scroll">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-[#caa85c] font-bold text-lg uppercase">Editar Pedido</h2>
+        <div id="totalPreview" class="text-right text-[#caa85c] font-bold text-xl">R$ 0,00</div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase">Dados do Cliente</h3>
+        <input id="edClienteNome" placeholder="Nome">
+        <input id="edClienteTel" placeholder="WhatsApp">
+      </div>
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest">Endereço de Entrega</h3>
+        <input id="edNomeEntrega" placeholder="Nome do Destinatário">
+        <input id="edRua" placeholder="Rua e Número">
+        <div class="grid grid-cols-2 gap-2">
+            <input id="edBairro" placeholder="Bairro">
+            <input id="edCidade" placeholder="Cidade">
+        </div>
+      </div>
+    </div>
+
+    <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c] uppercase">Itens da Compra</h3>
+    <div id="edItens" class="space-y-2"></div>
+    <button class="btn w-full mt-2 border-dashed border-gray-600 text-gray-400" onclick="addItemEditor()">+ ADICIONAR ITEM MANUAL</button>
+
+    <div class="grid grid-cols-3 gap-3 mt-6 p-4 bg-black/40 rounded-xl">
+        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+    </div>
+
+    <div class="mt-6 pt-4 border-t border-[#222]">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
+      </div>
+
+      <div class="flex flex-wrap gap-2 justify-between">
+        <button class="btn px-8 border-red-900/50 text-red-400" onclick="fecharEditorPedido()">SAIR</button>
+        <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="print-area"></div>
+
 <script>
-    // CONFIGURAÇÃO FIREBASE
-    const firebaseConfig = {
-        apiKey: "AIzaSyD62Yef2ggoAFSc-qKPlBTaRPRn20D91ug",
-        databaseURL: "https://luary-shop-default-rtdb.firebaseio.com"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+let pedidoEditando = null;
+const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+const fPeso = g => (Number(g) || 0).toLocaleString('pt-BR') + ' g';
 
-    let dataCache = { produtos: {}, categorias: {}, banners: {} };
+function showTab(id, btn) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'categorias') carregarCategorias();
+    if (id === 'produtos') carregarProdutos();
+    if (id === 'pedidos') carregarPedidos();
+    if (id === 'empresa') carregarEmpresa();
+}
 
-    // INICIALIZAÇÃO
-    window.onload = () => {
-        carregarDados();
-    };
+function carregarEmpresa() {
+    db.ref('settings/empresa').once('value', s => {
+        const v = s.val() || {};
+        document.getElementById('empNome').value = v.nome || '';
+        document.getElementById('empSub').value = v.subtitulo || '';
+        document.getElementById('empWhats').value = v.whats || '';
+        document.getElementById('empDesc').value = v.descontoPix || 0;
+        document.getElementById('empParc').value = v.parcelas || 0;
+    });
+}
 
-    function carregarDados() {
-        db.ref().on('value', snapshot => {
-            const data = snapshot.val() || {};
-            dataCache.produtos = data.products || {};
-            dataCache.categorias = data.categories || {};
-            dataCache.banners = data.banners || {};
+function salvarEmpresa() {
+    db.ref('settings/empresa').update({
+        nome: document.getElementById('empNome').value,
+        subtitulo: document.getElementById('empSub').value,
+        whats: document.getElementById('empWhats').value,
+        descontoPix: +document.getElementById('empDesc').value,
+        parcelas: +document.getElementById('empParc').value
+    }).then(() => alert('Configurações atualizadas!'));
+}
+
+function carregarCategorias() {
+    db.ref('categories').on('value', s => {
+        const lista = document.getElementById('listaCategorias');
+        lista.innerHTML = '';
+        s.forEach(c => {
+            lista.innerHTML += `<div class="card flex justify-between items-center">
+                <span class="uppercase text-xs font-bold">${c.val().name}</span>
+                <div class="flex gap-2">
+                    <button class="btn text-blue-400" onclick="editarCat('${c.key}','${c.val().name}')">✎</button>
+                    <button class="btn text-red-500" onclick="excluirCat('${c.key}')">🗑</button>
+                </div>
+            </div>`;
+        });
+    });
+}
+
+function novaCategoria() {
+    const n = document.getElementById('newCatName').value;
+    if(n) db.ref('categories').push({name:n}).then(() => document.getElementById('newCatName').value = '');
+}
+
+function excluirCat(id) { if(confirm("Excluir categoria?")) db.ref('categories/'+id).remove(); }
+
+function carregarProdutos() {
+    const lista = document.getElementById('listaProdutos');
+    lista.innerHTML = '<p class="text-center p-4">Carregando...</p>';
+    db.ref('categories').once('value', sCats => {
+        db.ref('products').once('value', sProds => {
+            lista.innerHTML = '';
+            sCats.forEach(cat => {
+                let htmlP = '';
+                sProds.forEach(p => {
+                    const prod = p.val();
+                    if(prod.category === cat.key) {
+                        htmlP += `<div class="card flex justify-between items-center py-2 px-3 bg-[#0d0d0d] mb-1 text-[11px]">
+                            <div class="flex items-center gap-3">
+                                <img src="${prod.image || ''}" class="w-8 h-8 object-cover rounded border border-[#333]">
+                                <span><b class="text-[#caa85c]">[${prod.sku || '---'}]</b> ${prod.name}</span>
+                            </div>
+                            <button onclick="editarProduto('${p.key}')">✎</button>
+                        </div>`;
+                    }
+                });
+                if(htmlP) lista.innerHTML += `<div class="mb-4"><b class="text-[10px] text-[#caa85c] ml-1 uppercase">${cat.val().name}</b><div class="mt-1">${htmlP}</div></div>`;
+            });
+        });
+    });
+}
+
+function editarProduto(id) {
+    db.ref('products/'+id).once('value', s => {
+        const p = s.val();
+        const nNome = prompt("Nome:", p.name);
+        const nPreco = prompt("Preço:", p.price);
+        const nSku = prompt("SKU:", p.sku);
+        const nPeso = prompt("Peso (g):", p.peso || p.weight || 0);
+        if(nNome) db.ref('products/'+id).update({ name:nNome, price:Number(nPreco), sku:nSku, peso:Number(nPeso) }).then(carregarProdutos);
+    });
+}
+
+function carregarPedidos() {
+    db.ref('orders').on('value', s => {
+        const lista = document.getElementById('listaPedidos');
+        lista.innerHTML = '';
+        s.forEach(ped => {
+            const p = ped.val();
+            lista.innerHTML += `<div class="card border-l-4 border-[#caa85c]">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente'}</b><br>
+                        <small class="text-gray-500">${p.data || ''} | ${p.itens ? (Array.isArray(p.itens) ? p.itens.length : Object.keys(p.itens).length) : 0} itens</small>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-xs">${fMoeda(p.total)}</div>
+                        <div class="flex gap-1 mt-2">
+                             <button class="btn p-1 bg-blue-900" onclick="duplicarPedido('${ped.key}')">📑</button>
+                             <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
+                             <button class="btn p-1 bg-red-900" onclick="excluirPedido('${ped.key}')">🗑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    });
+}
+
+function abrirEditorPedido(id) {
+    pedidoEditando = id;
+    db.ref('orders/'+id).once('value', s => {
+        const p = s.val();
+        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
+        document.getElementById('edNomeEntrega').value = p.entrega?.nomeEntrega || '';
+        document.getElementById('edRua').value = p.entrega?.rua || '';
+        document.getElementById('edBairro').value = p.entrega?.bairro || '';
+        document.getElementById('edCidade').value = p.entrega?.cidade || '';
+        document.getElementById('edDescPromo').value = p.descontoPromo || 0;
+        document.getElementById('edDescPix').value = p.descontoPix || 0;
+        document.getElementById('edFrete').value = p.frete || 0;
+        document.getElementById('edItens').innerHTML = '';
+        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+        itens.forEach(addItemEditor);
+        recalcularTotalEd();
+        document.getElementById('editorPedido').classList.remove('hidden');
+    });
+}
+
+function addItemEditor(i={}) {
+    const div = document.createElement('div');
+    div.className = "card bg-black/40 border-[#222] mb-2 p-2";
+    div.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <input placeholder="SKU" value="${i.sku||''}" class="!mb-0 text-[10px]">
+            <input placeholder="Nome" value="${i.name||''}" class="!mb-0 text-[10px]">
+            <input type="number" placeholder="Peso" value="${i.peso||i.weight||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Preço" value="${i.price||i.precoFinal||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Qtd" value="${i.quantidade||i.qtd||1}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+        </div>
+        <button class="text-red-500 text-[9px] uppercase font-bold mt-1" onclick="this.parentElement.remove();recalcularTotalEd();">Remover Item</button>`;
+    document.getElementById('edItens').appendChild(div);
+}
+
+function recalcularTotalEd() {
+    let subtotal = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const inputs = div.querySelectorAll('input');
+        const preco = Number(inputs[3].value) || 0;
+        const qtd = Number(inputs[4].value) || 0;
+        subtotal += (preco * qtd);
+    });
+    const descP = Number(document.getElementById('edDescPromo').value) || 0;
+    const descX = Number(document.getElementById('edDescPix').value) || 0;
+    const frete = Number(document.getElementById('edFrete').value) || 0;
+    const total = subtotal - descP - descX + frete;
+    document.getElementById('totalPreview').innerText = fMoeda(total);
+}
+
+function salvarPedidoEditado() {
+    const itens = [];
+    let subtotal = 0, pesoTotal = 0, totalPecas = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const ins = div.querySelectorAll('input');
+        const item = { sku: ins[0].value, name: ins[1].value, peso: Number(ins[2].value), price: Number(ins[3].value), quantidade: Number(ins[4].value) };
+        subtotal += (item.price * item.quantidade);
+        pesoTotal += (item.peso * item.quantidade);
+        totalPecas += item.quantidade;
+        itens.push(item);
+    });
+    const dPromo = Number(document.getElementById('edDescPromo').value);
+    const dPix = Number(document.getElementById('edDescPix').value);
+    const frete = Number(document.getElementById('edFrete').value);
+    db.ref('orders/'+pedidoEditando).update({
+        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
+        entrega: { nomeEntrega: document.getElementById('edNomeEntrega').value, rua: document.getElementById('edRua').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value },
+        itens, subtotal, pesoTotal, totalPecas, descontoPromo: dPromo, descontoPix: dPix, frete, total: (subtotal - dPromo - dPix + frete)
+    }).then(() => { alert("Pedido Salvo!"); fecharEditorPedido(); });
+}
+
+function duplicarPedido(id) {
+    if(!confirm("Duplicar este pedido?")) return;
+    db.ref('orders/'+id).once('value', s => {
+        const novo = s.val();
+        novo.data = new Date().toLocaleString();
+        db.ref('orders').push(novo).then(() => alert("Pedido duplicado!"));
+    });
+}
+
+function excluirPedido(id) { if(confirm("Excluir pedido?")) db.ref('orders/'+id).remove(); }
+function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
+
+function imprimirRomaneio(id, tipo) {
+    db.ref('orders/' + id).once('value', sPed => {
+        const p = sPed.val();
+        db.ref('settings/empresa').once('value', sEmp => {
+            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
+            const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+            const isFin = [2, 3, 5, 6].includes(tipo); 
+            const comFoto = [3, 6].includes(tipo);    
+            const emGrid = tipo >= 4;                  
+            const subtotal = itens.reduce((acc, i) => acc + ((Number(i.price) || 0) * (Number(i.quantidade) || 0)), 0);
             
-            renderizarProdutos();
-            renderizarCategorias();
-            renderizarBanners();
-            atualizarSelects();
-        });
-    }
-
-    function showSection(id) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
-        document.getElementById('sectionTitle').innerText = id.charAt(0).toUpperCase() + id.slice(1);
-    }
-
-    // PRODUTOS
-    function renderizarProdutos() {
-        const container = document.getElementById('listaProdutos');
-        const search = document.getElementById('searchProd').value.toLowerCase();
-        const catFilter = document.getElementById('filterCat').value;
-        
-        container.innerHTML = '';
-        
-        Object.entries(dataCache.produtos).forEach(([id, p]) => {
-            if(search && !p.name.toLowerCase().includes(search)) return;
-            if(catFilter && p.category !== catFilter) return;
-
-            const card = document.createElement('div');
-            card.className = 'card flex gap-4 items-center';
-            card.innerHTML = `
-                <img src="${p.image}" class="w-16 h-16 rounded-lg object-cover bg-black">
-                <div class="flex-1">
-                    <h4 class="font-bold text-sm line-clamp-1">${p.name}</h4>
-                    <p class="text-[#caa85c] font-bold text-xs">R$ ${parseFloat(p.price).toFixed(2)}</p>
-                    <p class="text-[10px] text-gray-500">${p.category || 'Sem categoria'}</p>
+            let html = `
+            <div style="padding:8mm; font-family:Arial, sans-serif; color:#000; background:#fff;">
+                <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
+                    <h1 style="margin:0; font-size:22px; text-transform:uppercase; letter-spacing:3px;">${emp.nome}</h1>
+                    <div style="font-size:9px; font-weight:bold; color: #444;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
                 </div>
-                <div class="flex flex-col gap-1">
-                    <button onclick="editarProduto('${id}')" class="btn p-2">✏️</button>
-                    <button onclick="excluirItem('products/${id}')" class="btn p-2 text-red-500">🗑️</button>
+                <table style="width:100%; border-collapse: separate; border-spacing: 5px 0; margin-bottom:15px;">
+                    <tr>
+                        <td style="width:50%; border: 1px solid #ccc; border-radius: 8px; padding:8px; vertical-align:top; font-size:10px;">
+                            <b style="color:#caa85c; font-size:8px; text-transform:uppercase;">Cliente</b><br>
+                            <b>${p.cliente?.nome || '---'}</b><br>${p.cliente?.telefone || '---'}
+                        </td>
+                        <td style="width:50%; border: 1px solid #ccc; border-radius: 8px; padding:8px; vertical-align:top; font-size:10px;">
+                            <b style="color:#caa85c; font-size:8px; text-transform:uppercase;">Entrega</b><br>
+                            <b>${p.entrega?.nomeEntrega || p.cliente?.nome}</b><br>${p.entrega?.rua || ''} - ${p.entrega?.bairro || ''}<br>${p.entrega?.cidade || ''}
+                        </td>
+                    </tr>
+                </table>`;
+
+            if (emGrid) {
+                html += `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">`;
+                itens.forEach(i => {
+                    html += `<div style="border: 1px solid #ddd; border-radius: 10px; padding: 8px; page-break-inside: avoid;">
+                        ${comFoto ? `<img src="${i.image || ''}" style="width: 100%; height: 80px; object-fit: contain; margin-bottom: 5px;">` : ''}
+                        <div style="font-size: 10px; font-weight: bold;">${i.sku || 'S/SKU'}</div>
+                        <div style="font-size: 9px; text-transform: uppercase;">${i.name || ''}</div>
+                        <div style="margin-top: 6px; background: #f4f4f4; padding: 4px; display:flex; justify-content:space-between;">
+                            <span style="font-size: 9px;">QTD: ${i.quantidade}</span>
+                            ${isFin ? `<span style="font-size: 10px; font-weight: bold;">${fMoeda(i.price * i.quantidade)}</span>` : ''}
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } else {
+                html += `<table style="width:100%; border-collapse:collapse; font-size:10px;">
+                    <thead style="background:#eee;"><tr>
+                        ${comFoto ? '<th style="padding:4px; border:1px solid #ccc; width:50px;">Foto</th>' : ''}
+                        <th style="padding:4px; border:1px solid #ccc; text-align:left;">Produto</th>
+                        <th style="padding:4px; border:1px solid #ccc; width:60px;">Peso</th>
+                        <th style="padding:4px; border:1px solid #ccc; width:40px;">Qtd</th>
+                        ${isFin ? '<th style="padding:4px; border:1px solid #ccc; text-align:right;">Subtotal</th>' : ''}
+                    </tr></thead><tbody>`;
+                itens.forEach(i => {
+                    html += `<tr>
+                        ${comFoto ? `<td style="border:1px solid #ccc; text-align:center;"><img src="${i.image || ''}" style="width:35px;"></td>` : ''}
+                        <td style="padding:4px; border:1px solid #ccc;"><b>${i.sku}</b> - ${i.name}</td>
+                        <td style="padding:4px; border:1px solid #ccc; text-align:center;">${(i.peso || 0).toFixed(2)}g</td>
+                        <td style="padding:4px; border:1px solid #ccc; text-align:center;">${i.quantidade}</td>
+                        ${isFin ? `<td style="padding:4px; border:1px solid #ccc; text-align:right;">${fMoeda(i.price * i.quantidade)}</td>` : ''}
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+            }
+
+            html += `<div style="margin-top: 15px; border: 1.5px solid #caa85c; border-radius: 10px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="font-size: 10px; width: 45%;">
+                        <b style="color:#caa85c; text-transform:uppercase;">Resumo</b><br>
+                        Modelos: <b>${itens.length}</b> | Peças: <b>${p.totalPecas || 0}</b> | Peso: <b>${(p.pesoTotal || 0).toFixed(2)}g</b>
+                    </div>
+                    <div style="width: 50%; text-align: right;">
+                        ${isFin ? `<table style="width:100%; font-size:10px;">
+                            <tr><td>Subtotal Itens:</td><td>${fMoeda(subtotal)}</td></tr>
+                            <tr><td>Total Final:</td><td style="font-size:16px; font-weight:bold;">${fMoeda(p.total)}</td></tr>
+                        </table>` : '<span style="font-weight:bold; color:#caa85c;">CONFERÊNCIA</span>'}
+                    </div>
                 </div>
-            `;
-            container.appendChild(card);
+            </div></div>`;
+            
+            document.getElementById('print-area').innerHTML = html;
+            setTimeout(() => { window.print(); }, 700);
         });
-    }
+    });
+}
 
-    function filtrarProdutos() {
-        renderizarProdutos();
-    }
-
-    function editarProduto(id) {
-        const p = dataCache.produtos[id];
-        const modalBody = document.getElementById('modalBody');
-        modalBody.innerHTML = `
-            <div class="grid gap-4">
-                <div><label class="text-[10px] uppercase font-bold text-gray-500">Nome do Produto</label>
-                <input id="edit_name" value="${p.name}" class="w-full"></div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-[10px] uppercase font-bold text-gray-500">Preço (R$)</label>
-                    <input type="number" step="0.01" id="edit_price" value="${p.price}" class="w-full"></div>
-                    <div><label class="text-[10px] uppercase font-bold text-gray-500">Categoria</label>
-                    <select id="edit_cat" class="w-full">${gerarOptionsCategorias(p.category)}</select></div>
-                </div>
-
-                <div><label class="text-[10px] uppercase font-bold text-gray-500">URL da Imagem</label>
-                <input id="edit_img" value="${p.image}" class="w-full"></div>
-
-                <div><label class="text-[10px] uppercase font-bold text-gray-500">Descrição</label>
-                <textarea id="edit_desc" class="w-full h-24">${p.description || ''}</textarea></div>
-            </div>
-        `;
-        
-        document.getElementById('modalTitle').innerText = "Editar Produto";
-        document.getElementById('modal').style.display = 'flex';
-        document.getElementById('btnSalvar').onclick = () => salvarProduto(id);
-    }
-
-    function salvarProduto(id) {
-        const updates = {
-            name: document.getElementById('edit_name').value,
-            price: document.getElementById('edit_price').value,
-            category: document.getElementById('edit_cat').value,
-            image: document.getElementById('edit_img').value,
-            description: document.getElementById('edit_desc').value
-        };
-        db.ref('products/' + id).update(updates).then(() => fecharModal());
-    }
-
-    // CATEGORIAS
-    function renderizarCategorias() {
-        const container = document.getElementById('listaCategorias');
-        container.innerHTML = '';
-        
-        Object.entries(dataCache.categorias).forEach(([id, c]) => {
-            const card = document.createElement('div');
-            card.className = 'card text-center';
-            card.innerHTML = `
-                <div class="w-12 h-12 bg-[#222] rounded-full flex items-center justify-center mx-auto mb-3 text-xl">${c.icon || '📁'}</div>
-                <h4 class="font-bold uppercase text-xs tracking-widest">${c.name}</h4>
-                <div class="mt-4 flex justify-center gap-2">
-                    <button onclick="editarCategoria('${id}')" class="btn px-4">Editar</button>
-                    <button onclick="excluirItem('categories/${id}')" class="btn text-red-500">✕</button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
-
-    function editarCategoria(id) {
-        const c = dataCache.categorias[id];
-        const modalBody = document.getElementById('modalBody');
-        modalBody.innerHTML = `
-            <div class="grid gap-4">
-                <div><label>Nome da Categoria</label>
-                <input id="cat_name" value="${c.name}" class="w-full"></div>
-                <div><label>Emoji/Ícone</label>
-                <input id="cat_icon" value="${c.icon || ''}" class="w-full" placeholder="Ex: 💍"></div>
-            </div>
-        `;
-        document.getElementById('modalTitle').innerText = "Editar Categoria";
-        document.getElementById('modal').style.display = 'flex';
-        document.getElementById('btnSalvar').onclick = () => {
-            db.ref('categories/' + id).update({
-                name: document.getElementById('cat_name').value,
-                icon: document.getElementById('cat_icon').value
-            }).then(() => fecharModal());
-        };
-    }
-
-    // BANNERS
-    function renderizarBanners() {
-        const container = document.getElementById('listaBanners');
-        container.innerHTML = '';
-        
-        Object.entries(dataCache.banners).forEach(([id, b]) => {
-            const item = document.createElement('div');
-            item.className = 'flex gap-4 items-center p-3 bg-black/30 rounded-lg';
-            item.innerHTML = `
-                <img src="${b.image}" class="w-32 h-12 object-cover rounded border border-[#333]">
-                <input class="flex-1 text-xs" value="${b.image}" onchange="db.ref('banners/${id}/image').set(this.value)">
-                <button onclick="excluirItem('banners/${id}')" class="text-red-500">✕</button>
-            `;
-            container.appendChild(item);
-        });
-    }
-
-    // AUXILIARES
-    function abrirModalAdd() {
-        const section = document.querySelector('section.active').id;
-        if(section === 'produtos') editarProduto(Date.now());
-        else if(section === 'categorias') editarCategoria(Date.now());
-        else if(section === 'banners') {
-            const id = Date.now();
-            db.ref('banners/' + id).set({ image: 'https://via.placeholder.com/1200x400' });
-        }
-    }
-
-    function fecharModal() {
-        document.getElementById('modal').style.display = 'none';
-    }
-
-    function excluirItem(path) {
-        if(confirm("Deseja realmente excluir este item?")) {
-            db.ref(path).remove();
-        }
-    }
-
-    function gerarOptionsCategorias(selected) {
-        let html = '<option value="">Sem Categoria</option>';
-        Object.values(dataCache.categorias).forEach(c => {
-            html += `<option value="${c.name}" ${selected === c.name ? 'selected' : ''}>${c.name}</option>`;
-        });
-        return html;
-    }
-
-    function atualizarSelects() {
-        const filter = document.getElementById('filterCat');
-        const current = filter.value;
-        filter.innerHTML = '<option value="">Todas Categorias</option>' + gerarOptionsCategorias(current);
-    }
+window.onload = () => carregarEmpresa();
 </script>
-
 </body>
 </html>
