@@ -2,187 +2,130 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Manutenção • Abellize</title>
+    <title>Painel Administrativo • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <script>
-        // Redirecionamento Automático Imediato
-        const seuNumero = "5519988207658";
-        const mensagem = "Olá! O catálogo está em manutenção técnica, mas estou disponível para atendimento por aqui.";
-        
-        window.location.href = `https://api.whatsapp.com/send?phone=${seuNumero}&text=${encodeURIComponent(mensagem)}`;
-    </script>
-</head>
-<body style="background: #0b0b0b;">
-    <div style="display:flex; justify-content:center; align-items:center; height:100vh; color:#caa85c; font-family:sans-serif;">
-        <p>Redirecionando para o atendimento via WhatsApp...</p>
-    </div>
-</body>
-</html>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
         body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
         nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
         section { display:none; min-height:300px; }
         section.active { display:block; }
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
-        .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
-        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; }
-        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
-        #mainModal.active { display: flex; }
-        @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: #fff; color: #000; }
-        }
+        .btn-gold { background:#caa85c; color:#000; font-weight:bold; }
+        .status-badge { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
-    Abella Joias • Gestão Total
-</header>
+    <nav class="flex justify-around bg-black border-b border-[#222] sticky top-0 z-50">
+        <button onclick="tab('pedidos')" class="p-4 text-xs font-bold uppercase active" id="btn-pedidos">Pedidos</button>
+        <button onclick="location.href='ofertas.html'" class="p-4 text-xs font-bold uppercase text-gray-500">Marketing</button>
+        <button onclick="tab('config')" class="p-4 text-xs font-bold uppercase" id="btn-config">Config</button>
+    </nav>
 
-<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
-    <button type="button" class="btn active" onclick="showTab('pedidos', this)">Pedidos</button>
-    <button type="button" class="btn" onclick="showTab('produtos', this)">Produtos</button>
-    <button type="button" class="btn" onclick="showTab('categorias', this)">Categorias</button>
-    <button type="button" class="btn" onclick="showTab('promocoes', this)">Promoções</button>
-    <button type="button" class="btn" onclick="showTab('empresa', this)">Empresa</button>
-</nav>
-
-<main class="p-6 max-w-4xl mx-auto">
-    <section id="pedidos" class="active">
-        <div id="listaPedidos" class="grid gap-4"></div>
-    </section>
-
-    <section id="produtos"><div id="listaProdutos" class="grid gap-2"></div></section>
-    <section id="categorias">
-        <div class="card mb-4">
-            <input id="newCatName" placeholder="Nome da Nova Categoria">
-            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
-        </div>
-        <div id="listaCategorias" class="grid gap-2"></div>
-    </section>
-    <section id="promocoes">
-        <div class="grid md:grid-cols-2 gap-4">
-            <div class="card text-center border-[#caa85c]/30">
-                <h2 class="text-[#caa85c] font-bold uppercase text-xs mb-4">Descontos Categoria</h2>
-                <button class="btn-gold w-full" onclick="abrirPainelPromocoes()">GERENCIAR</button>
+    <section id="pedidos" class="p-4 active">
+        <h2 class="text-[#caa85c] font-bold mb-4 serif uppercase tracking-widest text-sm">Gestão de Vendas</h2>
+        <div id="lista-pedidos" class="space-y-3">
             </div>
-            <div class="card text-center border-blue-900/30">
-                <h2 class="text-blue-400 font-bold uppercase text-xs mb-4">Descontos Atacado</h2>
-                <button class="btn bg-blue-900 text-white w-full" onclick="abrirPainelPromocoesValor()">CONFIGURAR</button>
+    </section>
+
+    <div id="modalPedido" class="fixed inset-0 bg-black/95 z-[60] hidden overflow-y-auto p-4">
+        <div class="max-w-2xl mx-auto bg-[#141414] border border-[#333] rounded-3xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="gold-text font-bold uppercase">Detalhes do Pedido</h3>
+                <button onclick="fecharPedido()" class="text-gray-500 text-xl">✕</button>
             </div>
+            <div id="conteudoPedido" class="text-xs space-y-4">
+                </div>
         </div>
-    </section>
-    <section id="empresa">
-        <div class="card space-y-3">
-            <input id="empNome" placeholder="Nome da Loja">
-            <input id="empWhats" placeholder="WhatsApp">
-            <button class="btn-gold w-full" onclick="salvarEmpresa()">SALVAR</button>
-        </div>
-    </section>
-</main>
-
-<div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[101] p-4">
-  <div class="bg-[#111] w-full max-w-5xl rounded-2xl p-6 overflow-auto max-h-[95vh] border border-[#333]">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-[#caa85c] font-bold text-xl uppercase">Editor de Pedido</h2>
-        <div id="totalPreview" class="text-right text-[#caa85c] font-bold text-2xl">R$ 0,00</div>
     </div>
-    <div class="grid md:grid-cols-2 gap-6 mb-6">
-      <div class="card">
-        <input id="edClienteNome" placeholder="Nome do Cliente">
-        <input id="edClienteTel" placeholder="WhatsApp">
-      </div>
-      <div class="card">
-        <input id="edNomeEntrega" placeholder="Destinatário">
-        <input id="edRua" placeholder="Endereço Completo">
-      </div>
-    </div>
-    <div id="edItens" class="space-y-2 mb-4"></div>
-    <div class="flex flex-wrap gap-2 justify-center border-t border-[#222] pt-6 mb-6">
-        <button class="btn bg-gray-800" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
-        <button class="btn bg-blue-900" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
-        </div>
-    <div class="flex gap-4">
-        <button class="flex-1 btn text-red-500" onclick="fecharEditorPedido()">DESCARTAR</button>
-        <button class="flex-1 btn-gold" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
-    </div>
-  </div>
-</div>
-
-<div id="mainModal" class="fixed inset-0 bg-black/95 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-2xl rounded-2xl overflow-hidden">
-        <div id="modalBody" class="p-6 overflow-y-auto" style="max-height: 70vh;"></div>
-        <button onclick="fecharModal()" class="btn w-full">Fechar</button>
-    </div>
-</div>
-
-<div id="print-area"></div>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let pedidoEditando = null;
 
-function showTab(id, btn) {
-    document.querySelectorAll('section, nav button').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    btn.classList.add('active');
-    if (id === 'pedidos') carregarPedidos();
-    if (id === 'produtos') carregarProdutos();
+function tab(name) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    document.getElementById('btn-'+name).classList.add('active');
 }
 
-function carregarPedidos() {
-    db.ref('orders').on('value', s => {
-        const list = document.getElementById('listaPedidos');
-        list.innerHTML = '';
-        s.forEach(child => {
-            const o = child.val();
-            const key = child.key;
-            list.innerHTML += `
-                <div class="card border-l-4 border-[#caa85c]">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs font-bold uppercase">${o.cliente.nome}</p>
-                            <p class="text-[10px] text-gray-500">${o.data}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="abrirEditor('${key}')" class="btn border-blue-500 text-blue-500">EDITAR</button>
-                            <button onclick="duplicarPedido('${key}')" class="btn">COPIAR</button>
-                            <button onclick="excluirPedido('${key}')" class="btn text-red-500">X</button>
-                        </div>
-                    </div>
-                </div>`;
-        });
+// Escuta novos pedidos
+db.ref('orders').on('value', snap => {
+    const list = document.getElementById('lista-pedidos');
+    list.innerHTML = '';
+    snap.forEach(child => {
+        const p = child.val();
+        list.innerHTML += `
+            <div class="card flex justify-between items-center" onclick="verPedido('${child.key}')">
+                <div>
+                    <p class="font-bold uppercase text-sm">${p.cliente.nome}</p>
+                    <p class="text-[10px] text-gray-500">${p.data}</p>
+                </div>
+                <div class="text-right">
+                    <p class="gold-text font-bold">R$ ${p.resumo.total.toFixed(2)}</p>
+                    <span class="status-badge bg-blue-900/30 text-blue-400">${p.status || 'Novo'}</span>
+                </div>
+            </div>`;
     });
-}
+});
 
-function abrirEditor(id) {
-    db.ref('orders/'+id).once('value', s => {
-        pedidoEditando = id;
-        const o = s.val();
-        document.getElementById('edClienteNome').value = o.cliente.nome;
-        document.getElementById('editorPedido').classList.remove('hidden');
-        // Adicione a lógica de carregar itens aqui conforme index6.txt
+async function verPedido(id) {
+    const snap = await db.ref('orders/'+id).once('value');
+    const p = snap.val();
+    const modal = document.getElementById('modalPedido');
+    const box = document.getElementById('conteudoPedido');
+    
+    let itensHtml = '';
+    p.itens.forEach(i => {
+        itensHtml += `<div class="flex justify-between border-b border-[#222] py-2">
+            <span>${i.quantidade}x ${i.name}</span>
+            <span class="font-bold">R$ ${(i.price * i.quantidade).toFixed(2)}</span>
+        </div>`;
     });
+
+    box.innerHTML = `
+        <div class="grid grid-cols-2 gap-4 bg-black/40 p-4 rounded-2xl">
+            <div><p class="text-gray-500 uppercase text-[9px]">Cliente</p><p class="font-bold">${p.cliente.nome}</p></div>
+            <div><p class="text-gray-500 uppercase text-[9px]">WhatsApp</p><p class="font-bold">${p.cliente.tel}</p></div>
+            <div class="col-span-2"><p class="text-gray-500 uppercase text-[9px]">Endereço</p><p class="font-bold">${p.cliente.cidade}</p></div>
+        </div>
+        
+        <div class="space-y-1">
+            <p class="text-[#caa85c] font-black uppercase text-[10px] mb-2">Itens do Pedido</p>
+            ${itensHtml}
+        </div>
+
+        <div class="bg-black/60 p-4 rounded-2xl space-y-2">
+            <div class="flex justify-between"><span>Subtotal</span><span>R$ ${p.resumo.sub.toFixed(2)}</span></div>
+            <div class="flex justify-between text-green-500"><span>Desconto Aplicado</span><span>- R$ ${p.resumo.desc.toFixed(2)}</span></div>
+            <div class="flex justify-between text-lg font-black gold-text"><span>Total Final</span><span>R$ ${p.resumo.total.toFixed(2)}</span></div>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="alterarStatus('${id}', 'Em Produção')" class="flex-1 btn-gold p-3 rounded-xl uppercase font-bold text-[9px]">Em Produção</button>
+            <button onclick="alterarStatus('${id}', 'Enviado')" class="flex-1 bg-green-700 p-3 rounded-xl uppercase font-bold text-[9px]">Enviado</button>
+            <button onclick="excluirPedido('${id}')" class="bg-red-900/50 text-red-500 p-3 rounded-xl uppercase font-bold text-[9px]">Excluir</button>
+        </div>
+    `;
+    modal.classList.remove('hidden');
 }
 
-function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
-function fecharModal() { document.getElementById('mainModal').classList.add('hidden'); }
+function fecharPedido() { document.getElementById('modalPedido').classList.add('hidden'); }
 
-function duplicarPedido(id) {
-    db.ref('orders/'+id).once('value', s => {
-        const n = s.val();
-        n.data = new Date().toLocaleString();
-        db.ref('orders').push(n).then(() => alert("Pedido duplicado!"));
-    });
+function alterarStatus(id, status) {
+    db.ref('orders/'+id).update({ status }).then(() => fecharPedido());
 }
 
-function excluirPedido(id) { if(confirm("Apagar permanentemente?")) db.ref('orders/'+id).remove(); }
-
-// Implementar imprimirRomaneio conforme a lógica extensa do index6.txt original
+function excluirPedido(id) {
+    if(confirm("Deseja apagar este pedido permanentemente?")) {
+        db.ref('orders/'+id).remove().then(() => fecharPedido());
+    }
+}
 </script>
 </body>
 </html>
