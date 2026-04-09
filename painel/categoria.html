@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Catálogo de Produtos • Abella Joias</title>
+    <title>Abella Joias • Atacado de Luxo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -10,100 +10,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; padding-bottom: 80px; }
+        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
         .gold-bg { background: #caa85c; }
         
-        /* Header Estilizado */
+        /* Header e Nav */
         header { background: rgba(0,0,0,0.95); border-bottom: 1px solid #222; backdrop-blur: 10px; }
         .btn-nav { border: 1px solid #333; color: #888; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; text-transform: uppercase; }
-        .btn-nav:hover { border-color: #caa85c; color: #caa85c; }
-        .btn-nav.active { background: #caa85c; color: #000; border-color: #caa85c; }
+        .btn-nav:hover, .btn-nav.active { border-color: #caa85c; color: #caa85c; }
 
-        /* Card de Produto */
-        .card-prod { background:#141414; border-radius:20px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; overflow:hidden; position: relative; cursor: pointer; }
-        .card-prod:hover { border-color: #caa85c; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .img-container { width:100%; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; background:#1a1a1a; overflow:hidden; position:relative; }
-        .img-container img { width:100%; height:100%; object-fit:cover; transition: 0.5s; }
-        .card-prod:hover .img-container img { scale: 1.05; }
+        /* Banner Relâmpago (Marketing Manager) */
+        #bannerRelampago { background: linear-gradient(90deg, #1a1a1a, #000); border-bottom: 2px solid #caa85c; display: none; }
 
-        /* Selo de Promoção */
-        .promo-badge { position: absolute; top: 10px; left: 10px; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 6px; z-index: 10; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-
-        /* Modal Moderno */
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; padding: 20px; backdrop-blur: 5px; }
-        .modal.active { display:flex; }
-        .modal-content { background:#141414; border: 1px solid #2a2a2a; padding: 24px; border-radius: 24px; width: 100%; max-width: 450px; text-align: center; max-height: 85vh; overflow-y: auto; }
+        /* Grid de Categorias */
+        .card-cat { background:#141414; border-radius:24px; border:1px solid #2a2a2a; transition:.4s; overflow:hidden; position: relative; cursor: pointer; }
+        .card-cat:hover { border-color: #caa85c; transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
+        .img-cat { width:100%; aspect-ratio: 1/1.1; object-fit: cover; transition: 0.6s; }
+        .card-cat:hover .img-cat { scale: 1.08; opacity: 0.7; }
         
-        .grid-variacoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
-        .item-variacao { background: #0b0b0b; border: 1px solid #222; border-radius: 12px; padding: 10px; transition: 0.2s; }
-        .item-variacao:focus-within { border-color: #caa85c; }
-        .item-variacao span { display: block; font-size: 10px; color: #888; font-weight: bold; margin-bottom: 6px; text-transform: uppercase; }
-        
-        input[type="number"] { background: #1a1a1a; border: 1px solid #333; color: #fff; outline: none; text-align: center; width: 100%; border-radius: 8px; padding: 5px; font-weight: bold; }
+        .cat-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
+
+        /* Selos de Promoção */
+        .promo-tag { position: absolute; top: 15px; right: 15px; font-size: 9px; font-weight: 900; padding: 4px 12px; border-radius: 50px; text-transform: uppercase; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
 
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
-
-        @media (max-width: 640px) {
-            .grid-variacoes { grid-template-columns: repeat(2, 1fr); }
-            .card-prod { border-radius: 16px; }
-        }
     </style>
 </head>
 <body class="custom-scroll">
 
+<div id="bannerRelampago" class="py-3 px-4 text-center">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6">
+        <span id="textoRelampago" class="gold-text font-black uppercase text-[11px] tracking-widest italic"></span>
+        <div id="countdown" class="font-mono text-white font-bold text-sm bg-black/40 px-4 py-1 rounded-full border border-white/10"></div>
+    </div>
+</div>
+
 <header class="sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col items-center">
-        <h1 class="serif text-2xl gold-text tracking-widest uppercase mb-1" id="nomeLoja">Abella Joias</h1>
-        <p class="text-[9px] tracking-[3px] text-gray-500 font-bold mb-4 uppercase" id="sloganLoja">Atacado de Joias no Bruto</p>
+    <div class="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="text-center md:text-left">
+            <h1 class="serif text-2xl gold-text tracking-[0.2em] uppercase leading-none" id="nomeLoja">Abella Joias</h1>
+            <p class="text-[9px] tracking-[4px] text-gray-500 font-bold uppercase mt-1" id="sloganLoja">Carregando...</p>
+        </div>
         
-        <div class="flex gap-2 flex-wrap justify-center items-center">
-            <a href="index.html" class="btn-nav px-4 py-1.5 rounded-lg active">Categorias</a>
-            <a href="galvanicas.html" class="btn-nav px-4 py-1.5 rounded-lg border-dashed">Galvânicas</a>
-            <a href="carrinho.html" class="btn-nav px-4 py-1.5 rounded-lg flex items-center gap-2 bg-[#111]">
-                <span>🛒 Carrinho</span> 
-                <span id="contadorCarrinho" class="gold-text">R$ 0,00</span>
+        <div class="flex gap-2 items-center">
+            <a href="galvanicas.html" class="btn-nav px-5 py-2 rounded-xl">Galvânicas</a>
+            <a href="carrinho.html" class="btn-nav px-5 py-2 rounded-xl flex items-center gap-2 bg-[#111] border-[#caa85c]/30">
+                <span class="gold-text">🛒</span> 
+                <span id="valorCarrinho" class="text-white">R$ 0,00</span>
             </a>
         </div>
     </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-4 md:p-8">
-    <div class="flex items-center justify-between mb-8 border-b border-[#222] pb-4">
-        <h2 id="tituloCategoria" class="serif text-lg gold-text uppercase tracking-widest">Carregando...</h2>
-        <span class="text-[10px] text-gray-500 uppercase font-bold" id="qtdProdutos">0 Itens</span>
+<main class="max-w-7xl mx-auto p-6 md:p-12">
+    <div class="mb-12">
+        <h2 class="serif text-3xl text-white mb-2">Coleções</h2>
+        <div class="h-1 w-20 gold-bg rounded-full"></div>
     </div>
     
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+    <div id="gridCategorias" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
         </div>
 </main>
-
-<div id="modalQtd" class="modal">
-    <div class="modal-content custom-scroll">
-        <div class="flex justify-between items-start mb-4">
-            <div class="text-left">
-                <h3 class="serif gold-text text-lg leading-tight" id="modalNomeProd">---</h3>
-                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter" id="modalSkuProd">SKU: ---</p>
-            </div>
-            <button onclick="fecharModal()" class="text-gray-500 hover:text-white text-2xl">&times;</button>
-        </div>
-
-        <img id="modalImgProd" class="w-full aspect-square object-cover rounded-2xl mb-6 border border-[#2a2a2a] shadow-2xl">
-        
-        <p class="text-[10px] text-[#caa85c] font-black uppercase mb-4 tracking-widest">Grade de Pedido</p>
-        
-        <div id="containerOpcoes"></div>
-        
-        <div class="flex gap-3 mt-8">
-            <button onclick="fecharModal()" class="flex-1 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Cancelar</button>
-            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-black py-4 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-[#caa85c]/20 hover:scale-105 transition-transform">
-                Confirmar Itens
-            </button>
-        </div>
-    </div>
-</div>
 
 <script>
 const firebaseConfig = {
@@ -113,175 +82,84 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let produtoAtualParaAdd = null;
 const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-function atualizarContador() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const total = carrinho.reduce((acc, item) => acc + (parseFloat(item.precoFinal || item.price) * item.quantidade), 0);
-    document.getElementById('contadorCarrinho').innerText = fM(total);
-}
-
-async function carregarProdutos() {
-    const params = new URLSearchParams(window.location.search);
-    const catId = params.get('id');
-    if(!catId) { window.location.href = 'index.html'; return; }
-
-    const [empSnap, catSnap, promoSnap] = await Promise.all([
+async function inicializarLoja() {
+    // 1. Carregar Dados da Empresa e Marketing
+    const [empSnap, promoSnap, catSnap] = await Promise.all([
         db.ref('settings/empresa').once('value'),
-        db.ref('categories/' + catId).once('value'),
-        db.ref('settings/promocao').once('value')
+        db.ref('settings/promocao').once('value'),
+        db.ref('categories').once('value')
     ]);
 
     const empresa = empSnap.val() || {};
-    const categoria = catSnap.val() || {};
-    const promoGlobal = promoSnap.val() || {};
+    const promo = promoSnap.val() || {};
+    const categorias = catSnap.val() || {};
 
     document.getElementById('nomeLoja').innerText = empresa.nome || "Abella Joias";
-    document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
+    document.getElementById('sloganLoja').innerText = empresa.slogan || "Atacado de Joias no Bruto";
 
-    db.ref('products').on('value', snap => {
-        const grid = document.getElementById('gridProdutos');
-        grid.innerHTML = '';
-        let count = 0;
+    // 2. Lógica do Banner Relâmpago (Marketing Manager)
+    if (promo.ativa && promo.relampago?.ativa) {
+        const banner = document.getElementById('bannerRelampago');
+        const countdownEl = document.getElementById('countdown');
+        document.getElementById('textoRelampago').innerText = promo.relampago.titulo;
+        banner.style.display = 'block';
 
-        snap.forEach(s => {
-            const p = s.val();
-            if (p.category !== catId || p.paused) return;
-            count++;
+        const dataFim = new Date(promo.relampago.fim).getTime();
+        
+        const timer = setInterval(() => {
+            const agora = new Date().getTime();
+            const dist = dataFim - agora;
 
-            // Lógica de Preço e Promoção (Marketing Manager Align)
-            const promoAtiva = promoGlobal.ativa || false;
-            const pctDesc = (promoAtiva && categoria.promoAtiva) ? (categoria.promoPct || 0) : 0;
-            
-            const precoOriginal = parseFloat(p.price);
-            const precoFinal = pctDesc > 0 ? precoOriginal * (1 - pctDesc / 100) : precoOriginal;
-            const valorPix = precoFinal * (1 - ((empresa.descontoPix || 0) / 100));
-
-            const prodData = JSON.stringify({ ...p, key: s.key, precoFinal }).replace(/'/g,"&apos;");
-
-            grid.innerHTML += `
-                <div class="card-prod p-3 flex flex-col" onclick='prepararAdd(${prodData})'>
-                    <div class="img-container mb-4 rounded-2xl">
-                        ${pctDesc > 0 ? `
-                            <span class="promo-badge" style="background:${categoria.promoColor || '#caa85c'}; color:${categoria.promoTextColor || '#fff'}">
-                                ${categoria.promoTag || 'OFF'}
-                            </span>
-                        ` : ''}
-                        <img src="${p.image || 'https://via.placeholder.com/400'}" loading="lazy">
-                    </div>
-                    
-                    <div class="flex-1 px-1">
-                        <div class="flex justify-between items-start mb-1">
-                            <span class="text-[8px] text-gray-600 font-bold uppercase tracking-tighter">SKU: ${p.sku || '---'}</span>
-                            ${p.weight ? `<span class="text-[8px] text-[#caa85c] font-bold uppercase">${p.weight}g</span>` : ''}
-                        </div>
-                        <h3 class="text-[11px] font-bold uppercase mb-3 leading-tight text-gray-200 h-8 overflow-hidden line-clamp-2">${p.name}</h3>
-                        
-                        <div class="space-y-0.5 mb-4">
-                            ${pctDesc > 0 ? `<div class="text-[9px] text-gray-500 line-through">${fM(precoOriginal)}</div>` : ''}
-                            <div class="text-sm font-black gold-text">${fM(precoFinal)}</div>
-                            <div class="text-[10px] text-emerald-500 font-bold uppercase">No Pix: ${fM(valorPix)}</div>
-                        </div>
-                    </div>
-
-                    <button class="w-full gold-bg text-black py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:brightness-110 transition-all">
-                        Selecionar
-                    </button>
-                </div>`;
-        });
-        document.getElementById('qtdProdutos').innerText = `${count} Itens`;
-    });
-}
-
-function prepararAdd(p) {
-    produtoAtualParaAdd = p;
-    document.getElementById('modalNomeProd').innerText = p.name;
-    document.getElementById('modalSkuProd').innerText = `SKU: ${p.sku || '---'}`;
-    document.getElementById('modalImgProd').src = p.image || 'https://via.placeholder.com/300';
-    
-    const container = document.getElementById('containerOpcoes');
-    container.innerHTML = '';
-
-    if (p.variacaoTipo === 'Lista' && p.opcoesPersonalizadas) {
-        const opcoes = p.opcoesPersonalizadas.split(',').map(o => o.trim());
-        let html = '<div class="grid-variacoes">';
-        opcoes.forEach(opt => {
-            html += `
-                <div class="item-variacao">
-                    <span>${opt}</span>
-                    <input type="number" min="0" value="0" data-var="${opt}" class="input-var-qtd" onfocus="this.select()">
-                </div>`;
-        });
-        html += '</div>';
-        container.innerHTML = html;
-    } else if (p.variacaoTipo === 'Aro') {
-        const aros = ["10", "12", "14", "16", "18", "20", "22", "24", "26"];
-        let html = '<div class="grid-variacoes">';
-        aros.forEach(aro => {
-            html += `
-                <div class="item-variacao">
-                    <span>Aro ${aro}</span>
-                    <input type="number" min="0" value="0" data-var="${aro}" class="input-var-qtd" onfocus="this.select()">
-                </div>`;
-        });
-        html += '</div>';
-        container.innerHTML = html;
-    } else {
-        container.innerHTML = `
-            <div class="flex flex-col items-center py-4">
-                <span class="text-[10px] text-gray-500 uppercase font-bold mb-2">Quantidade</span>
-                <input type="number" id="inputQtdSimples" value="1" min="1" class="w-32 p-4 text-center text-2xl font-black border-2 border-[#caa85c] rounded-2xl bg-black text-white">
-            </div>`;
-    }
-    document.getElementById('modalQtd').classList.add('active');
-}
-
-document.getElementById('btnConfirmarAdd').onclick = () => {
-    let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const inputsVar = document.querySelectorAll('.input-var-qtd');
-    let adicionouAlgo = false;
-
-    if (inputsVar.length > 0) {
-        inputsVar.forEach(input => {
-            const qtd = parseInt(input.value);
-            if (qtd > 0) {
-                carrinho.push({
-                    ...produtoAtualParaAdd,
-                    name: `${produtoAtualParaAdd.name} (${input.dataset.var})`,
-                    variacaoEscolhida: input.dataset.var,
-                    quantidade: qtd
-                });
-                adicionouAlgo = true;
+            if (dist < 0) {
+                clearInterval(timer);
+                banner.style.display = 'none';
+                return;
             }
-        });
-    } else {
-        const qtd = parseInt(document.getElementById('inputQtdSimples').value);
-        if (qtd > 0) {
-            carrinho.push({ ...produtoAtualParaAdd, quantidade: qtd });
-            adicionouAlgo = true;
-        }
+
+            const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((dist % (1000 * 60)) / 1000);
+            countdownEl.innerText = `${h}h ${m}m ${s}s`;
+        }, 1000);
     }
 
-    if (adicionouAlgo) {
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        atualizarContador();
-        fecharModal();
-        // Feedback visual simples
-        const btn = document.getElementById('btnConfirmarAdd');
-        btn.innerText = "ADICIONADO!";
-        setTimeout(() => { btn.innerText = "CONFIRMAR ITENS"; }, 1500);
-    } else {
-        alert("Defina a quantidade desejada.");
-    }
-};
+    // 3. Renderizar Categorias com Selos de Promoção
+    const grid = document.getElementById('gridCategorias');
+    grid.innerHTML = '';
 
-function fecharModal() { document.getElementById('modalQtd').classList.remove('active'); }
+    Object.entries(categorias).forEach(([id, cat]) => {
+        if (cat.paused) return;
 
-window.onload = () => { 
-    carregarProdutos(); 
-    atualizarContador(); 
-};
+        // Verifica se a categoria tem promoção ativa no Marketing Manager
+        const temPromo = promo.ativa && cat.promoAtiva;
+
+        grid.innerHTML += `
+            <div class="card-cat" onclick="location.href='produtos.html?id=${id}'">
+                ${temPromo ? `
+                    <span class="promo-tag" style="background:${cat.promoColor || '#caa85c'}; color:${cat.promoTextColor || '#fff'}">
+                        ${cat.promoTag || 'OFERTA'}
+                    </span>
+                ` : ''}
+                <img src="${cat.image || 'https://via.placeholder.com/600x800'}" class="img-cat">
+                <div class="cat-overlay">
+                    <h3 class="serif text-xl text-white tracking-widest uppercase">${cat.name}</h3>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Ver Coleção Completa →</p>
+                </div>
+            </div>`;
+    });
+
+    atualizarResumoCarrinho();
+}
+
+function atualizarResumoCarrinho() {
+    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    const total = carrinho.reduce((acc, item) => acc + (parseFloat(item.precoFinal || item.price) * item.quantidade), 0);
+    document.getElementById('valorCarrinho').innerText = fM(total);
+}
+
+window.onload = inicializarLoja;
 </script>
 </body>
 </html>
