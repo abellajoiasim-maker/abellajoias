@@ -39,6 +39,11 @@
         transition: 0.4s;
     }
     .card-preview:hover { border-color: var(--gold); }
+
+    /* Scrollbar customizada para combinar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0b0b0b; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
 </style>
 </head>
 
@@ -63,45 +68,45 @@
             <div class="space-y-4">
                 <div>
                     <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">Nome da Empresa</label>
-                    <input id="nome" type="text" class="w-full p-3 rounded-xl text-sm">
+                    <input id="nome" type="text" placeholder="Nome da Galvânica" class="w-full p-3 rounded-xl text-sm">
                 </div>
                 
                 <div>
                     <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">Slogan ou Especialidade</label>
-                    <input id="descricao" type="text" class="w-full p-3 rounded-xl text-sm">
+                    <input id="descricao" type="text" placeholder="Ex: Especialista em Ouro 18k" class="w-full p-3 rounded-xl text-sm">
                 </div>
 
                 <div>
                     <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">Endereço Completo</label>
-                    <input id="endereco" type="text" class="w-full p-3 rounded-xl text-sm">
+                    <input id="endereco" type="text" placeholder="Rua, Número - Bairro, Cidade" class="w-full p-3 rounded-xl text-sm">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">WhatsApp (Ex: 5519...)</label>
-                        <input id="whatsapp" type="text" class="w-full p-3 rounded-xl text-sm">
+                        <input id="whatsapp" type="text" placeholder="Apenas números" class="w-full p-3 rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">Telefone Fixo</label>
-                        <input id="telefone" type="text" class="w-full p-3 rounded-xl text-sm">
+                        <input id="telefone" type="text" placeholder="(19) 0000-0000" class="w-full p-3 rounded-xl text-sm">
                     </div>
                 </div>
 
                 <div>
-                    <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">URL do Logotipo</label>
-                    <input id="imagem" type="text" class="w-full p-3 rounded-xl text-sm">
+                    <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">URL do Logotipo (Link da Imagem)</label>
+                    <input id="imagem" type="text" placeholder="https://link-da-imagem.jpg" class="w-full p-3 rounded-xl text-sm">
                 </div>
 
                 <div>
-                    <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">Selo (Ex: PARCEIRO)</label>
-                    <input id="selo" type="text" class="w-full p-3 rounded-xl text-sm">
+                    <label class="text-[9px] uppercase font-black text-zinc-500 mb-1 block">Selo Superior (Ex: PARCEIRO)</label>
+                    <input id="selo" type="text" placeholder="Ex: ABELLA GOLD" class="w-full p-3 rounded-xl text-sm">
                 </div>
 
                 <div class="pt-4 space-y-3">
                     <button onclick="salvarGalvanica()" id="btnSalvar" class="btn-gold w-full py-4 rounded-xl shadow-lg hover:brightness-110 transition-all">
-                        Salvar Alterações
+                        Salvar Galvânica
                     </button>
-                    <button onclick="limparForm()" id="btnCancelar" class="hidden w-full text-zinc-500 text-[10px] font-bold uppercase py-2">
+                    <button onclick="limparForm()" id="btnCancelar" class="hidden w-full text-zinc-500 text-[10px] font-bold uppercase py-2 text-center">
                         ✕ Cancelar Edição
                     </button>
                 </div>
@@ -111,11 +116,12 @@
 
     <div class="lg:col-span-7">
         <div class="flex justify-between items-center mb-8">
-            <h2 class="serif gold-text text-xl uppercase">Parceiros no Banco</h2>
+            <h2 class="serif gold-text text-xl uppercase tracking-widest">Empresas no Banco</h2>
             <div id="contador" class="bg-zinc-900 border border-zinc-800 px-4 py-1 rounded-full text-[10px] font-bold text-zinc-400">...</div>
         </div>
 
-        <div id="listaGalvanicas" class="space-y-4"></div>
+        <div id="listaGalvanicas" class="space-y-4">
+            </div>
     </div>
 
 </main>
@@ -132,47 +138,25 @@ const db = firebase.database();
 let editId = null;
 const campos = ['nome', 'descricao', 'endereco', 'telefone', 'whatsapp', 'imagem', 'selo'];
 
-/* FUNÇÃO PARA SALVAR / EDITAR */
+/* SALVAR OU ATUALIZAR */
 function salvarGalvanica(){
     const dados = {};
     campos.forEach(c => dados[c] = document.getElementById(c).value);
 
-    if(!dados.nome) return alert("Nome é obrigatório!");
+    if(!dados.nome) return alert("O nome da empresa é obrigatório!");
 
     if(editId){
-        db.ref('galvanicas/' + editId).set(dados).then(() => { alert("Atualizado!"); limparForm(); });
+        db.ref('galvanicas/' + editId).set(dados)
+          .then(() => { alert("Atualizado com sucesso!"); limparForm(); })
+          .catch(e => alert("Erro ao salvar: " + e));
     } else {
-        db.ref('galvanicas').push(dados).then(() => { alert("Cadastrado!"); limparForm(); });
+        db.ref('galvanicas').push(dados)
+          .then(() => { alert("Cadastrado com sucesso!"); limparForm(); })
+          .catch(e => alert("Erro ao salvar: " + e));
     }
 }
 
-/* FUNÇÃO PARA IMPORTAR AS 14 INICIAIS (CASO O BANCO ESTEJA VAZIO) */
-function verificarImportacao() {
-    db.ref('galvanicas').once('value', snap => {
-        if (!snap.exists()) {
-            const iniciais = [
-                { nome: "Franco Galvânica", descricao: "Mais de 20 anos de tradição em Ouro, Prata e Ródio.", endereco: "R: José Motta dos Santos, 113 - Jd. Adélia Cavicchia Grotta", telefone: "(19) 3451-6246", whatsapp: "5519984202600", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-5-300x129.jpg", selo: "PARCEIRO" },
-                { nome: "Costa Rica", descricao: "Especializada em banhos folheados com foco em alto padrão.", endereco: "Rua: Mário Lima, 241 - Bairro Jardim Anhanguera", whatsapp: "5519988760429", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0045-300x150.jpg", selo: "PARCEIRO" },
-                { nome: "Queen Galvânica", descricao: "Serviços de galvanoplastia com os melhores produtos.", endereco: "Rua: Arthur Salibe, 589 - Jd. Nova Suiça", whatsapp: "5519999702895", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0042-300x150.jpg", selo: "PARCEIRO" },
-                { nome: "Atenas Galvânica", descricao: "Atendimento comercial especializado para semijoias.", endereco: "Rua: Tancre Leitão, 34 - Jardim Aeroporto", whatsapp: "5519981226758", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0039.jpg", selo: "PARCEIRO" },
-                { nome: "4D Galvânica", descricao: "Soluções completas para fabricantes e empreendedores.", endereco: "Rua: Giocondo Negro, 316 - Vila Rosana", telefone: "(19) 3451-9651", whatsapp: "5519971796251", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-7-300x232.jpg", selo: "PARCEIRO" },
-                { nome: "Sul Folheados", descricao: "Galvanoplastia com credibilidade e pontualidade.", endereco: "Rua: Major Francisco Barcellos, 453 - Jd Glória", whatsapp: "5519983242156", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-6-300x121.jpg", selo: "PARCEIRO" },
-                { nome: "Viena Galvânica", descricao: "Excelência em serviços de galvanoplastia.", endereco: "Rua: João Bozza, 496 - Jd. Maria Buchi Modeneis", whatsapp: "5519992162908", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/Imagem-do-WhatsApp-de-2025-10-14-as-21.47.01_f45b979f.jpg", selo: "PARCEIRO" },
-                { nome: "Fiori Galvânica", descricao: "Foco na rapidez de entrega e qualidade do acabamento.", endereco: "Rua: Des. Júlio César da Silveira, 1352 - V. Claudia", telefone: "(19) 3704-4590", whatsapp: "5519983148195", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0041-300x150.jpg", selo: "PARCEIRO" },
-                { nome: "Amazon Galvânica", descricao: "Banhos em ouro, prata, ródio e verniz Diamond.", endereco: "Rua: Clarindo Peixoto de Oliveira, 201 - Jd Maria Buchi Modeneis", telefone: "(19) 3792-9005", whatsapp: "5519988839762", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0043-300x150.jpg", selo: "PARCEIRO" },
-                { nome: "Reluz Galvânica", descricao: "Três décadas de experiência em banhos duradouros.", endereco: "Av. Mal. Artur da Costa e Silva, 708 – Jd Glória", whatsapp: "5519993806585", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0044-300x150.jpg", selo: "PARCEIRO" },
-                { nome: "Magri Folheados", descricao: "Qualidade e honestidade em banho de ouro 18k.", endereco: "Rua: Roque Vaz Gonçalves, 88 - Jd Boa Vista", telefone: "(19) 3442-4287", whatsapp: "5519996942050", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/Imagem-do-WhatsApp-de-2025-10-18-as-12.02.21_cf8ffdba-300x150.jpg", selo: "PARCEIRO" },
-                { nome: "Banho Salvador", descricao: "Referência no mercado há mais de 30 anos.", endereco: "Rua: Paraná, 698 - Vila Rocha", whatsapp: "5519998173164", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/72dpi_0002_LOGO_SALVADOR_HORIZONTAL_FUNDO_CLARO.png", selo: "PARCEIRO" },
-                { nome: "Fenix Galvânica", descricao: "Focada em serviços especializados para semijoias.", endereco: "Rua: Maria Tomeo de Almeida, 94 - Jd Glória", whatsapp: "5519988292435", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0038.jpg", selo: "PARCEIRO" },
-                { nome: "ORO Galvânica", descricao: "Excelência em Banhos para Semijoias de Alto Padrão.", endereco: "Rua Pércio Machado Gomes, 243 - Jd Anhanguera", whatsapp: "5519989072453", imagem: "https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg", selo: "PARCEIRO" }
-            ];
-            iniciais.forEach(item => db.ref('galvanicas').push(item));
-        }
-    });
-}
-verificarImportacao();
-
-/* RENDERIZAR LISTA EM TEMPO REAL */
+/* CARREGAR LISTA EM TEMPO REAL */
 db.ref('galvanicas').on('value', snap => {
     const lista = document.getElementById('listaGalvanicas');
     lista.innerHTML = "";
@@ -183,30 +167,32 @@ db.ref('galvanicas').on('value', snap => {
         lista.innerHTML += `
             <div class="card-preview p-5 flex items-center gap-5 relative overflow-hidden group">
                 <div class="w-16 h-16 bg-black rounded-xl border border-zinc-800 flex items-center justify-center p-2 flex-shrink-0 group-hover:border-[#caa85c] transition">
-                    <img src="${g.imagem || ''}" class="max-w-full max-h-full object-contain">
+                    <img src="${g.imagem || 'https://via.placeholder.com/150'}" class="max-w-full max-h-full object-contain">
                 </div>
                 <div class="flex-1">
                     <div class="flex items-center gap-2">
                         <h3 class="serif gold-text font-bold uppercase text-sm">${g.nome}</h3>
                         ${g.selo ? `<span class="bg-[#caa85c] text-black text-[7px] font-black px-2 py-0.5 rounded-full uppercase">${g.selo}</span>` : ''}
                     </div>
-                    <p class="text-zinc-500 text-[10px] italic">${g.descricao || ''}</p>
+                    <p class="text-zinc-500 text-[10px] italic">${g.descricao || 'Sem descrição'}</p>
                     <p class="text-zinc-400 text-[9px] mt-1">📍 ${g.endereco}</p>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button onclick="editar('${s.key}')" class="bg-zinc-800 hover:bg-zinc-700 text-white text-[9px] font-bold py-2 px-4 rounded-lg uppercase">Editar</button>
-                    <button onclick="excluir('${s.key}')" class="text-red-500 hover:text-red-400 text-[9px] font-bold uppercase">Excluir</button>
+                    <button onclick="editar('${s.key}')" class="bg-zinc-800 hover:bg-zinc-700 text-white text-[9px] font-bold py-2 px-4 rounded-lg uppercase transition">Editar</button>
+                    <button onclick="excluir('${s.key}')" class="text-red-500 hover:text-red-400 text-[9px] font-bold uppercase transition">Excluir</button>
                 </div>
             </div>
         `;
     });
-    document.getElementById('contador').innerText = i + " CADASTRADAS";
+    document.getElementById('contador').innerText = i + " EMPRESAS";
 });
 
+/* EDITAR */
 function editar(id){
     db.ref('galvanicas/' + id).once('value').then(s => {
         const g = s.val();
         campos.forEach(c => document.getElementById(c).value = g[c] || "");
+        
         editId = id;
         document.getElementById('formTitle').innerText = "Editando Parceiro";
         document.getElementById('btnSalvar').innerText = "Atualizar Cadastro";
@@ -215,16 +201,20 @@ function editar(id){
     });
 }
 
+/* LIMPAR FORMULÁRIO */
 function limparForm(){
     campos.forEach(c => document.getElementById(c).value = "");
     editId = null;
     document.getElementById('formTitle').innerText = "Cadastro de Parceiro";
-    document.getElementById('btnSalvar').innerText = "Salvar Alterações";
+    document.getElementById('btnSalvar').innerText = "Salvar Galvânica";
     document.getElementById('btnCancelar').classList.add('hidden');
 }
 
+/* EXCLUIR */
 function excluir(id){
-    if(confirm("Deseja realmente excluir este parceiro?")) db.ref('galvanicas/' + id).remove();
+    if(confirm("Tem certeza que deseja remover este parceiro permanentemente?")) {
+        db.ref('galvanicas/' + id).remove();
+    }
 }
 </script>
 
