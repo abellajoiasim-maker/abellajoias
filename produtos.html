@@ -2,144 +2,169 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Modelos | Abella Joias</title>
+    <title>Produtos • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #0b0b0b; color: #eee; font-family: 'Inter', sans-serif; }
-        .card-prod { background:#141414; border:1px solid #2a2a2a; border-radius:20px; transition: 0.3s; }
-        .card-prod:hover { border-color: #caa85c; }
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center; padding:20px; backdrop-blur: 5px; }
-        .modal.active { display:flex; }
-        .modal-content { background:#141414; border:1px solid #2a2a2a; padding:25px; border-radius:30px; width:100%; max-width:400px; }
-        input[type="number"] { background:#000; border:1px solid #333; color:#fff; text-align:center; padding:8px; border-radius:10px; width:100%; font-weight:bold; }
-        .gold-bg { background: #caa85c; color: #000; }
+        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold-text { color: #caa85c; }
+        .card-produto { transition: all 0.3s ease; border: 1px solid #222; }
+        .card-produto:hover { transform: translateY(-5px); border-color: #caa85c; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     </style>
 </head>
 <body>
 
-<div class="p-5 border-b border-[#222] flex items-center justify-between sticky top-0 bg-[#0b0b0b]/90 backdrop-blur-md z-50">
-    <button onclick="history.back()" class="text-[#caa85c] font-bold text-xs uppercase tracking-widest">← Voltar</button>
-    <h2 id="tituloPagina" class="text-white font-black uppercase text-sm tracking-widest">Carregando...</h2>
-    <a href="carrinho.html" class="text-lg">🛒</a>
-</div>
+    <header class="sticky top-0 z-50 py-4 bg-black/90 border-b border-[#222] backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <a href="index.html" class="serif text-xl gold-text tracking-widest uppercase">Abella Joias</a>
+            <a href="carrinho.html" class="flex items-center gap-2 bg-[#111] border border-[#caa85c]/30 px-4 py-2 rounded-xl">
+                <span class="gold-text text-sm">🛒</span>
+                <span id="valCarrinho" class="text-xs font-bold uppercase tracking-widest">R$ 0,00</span>
+            </a>
+        </div>
+    </header>
 
-<div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 p-5"></div>
+    <main class="max-w-7xl mx-auto p-6">
+        <div class="flex items-center gap-4 mb-8">
+            <a href="index.html" class="text-[#caa85c] text-[10px] font-extrabold border border-[#caa85c]/30 px-3 py-1 rounded-full hover:bg-[#caa85c] hover:text-black transition-all uppercase tracking-widest">❮ Voltar</a>
+            <h2 id="tituloCategoria" class="serif text-2xl text-white uppercase tracking-widest">Carregando...</h2>
+        </div>
 
-<div id="modalAdd" class="modal">
-    <div class="modal-content">
-        <div class="flex justify-between items-start mb-4">
-            <div class="text-left">
-                <h3 id="mNome" class="text-white font-bold leading-tight">---</h3>
-                <p id="mSku" class="text-[10px] text-gray-500 font-bold uppercase">SKU: ---</p>
+        <div id="gridProdutos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="col-span-full text-center py-20 text-gray-600 italic animate-pulse uppercase tracking-[4px] text-xs">
+                Aguarde, selecionando peças exclusivas...
             </div>
-            <button onclick="fecharModal()" class="text-gray-500 text-xl">&times;</button>
         </div>
-        <img id="mImg" class="w-full aspect-square object-cover rounded-2xl mb-6 border border-[#222]">
-        
-        <div id="areaVariações"></div>
+    </main>
 
-        <div class="flex gap-3 mt-8">
-            <button onclick="fecharModal()" class="flex-1 py-3 text-gray-500 font-bold uppercase text-[10px]">Sair</button>
-            <button id="btnConfirmar" class="flex-1 gold-bg py-3 rounded-xl font-black uppercase text-[10px] shadow-lg">Confirmar</button>
-        </div>
-    </div>
-</div>
+    <script>
+        // CONFIGURAÇÃO FIREBASE
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
+            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-<script>
-    const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUkn?AyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    
-    let pAtivo = null;
-    const catId = new URLSearchParams(window.location.search).get('id');
+        const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-    async function carregarModelos() {
-        const [pSnap, cSnap, prSnap] = await Promise.all([
-            db.ref('products').once('value'),
-            db.ref(`categories/${catId}`).once('value'),
-            db.ref('settings/promocao').once('value')
-        ]);
+        async function carregarPagina() {
+            const params = new URLSearchParams(window.location.search);
+            const categoriaId = params.get('id');
+            const grid = document.getElementById('gridProdutos');
 
-        const categoria = cSnap.val();
-        const promo = prSnap.val();
-        document.getElementById('tituloPagina').innerText = categoria.name;
+            if (!categoriaId) {
+                grid.innerHTML = '<p class="col-span-full text-center py-10">Categoria não identificada.</p>';
+                return;
+            }
 
-        const grid = document.getElementById('gridProdutos');
-        grid.innerHTML = '';
-        
-        pSnap.forEach(s => {
-            const p = s.val();
-            if(p.category !== catId || p.paused) return;
-
-            const desc = (promo.ativa && categoria.promoAtiva) ? (categoria.promoPct || 0) : 0;
-            const precoFinal = p.price * (1 - desc/100);
-
-            const card = document.createElement('div');
-            card.className = 'card-prod p-3 cursor-pointer';
-            card.onclick = () => abrirModal(p, precoFinal, s.key);
-            card.innerHTML = `
-                <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
-                <p class="text-[9px] font-bold text-gray-600 uppercase">SKU: ${p.sku}</p>
-                <h4 class="text-[11px] font-bold truncate text-gray-200">${p.name}</h4>
-                <div class="mt-2">
-                    ${desc > 0 ? `<span class="text-[9px] text-gray-500 line-through">R$ ${p.price.toFixed(2)}</span>` : ''}
-                    <p class="text-[#caa85c] font-black text-sm">R$ ${precoFinal.toFixed(2)}</p>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-    }
-
-    function abrirModal(p, precoFinal, id) {
-        pAtivo = { ...p, id, precoFinal };
-        document.getElementById('mNome').innerText = p.name;
-        document.getElementById('mSku').innerText = `SKU: ${p.sku}`;
-        document.getElementById('mImg').src = p.image;
-        
-        const area = document.getElementById('areaVariações');
-        area.innerHTML = '';
-
-        if(p.variacaoTipo === 'Aro') {
-            const aros = ["12","14","16","18","20","22","24","26"];
-            let html = '<p class="text-[10px] text-[#caa85c] font-black mb-3 uppercase text-center">Grade de Aros</p><div class="grid grid-cols-4 gap-2">';
-            aros.forEach(aro => {
-                html += `<div><span class="text-[8px] block text-center text-gray-500 mb-1">${aro}</span><input type="number" class="input-aro" data-aro="${aro}" value="0" min="0"></div>`;
+            // BUSCA NOME DA CATEGORIA
+            db.ref('categories/' + categoriaId).once('value', s => {
+                if(s.exists()) document.getElementById('tituloCategoria').innerText = s.val().name;
             });
-            area.innerHTML = html + '</div>';
-        } else {
-            area.innerHTML = `<p class="text-[10px] text-[#caa85c] font-black mb-3 uppercase text-center">Quantidade</p>
-                              <input type="number" id="qSimple" value="1" min="1" class="text-xl py-3">`;
-        }
-        document.getElementById('modalAdd').classList.add('active');
-    }
 
-    document.getElementById('btnConfirmar').onclick = () => {
-        let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        const aroInputs = document.querySelectorAll('.input-aro');
-        
-        if(aroInputs.length > 0) {
-            aroInputs.forEach(input => {
-                const qtd = parseInt(input.value);
-                if(qtd > 0) {
-                    cart.push({ ...pAtivo, name: `${pAtivo.name} (Aro ${input.dataset.aro})`, quantidade: qtd });
+            // ESCUTA DE PRODUTOS DA CATEGORIA
+            db.ref('products').orderByChild('category').equalTo(categoriaId).on('value', snapshot => {
+                grid.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    grid.innerHTML = '<p class="col-span-full text-center py-10 text-gray-500 uppercase text-xs tracking-widest">Nenhum produto disponível nesta coleção.</p>';
+                    return;
                 }
+
+                snapshot.forEach(child => {
+                    const p = child.val();
+                    if (p.paused) return;
+
+                    // LÓGICA DE PREÇOS
+                    const precoOriginal = Number(p.price || 0);
+                    const temPromo = (p.promoPrice && p.promoPrice > 0);
+                    const precoVenda = temPromo ? Number(p.promoPrice) : precoOriginal;
+                    
+                    // Desconto PIX (5% OFF sobre o melhor preço)
+                    const precoPix = precoVenda * 0.95;
+                    // Parcelamento (3x sobre o preço de venda)
+                    const valorParcela = precoVenda / 3;
+
+                    // REESTABELECIMENTO DE VARIAÇÕES (BASEADO NO NOME)
+                    let variacaoTag = '';
+                    const nomeLower = (p.name || p.nome || "").toLowerCase();
+                    
+                    if (nomeLower.includes("dizeres")) {
+                        variacaoTag = `<div class="bg-[#caa85c]/10 text-[#caa85c] text-[9px] font-bold px-2 py-1 rounded border border-[#caa85c]/20 inline-block mt-1">PALAVRAS: FÉ, AMOR, GRATIDÃO...</div>`;
+                    } else if (nomeLower.includes("letra") || nomeLower.includes("alfabeto") || nomeLower.includes("inicial")) {
+                        variacaoTag = `<div class="bg-[#caa85c]/10 text-[#caa85c] text-[9px] font-bold px-2 py-1 rounded border border-[#caa85c]/20 inline-block mt-1">ALFABETO COMPLETO: A-Z</div>`;
+                    }
+
+                    grid.innerHTML += `
+                    <div class="card-produto bg-[#111] rounded-2xl overflow-hidden flex flex-col">
+                        <div class="relative aspect-square bg-black">
+                            <img src="${p.image || p.foto}" class="w-full h-full object-cover" loading="lazy">
+                            ${temPromo ? `<span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black px-2 py-1 rounded uppercase tracking-tighter">OFERTA</span>` : ''}
+                        </div>
+                        
+                        <div class="p-4 flex flex-col flex-grow">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] text-gray-500 font-bold tracking-widest">${p.sku || '---'}</span>
+                                <span class="text-[10px] text-gray-400 font-medium italic">${p.weight || p.peso || 0}g</span>
+                            </div>
+                            
+                            <h3 class="text-white text-sm font-semibold mb-1 line-clamp-2 h-10 leading-snug">${p.name || p.nome}</h3>
+                            ${variacaoTag}
+
+                            <div class="mt-4 pt-3 border-t border-[#222]">
+                                ${temPromo ? `<p class="text-gray-600 text-[10px] line-through">${fMoeda(precoOriginal)}</p>` : ''}
+                                <p class="text-[#caa85c] text-xl font-black leading-none">${fMoeda(precoVenda)}</p>
+                                <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter">No cartão: 3x de ${fMoeda(valorParcela)}</p>
+                                
+                                <div class="mt-3 bg-[#caa85c] p-[1px] rounded-lg">
+                                    <div class="bg-[#0b0b0b] rounded-[7px] p-2 text-center">
+                                        <p class="text-[#caa85c] text-sm font-black leading-none">${fMoeda(precoPix)} <span class="text-[8px] uppercase tracking-widest">no Pix</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="adicionar('${child.key}', '${p.name || p.nome}', ${precoVenda})" 
+                                class="w-full mt-4 bg-white text-black text-[10px] font-extrabold py-3 rounded-xl hover:bg-[#caa85c] hover:text-white transition-all uppercase tracking-[2px]">
+                                Comprar
+                            </button>
+                        </div>
+                    </div>`;
+                });
             });
-        } else {
-            const q = parseInt(document.getElementById('qSimple').value);
-            if(q > 0) cart.push({ ...pAtivo, quantidade: q });
+            atualizarMiniCarrinho();
         }
 
-        localStorage.setItem('carrinho', JSON.stringify(cart));
-        fecharModal();
-        alert('Adicionado ao carrinho!');
-    };
+        // LÓGICA DE CARRINHO
+        function adicionar(id, nome, preco) {
+            let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
+            const index = cart.findIndex(i => i.id === id);
+            
+            if(index > -1) {
+                cart[index].quantidade++;
+            } else {
+                cart.push({ id, nome, precoFinal: preco, quantidade: 1 });
+            }
+            
+            localStorage.setItem('carrinho', JSON.stringify(cart));
+            atualizarMiniCarrinho();
+            
+            // Efeito visual simples de confirmação
+            alert("✅ " + nome + " adicionado!");
+        }
 
-    function fecharModal() { document.getElementById('modalAdd').classList.remove('active'); }
-    window.onload = carregarModelos;
-</script>
+        function atualizarMiniCarrinho() {
+            const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
+            const total = cart.reduce((acc, i) => acc + (i.precoFinal * i.quantidade), 0);
+            document.getElementById('valCarrinho').innerText = fMoeda(total);
+        }
+
+        window.onload = carregarPagina;
+    </script>
 </body>
 </html>
