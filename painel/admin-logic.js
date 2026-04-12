@@ -1,5 +1,5 @@
 // ============================================================
-// CONFIGURAÇÃO FIREBASE (COM CHECAGEM DE SEGURANÇA)
+// CONFIGURAÇÃO FIREBASE
 // ============================================================
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -14,7 +14,9 @@ const db = firebase.database();
 let pedidoEditando = null;
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-// NAVEGAÇÃO
+// ============================================================
+// NAVEGAÇÃO E UI
+// ============================================================
 function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -44,7 +46,9 @@ function buscarDadosProduto(sku, inputElement) {
     });
 }
 
-// CARREGAR LISTA DE PEDIDOS
+// ============================================================
+// GESTÃO DE PEDIDOS (LISTAGEM)
+// ============================================================
 function carregarPedidos() {
     const busca = document.getElementById('buscaPedido')?.value.toLowerCase() || "";
     db.ref('orders').on('value', s => {
@@ -60,11 +64,11 @@ function carregarPedidos() {
             if(busca && !nomeCli.includes(busca)) return;
 
             lista.innerHTML += `
-            <div class="card border-l-4 border-[#caa85c] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3 group">
+            <div class="card border-l-4 border-[#caa85c] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3 group bg-[#111] p-4 rounded-lg">
                 <div class="flex-grow">
                     <div class="flex items-center gap-2">
-                         <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente Sem Nome'}</b>
-                         <span class="text-[9px] bg-[#222] px-2 py-0.5 rounded text-gray-400">ID: ${p.key.substring(1,6)}</span>
+                        <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente Sem Nome'}</b>
+                        <span class="text-[9px] bg-[#222] px-2 py-0.5 rounded text-gray-400">ID: ${p.key.substring(1,8).toUpperCase()}</span>
                     </div>
                     <p class="text-[10px] text-gray-500 mt-1">
                         📅 ${p.data || '---'} | 📦 ${p.totalPecas || 0} peças | ⚖️ ${(p.pesoTotal || 0).toFixed(2)}g
@@ -72,20 +76,24 @@ function carregarPedidos() {
                 </div>
                 <div class="flex items-center gap-2 w-full md:w-auto border-t md:border-t-0 border-[#222] pt-2 md:pt-0">
                     <div class="text-right mr-4 font-bold text-white text-sm">${fMoeda(p.total)}</div>
-                    <button class="btn bg-blue-900/20 text-blue-400 border-blue-900/50" onclick="abrirEditorPedido('${p.key}')">✏️</button>
-                    <button class="btn hover:border-[#caa85c]" onclick="duplicarPedido('${p.key}')">👯</button>
-                    <button class="btn bg-red-900/10 text-red-500 border-red-900/30" onclick="excluirPedido('${p.key}')">🗑️</button>
+                    <button class="btn bg-blue-900/20 text-blue-400 border-blue-900/50 p-2 rounded" onclick="abrirEditorPedido('${p.key}')">✏️</button>
+                    <button class="btn hover:border-[#caa85c] p-2 rounded" onclick="duplicarPedido('${p.key}')">👯</button>
+                    <button class="btn bg-red-900/10 text-red-500 border-red-900/30 p-2 rounded" onclick="excluirPedido('${p.key}')">🗑️</button>
                 </div>
             </div>`;
         });
     });
 }
 
+// ============================================================
 // EDITOR DE PEDIDO
+// ============================================================
 function abrirEditorPedido(id) {
     pedidoEditando = id;
     db.ref('orders/'+id).once('value', s => {
         const p = s.val();
+        if(!p) return;
+
         document.getElementById('edClienteNome').value = p.cliente?.nome || '';
         document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
         document.getElementById('edRua').value = p.entrega?.rua || '';
@@ -105,17 +113,17 @@ function abrirEditorPedido(id) {
 
 function addItemEditor(i={}) {
     const div = document.createElement('div');
-    div.className = "item-editor card bg-black/40 border-[#222] p-3 relative group mb-2";
+    div.className = "item-editor card bg-black/40 border-[#222] p-3 relative group mb-2 rounded-lg border";
     div.innerHTML = `
         <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <div><label class="text-[8px] text-gray-500 uppercase">SKU</label><input class="in-sku !mb-0 text-[10px]" value="${i.sku||''}" onblur="buscarDadosProduto(this.value, this)"></div>
-            <div class="md:col-span-2"><label class="text-[8px] text-gray-500 uppercase">Produto</label><input class="in-nome !mb-0 text-[10px]" value="${i.name||i.nome||''}"></div>
-            <div><label class="text-[8px] text-gray-500 uppercase">Peso(g)</label><input type="number" class="in-peso !mb-0 text-[10px]" value="${i.peso||i.weight||0}" oninput="recalcularTotalEd()"></div>
-            <div><label class="text-[8px] text-gray-500 uppercase">Preço</label><input type="number" class="in-preco !mb-0 text-[10px]" value="${i.price||i.precoFinal||0}" oninput="recalcularTotalEd()"></div>
-            <div><label class="text-[8px] text-gray-500 uppercase">Qtd</label><input type="number" class="in-qtd !mb-0 text-[10px] font-bold text-[#caa85c]" value="${i.quantidade||i.qtd||1}" oninput="recalcularTotalEd()"></div>
+            <div><label class="text-[8px] text-gray-500 uppercase">SKU</label><input class="in-sku w-full bg-[#111] border border-[#333] p-1 rounded text-[10px] text-white" value="${i.sku||''}" onblur="buscarDadosProduto(this.value, this)"></div>
+            <div class="md:col-span-2"><label class="text-[8px] text-gray-500 uppercase">Produto</label><input class="in-nome w-full bg-[#111] border border-[#333] p-1 rounded text-[10px] text-white" value="${i.name||i.nome||''}"></div>
+            <div><label class="text-[8px] text-gray-500 uppercase">Peso(g)</label><input type="number" class="in-peso w-full bg-[#111] border border-[#333] p-1 rounded text-[10px] text-white" value="${i.peso||i.weight||0}" oninput="recalcularTotalEd()"></div>
+            <div><label class="text-[8px] text-gray-500 uppercase">Preço</label><input type="number" class="in-preco w-full bg-[#111] border border-[#333] p-1 rounded text-[10px] text-white" value="${i.price||i.precoFinal||0}" oninput="recalcularTotalEd()"></div>
+            <div><label class="text-[8px] text-gray-500 uppercase">Qtd</label><input type="number" class="in-qtd w-full bg-[#111] border border-[#333] p-1 rounded text-[10px] font-bold text-[#caa85c]" value="${i.quantidade||i.qtd||1}" oninput="recalcularTotalEd()"></div>
             <input type="hidden" class="in-foto" value="${i.image||i.foto||''}">
         </div>
-        <button class="absolute -right-2 -top-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs" onclick="this.parentElement.remove();recalcularTotalEd();">×</button>
+        <button class="absolute -right-2 -top-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center" onclick="this.parentElement.remove();recalcularTotalEd();">×</button>
     `;
     document.getElementById('edItens').appendChild(div);
 }
@@ -123,27 +131,34 @@ function addItemEditor(i={}) {
 function recalcularTotalEd() {
     let subtotal = 0, qtdT = 0;
     document.querySelectorAll('.item-editor').forEach(div => {
-        subtotal += (Number(div.querySelector('.in-preco').value) * Number(div.querySelector('.in-qtd').value));
-        qtdT += Number(div.querySelector('.in-qtd').value);
+        const preco = Number(div.querySelector('.in-preco').value);
+        const qtd = Number(div.querySelector('.in-qtd').value);
+        subtotal += (preco * qtd);
+        qtdT += qtd;
     });
     const dP = Number(document.getElementById('edDescPromo').value || 0);
     const dX = Number(document.getElementById('edDescPix').value || 0);
     const f = Number(document.getElementById('edFrete').value || 0);
+    
     document.getElementById('totalPreview').innerText = fMoeda(subtotal - dP - dX + f);
     if(document.getElementById('edQtdTotal')) document.getElementById('edQtdTotal').value = qtdT;
 }
 
-function salvarPedidoEditado() {
+async function salvarPedidoEditado() {
+    if(!pedidoEditando) return;
     const itens = [];
     let pesoTotal = 0;
+    
     document.querySelectorAll('.item-editor').forEach(div => {
         const q = Number(div.querySelector('.in-qtd').value);
         const p = Number(div.querySelector('.in-peso').value);
+        const preco = Number(div.querySelector('.in-preco').value);
+        
         itens.push({
             sku: div.querySelector('.in-sku').value,
             name: div.querySelector('.in-nome').value,
             peso: p,
-            price: Number(div.querySelector('.in-preco').value),
+            price: preco,
             quantidade: q,
             image: div.querySelector('.in-foto').value
         });
@@ -156,16 +171,31 @@ function salvarPedidoEditado() {
     const dX = Number(document.getElementById('edDescPix').value);
     const f = Number(document.getElementById('edFrete').value);
 
-    db.ref('orders/'+pedidoEditando).update({
-        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
-        entrega: { rua: document.getElementById('edRua').value, cidade: document.getElementById('edCidade').value },
+    const updates = {
+        cliente: { 
+            nome: document.getElementById('edClienteNome').value, 
+            telefone: document.getElementById('edClienteTel').value 
+        },
+        entrega: { 
+            rua: document.getElementById('edRua').value, 
+            cidade: document.getElementById('edCidade').value 
+        },
         itens, totalPecas, subtotal, pesoTotal,
         descontoPromo: dP, descontoPix: dX, frete: f,
         total: (subtotal - dP - dX + f)
-    }).then(() => { alert("Pedido atualizado!"); fecharEditorPedido(); });
+    };
+
+    db.ref('orders/'+pedidoEditando).update(updates)
+        .then(() => { 
+            alert("Pedido atualizado!"); 
+            fecharEditorPedido(); 
+        })
+        .catch(err => alert("Erro ao salvar: " + err.message));
 }
 
-// DASHBOARD - MANUTENÇÃO
+// ============================================================
+// DASHBOARD & MANUTENÇÃO
+// ============================================================
 function carregarStatusSite() {
     const statusTexto = document.getElementById('statusTexto');
     const btnManutencao = document.getElementById('btnManutencao');
@@ -183,11 +213,15 @@ function carregarStatusSite() {
 function alternarManutencao() {
     db.ref('settings/manutencao').once('value', s => {
         const novo = !s.val();
-        if(confirm(novo ? "Ativar manutenção?" : "Colocar site online?")) db.ref('settings/manutencao').set(novo);
+        if(confirm(novo ? "Ativar manutenção?" : "Colocar site online?")) {
+            db.ref('settings/manutencao').set(novo);
+        }
     });
 }
 
+// ============================================================
 // FUNÇÕES DE APOIO
+// ============================================================
 function duplicarPedido(id) {
     db.ref('orders/'+id).once('value', s => {
         const novo = s.val();
@@ -195,12 +229,23 @@ function duplicarPedido(id) {
         db.ref('orders').push(novo).then(() => alert("Pedido Duplicado!"));
     });
 }
-function excluirPedido(id) {
-    if(confirm("Excluir permanentemente?")) db.ref('orders/'+id).remove();
-}
-function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 
+function excluirPedido(id) {
+    if(confirm("Excluir permanentemente?")) {
+        db.ref('orders/'+id).remove();
+    }
+}
+
+function fecharEditorPedido() { 
+    document.getElementById('editorPedido').classList.add('hidden');
+    pedidoEditando = null;
+}
+
+// ============================================================
+// SISTEMA DE IMPRESSÃO (ROMANEIOS)
+// ============================================================
 async function imprimirRomaneio(id, tipo) {
+    if(!id) id = pedidoEditando;
     db.ref('orders/' + id).once('value', async s => {
         const p = s.val();
         if (!p) return;
@@ -286,16 +331,16 @@ async function imprimirRomaneio(id, tipo) {
         }
 
         const subtotalItens = itens.reduce((acc, i) => acc + (i.price * i.quantidade), 0);
-        const pesoTotal = itens.reduce((acc, i) => acc + (Number(i.peso || 0) * i.quantidade), 0);
-        const totalPecas = itens.reduce((acc, i) => acc + Number(i.quantidade), 0);
+        const pTotal = itens.reduce((acc, i) => acc + (Number(i.peso || 0) * i.quantidade), 0);
+        const qTotal = itens.reduce((acc, i) => acc + Number(i.quantidade), 0);
 
         html += `<div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #000; break-inside: avoid;">
             <div style="display: flex; justify-content: space-between;">
                 <div style="font-size: 10px; line-height: 1.6;">
                     <b style="text-transform: uppercase; color: #caa85c;">Informações Técnicas</b><br>
                     Total de Modelos: <b>${itens.length}</b><br>
-                    Total de Peças: <b>${totalPecas}</b><br>
-                    Peso Total: <b>${pesoTotal.toFixed(2)}g</b>
+                    Total de Peças: <b>${qTotal}</b><br>
+                    Peso Total: <b>${pTotal.toFixed(2)}g</b>
                 </div>
                 <div style="text-align: right; min-width: 200px;">
                     <table style="width: 100%; font-size: 11px; border-spacing: 0;">
@@ -321,7 +366,6 @@ async function imprimirRomaneio(id, tipo) {
             </div>
         </div></div>`;
 
-        // GARANTIA: Cria a área de impressão se ela não existir no HTML
         let printArea = document.getElementById('print-area');
         if (!printArea) {
             printArea = document.createElement('div');
