@@ -205,6 +205,52 @@ function excluirPedido(id) {
 function fecharEditorPedido() { 
     document.getElementById('editorPedido').classList.add('hidden'); 
 }
+// ============================================================
+// LÓGICA DO DASHBOARD - CONTROLE DE MANUTENÇÃO
+// ============================================================
+
+function carregarStatusSite() {
+    const statusTexto = document.getElementById('statusTexto');
+    const btnManutencao = document.getElementById('btnManutencao');
+
+    if (!statusTexto || !btnManutencao) return;
+
+    db.ref('settings/manutencao').on('value', (snapshot) => {
+        const emManutencao = snapshot.val();
+
+        if (emManutencao) {
+            statusTexto.innerText = "Site em Manutenção";
+            statusTexto.classList.replace('text-green-500', 'text-red-500'); // Garante a cor
+            statusTexto.style.color = "#ff4444"; 
+            
+            btnManutencao.innerText = "DESATIVAR MANUTENÇÃO";
+            btnManutencao.className = "btn px-6 font-bold bg-green-900/20 text-green-500 border-green-900 hover:bg-green-600 hover:text-white";
+        } else {
+            statusTexto.innerText = "Site Online (Normal)";
+            statusTexto.style.color = "#44ff44";
+            
+            btnManutencao.innerText = "ATIVAR MANUTENÇÃO";
+            btnManutencao.className = "btn px-6 font-bold bg-red-900/20 text-red-500 border-red-900 hover:bg-red-600 hover:text-white";
+        }
+    });
+}
+
+function alternarManutencao() {
+    db.ref('settings/manutencao').once('value').then((snapshot) => {
+        const atual = snapshot.val();
+        const novoStatus = !atual;
+        
+        if (confirm(novoStatus ? "Deseja colocar o site em MANUTENÇÃO?" : "Deseja colocar o site ONLINE?")) {
+            db.ref('settings/manutencao').set(novoStatus)
+                .then(() => {
+                    console.log("Status de manutenção alterado para:", novoStatus);
+                })
+                .catch((error) => {
+                    alert("Erro ao alterar status: " + error.message);
+                });
+        }
+    });
+}
 
 async function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', async s => {
