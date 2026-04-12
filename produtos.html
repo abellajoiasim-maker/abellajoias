@@ -9,12 +9,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; }
+        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin: 0; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
         .card-produto { transition: all 0.3s ease; border: 1px solid #222; }
         .card-produto:hover { transform: translateY(-5px); border-color: #caa85c; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        input::placeholder { color: #555; }
     </style>
 </head>
 <body>
@@ -32,12 +33,12 @@
     <main class="max-w-7xl mx-auto p-6">
         <div class="flex items-center gap-4 mb-8">
             <a href="index.html" class="text-[#caa85c] text-[10px] font-extrabold border border-[#caa85c]/30 px-3 py-1 rounded-full hover:bg-[#caa85c] hover:text-black transition-all uppercase tracking-widest">❮ Voltar</a>
-            <h2 id="tituloCategoria" class="serif text-2xl text-white uppercase tracking-widest">Carregando...</h2>
+            <h2 id="tituloCategoria" class="serif text-2xl text-white uppercase tracking-widest">Coleção</h2>
         </div>
 
         <div id="gridProdutos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <div class="col-span-full text-center py-20 text-gray-600 italic animate-pulse uppercase tracking-[4px] text-xs">
-                Aguarde, selecionando peças exclusivas...
+                Sincronizando estoque de luxo...
             </div>
         </div>
     </main>
@@ -59,7 +60,7 @@
             const grid = document.getElementById('gridProdutos');
 
             if (!categoriaId) {
-                grid.innerHTML = '<p class="col-span-full text-center py-10">Categoria não identificada.</p>';
+                grid.innerHTML = '<p class="col-span-full text-center py-10">Selecione uma categoria na página inicial.</p>';
                 return;
             }
 
@@ -68,97 +69,118 @@
                 if(s.exists()) document.getElementById('tituloCategoria').innerText = s.val().name;
             });
 
-            // ESCUTA DE PRODUTOS DA CATEGORIA
+            // ESCUTA DE PRODUTOS
             db.ref('products').orderByChild('category').equalTo(categoriaId).on('value', snapshot => {
                 grid.innerHTML = '';
                 
                 if (!snapshot.exists()) {
-                    grid.innerHTML = '<p class="col-span-full text-center py-10 text-gray-500 uppercase text-xs tracking-widest">Nenhum produto disponível nesta coleção.</p>';
+                    grid.innerHTML = '<p class="col-span-full text-center py-10 text-gray-500 uppercase text-xs tracking-widest">Nenhum item disponível nesta categoria.</p>';
                     return;
                 }
 
                 snapshot.forEach(child => {
                     const p = child.val();
+                    const id = child.key;
                     if (p.paused) return;
 
                     // LÓGICA DE PREÇOS
-                    const precoOriginal = Number(p.price || 0);
+                    const precoBase = Number(p.price || 0);
                     const temPromo = (p.promoPrice && p.promoPrice > 0);
-                    const precoVenda = temPromo ? Number(p.promoPrice) : precoOriginal;
-                    
-                    // Desconto PIX (5% OFF sobre o melhor preço)
-                    const precoPix = precoVenda * 0.95;
-                    // Parcelamento (3x sobre o preço de venda)
-                    const valorParcela = precoVenda / 3;
+                    const precoFinal = temPromo ? Number(p.promoPrice) : precoBase;
+                    const precoPix = precoFinal * 0.95; // 5% OFF
+                    const valorParcela = precoFinal / 3;
 
-                    // REESTABELECIMENTO DE VARIAÇÕES (BASEADO NO NOME)
-                    let variacaoTag = '';
+                    // LÓGICA DE VARIAÇÕES (ALFABETO/DIZERES)
+                    let htmlVariacao = '';
                     const nomeLower = (p.name || p.nome || "").toLowerCase();
-                    
-                    if (nomeLower.includes("dizeres")) {
-                        variacaoTag = `<div class="bg-[#caa85c]/10 text-[#caa85c] text-[9px] font-bold px-2 py-1 rounded border border-[#caa85c]/20 inline-block mt-1">PALAVRAS: FÉ, AMOR, GRATIDÃO...</div>`;
-                    } else if (nomeLower.includes("letra") || nomeLower.includes("alfabeto") || nomeLower.includes("inicial")) {
-                        variacaoTag = `<div class="bg-[#caa85c]/10 text-[#caa85c] text-[9px] font-bold px-2 py-1 rounded border border-[#caa85c]/20 inline-block mt-1">ALFABETO COMPLETO: A-Z</div>`;
+                    const precisaVariacao = nomeLower.includes("dizeres") || nomeLower.includes("letra") || nomeLower.includes("inicial") || nomeLower.includes("alfabeto");
+
+                    if (precisaVariacao) {
+                        htmlVariacao = `
+                            <div class="mt-3 p-2 bg-black/50 border border-[#333] rounded-lg">
+                                <label class="text-[9px] text-[#caa85c] font-bold uppercase tracking-widest">Especificar variações:</label>
+                                <input type="text" id="input-var-${id}" 
+                                    placeholder="Ex: 2 'A', 1 'Amor'..." 
+                                    class="w-full bg-[#111] text-white text-[11px] p-2 rounded mt-1 outline-none border border-transparent focus:border-[#caa85c]">
+                            </div>
+                        `;
                     }
 
                     grid.innerHTML += `
                     <div class="card-produto bg-[#111] rounded-2xl overflow-hidden flex flex-col">
                         <div class="relative aspect-square bg-black">
-                            <img src="${p.image || p.foto}" class="w-full h-full object-cover" loading="lazy">
-                            ${temPromo ? `<span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black px-2 py-1 rounded uppercase tracking-tighter">OFERTA</span>` : ''}
+                            <img src="${p.image || p.foto}" class="w-full h-full object-cover">
+                            ${temPromo ? `<span class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black px-2 py-1 rounded uppercase">OFERTA</span>` : ''}
                         </div>
                         
                         <div class="p-4 flex flex-col flex-grow">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-[10px] text-gray-500 font-bold tracking-widest">${p.sku || '---'}</span>
-                                <span class="text-[10px] text-gray-400 font-medium italic">${p.weight || p.peso || 0}g</span>
+                                <span class="text-[10px] text-gray-500 font-bold tracking-widest">${p.sku || 'S/SKU'}</span>
+                                <span class="text-[10px] text-gray-400 italic">${p.weight || p.peso || 0}g</span>
                             </div>
                             
-                            <h3 class="text-white text-sm font-semibold mb-1 line-clamp-2 h-10 leading-snug">${p.name || p.nome}</h3>
-                            ${variacaoTag}
+                            <h3 class="text-white text-sm font-semibold mb-1 line-clamp-2 h-10 leading-tight">${p.name || p.nome}</h3>
+                            
+                            ${htmlVariacao}
 
-                            <div class="mt-4 pt-3 border-t border-[#222]">
-                                ${temPromo ? `<p class="text-gray-600 text-[10px] line-through">${fMoeda(precoOriginal)}</p>` : ''}
-                                <p class="text-[#caa85c] text-xl font-black leading-none">${fMoeda(precoVenda)}</p>
-                                <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter">No cartão: 3x de ${fMoeda(valorParcela)}</p>
+                            <div class="mt-auto pt-4 border-t border-[#222] mt-4">
+                                ${temPromo ? `<p class="text-gray-600 text-[10px] line-through">${fMoeda(precoBase)}</p>` : ''}
+                                <p class="text-[#caa85c] text-xl font-black leading-none">${fMoeda(precoFinal)}</p>
+                                <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter text-right">3x de ${fMoeda(valorParcela)}</p>
                                 
-                                <div class="mt-3 bg-[#caa85c] p-[1px] rounded-lg">
-                                    <div class="bg-[#0b0b0b] rounded-[7px] p-2 text-center">
-                                        <p class="text-[#caa85c] text-sm font-black leading-none">${fMoeda(precoPix)} <span class="text-[8px] uppercase tracking-widest">no Pix</span></p>
-                                    </div>
+                                <div class="mt-3 bg-[#caa85c]/10 border border-[#caa85c]/20 p-2 rounded-lg text-center">
+                                    <p class="text-[#caa85c] text-sm font-black">${fMoeda(precoPix)} <span class="text-[8px] uppercase tracking-widest">no Pix</span></p>
                                 </div>
                             </div>
 
-                            <button onclick="adicionar('${child.key}', '${p.name || p.nome}', ${precoVenda})" 
+                            <button onclick="adicionarAoCarrinho('${id}', '${p.name || p.nome}', ${precoFinal})" 
                                 class="w-full mt-4 bg-white text-black text-[10px] font-extrabold py-3 rounded-xl hover:bg-[#caa85c] hover:text-white transition-all uppercase tracking-[2px]">
-                                Comprar
+                                Adicionar
                             </button>
                         </div>
                     </div>`;
                 });
             });
-            atualizarMiniCarrinho();
+            atualizarResumoHeader();
         }
 
-        // LÓGICA DE CARRINHO
-        function adicionar(id, nome, preco) {
+        function adicionarAoCarrinho(id, nome, preco) {
             let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-            const index = cart.findIndex(i => i.id === id);
-            
-            if(index > -1) {
+            const inputVar = document.getElementById(`input-var-${id}`);
+            const variacaoTexto = inputVar ? inputVar.value.trim() : "";
+
+            // Validação de variação obrigatória
+            if (inputVar && variacaoTexto === "") {
+                alert("Por favor, digite as letras ou dizeres que deseja para este item.");
+                inputVar.focus();
+                return;
+            }
+
+            // Criamos um ID único para o carrinho que combina o produto com a variação escolhida
+            const cartId = id + (variacaoTexto ? "-" + variacaoTexto : "");
+            const index = cart.findIndex(item => item.cartId === cartId);
+
+            if (index > -1) {
                 cart[index].quantidade++;
             } else {
-                cart.push({ id, nome, precoFinal: preco, quantidade: 1 });
+                cart.push({
+                    cartId: cartId,
+                    id: id,
+                    nome: nome,
+                    precoFinal: preco,
+                    quantidade: 1,
+                    variacao: variacaoTexto
+                });
             }
-            
+
             localStorage.setItem('carrinho', JSON.stringify(cart));
-            atualizarMiniCarrinho();
+            atualizarResumoHeader();
             
-            // Efeito visual simples de confirmação
-            alert("✅ " + nome + " adicionado!");
+            if(inputVar) inputVar.value = "";
+            alert("✅ " + nome + " adicionado ao carrinho!");
         }
 
-        function atualizarMiniCarrinho() {
+        function atualizarResumoHeader() {
             const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
             const total = cart.reduce((acc, i) => acc + (i.precoFinal * i.quantidade), 0);
             document.getElementById('valCarrinho').innerText = fMoeda(total);
