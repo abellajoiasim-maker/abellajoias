@@ -1,9 +1,14 @@
-// CONFIGURAÇÃO FIREBASE
+// ============================================================
+// CONFIGURAÇÃO FIREBASE (COM CHECAGEM DE SEGURANÇA)
+// ============================================================
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-firebase.initializeApp(firebaseConfig);
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 
 let pedidoEditando = null;
@@ -18,7 +23,7 @@ function showTab(id, btn) {
     if(btn) btn.classList.add('active');
 }
 
-// BUSCA AUTOMÁTICA POR SKU (PARA O EDITOR DE PEDIDOS)
+// BUSCA AUTOMÁTICA POR SKU
 function buscarDadosProduto(sku, inputElement) {
     if(!sku) return;
     db.ref('products').once('value', s => {
@@ -27,10 +32,10 @@ function buscarDadosProduto(sku, inputElement) {
             const p = child.val();
             if(p.sku && p.sku.toLowerCase() === sku.toLowerCase()) {
                 const card = inputElement.closest('.item-editor');
-                card.querySelector('.in-nome').value = p.name || '';
+                card.querySelector('.in-nome').value = p.name || p.nome || '';
                 card.querySelector('.in-peso').value = p.weight || p.peso || 0;
                 card.querySelector('.in-preco').value = p.price || 0;
-                card.querySelector('.in-foto').value = p.image || '';
+                card.querySelector('.in-foto').value = p.image || p.foto || '';
                 achou = true;
             }
         });
@@ -39,6 +44,7 @@ function buscarDadosProduto(sku, inputElement) {
     });
 }
 
+// CARREGAR LISTA DE PEDIDOS
 function carregarPedidos() {
     const busca = document.getElementById('buscaPedido')?.value.toLowerCase() || "";
     db.ref('orders').on('value', s => {
@@ -46,7 +52,6 @@ function carregarPedidos() {
         if(!lista) return;
         lista.innerHTML = '';
         
-        // Inverter para mostrar os mais recentes primeiro
         const pedidos = [];
         s.forEach(child => { pedidos.unshift({key: child.key, ...child.val()}); });
 
@@ -65,31 +70,18 @@ function carregarPedidos() {
                         📅 ${p.data || '---'} | 📦 ${p.totalPecas || 0} peças | ⚖️ ${(p.pesoTotal || 0).toFixed(2)}g
                     </p>
                 </div>
-
                 <div class="flex items-center gap-2 w-full md:w-auto border-t md:border-t-0 border-[#222] pt-2 md:pt-0">
-                    <div class="text-right mr-4">
-                        <div class="font-bold text-white text-sm">${fMoeda(p.total)}</div>
-                    </div>
-                    
-                    <button class="btn bg-blue-900/20 text-blue-400 border-blue-900/50 hover:bg-blue-900" 
-                            onclick="abrirEditorPedido('${p.key}')" title="Editar Pedido">
-                        ✏️ <span class="hidden md:inline ml-1">Editar</span>
-                    </button>
-
-                    <button class="btn hover:border-[#caa85c]" 
-                            onclick="duplicarPedido('${p.key}')" title="Duplicar Pedido">
-                        👯
-                    </button>
-
-                    <button class="btn bg-red-900/10 text-red-500 border-red-900/30 hover:bg-red-600 hover:text-white" 
-                            onclick="excluirPedido('${p.key}')" title="Excluir Pedido">
-                        🗑️
-                    </button>
+                    <div class="text-right mr-4 font-bold text-white text-sm">${fMoeda(p.total)}</div>
+                    <button class="btn bg-blue-900/20 text-blue-400 border-blue-900/50" onclick="abrirEditorPedido('${p.key}')">✏️</button>
+                    <button class="btn hover:border-[#caa85c]" onclick="duplicarPedido('${p.key}')">👯</button>
+                    <button class="btn bg-red-900/10 text-red-500 border-red-900/30" onclick="excluirPedido('${p.key}')">🗑️</button>
                 </div>
             </div>`;
         });
     });
 }
+
+// EDITOR DE PEDIDO
 function abrirEditorPedido(id) {
     pedidoEditando = id;
     db.ref('orders/'+id).once('value', s => {
@@ -116,26 +108,11 @@ function addItemEditor(i={}) {
     div.className = "item-editor card bg-black/40 border-[#222] p-3 relative group mb-2";
     div.innerHTML = `
         <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <div>
-                <label class="text-[8px] text-gray-500 uppercase">SKU</label>
-                <input class="in-sku !mb-0 text-[10px]" value="${i.sku||''}" onblur="buscarDadosProduto(this.value, this)">
-            </div>
-            <div class="md:col-span-2">
-                <label class="text-[8px] text-gray-500 uppercase">Produto</label>
-                <input class="in-nome !mb-0 text-[10px]" value="${i.name||i.nome||''}">
-            </div>
-            <div>
-                <label class="text-[8px] text-gray-500 uppercase">Peso(g)</label>
-                <input type="number" class="in-peso !mb-0 text-[10px]" value="${i.peso||i.weight||0}" oninput="recalcularTotalEd()">
-            </div>
-            <div>
-                <label class="text-[8px] text-gray-500 uppercase">Preço</label>
-                <input type="number" class="in-preco !mb-0 text-[10px]" value="${i.price||i.precoFinal||0}" oninput="recalcularTotalEd()">
-            </div>
-            <div>
-                <label class="text-[8px] text-gray-500 uppercase">Qtd</label>
-                <input type="number" class="in-qtd !mb-0 text-[10px] font-bold text-[#caa85c]" value="${i.quantidade||i.qtd||1}" oninput="recalcularTotalEd()">
-            </div>
+            <div><label class="text-[8px] text-gray-500 uppercase">SKU</label><input class="in-sku !mb-0 text-[10px]" value="${i.sku||''}" onblur="buscarDadosProduto(this.value, this)"></div>
+            <div class="md:col-span-2"><label class="text-[8px] text-gray-500 uppercase">Produto</label><input class="in-nome !mb-0 text-[10px]" value="${i.name||i.nome||''}"></div>
+            <div><label class="text-[8px] text-gray-500 uppercase">Peso(g)</label><input type="number" class="in-peso !mb-0 text-[10px]" value="${i.peso||i.weight||0}" oninput="recalcularTotalEd()"></div>
+            <div><label class="text-[8px] text-gray-500 uppercase">Preço</label><input type="number" class="in-preco !mb-0 text-[10px]" value="${i.price||i.precoFinal||0}" oninput="recalcularTotalEd()"></div>
+            <div><label class="text-[8px] text-gray-500 uppercase">Qtd</label><input type="number" class="in-qtd !mb-0 text-[10px] font-bold text-[#caa85c]" value="${i.quantidade||i.qtd||1}" oninput="recalcularTotalEd()"></div>
             <input type="hidden" class="in-foto" value="${i.image||i.foto||''}">
         </div>
         <button class="absolute -right-2 -top-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs" onclick="this.parentElement.remove();recalcularTotalEd();">×</button>
@@ -146,31 +123,31 @@ function addItemEditor(i={}) {
 function recalcularTotalEd() {
     let subtotal = 0, qtdT = 0;
     document.querySelectorAll('.item-editor').forEach(div => {
-        const p = Number(div.querySelector('.in-preco').value);
-        const q = Number(div.querySelector('.in-qtd').value);
-        subtotal += (p * q);
-        qtdT += q;
+        subtotal += (Number(div.querySelector('.in-preco').value) * Number(div.querySelector('.in-qtd').value));
+        qtdT += Number(div.querySelector('.in-qtd').value);
     });
-    const dP = Number(document.getElementById('edDescPromo').value);
-    const dX = Number(document.getElementById('edDescPix').value);
-    const f = Number(document.getElementById('edFrete').value);
-    const total = subtotal - dP - dX + f;
-    
-    document.getElementById('totalPreview').innerText = fMoeda(total);
-    document.getElementById('edQtdTotal').value = qtdT;
+    const dP = Number(document.getElementById('edDescPromo').value || 0);
+    const dX = Number(document.getElementById('edDescPix').value || 0);
+    const f = Number(document.getElementById('edFrete').value || 0);
+    document.getElementById('totalPreview').innerText = fMoeda(subtotal - dP - dX + f);
+    if(document.getElementById('edQtdTotal')) document.getElementById('edQtdTotal').value = qtdT;
 }
 
 function salvarPedidoEditado() {
     const itens = [];
+    let pesoTotal = 0;
     document.querySelectorAll('.item-editor').forEach(div => {
+        const q = Number(div.querySelector('.in-qtd').value);
+        const p = Number(div.querySelector('.in-peso').value);
         itens.push({
             sku: div.querySelector('.in-sku').value,
             name: div.querySelector('.in-nome').value,
-            peso: Number(div.querySelector('.in-peso').value),
+            peso: p,
             price: Number(div.querySelector('.in-preco').value),
-            quantidade: Number(div.querySelector('.in-qtd').value),
+            quantidade: q,
             image: div.querySelector('.in-foto').value
         });
+        pesoTotal += (p * q);
     });
 
     const totalPecas = itens.reduce((acc, i) => acc + i.quantidade, 0);
@@ -182,12 +159,35 @@ function salvarPedidoEditado() {
     db.ref('orders/'+pedidoEditando).update({
         cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
         entrega: { rua: document.getElementById('edRua').value, cidade: document.getElementById('edCidade').value },
-        itens, totalPecas, subtotal, 
+        itens, totalPecas, subtotal, pesoTotal,
         descontoPromo: dP, descontoPix: dX, frete: f,
         total: (subtotal - dP - dX + f)
-    }).then(() => { alert("Salvo!"); fecharEditorPedido(); });
+    }).then(() => { alert("Pedido atualizado!"); fecharEditorPedido(); });
 }
 
+// DASHBOARD - MANUTENÇÃO
+function carregarStatusSite() {
+    const statusTexto = document.getElementById('statusTexto');
+    const btnManutencao = document.getElementById('btnManutencao');
+    if (!statusTexto || !btnManutencao) return;
+
+    db.ref('settings/manutencao').on('value', s => {
+        const emM = s.val();
+        statusTexto.innerText = emM ? "Site em Manutenção" : "Site Online (Normal)";
+        statusTexto.style.color = emM ? "#ff4444" : "#44ff44";
+        btnManutencao.innerText = emM ? "DESATIVAR MANUTENÇÃO" : "ATIVAR MANUTENÇÃO";
+        btnManutencao.className = emM ? "btn px-6 font-bold bg-green-900/20 text-green-500 border-green-900" : "btn px-6 font-bold bg-red-900/20 text-red-500 border-red-900";
+    });
+}
+
+function alternarManutencao() {
+    db.ref('settings/manutencao').once('value', s => {
+        const novo = !s.val();
+        if(confirm(novo ? "Ativar manutenção?" : "Colocar site online?")) db.ref('settings/manutencao').set(novo);
+    });
+}
+
+// FUNÇÕES DE APOIO
 function duplicarPedido(id) {
     db.ref('orders/'+id).once('value', s => {
         const novo = s.val();
@@ -195,62 +195,10 @@ function duplicarPedido(id) {
         db.ref('orders').push(novo).then(() => alert("Pedido Duplicado!"));
     });
 }
-
 function excluirPedido(id) {
-    if(confirm("Excluir este pedido permanentemente?")) {
-        db.ref('orders/'+id).remove().then(() => fecharEditorPedido());
-    }
+    if(confirm("Excluir permanentemente?")) db.ref('orders/'+id).remove();
 }
-
-function fecharEditorPedido() { 
-    document.getElementById('editorPedido').classList.add('hidden'); 
-}
-// ============================================================
-// LÓGICA DO DASHBOARD - CONTROLE DE MANUTENÇÃO
-// ============================================================
-
-function carregarStatusSite() {
-    const statusTexto = document.getElementById('statusTexto');
-    const btnManutencao = document.getElementById('btnManutencao');
-
-    if (!statusTexto || !btnManutencao) return;
-
-    db.ref('settings/manutencao').on('value', (snapshot) => {
-        const emManutencao = snapshot.val();
-
-        if (emManutencao) {
-            statusTexto.innerText = "Site em Manutenção";
-            statusTexto.classList.replace('text-green-500', 'text-red-500'); // Garante a cor
-            statusTexto.style.color = "#ff4444"; 
-            
-            btnManutencao.innerText = "DESATIVAR MANUTENÇÃO";
-            btnManutencao.className = "btn px-6 font-bold bg-green-900/20 text-green-500 border-green-900 hover:bg-green-600 hover:text-white";
-        } else {
-            statusTexto.innerText = "Site Online (Normal)";
-            statusTexto.style.color = "#44ff44";
-            
-            btnManutencao.innerText = "ATIVAR MANUTENÇÃO";
-            btnManutencao.className = "btn px-6 font-bold bg-red-900/20 text-red-500 border-red-900 hover:bg-red-600 hover:text-white";
-        }
-    });
-}
-
-function alternarManutencao() {
-    db.ref('settings/manutencao').once('value').then((snapshot) => {
-        const atual = snapshot.val();
-        const novoStatus = !atual;
-        
-        if (confirm(novoStatus ? "Deseja colocar o site em MANUTENÇÃO?" : "Deseja colocar o site ONLINE?")) {
-            db.ref('settings/manutencao').set(novoStatus)
-                .then(() => {
-                    console.log("Status de manutenção alterado para:", novoStatus);
-                })
-                .catch((error) => {
-                    alert("Erro ao alterar status: " + error.message);
-                });
-        }
-    });
-}
+function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 
 async function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', async s => {
@@ -262,12 +210,10 @@ async function imprimirRomaneio(id, tipo) {
         
         const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
         
-        // Configurações de exibição por tipo
-        const isFin = [2, 5, 6].includes(tipo);    // Tipos que mostram valores
-        const isFoto = [3, 6].includes(tipo);      // Tipos que mostram fotos
-        const isGrade = [4, 5, 6].includes(tipo);  // Tipos em modo grade (2 colunas)
+        const isFin = [2, 5, 6].includes(tipo);    
+        const isFoto = [3, 6].includes(tipo);      
+        const isGrade = [4, 5, 6].includes(tipo);  
 
-        // Títulos dos Romaneios
         const titulos = {
             1: "Conferência de Pedido", 2: "Romaneio Financeiro", 3: "Catálogo do Pedido",
             4: "Grade de Conferência", 5: "Grade Financeira", 6: "Romaneio Completo (Foto/Preço)"
@@ -297,9 +243,8 @@ async function imprimirRomaneio(id, tipo) {
                 </div>
             </div>`;
 
-        // CORPO DO ROMANEIO (TABELA OU GRADE)
         if (isGrade) {
-            html += `<div class="grid-romaneio" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">`;
+            html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">`;
             itens.forEach(i => {
                 html += `
                 <div style="border: 1px solid #eee; padding: 8px; border-radius: 8px; display: flex; align-items: center; gap: 10px; break-inside: avoid;">
@@ -340,7 +285,6 @@ async function imprimirRomaneio(id, tipo) {
             html += `</tbody></table>`;
         }
 
-        // RESUMO DETALHADO (O QUE VOCÊ PEDIU)
         const subtotalItens = itens.reduce((acc, i) => acc + (i.price * i.quantidade), 0);
         const pesoTotal = itens.reduce((acc, i) => acc + (Number(i.peso || 0) * i.quantidade), 0);
         const totalPecas = itens.reduce((acc, i) => acc + Number(i.quantidade), 0);
@@ -351,9 +295,8 @@ async function imprimirRomaneio(id, tipo) {
                     <b style="text-transform: uppercase; color: #caa85c;">Informações Técnicas</b><br>
                     Total de Modelos: <b>${itens.length}</b><br>
                     Total de Peças: <b>${totalPecas}</b><br>
-                    Peso Total do Pedido: <b>${pesoTotal.toFixed(2)}g</b>
+                    Peso Total: <b>${pesoTotal.toFixed(2)}g</b>
                 </div>
-
                 <div style="text-align: right; min-width: 200px;">
                     <table style="width: 100%; font-size: 11px; border-spacing: 0;">
                         ${isFin ? `
@@ -373,15 +316,20 @@ async function imprimirRomaneio(id, tipo) {
                     </table>
                 </div>
             </div>
-            
-            <div style="margin-top: 30px; text-align: center; font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 1px;">
+            <div style="margin-top: 30px; text-align: center; font-size: 9px; color: #999; text-transform: uppercase;">
                 Obrigado pela preferência! • ${emp.nome}
             </div>
         </div></div>`;
 
-        document.getElementById('print-area').innerHTML = html;
+        // GARANTIA: Cria a área de impressão se ela não existir no HTML
+        let printArea = document.getElementById('print-area');
+        if (!printArea) {
+            printArea = document.createElement('div');
+            printArea.id = 'print-area';
+            document.body.appendChild(printArea);
+        }
         
-        // Pequeno atraso para garantir que as fotos carreguem antes de abrir o PDF
+        printArea.innerHTML = html;
         setTimeout(() => { window.print(); }, 800);
     });
 }
