@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Meu Carrinho • Abella Joias</title>
+    <title>Carrinho • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -10,105 +10,104 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; padding-bottom: 240px; }
+        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; padding-bottom: 260px; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
-        .card { background: #111; border-radius: 12px; border: 1px solid #222; padding: 12px; margin-bottom: 12px; }
-        label { font-size: 10px; text-transform: uppercase; color: #666; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; display: block; }
-        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; border-radius: 8px !important; padding: 8px 12px !important; width: 100%; outline: none; font-size: 13px; transition: 0.2s; }
-        input:focus { border-color: #caa85c !important; box-shadow: 0 0 0 2px rgba(202, 168, 92, 0.1); }
-        .btn-pay { border: 1px solid #333; transition: 0.3s; background: #000; height: 55px; border-radius: 10px; }
-        .btn-pay.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.05); color: #caa85c; box-shadow: inset 0 0 10px rgba(202, 168, 92, 0.1); }
-        .grid-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 11px; }
-        .item-row { border-bottom: 1px solid #222; padding-bottom: 12px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; }
+        .card { background: #111; border-radius: 12px; border: 1px solid #222; padding: 15px; margin-bottom: 12px; }
+        label { font-size: 10px; text-transform: uppercase; color: #666; font-weight: 700; margin-bottom: 5px; display: block; }
+        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; border-radius: 8px !important; padding: 10px !important; width: 100%; outline: none; font-size: 13px; }
+        input:focus { border-color: #caa85c !important; }
+        
+        /* Botões de Pagamento Lado a Lado */
+        .btn-pay { border: 1px solid #333; background: #000; height: 60px; border-radius: 12px; transition: 0.3s; width: 100%; }
+        .btn-pay.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.15); color: #caa85c; }
+        
+        .item-row { display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #222; padding: 12px 0; }
+        .item-row:last-child { border: none; }
+        .input-qtd { width: 55px !important; text-align: center; border: 1px solid #444 !important; background: #000 !important; height: 30px !important; padding: 0 !important; }
     </style>
 </head>
 <body class="p-4">
 
-    <header class="flex items-center justify-between mb-8 border-b border-[#222] pb-4">
-        <button onclick="window.location.href='index.html'" class="flex items-center gap-2 text-xs font-bold uppercase gold-text">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-            Continuar Comprando
+    <header class="flex justify-between items-center mb-6">
+        <button onclick="window.location.href='index.html'" class="gold-text text-xs font-bold uppercase flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg> Voltar
         </button>
-        <h1 class="serif text-sm gold-text tracking-[4px] uppercase">Carrinho</h1>
+        <h1 class="serif text-sm gold-text tracking-widest uppercase text-center">Finalizar Pedido</h1>
+        <div class="w-10"></div>
     </header>
 
     <div id="area-impressao">
         <div class="card">
-            <h3 class="gold-text serif text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">📦 Itens Selecionados</h3>
+            <h3 class="gold-text serif text-[10px] mb-2 tracking-widest uppercase border-b border-[#222] pb-2">Itens no Carrinho</h3>
             <div id="lista-carrinho"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="card">
-                <h3 class="gold-text serif text-[10px] mb-4 tracking-widest uppercase">👤 Dados do Cliente</h3>
-                <div class="space-y-3">
-                    <div><label>Nome Completo *</label><input type="text" id="nomeCliente" placeholder="Ex: Maria Silva"></div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div><label>WhatsApp *</label><input type="tel" id="telCliente" placeholder="(00) 00000-0000"></div>
-                        <div><label>Cidade *</label><input type="text" id="cidCliente" placeholder="Sua Cidade"></div>
-                    </div>
+        <div class="card">
+            <h3 class="gold-text serif text-[10px] mb-4 tracking-widest uppercase">Dados Pessoais</h3>
+            <div class="space-y-4">
+                <div><label>Nome Completo *</label><input type="text" id="nomeCliente"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label>WhatsApp *</label><input type="tel" id="telCliente"></div>
+                    <div><label>Cidade *</label><input type="text" id="cidCliente"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="card">
-                <h3 class="gold-text serif text-[10px] mb-4 tracking-widest uppercase">🚚 Endereço de Entrega</h3>
-                <div class="space-y-3">
-                    <div><label>Rua e Número</label><input type="text" id="entEnd" placeholder="Rua..., nº 123"></div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="col-span-1"><label>Bairro</label><input type="text" id="entBairro" placeholder="Bairro"></div>
-                        <div class="col-span-1"><label>CEP</label><input type="text" id="entCep" placeholder="00000-000"></div>
-                        <div class="col-span-1"><label>Cidade/UF</label><input type="text" id="entCid" placeholder="Destino"></div>
-                    </div>
+        <div class="card">
+            <h3 class="gold-text serif text-[10px] mb-4 tracking-widest uppercase">Local de Entrega</h3>
+            <div class="space-y-4">
+                <div><label>Rua, Número e Bairro</label><input type="text" id="entEnd"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label>CEP</label><input type="text" id="entCep"></div>
+                    <div><label>Cidade Destino</label><input type="text" id="entCid"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="gold-text serif text-[9px] mb-3 text-center tracking-[2px]">ESCOLHA A FORMA DE PAGAMENTO</h3>
-        <div class="grid grid-cols-3 gap-2">
+        <h3 class="gold-text serif text-[9px] mb-3 text-center tracking-widest">FORMA DE PAGAMENTO</h3>
+        <div class="flex gap-3">
             <button onclick="setMetodo('pix')" id="btn-pix" class="btn-pay">
-                <span class="text-[11px] font-bold">PIX</span>
-                <span class="text-[9px] text-green-500 font-bold">-5% OFF</span>
+                <span class="text-xs font-bold">PIX</span><br>
+                <span class="text-[9px] text-green-500">-5% DESCONTO</span>
             </button>
             <button onclick="setMetodo('cartao')" id="btn-cartao" class="btn-pay">
-                <span class="text-[11px] font-bold">CARTÃO</span>
+                <span class="text-xs font-bold">CARTÃO</span><br>
                 <span class="text-[9px] text-gray-500">VALOR CHEIO</span>
-            </button>
-            <button onclick="setMetodo('promo')" id="btn-promo" class="btn-pay">
-                <span class="text-[11px] font-bold">PROMOÇÃO</span>
-                <span id="promo-label" class="text-[9px] text-blue-400">VERIFICANDO...</span>
             </button>
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-[#000]/95 backdrop-blur-lg border-t border-[#caa85c]/30 p-4 z-50">
-        <div class="max-w-3xl mx-auto">
-            <div class="grid grid-cols-3 gap-4 mb-4 text-center border-b border-[#222] pb-2">
-                <div><label>Total Peças</label><p id="res-pecas" class="text-white font-bold text-sm">0</p></div>
-                <div><label>Peso Total</label><p id="res-peso" class="text-white font-bold text-sm">0g</p></div>
-                <div><label>Subtotal</label><p id="res-sub" class="text-white font-bold text-sm">R$ 0,00</p></div>
+    <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-[#333] p-4 z-50 shadow-2xl">
+        <div class="max-w-xl mx-auto">
+            <div class="flex justify-between text-[10px] font-bold text-gray-500 uppercase mb-3 border-b border-[#222] pb-2">
+                <span>Peças: <b id="res-pecas" class="text-white">0</b></span>
+                <span>Peso: <b id="res-peso" class="text-white">0g</b></span>
+                <span>Subtotal: <b id="res-sub" class="text-white">R$ 0,00</b></span>
             </div>
-            
-            <div class="flex justify-between items-center mb-4">
-                <div class="text-left">
-                    <p class="text-[10px] text-green-500 font-bold uppercase" id="label-metodo">Desconto Pix Aplicado</p>
-                    <p class="text-[11px] text-gray-500 italic" id="txt-parcela">Ou em 3x s/ juros</p>
+
+            <div class="space-y-1 mb-4">
+                <div class="flex justify-between text-xs text-blue-400 font-semibold" id="promo-row" style="display:none;">
+                    <span>PROMOÇÃO ATIVA:</span> <span id="res-promo">- R$ 0,00</span>
                 </div>
-                <div class="text-right">
-                    <p class="text-2xl font-black gold-text" id="res-total">R$ 0,00</p>
+                <div class="flex justify-between text-xs text-green-500 font-semibold" id="pix-row">
+                    <span>DESCONTO PIX:</span> <span id="res-pix">- R$ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center pt-1">
+                    <span class="text-gray-400 text-[11px] italic" id="res-parcelas">Ou 3x de R$ 0,00</span>
+                    <span class="text-2xl font-black gold-text" id="res-total">R$ 0,00</span>
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <button onclick="gerarPDF()" class="bg-[#222] border border-[#333] px-4 rounded-xl flex flex-col items-center justify-center min-w-[80px]">
-                    <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span class="text-[8px] font-bold uppercase">Baixar PDF</span>
+                <button onclick="gerarPDF()" class="bg-[#222] border border-[#444] p-4 rounded-xl flex flex-col items-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span class="text-[8px] font-bold uppercase mt-1">PDF</span>
                 </button>
-                <button onclick="enviarPedido()" class="flex-1 bg-[#caa85c] text-black rounded-xl font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-[#caa85c]/20">
-                    Enviar Pedido via WhatsApp
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-2.135 0-4.148 1.157-5.235 3.012-.438.746-.666 1.583-.666 2.422 0 .614.116 1.21.343 1.76l-.371 1.355 1.391-.365c.529.3 1.118.458 1.714.458h.003c2.135 0 4.148-1.157 5.235-3.012.438-.746.666-1.583.666-2.422 0-2.406-1.957-4.208-4.08-4.208zm3.487 5.672c-.52 1.042-1.705 1.782-2.91 1.782h-.002c-.443 0-.877-.11-1.258-.323l-.091-.051-.836.22.224-.817-.056-.09c-.218-.352-.332-.755-.332-1.17 0-.643.174-1.272.508-1.841.52-1.042 1.705-1.782 2.91-1.782 1.631 0 2.883 1.378 2.883 3.012 0 .393-.071.776-.21 1.137z"/></svg>
+                <button onclick="enviarPedido()" class="flex-1 bg-[#caa85c] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-[#caa85c]/20">
+                    Finalizar no WhatsApp
                 </button>
             </div>
         </div>
@@ -129,70 +128,72 @@ async function render() {
     let sub = 0, pecas = 0, pesoTotal = 0;
 
     carrinho.forEach((item, idx) => {
-        const pUn = item.precoFinal || 0;
-        const pTot = pUn * item.quantidade;
+        const vUn = item.precoFinal || 0;
+        const vTot = vUn * item.quantidade;
         const wUn = Number(item.peso || 0);
         const wTot = wUn * item.quantidade;
-
-        sub += pTot; pecas += item.quantidade; pesoTotal += wTot;
+        sub += vTot; pecas += item.quantidade; pesoTotal += wTot;
 
         box.innerHTML += `
             <div class="item-row">
-                <img src="${item.image || item.foto}" class="w-14 h-14 object-cover rounded-lg bg-black">
+                <img src="${item.image || item.foto}" class="w-14 h-14 object-cover rounded-lg">
                 <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start mb-1">
-                        <h4 class="text-[11px] font-bold uppercase truncate pr-4">${item.nome}</h4>
-                        <button onclick="remover(${idx})" class="text-gray-600 hover:text-red-500">✕</button>
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-[11px] font-bold uppercase truncate">${item.nome}</h4>
+                        <button onclick="remover(${idx})" class="text-gray-600 text-xs">✕</button>
                     </div>
-                    <div class="grid-info">
-                        <div><span class="text-[#666]">UN:</span> ${fMoeda(pUn)}</div>
-                        <div><span class="text-[#666]">TOTAL:</span> <b class="gold-text">${fMoeda(pTot)}</b></div>
-                        <div><span class="text-[#666]">PESO:</span> ${wUn.toFixed(2)}g</div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[#666]">QTD:</span>
-                            <input type="number" value="${item.quantidade}" onchange="editarQtd(${idx}, this.value)" 
-                                class="!w-12 !p-0.5 text-center !text-[11px] !border-[#444]">
+                    <div class="grid grid-cols-2 text-[10px] mt-2 gap-y-1">
+                        <div><span class="text-gray-500">Un:</span> ${fMoeda(vUn)}</div>
+                        <div class="text-right"><span class="text-gray-500">Total:</span> <b class="gold-text">${fMoeda(vTot)}</b></div>
+                        <div><span class="text-gray-500">Peso:</span> ${wUn.toFixed(2)}g</div>
+                        <div class="text-right flex items-center justify-end gap-1">
+                            <span class="text-gray-500">Qtd:</span>
+                            <input type="number" value="${item.quantidade}" onchange="editarQtd(${idx}, this.value)" class="input-qtd">
                         </div>
                     </div>
                 </div>
             </div>`;
     });
 
-    if(carrinho.length === 0) box.innerHTML = '<p class="text-center py-6 text-xs text-gray-500">Nenhum item adicionado.</p>';
-
+    // Lógica de Promoção Automática do Firebase
     const snap = await db.ref('settings/promocao').once('value');
     const p = snap.val() || { ativa: false };
     let pctP = 0;
     if(p.ativa && p.regras_progressivas) {
         Object.values(p.regras_progressivas).forEach(r => { if(sub >= r.min) pctP = r.desc; });
     }
-    document.getElementById('promo-label').innerText = pctP + "% OFF";
 
-    let desc = 0;
-    if(metodoPagamento === 'pix') {
-        desc = sub * 0.05;
-        document.getElementById('label-metodo').innerText = "Desconto PIX (5%) Aplicado";
-    } else if(metodoPagamento === 'promo') {
-        desc = sub * (pctP/100);
-        document.getElementById('label-metodo').innerText = `Desconto Promoção (${pctP}%) Aplicado`;
-    } else {
-        document.getElementById('label-metodo').innerText = "Pagamento no Cartão (Sem desconto)";
-    }
+    // Cálculos de Desconto
+    let descPromo = sub * (pctP / 100);
+    let descPix = (metodoPagamento === 'pix') ? (sub - descPromo) * 0.05 : 0;
+    let totalFinal = sub - descPromo - descPix;
 
-    const totalFinal = sub - desc;
+    // Atualização da UI Financeira
     document.getElementById('res-pecas').innerText = pecas;
     document.getElementById('res-peso').innerText = pesoTotal.toFixed(2) + 'g';
     document.getElementById('res-sub').innerText = fMoeda(sub);
     document.getElementById('res-total').innerText = fMoeda(totalFinal);
-    document.getElementById('txt-parcela').innerText = `Ou em 3x de ${fMoeda(totalFinal / 3)}`;
+    document.getElementById('res-parcelas').innerText = `Ou 3x de ${fMoeda(totalFinal / 3)}`;
+
+    // Mostrar ou ocultar linhas de desconto
+    const rowPromo = document.getElementById('promo-row');
+    if(pctP > 0) {
+        rowPromo.style.display = 'flex';
+        document.getElementById('res-promo').innerText = `- ${fMoeda(descPromo)} (${pctP}%)`;
+    } else { rowPromo.style.display = 'none'; }
+
+    const rowPix = document.getElementById('pix-row');
+    if(descPix > 0) {
+        rowPix.style.display = 'flex';
+        document.getElementById('res-pix').innerText = `- ${fMoeda(descPix)}`;
+    } else { rowPix.style.display = 'none'; }
 
     document.querySelectorAll('.btn-pay').forEach(b => b.classList.remove('active'));
     document.getElementById('btn-' + metodoPagamento).classList.add('active');
 }
 
 function editarQtd(idx, val) {
-    carrinho[idx].quantidade = parseInt(val) || 1;
-    if(carrinho[idx].quantidade < 1) carrinho[idx].quantidade = 1;
+    carrinho[idx].quantidade = Math.max(1, parseInt(val) || 1);
     salvar();
 }
 function setMetodo(m) { metodoPagamento = m; render(); }
@@ -206,8 +207,9 @@ function gerarPDF() {
 
 async function enviarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if(!nome || carrinho.length === 0) return alert("Por favor, preencha os dados e adicione itens.");
-    const msg = `Olá, meu nome é *${nome}*!\nFiz um pedido na Abella Joias.\n\n💰 *Total:* ${document.getElementById('res-total').innerText}\n💳 *Pagamento:* ${metodoPagamento.toUpperCase()}`;
+    if(!nome || carrinho.length === 0) return alert("Preencha seu nome e adicione itens.");
+    const total = document.getElementById('res-total').innerText;
+    const msg = `Olá, meu nome é *${nome}*!\nAcabei de fazer um pedido na Abella Joias.\n\n💰 *Total:* ${total}\n💳 *Pagamento:* ${metodoPagamento.toUpperCase()}\n\nAguardando seu retorno!`;
     window.location.href = `https://api.whatsapp.com/send?phone=5519988207658&text=${encodeURIComponent(msg)}`;
 }
 render();
