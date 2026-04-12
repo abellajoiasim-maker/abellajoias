@@ -2,111 +2,120 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Carrinho • Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Checkout • Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; padding-bottom: 260px; }
+        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; padding-bottom: 200px; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
-        .card { background: #111; border-radius: 12px; border: 1px solid #222; padding: 15px; margin-bottom: 12px; }
-        label { font-size: 10px; text-transform: uppercase; color: #666; font-weight: 700; margin-bottom: 5px; display: block; }
-        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; border-radius: 8px !important; padding: 10px !important; width: 100%; outline: none; font-size: 13px; }
+        .card { background: #111; border-radius: 10px; border: 1px solid #222; padding: 12px; margin-bottom: 10px; }
+        label { font-size: 9px; text-transform: uppercase; color: #555; font-weight: 800; margin-bottom: 3px; display: block; letter-spacing: 0.5px; }
+        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; border-radius: 6px !important; padding: 8px !important; width: 100%; outline: none; font-size: 12px; height: 35px; }
         input:focus { border-color: #caa85c !important; }
         
-        /* Botões de Pagamento Lado a Lado */
-        .btn-pay { border: 1px solid #333; background: #000; height: 60px; border-radius: 12px; transition: 0.3s; width: 100%; }
-        .btn-pay.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.15); color: #caa85c; }
+        .btn-pay { border: 1px solid #333; background: #000; height: 50px; border-radius: 10px; transition: 0.3s; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-pay.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.1); color: #caa85c; }
         
-        .item-row { display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #222; padding: 12px 0; }
-        .item-row:last-child { border: none; }
-        .input-qtd { width: 55px !important; text-align: center; border: 1px solid #444 !important; background: #000 !important; height: 30px !important; padding: 0 !important; }
+        .item-row { display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #222; padding: 8px 0; }
+        .input-qtd { width: 45px !important; text-align: center; height: 25px !important; padding: 0 !important; font-weight: bold; }
+        
+        /* Ajuste de escala para resoluções menores */
+        @media (max-height: 700px) {
+            .card { padding: 8px; margin-bottom: 8px; }
+            body { padding-bottom: 180px; }
+        }
     </style>
 </head>
-<body class="p-4">
+<body class="p-3">
 
-    <header class="flex justify-between items-center mb-6">
-        <button onclick="window.location.href='index.html'" class="gold-text text-xs font-bold uppercase flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg> Voltar
+    <header class="flex justify-between items-center mb-4 border-b border-[#222] pb-2">
+        <button onclick="window.location.href='index.html'" class="gold-text text-[10px] font-bold uppercase flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg> Voltar
         </button>
-        <h1 class="serif text-sm gold-text tracking-widest uppercase text-center">Finalizar Pedido</h1>
-        <div class="w-10"></div>
+        <h1 class="serif text-xs gold-text tracking-widest uppercase">Carrinho</h1>
+        <div class="w-8"></div>
     </header>
 
     <div id="area-impressao">
         <div class="card">
-            <h3 class="gold-text serif text-[10px] mb-2 tracking-widest uppercase border-b border-[#222] pb-2">Itens no Carrinho</h3>
-            <div id="lista-carrinho"></div>
+            <h3 class="gold-text serif text-[9px] mb-2 tracking-widest uppercase">Itens Selecionados</h3>
+            <div id="lista-carrinho" class="max-h-[30vh] overflow-y-auto pr-1"></div>
         </div>
 
-        <div class="card">
-            <h3 class="gold-text serif text-[10px] mb-4 tracking-widest uppercase">Dados Pessoais</h3>
-            <div class="space-y-4">
-                <div><label>Nome Completo *</label><input type="text" id="nomeCliente"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label>WhatsApp *</label><input type="tel" id="telCliente"></div>
-                    <div><label>Cidade *</label><input type="text" id="cidCliente"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="card">
+                <h3 class="gold-text serif text-[9px] mb-3 tracking-widest uppercase">👤 Cliente</h3>
+                <div class="space-y-2">
+                    <div><label>Nome Completo *</label><input type="text" id="nomeCliente"></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label>WhatsApp *</label><input type="tel" id="telCliente"></div>
+                        <div><label>Cidade *</label><input type="text" id="cidCliente"></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <h3 class="gold-text serif text-[10px] mb-4 tracking-widest uppercase">Local de Entrega</h3>
-            <div class="space-y-4">
-                <div><label>Rua, Número e Bairro</label><input type="text" id="entEnd"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label>CEP</label><input type="text" id="entCep"></div>
-                    <div><label>Cidade Destino</label><input type="text" id="entCid"></div>
+            <div class="card">
+                <h3 class="gold-text serif text-[9px] mb-3 tracking-widest uppercase">🚚 Endereço de Entrega</h3>
+                <div class="space-y-2">
+                    <div class="grid grid-cols-4 gap-2">
+                        <div class="col-span-3"><label>Logradouro (Rua/Av) *</label><input type="text" id="entRua"></div>
+                        <div class="col-span-1"><label>Nº *</label><input type="text" id="entNum"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label>Bairro *</label><input type="text" id="entBairro"></div>
+                        <div><label>CEP *</label><input type="text" id="entCep"></div>
+                    </div>
+                    <div><label>Cidade / UF *</label><input type="text" id="entCid"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="gold-text serif text-[9px] mb-3 text-center tracking-widest">FORMA DE PAGAMENTO</h3>
-        <div class="flex gap-3">
+        <label class="text-center mb-2 block">Forma de Pagamento</label>
+        <div class="flex gap-2">
             <button onclick="setMetodo('pix')" id="btn-pix" class="btn-pay">
-                <span class="text-xs font-bold">PIX</span><br>
-                <span class="text-[9px] text-green-500">-5% DESCONTO</span>
+                <span class="text-[11px] font-bold">PIX</span>
+                <span class="text-[8px] text-green-500">-5% OFF</span>
             </button>
             <button onclick="setMetodo('cartao')" id="btn-cartao" class="btn-pay">
-                <span class="text-xs font-bold">CARTÃO</span><br>
-                <span class="text-[9px] text-gray-500">VALOR CHEIO</span>
+                <span class="text-[11px] font-bold">CARTÃO</span>
+                <span class="text-[8px] text-gray-500">VALOR CHEIO</span>
             </button>
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-[#333] p-4 z-50 shadow-2xl">
+    <div class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-[#333] p-3 z-50">
         <div class="max-w-xl mx-auto">
-            <div class="flex justify-between text-[10px] font-bold text-gray-500 uppercase mb-3 border-b border-[#222] pb-2">
+            <div class="flex justify-between text-[9px] font-bold text-gray-500 mb-2 uppercase border-b border-[#222] pb-1">
                 <span>Peças: <b id="res-pecas" class="text-white">0</b></span>
                 <span>Peso: <b id="res-peso" class="text-white">0g</b></span>
                 <span>Subtotal: <b id="res-sub" class="text-white">R$ 0,00</b></span>
             </div>
 
-            <div class="space-y-1 mb-4">
-                <div class="flex justify-between text-xs text-blue-400 font-semibold" id="promo-row" style="display:none;">
-                    <span>PROMOÇÃO ATIVA:</span> <span id="res-promo">- R$ 0,00</span>
+            <div class="flex justify-between items-center mb-3">
+                <div class="leading-none">
+                    <span class="text-[10px] text-blue-400 font-bold block" id="res-promo-txt"></span>
+                    <span class="text-[10px] text-green-500 font-bold block" id="res-pix-txt"></span>
+                    <span class="text-[10px] text-gray-500 italic" id="res-parcelas"></span>
                 </div>
-                <div class="flex justify-between text-xs text-green-500 font-semibold" id="pix-row">
-                    <span>DESCONTO PIX:</span> <span id="res-pix">- R$ 0,00</span>
-                </div>
-                <div class="flex justify-between items-center pt-1">
-                    <span class="text-gray-400 text-[11px] italic" id="res-parcelas">Ou 3x de R$ 0,00</span>
-                    <span class="text-2xl font-black gold-text" id="res-total">R$ 0,00</span>
+                <div class="text-right leading-none">
+                    <span class="text-[9px] text-gray-500 uppercase block">Total Final</span>
+                    <span class="text-xl font-black gold-text" id="res-total">R$ 0,00</span>
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <button onclick="gerarPDF()" class="bg-[#222] border border-[#444] p-4 rounded-xl flex flex-col items-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    <span class="text-[8px] font-bold uppercase mt-1">PDF</span>
+                <button onclick="gerarPDF()" class="bg-[#222] border border-[#444] px-4 rounded-lg flex flex-col items-center justify-center min-w-[60px]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span class="text-[7px] font-bold uppercase mt-1">BAIXAR PDF</span>
                 </button>
-                <button onclick="enviarPedido()" class="flex-1 bg-[#caa85c] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-[#caa85c]/20">
+                <button onclick="enviarPedido()" class="flex-1 bg-[#caa85c] text-black rounded-lg font-black uppercase text-[11px] tracking-widest h-[45px]">
                     Finalizar no WhatsApp
                 </button>
             </div>
@@ -128,26 +137,22 @@ async function render() {
     let sub = 0, pecas = 0, pesoTotal = 0;
 
     carrinho.forEach((item, idx) => {
-        const vUn = item.precoFinal || 0;
-        const vTot = vUn * item.quantidade;
-        const wUn = Number(item.peso || 0);
-        const wTot = wUn * item.quantidade;
+        const vUn = item.precoFinal || 0, vTot = vUn * item.quantidade;
+        const wUn = Number(item.peso || 0), wTot = wUn * item.quantidade;
         sub += vTot; pecas += item.quantidade; pesoTotal += wTot;
 
         box.innerHTML += `
             <div class="item-row">
-                <img src="${item.image || item.foto}" class="w-14 h-14 object-cover rounded-lg">
+                <img src="${item.image || item.foto}" class="w-10 h-10 object-cover rounded">
                 <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start">
-                        <h4 class="text-[11px] font-bold uppercase truncate">${item.nome}</h4>
-                        <button onclick="remover(${idx})" class="text-gray-600 text-xs">✕</button>
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-[10px] font-bold uppercase truncate">${item.nome}</h4>
+                        <button onclick="remover(${idx})" class="text-gray-600 text-[10px]">✕</button>
                     </div>
-                    <div class="grid grid-cols-2 text-[10px] mt-2 gap-y-1">
-                        <div><span class="text-gray-500">Un:</span> ${fMoeda(vUn)}</div>
-                        <div class="text-right"><span class="text-gray-500">Total:</span> <b class="gold-text">${fMoeda(vTot)}</b></div>
-                        <div><span class="text-gray-500">Peso:</span> ${wUn.toFixed(2)}g</div>
-                        <div class="text-right flex items-center justify-end gap-1">
-                            <span class="text-gray-500">Qtd:</span>
+                    <div class="flex justify-between items-center text-[9px] mt-1">
+                        <span>Un: ${fMoeda(vUn)} | Peso: ${wUn.toFixed(2)}g</span>
+                        <div class="flex items-center gap-1">
+                            <span>Qtd:</span>
                             <input type="number" value="${item.quantidade}" onchange="editarQtd(${idx}, this.value)" class="input-qtd">
                         </div>
                     </div>
@@ -155,7 +160,6 @@ async function render() {
             </div>`;
     });
 
-    // Lógica de Promoção Automática do Firebase
     const snap = await db.ref('settings/promocao').once('value');
     const p = snap.val() || { ativa: false };
     let pctP = 0;
@@ -163,54 +167,38 @@ async function render() {
         Object.values(p.regras_progressivas).forEach(r => { if(sub >= r.min) pctP = r.desc; });
     }
 
-    // Cálculos de Desconto
     let descPromo = sub * (pctP / 100);
     let descPix = (metodoPagamento === 'pix') ? (sub - descPromo) * 0.05 : 0;
     let totalFinal = sub - descPromo - descPix;
 
-    // Atualização da UI Financeira
     document.getElementById('res-pecas').innerText = pecas;
     document.getElementById('res-peso').innerText = pesoTotal.toFixed(2) + 'g';
     document.getElementById('res-sub').innerText = fMoeda(sub);
     document.getElementById('res-total').innerText = fMoeda(totalFinal);
-    document.getElementById('res-parcelas').innerText = `Ou 3x de ${fMoeda(totalFinal / 3)}`;
+    document.getElementById('res-parcelas').innerText = `3x de ${fMoeda(totalFinal / 3)}`;
 
-    // Mostrar ou ocultar linhas de desconto
-    const rowPromo = document.getElementById('promo-row');
-    if(pctP > 0) {
-        rowPromo.style.display = 'flex';
-        document.getElementById('res-promo').innerText = `- ${fMoeda(descPromo)} (${pctP}%)`;
-    } else { rowPromo.style.display = 'none'; }
-
-    const rowPix = document.getElementById('pix-row');
-    if(descPix > 0) {
-        rowPix.style.display = 'flex';
-        document.getElementById('res-pix').innerText = `- ${fMoeda(descPix)}`;
-    } else { rowPix.style.display = 'none'; }
+    document.getElementById('res-promo-txt').innerText = pctP > 0 ? `PROMO: -${fMoeda(descPromo)}` : '';
+    document.getElementById('res-pix-txt').innerText = descPix > 0 ? `PIX: -${fMoeda(descPix)}` : '';
 
     document.querySelectorAll('.btn-pay').forEach(b => b.classList.remove('active'));
     document.getElementById('btn-' + metodoPagamento).classList.add('active');
 }
 
-function editarQtd(idx, val) {
-    carrinho[idx].quantidade = Math.max(1, parseInt(val) || 1);
-    salvar();
-}
+function editarQtd(idx, val) { carrinho[idx].quantidade = Math.max(1, parseInt(val) || 1); salvar(); }
 function setMetodo(m) { metodoPagamento = m; render(); }
 function remover(idx) { carrinho.splice(idx,1); salvar(); }
 function salvar() { localStorage.setItem('carrinho', JSON.stringify(carrinho)); render(); }
 
 function gerarPDF() {
-    const opt = { margin: 10, filename: 'pedido-abella.pdf', html2canvas: { scale: 2, backgroundColor: '#0b0b0b' }, jsPDF: { unit: 'mm', format: 'a4' } };
+    const opt = { margin: 5, filename: 'pedido-abella.pdf', html2canvas: { scale: 2, backgroundColor: '#0b0b0b' }, jsPDF: { unit: 'mm', format: 'a4' } };
     html2pdf().set(opt).from(document.getElementById('area-impressao')).save();
 }
 
 async function enviarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if(!nome || carrinho.length === 0) return alert("Preencha seu nome e adicione itens.");
+    if(!nome || carrinho.length === 0) return alert("Preencha o nome.");
     const total = document.getElementById('res-total').innerText;
-    const msg = `Olá, meu nome é *${nome}*!\nAcabei de fazer um pedido na Abella Joias.\n\n💰 *Total:* ${total}\n💳 *Pagamento:* ${metodoPagamento.toUpperCase()}\n\nAguardando seu retorno!`;
-    window.location.href = `https://api.whatsapp.com/send?phone=5519988207658&text=${encodeURIComponent(msg)}`;
+    window.location.href = `https://api.whatsapp.com/send?phone=5519988207658&text=${encodeURIComponent('Nome: '+nome+'\nTotal: '+total+'\nPagamento: '+metodoPagamento.toUpperCase())}`;
 }
 render();
 </script>
