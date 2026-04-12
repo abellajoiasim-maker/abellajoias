@@ -12,11 +12,9 @@
     <link rel="stylesheet" href="admin-style.css">
 
     <style>
-        /* Ajuste fino para o editor de pedidos e scroll */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
         
-        /* Garantia absoluta de limpeza na impressão */
         @media print {
             body { background: white !important; }
             header, nav, main, #editorPedido { display: none !important; }
@@ -53,48 +51,48 @@
             </div>
             
             <div class="grid md:grid-cols-2 gap-4">
-                <div class="card bg-black/40">
+                <div class="card bg-black/40 p-4 border border-[#222] rounded-lg">
                     <p class="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-widest">Dados Pessoais</p>
-                    <input id="edClienteNome" placeholder="Nome do Cliente" class="w-full bg-[#111] border border-[#333] p-2 rounded mb-2">
-                    <input id="edClienteTel" placeholder="WhatsApp" class="w-full bg-[#111] border border-[#333] p-2 rounded">
+                    <input id="edClienteNome" placeholder="Nome do Cliente" class="w-full bg-[#111] border border-[#333] p-2 rounded mb-2 text-white">
+                    <input id="edClienteTel" placeholder="WhatsApp" class="w-full bg-[#111] border border-[#333] p-2 rounded text-white">
                 </div>
-                <div class="card bg-black/40">
+                <div class="card bg-black/40 p-4 border border-[#222] rounded-lg">
                     <p class="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-widest">Entrega / Logística</p>
-                    <input id="edRua" placeholder="Endereço Completo" class="w-full bg-[#111] border border-[#333] p-2 rounded mb-2">
-                    <input id="edCidade" placeholder="Cidade / Estado" class="w-full bg-[#111] border border-[#333] p-2 rounded">
+                    <input id="edRua" placeholder="Endereço Completo" class="w-full bg-[#111] border border-[#333] p-2 rounded mb-2 text-white">
+                    <input id="edCidade" placeholder="Cidade / Estado" class="w-full bg-[#111] border border-[#333] p-2 rounded text-white">
                 </div>
             </div>
 
             <div class="mt-6 flex justify-between items-center px-1">
                 <h3 class="text-[#caa85c] font-bold text-sm uppercase italic">Itens do Pedido</h3>
-                <button class="btn bg-green-900/30 text-green-500 border-green-900 hover:bg-green-900" onclick="addItemEditor()">+ ADICIONAR ITEM (SKU)</button>
+                <button class="btn bg-green-900/30 text-green-500 border-green-900 hover:bg-green-900 px-4 py-2 rounded text-xs" onclick="addItemEditor()">+ ADICIONAR ITEM (SKU)</button>
             </div>
 
             <div id="edItens" class="mt-2 space-y-2"></div>
 
-            <div class="card mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 bg-[#1a1a1a]">
-                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Promo (R$)</label><input id="edDescPromo" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Pix (R$)</label><input id="edDescPix" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase">Frete (R$)</label><input id="edFrete" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase">Total Peças</label><input id="edQtdTotal" type="number" readonly class="w-full bg-black/50 border border-[#333] p-2 rounded opacity-50 cursor-not-allowed"></div>
+            <div class="card mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 bg-[#1a1a1a] p-4 border border-[#222] rounded-lg">
+                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Promo (R$)</label><input id="edDescPromo" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded text-white"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Pix (R$)</label><input id="edDescPix" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded text-white"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase">Frete (R$)</label><input id="edFrete" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded text-white"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase">Total Peças</label><input id="edQtdTotal" type="number" readonly class="w-full bg-black/50 border border-[#333] p-2 rounded opacity-50 cursor-not-allowed text-white"></div>
             </div>
             
             <div class="mt-6 p-4 border border-[#222] rounded-xl bg-black/20">
                 <p class="text-[10px] text-gray-500 mb-2 uppercase font-bold text-center">Gerar Romaneio (Escolha o Modelo):</p>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    <button class="btn bg-blue-900 text-[9px] hover:bg-blue-700" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA</button>
-                    <button class="btn bg-blue-900 text-[9px] hover:bg-blue-700" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO</button>
-                    <button class="btn bg-blue-900 text-[9px] hover:bg-blue-700" onclick="imprimirRomaneio(pedidoEditando, 3)">3. VITRINE (FOTO)</button>
-                    <button class="btn bg-indigo-900 text-[9px] hover:bg-indigo-700" onclick="imprimirRomaneio(pedidoEditando, 4)">4. GRADE CONF.</button>
-                    <button class="btn bg-indigo-900 text-[9px] hover:bg-indigo-700" onclick="imprimirRomaneio(pedidoEditando, 5)">5. GRADE FIN.</button>
-                    <button class="btn bg-indigo-900 text-[9px] hover:bg-indigo-700" onclick="imprimirRomaneio(pedidoEditando, 6)">6. GRADE TOTAL</button>
+                    <button class="btn bg-blue-900/40 text-blue-400 border-blue-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA</button>
+                    <button class="btn bg-blue-900/40 text-blue-400 border-blue-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO</button>
+                    <button class="btn bg-blue-900/40 text-blue-400 border-blue-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 3)">3. VITRINE (FOTO)</button>
+                    <button class="btn bg-indigo-900/40 text-indigo-400 border-indigo-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 4)">4. GRADE CONF.</button>
+                    <button class="btn bg-indigo-900/40 text-indigo-400 border-indigo-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 5)">5. GRADE FIN.</button>
+                    <button class="btn bg-indigo-900/40 text-indigo-400 border-indigo-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 6)">6. GRADE TOTAL</button>
                 </div>
             </div>
 
             <div class="flex flex-col md:flex-row gap-2 pt-6 mt-4 border-t border-[#222]">
-                <button class="btn-gold flex-grow py-3" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
-                <button class="btn bg-red-900/20 text-red-500 border-red-900 hover:bg-red-600 hover:text-white" onclick="excluirPedido(pedidoEditando)">EXCLUIR</button>
-                <button class="btn py-3" onclick="fecharEditorPedido()">CANCELAR</button>
+                <button class="btn bg-[#caa85c] text-black font-bold flex-grow py-3 rounded-lg" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
+                <button class="btn bg-red-900/20 text-red-500 border-red-900 hover:bg-red-600 hover:text-white px-6 py-3 rounded-lg" onclick="excluirPedido(pedidoEditando)">EXCLUIR</button>
+                <button class="btn border-[#333] text-gray-400 py-3 px-6 rounded-lg" onclick="fecharEditorPedido()">CANCELAR</button>
             </div>
         </div>
     </div>
@@ -102,10 +100,26 @@
     <div id="print-area"></div>
 
     <script>
-        // Variável global que armazena qual ID de pedido estamos editando no momento
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
         var pedidoEditando = null;
     </script>
+
     <script src="admin-logic.js"></script>
-    <script>window.onload = () => carregarPedidos();</script>
+    <script>
+        window.onload = () => {
+            if (typeof carregarPedidos === "function") {
+                carregarPedidos();
+            } else {
+                console.error("Função carregarPedidos não encontrada no admin-logic.js");
+            }
+        };
+    </script>
 </body>
 </html>
