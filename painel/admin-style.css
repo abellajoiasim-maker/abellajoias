@@ -1,21 +1,110 @@
-/* Estilo Base - Abella Joias */
-body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
+/* ============================================================
+   ESTILO BASE - ABELLA JOIAS (PAINEL ADMIN)
+   ============================================================ */
+body { background:#0b0b0b; color:#eee; font-family:Inter, Arial, sans-serif; margin:0; }
+
+/* Navegação e Tabs */
 nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
 section { display:none; min-height:300px; }
 section.active { display:block; }
+
+/* Componentes de UI */
 .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
-.btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
-.btn:hover { background:#333; }
-.btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; }
-input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
+.btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.btn:hover { background:#333; border-color: #555; }
+.btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; text-transform: uppercase; transition: 0.3s; }
+.btn-gold:hover { background: #e2bd6e; transform: translateY(-1px); }
+
+/* Formulários */
+input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; transition: 0.2s; }
+input:focus { border-color: #caa85c; background: #161616; }
+
+/* Scrollbar Personalizada */
 .custom-scroll::-webkit-scrollbar { width: 4px; }
 .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
 
-/* Estilos de Impressão */
+/* ============================================================
+   SISTEMA DE GRADE PARA ROMANEIOS (TIPOS 4, 5 e 6)
+   ============================================================ */
+.grid-romaneio {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 colunas por linha */
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.item-grade {
+    border: 1px solid #eee;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.item-grade img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.item-grade-info {
+    flex: 1;
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+/* ============================================================
+   ESTILOS DE IMPRESSÃO (ANTI-PÁGINA EM BRANCO)
+   ============================================================ */
 #print-area { display: none; }
+
 @media print {
-    @page { size: A4; margin: 10mm; }
+    /* Configuração da Página */
+    @page { 
+        size: A4; 
+        margin: 8mm 10mm 8mm 10mm; /* Margens equilibradas */
+    }
+
+    /* Reset de visual para impressão */
+    html, body { 
+        background: #fff !important; 
+        color: #000 !important; 
+        height: auto !important; 
+        overflow: visible !important; 
+    }
+
+    /* Esconde tudo o que não é o romaneio */
     body * { visibility: hidden; }
+    
+    /* Mostra a área de impressão */
     #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
+    #print-area { 
+        display: block !important; 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Evita que um produto seja cortado no meio entre duas páginas */
+    tr, .item-grade, .card { 
+        page-break-inside: avoid !important; 
+        break-inside: avoid !important; 
+    }
+
+    /* Força quebra de página se necessário */
+    .page-break { page-break-before: always; }
+
+    /* Estilo de Tabelas no Romaneio */
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+    td, th { border: 1px solid #ddd; padding: 6px; font-size: 11px; }
+
+    /* Ajuste para imagens aparecerem na impressão */
+    img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
