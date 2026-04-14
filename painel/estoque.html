@@ -15,19 +15,20 @@
         .card-gold { background: #111; border: 1px solid #222; border-left: 4px solid #caa85c; border-radius: 15px; }
         .card-item { background: #141414; border: 1px solid #222; transition: 0.3s; border-radius: 12px; }
         input, select, textarea { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; outline: none; padding: 10px; border-radius: 8px; width: 100%; font-size: 13px; }
-        input:focus, select:focus { border-color: #caa85c !important; }
-        .btn-nav { padding: 10px 20px; font-size: 11px; font-weight: bold; background: #1a1a1a; color: #666; border-radius: 8px; text-transform: uppercase; border: 1px solid #333; }
+        input:focus { border-color: #caa85c !important; }
+        .btn-nav { padding: 10px 20px; font-size: 11px; font-weight: bold; background: #1a1a1a; color: #666; border-radius: 8px; text-transform: uppercase; border: 1px solid #333; min-width: 120px; }
         .btn-nav.active { background: #caa85c; color: #000; border-color: #caa85c; }
-        .btn-main { background: #caa85c; color: #000; font-weight: bold; padding: 12px; border-radius: 10px; text-transform: uppercase; font-size: 12px; width: 100%; transition: 0.3s; }
-        section { display: none; padding: 20px; max-width: 1000px; margin: auto; }
+        .btn-main { background: #caa85c; color: #000; font-weight: bold; padding: 12px; border-radius: 10px; text-transform: uppercase; font-size: 11px; width: 100%; transition: 0.3s; }
+        section { display: none; padding: 20px; max-width: 1100px; margin: auto; }
         section.active { display: block; }
+        label { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #555; margin-left: 4px; margin-bottom: 2px; display: block; }
         #modalEdit { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
     </style>
 </head>
 <body class="pb-10">
 
     <header class="p-6 text-center bg-black border-b border-[#222]">
-        <h1 class="serif gold text-2xl tracking-widest uppercase">Abella Joias • Gestão</h1>
+        <h1 class="serif gold text-2xl tracking-widest uppercase">Abella Joias • Painel de Controle</h1>
     </header>
 
     <nav class="flex gap-2 p-3 bg-[#111] sticky top-0 z-50 overflow-x-auto justify-center border-b border-[#222]">
@@ -37,67 +38,70 @@
     </nav>
 
     <section id="tab-loja" class="active">
-        <div class="card-gold p-6">
-            <h2 class="gold serif text-sm mb-4 uppercase">Configurações do Checkout</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div><label class="text-[10px] uppercase font-bold text-gray-500">Nome Promoção</label><input id="confPromo" placeholder="Ex: OFERTA"></div>
-                <div><label class="text-[10px] uppercase font-bold text-gray-500">Desc. Pix (%)</label><input id="confPix" type="number"></div>
-                <div><label class="text-[10px] uppercase font-bold text-gray-500">WhatsApp</label><input id="confWhats"></div>
-                <div class="flex items-end"><button onclick="saveConfigGlobais()" class="btn-main bg-green-700 text-white">Sincronizar</button></div>
+        <div class="card-gold p-6 space-y-4">
+            <h2 class="gold serif text-sm mb-4 uppercase">Dados da Empresa & Checkout</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div><label>Nome da Marca</label><input id="confNome"></div>
+                <div><label>Slogan / Subtítulo</label><input id="confSub"></div>
+                <div><label>WhatsApp (Link)</label><input id="confWhats"></div>
+                <div><label>Nome da Promoção Ativa</label><input id="confPromo"></div>
+                <div><label>Desconto PIX (%)</label><input id="confPix" type="number"></div>
+                <div><label>Parcelas Máximas</label><input id="confParc" type="number"></div>
             </div>
+            <button onclick="saveConfigGlobais()" class="btn-main bg-green-700 text-white mt-4">SALVAR CONFIGURAÇÕES DA LOJA</button>
         </div>
     </section>
 
     <section id="tab-categorias">
         <div class="card-gold p-6 mb-8">
-            <h2 class="gold serif text-sm mb-4 uppercase">Criar Categoria</h2>
+            <h2 class="gold serif text-sm mb-4 uppercase">Nova Categoria / Iniciais</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                <input id="catName" placeholder="Nome">
-                <input id="catDisc" type="number" placeholder="Desconto %">
-                <select id="catVar" onchange="toggleVar('new')">
-                    <option value="">Sem Variação</option>
-                    <option value="Aro">Habilitar Aro</option>
-                    <option value="Tamanho">Habilitar Tamanho</option>
-                    <option value="Lista">Lista (Iniciais/Dizeres)</option>
-                </select>
-                <input id="catImg" placeholder="URL da Imagem">
+                <div><label>Nome Categoria</label><input id="catName" placeholder="Ex: Iniciais A-Z"></div>
+                <div><label>Desconto %</label><input id="catDisc" type="number"></div>
+                <div><label>Variação</label>
+                    <select id="catVar" onchange="toggleVar('new')">
+                        <option value="">Sem Variação</option>
+                        <option value="Aro">Habilitar Aro</option>
+                        <option value="Tamanho">Habilitar Tamanho</option>
+                        <option value="Lista">Lista (Iniciais/Dizeres)</option>
+                    </select>
+                </div>
+                <div><label>Imagem URL</label><input id="catImg"></div>
             </div>
             <div id="boxListaNew" class="hidden mt-3">
-                <textarea id="catOpcoes" placeholder="A, B, C... (Separe por vírgula)" class="h-20"></textarea>
+                <label>Itens da Lista (separe por vírgula)</label>
+                <textarea id="catOpcoes" placeholder="Ex: Fé, Amor, Gratidão ou A, B, C..." class="h-20"></textarea>
             </div>
-            <button onclick="addCategoria()" class="btn-main mt-4">Salvar Categoria</button>
+            <button onclick="addCategoria()" class="btn-main mt-4">+ CADASTRAR CATEGORIA</button>
         </div>
         <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
     <section id="tab-produtos">
         <div class="card-gold p-6 mb-8">
-            <h2 class="gold serif text-sm mb-4 uppercase">Novo Produto</h2>
+            <h2 class="gold serif text-sm mb-4 uppercase">Novo Produto no Sistema</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                <input id="pName" placeholder="Nome do Produto">
-                <input id="pSKU" placeholder="SKU/Referência">
-                <select id="pCatSel"></select>
-                <input id="pPreco" type="number" step="0.01" placeholder="Preço R$">
-                <input id="pPeso" type="number" step="0.01" placeholder="Peso (g)">
-                <input id="pFoto" placeholder="URL da Foto">
+                <div><label>Nome Produto</label><input id="pName"></div>
+                <div><label>Referência / SKU</label><input id="pSKU"></div>
+                <div><label>Categoria</label><select id="pCatSel"></select></div>
+                <div><label>Preço Base (R$)</label><input id="pPreco" type="number" step="0.01"></div>
+                <div><label>Peso unitário (g)</label><input id="pPeso" type="number" step="0.01"></div>
+                <div><label>URL Imagem</label><input id="pFoto"></div>
             </div>
-            <button onclick="addProduto()" class="btn-main mt-4">Adicionar ao Estoque</button>
+            <button onclick="addProduto()" class="btn-main mt-4">+ ADICIONAR AO ESTOQUE</button>
         </div>
         <div id="listaProdutos" class="grid gap-3"></div>
     </section>
 
     <div id="modalEdit">
-        <div class="bg-[#141414] border border-[#333] p-8 rounded-3xl w-full max-w-2xl my-10 overflow-y-auto max-h-[90vh]">
+        <div class="bg-[#141414] border border-[#333] p-8 rounded-3xl w-full max-w-2xl overflow-y-auto max-h-[90vh]">
             <h3 id="editTitle" class="serif gold text-xl mb-6 text-center uppercase">Editar</h3>
             <input type="hidden" id="editId">
             <input type="hidden" id="editType">
-            
-            <div id="formEdit" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                </div>
-
+            <div id="formEdit" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             <div class="flex gap-2 mt-8">
-                <button onclick="confirmarEdicao()" class="btn-main flex-1">Salvar</button>
-                <button onclick="fecharModal()" class="btn-main flex-1 bg-zinc-800 text-white">Cancelar</button>
+                <button onclick="confirmarEdicao()" class="btn-main flex-1">SALVAR ALTERAÇÕES</button>
+                <button onclick="fecharModal()" class="btn-main flex-1 bg-zinc-800 text-white">CANCELAR</button>
             </div>
         </div>
     </div>
@@ -123,23 +127,29 @@
         if(val === 'Lista') box.classList.remove('hidden'); else box.classList.add('hidden');
     }
 
-    // --- SINCRONIA LOJA ---
+    // --- CARREGAR DADOS DA LOJA (SETTINGS/EMPRESA) ---
     db.ref('settings/empresa').on('value', s => {
         const v = s.val() || {};
+        document.getElementById('confNome').value = v.nome || "";
+        document.getElementById('confSub').value = v.sub || "";
+        document.getElementById('confWhats').value = v.whats || "";
         document.getElementById('confPromo').value = v.nomePromo || "";
         document.getElementById('confPix').value = v.descontoPix || 0;
-        document.getElementById('confWhats').value = v.whats || "";
+        document.getElementById('confParc').value = v.parcelas || 3;
     });
 
     function saveConfigGlobais() {
         db.ref('settings/empresa').update({
+            nome: document.getElementById('confNome').value,
+            sub: document.getElementById('confSub').value,
+            whats: document.getElementById('confWhats').value,
             nomePromo: document.getElementById('confPromo').value,
             descontoPix: parseFloat(document.getElementById('confPix').value) || 0,
-            whats: document.getElementById('confWhats').value
-        }).then(() => alert("Configurações unificadas!"));
+            parcelas: parseInt(document.getElementById('confParc').value) || 1
+        }).then(() => alert("Dados da Loja Atualizados!"));
     }
 
-    // --- CATEGORIAS ---
+    // --- CARREGAR CATEGORIAS ---
     db.ref('categories').on('value', snap => {
         const grid = document.getElementById('listaCategorias');
         const select = document.getElementById('pCatSel');
@@ -147,11 +157,12 @@
         select.innerHTML = '<option value="">Selecionar Categoria...</option>';
         snap.forEach(c => {
             const d = c.val();
+            const nomeCat = d.name || d.nome;
             grid.innerHTML += `
                 <div class="card-item p-4 flex items-center gap-4">
-                    <img src="${d.image}" class="w-16 h-16 object-cover rounded-xl border border-[#333]">
+                    <img src="${d.image || d.foto}" class="w-16 h-16 object-cover rounded-xl border border-[#333]">
                     <div class="flex-1">
-                        <h4 class="font-bold text-sm uppercase">${d.name}</h4>
+                        <h4 class="font-bold text-sm uppercase">${nomeCat}</h4>
                         <p class="text-[9px] text-zinc-500">${d.variacaoTipo || 'Padrão'}</p>
                     </div>
                     <div class="flex flex-col gap-1">
@@ -159,7 +170,7 @@
                         <button onclick="remover('categories/${c.key}')" class="bg-zinc-800 p-2 rounded-lg text-xs hover:bg-red-900">🗑️</button>
                     </div>
                 </div>`;
-            select.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+            select.innerHTML += `<option value="${nomeCat}">${nomeCat}</option>`;
         });
     });
 
@@ -172,10 +183,10 @@
             variacaoTipo: document.getElementById('catVar').value,
             image: document.getElementById('catImg').value,
             opcoesPersonalizadas: document.getElementById('catOpcoes').value
-        }).then(() => { alert("Categoria salva!"); });
+        }).then(() => { alert("Categoria salva!"); document.getElementById('catName').value = ''; });
     }
 
-    // --- PRODUTOS ---
+    // --- CARREGAR PRODUTOS ---
     db.ref('products').on('value', snap => {
         const grid = document.getElementById('listaProdutos');
         grid.innerHTML = '';
@@ -183,9 +194,9 @@
             const d = p.val();
             grid.innerHTML += `
                 <div class="card-item p-3 flex items-center gap-4">
-                    <img src="${d.foto || d.image}" class="w-12 h-12 object-cover rounded bg-black">
+                    <img src="${d.foto || d.image}" class="w-12 h-12 object-cover rounded bg-black border border-[#222]">
                     <div class="flex-1">
-                        <h4 class="text-xs font-bold uppercase">${d.name}</h4>
+                        <h4 class="text-xs font-bold uppercase">${d.name || d.nome}</h4>
                         <p class="text-[10px] text-gray-500">${d.category} | R$ ${Number(d.price).toFixed(2)} | ${d.weight}g</p>
                     </div>
                     <button onclick="abrirEdicao('prod', '${p.key}')" class="bg-zinc-800 p-2 rounded-lg text-xs">✏️</button>
@@ -203,39 +214,44 @@
             weight: parseFloat(document.getElementById('pPeso').value) || 0,
             foto: document.getElementById('pFoto').value
         };
-        db.ref('products').push(p).then(() => alert("Produto adicionado!"));
+        db.ref('products').push(p).then(() => {
+            alert("Produto adicionado!");
+            document.querySelectorAll('#tab-produtos input').forEach(i => i.value = '');
+        });
     }
 
-    // --- EDIÇÃO (MODAL) ---
+    // --- MODAL DE EDIÇÃO ---
     async function abrirEdicao(type, id) {
         const snap = await db.ref((type === 'cat' ? 'categories/' : 'products/') + id).once('value');
         const d = snap.val();
         const form = document.getElementById('formEdit');
         document.getElementById('editId').value = id;
         document.getElementById('editType').value = type;
-        document.getElementById('editTitle').innerText = type === 'cat' ? "Editar Categoria" : "Editar Produto";
         
         if(type === 'cat') {
             form.innerHTML = `
-                <input id="editName" value="${d.name}" placeholder="Nome">
-                <input id="editDisc" type="number" value="${d.discount}" placeholder="Desconto %">
-                <select id="editVar" onchange="toggleVar('edit')">
-                    <option value="" ${d.variacaoTipo==''?'selected':''}>Sem Variação</option>
-                    <option value="Aro" ${d.variacaoTipo=='Aro'?'selected':''}>Habilitar Aro</option>
-                    <option value="Tamanho" ${d.variacaoTipo=='Tamanho'?'selected':''}>Habilitar Tamanho</option>
-                    <option value="Lista" ${d.variacaoTipo=='Lista'?'selected':''}>Lista Customizada</option>
-                </select>
-                <input id="editImg" value="${d.image}" placeholder="URL Imagem">
+                <div><label>Nome</label><input id="editName" value="${d.name || d.nome}"></div>
+                <div><label>Desconto %</label><input id="editDisc" type="number" value="${d.discount || 0}"></div>
+                <div><label>Variação</label>
+                    <select id="editVar" onchange="toggleVar('edit')">
+                        <option value="" ${d.variacaoTipo==''?'selected':''}>Padrão</option>
+                        <option value="Aro" ${d.variacaoTipo=='Aro'?'selected':''}>Habilitar Aro</option>
+                        <option value="Tamanho" ${d.variacaoTipo=='Tamanho'?'selected':''}>Habilitar Tamanho</option>
+                        <option value="Lista" ${d.variacaoTipo=='Lista'?'selected':''}>Lista Customizada</option>
+                    </select>
+                </div>
+                <div><label>URL Imagem</label><input id="editImg" value="${d.image || d.foto}"></div>
                 <div id="boxListaEdit" class="col-span-full ${d.variacaoTipo==='Lista'?'':'hidden'}">
+                    <label>Opções da Lista</label>
                     <textarea id="editOpcoes" class="h-24">${d.opcoesPersonalizadas || ''}</textarea>
                 </div>`;
         } else {
             form.innerHTML = `
-                <input id="editName" value="${d.name}" placeholder="Nome">
-                <input id="editSKU" value="${d.sku || ''}" placeholder="SKU">
-                <input id="editPrice" type="number" step="0.01" value="${d.price}" placeholder="Preço">
-                <input id="editWeight" type="number" step="0.01" value="${d.weight}" placeholder="Peso">
-                <input id="editFoto" value="${d.foto || d.image}" placeholder="URL Foto">`;
+                <div><label>Nome</label><input id="editName" value="${d.name || d.nome}"></div>
+                <div><label>SKU</label><input id="editSKU" value="${d.sku || ''}"></div>
+                <div><label>Preço</label><input id="editPrice" type="number" step="0.01" value="${d.price}"></div>
+                <div><label>Peso</label><input id="editWeight" type="number" step="0.01" value="${d.weight}"></div>
+                <div class="col-span-full"><label>URL Foto</label><input id="editFoto" value="${d.foto || d.image}"></div>`;
         }
         document.getElementById('modalEdit').style.display = 'flex';
     }
@@ -244,7 +260,6 @@
         const id = document.getElementById('editId').value;
         const type = document.getElementById('editType').value;
         const updates = {};
-        
         if(type === 'cat') {
             updates.name = document.getElementById('editName').value;
             updates.discount = parseInt(document.getElementById('editDisc').value) || 0;
@@ -258,15 +273,14 @@
             updates.weight = parseFloat(document.getElementById('editWeight').value);
             updates.foto = document.getElementById('editFoto').value;
         }
-        
         db.ref((type === 'cat' ? 'categories/' : 'products/') + id).update(updates).then(() => {
             fecharModal();
-            alert("Atualizado com sucesso!");
+            alert("Atualizado!");
         });
     }
 
     function fecharModal() { document.getElementById('modalEdit').style.display = 'none'; }
-    function remover(path) { if(confirm("Apagar permanentemente?")) db.ref(path).remove(); }
+    function remover(path) { if(confirm("Deseja apagar?")) db.ref(path).remove(); }
 </script>
 </body>
 </html>
