@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Painel Abella Joias</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial; display: flex; }
+        nav { width: 200px; background: #1a1a1a; color: white; height: 100vh; padding: 20px; }
+        nav button { width: 100%; padding: 10px; margin-bottom: 10px; cursor: pointer; }
+        main { padding: 20px; flex: 1; }
+        section { display: none; }
+        .active { display: block; }
+    </style>
+</head>
+<body>
+    <nav>
+        <h2>ABELLA</h2>
+        <button onclick="showTab('produtos')">💍 Produtos</button>
+        <button onclick="showTab('pedidos')">📦 Pedidos</button>
+        <button onclick="showTab('config')">⚙️ Empresa</button>
+    </nav>
+
+    <main>
+        <section id="produtos" class="active">
+            <h2>Gerenciar Produtos</h2>
+            <form id="form-produto">
+                <input type="text" id="nome" placeholder="Nome da Joia">
+                <input type="text" id="sku" placeholder="SKU (Ex: AN-01)">
+                <input type="number" id="preco" placeholder="Preço">
+                <button type="button" onclick="salvarProduto()">Salvar</button>
+            </form>
+            <div id="lista-produtos" style="margin-top:20px;"></div>
+        </section>
+
+        <section id="pedidos">
+            <h2>Pedidos Recebidos</h2>
+            <div id="lista-pedidos">Nenhum pedido ainda.</div>
+        </section>
+    </main>
+
+    <script src="admin-logic.js"></script>
+</body>
+</html>
