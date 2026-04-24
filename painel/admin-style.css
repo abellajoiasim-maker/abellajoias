@@ -98,3 +98,16 @@ input:focus { border-color: #caa85c; background: #161616; }
         break-inside: avoid !important;
     }
 }
+.btn-voltar {
+    display:inline-block;
+    margin-bottom:20px;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:#caa85c;
+    text-decoration:none;
+    transition:0.3s;
+}
+.btn-voltar:hover {
+    opacity:0.7;
+}
