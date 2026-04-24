@@ -110,8 +110,14 @@ const p = child.val() || {};
 if(p.paused) return;
 
 const id = child.key;
-const precoBase = p.precoFinal || p.price || 0;
-const precoFinal = p.promoPrice > 0 ? p.promoPrice : precoBase;
+
+// 🔥 PADRÕES SEGUROS (ANTI-BUG)
+const precoBase = parseFloat(p.precoFinal ?? p.price ?? 0);
+const precoFinal = p.promoPrice > 0 ? parseFloat(p.promoPrice) : precoBase;
+const peso = parseFloat(p.peso ?? p.weight ?? 0);
+
+// 🔥 FORMATAÇÃO INTELIGENTE
+const pesoFormatado = peso > 0 ? peso.toFixed(2) + 'g' : '--';
 
 grid.innerHTML += `
 <div class="card-produto bg-[#111] rounded-2xl overflow-hidden flex flex-col shadow-lg">
@@ -125,13 +131,13 @@ ${p.destaque ? `<span class="bg-[#caa85c] text-black text-[9px] px-2 py-1 rounde
 
 </div>
 
-<img src="${p.image}" class="w-full aspect-square object-contain bg-[#111] p-2">
+<img src="${p.image || ''}" class="w-full aspect-square object-contain bg-[#111] p-2">
 
 <div class="p-4 flex flex-col flex-grow">
 
 <div class="flex justify-between text-[10px] text-gray-500 font-bold mb-1">
 <span>${p.sku || ''}</span>
-<span>${p.peso || 0}g</span>
+<span>${pesoFormatado}</span>
 </div>
 
 <h3 class="text-white text-sm font-semibold mb-2">${p.name || ''}</h3>
@@ -140,7 +146,7 @@ ${p.destaque ? `<span class="bg-[#caa85c] text-black text-[9px] px-2 py-1 rounde
 
 ${p.promoPrice ? `
 <p class="text-gray-500 line-through text-[11px]">${fMoeda(precoBase)}</p>
-<p class="text-red-500 text-lg font-black">${fMoeda(p.promoPrice)}</p>
+<p class="text-red-500 text-lg font-black">${fMoeda(precoFinal)}</p>
 ` : `
 <p class="text-[#caa85c] text-lg font-black">${fMoeda(precoBase)}</p>
 `}
@@ -148,11 +154,11 @@ ${p.promoPrice ? `
 </div>
 
 <p class="text-green-400 text-[11px] font-bold">
-${fMoeda(precoFinal * (1 - settings.pixDesconto/100))} no PIX
+${fMoeda(precoFinal * (1 - (settings?.pixDesconto || 0)/100))} no PIX
 </p>
 
 <p class="text-gray-400 text-[10px] mb-2">
-ou ${settings.parcelas}x de ${fMoeda(precoFinal / settings.parcelas)}
+ou ${(settings?.parcelas || 1)}x de ${fMoeda(precoFinal / (settings?.parcelas || 1))}
 </p>
 
 <div class="text-[10px] text-gray-500 mb-3">
