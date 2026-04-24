@@ -132,27 +132,62 @@
     });
 
     async function carregarLoja() {
-        try {
-            const catSnap = await db.ref('categories').once('value');
-            const categorias = catSnap.val() || {};
-            const grid = document.getElementById('gridCategorias');
-            grid.innerHTML = '';
-            
-            Object.entries(categorias).forEach(([id, cat]) => {
-                if(cat.paused) return;
-                grid.innerHTML += `
-                    <div class="card-cat" onclick="location.href='produtos.html?id=${id}'">
-                        <img src="${cat.image || 'https://via.placeholder.com/600'}" class="img-cat" loading="lazy">
-                        <div class="cat-overlay">
-                            <h3 class="serif text-xl text-white tracking-widest uppercase">${cat.name}</h3>
-                            <p class="text-[10px] text-gray-400 font-bold mt-1 uppercase">Ver Modelos →</p>
-                        </div>
-                    </div>`;
-            });
-            atualizarResumo();
-        } catch (e) { console.error(e); }
-    }
+    try {
+        const [catSnap, prodSnap] = await Promise.all([
+            db.ref('categories').once('value'),
+            db.ref('products').once('value')
+        ]);
 
+        const categorias = catSnap.val() || {};
+        const produtos = prodSnap.val() || {};
+
+        const grid = document.getElementById('gridCategorias');
+        grid.innerHTML = '';
+
+        // 🔥 Mapeia quantos produtos existem por categoria
+        const contagem = {};
+
+        Object.values(produtos).forEach(p => {
+            if (!p || p.paused) return;
+
+            const catId = p.category;
+            if (!catId) return;
+
+            contagem[catId] = (contagem[catId] || 0) + 1;
+        });
+
+        // 🔥 Renderiza apenas categorias válidas
+        Object.entries(categorias).forEach(([id, cat]) => {
+
+            if (!cat || cat.paused) return;
+
+            // ❗ ignora categorias sem produtos
+            if (!contagem[id]) return;
+
+            const nome = cat.name || 'Categoria';
+            const imagem = cat.image || 'https://via.placeholder.com/600';
+
+            grid.innerHTML += `
+                <div class="card-cat" onclick="location.href='produtos.html?id=${id}'">
+                    <img src="${imagem}" class="img-cat" loading="lazy">
+                    
+                    <div class="cat-overlay">
+                        <h3 class="serif text-xl text-white tracking-widest uppercase">${nome}</h3>
+                        
+                        <p class="text-[10px] text-gray-400 font-bold mt-1 uppercase">
+                            ${contagem[id]} modelos →
+                        </p>
+                    </div>
+                </div>
+            `;
+        });
+
+        atualizarResumo();
+
+    } catch (e) {
+        console.error("Erro ao carregar loja:", e);
+    }
+}
     function atualizarResumo() {
         const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
         const total = cart.reduce((acc, i) => acc + (i.precoFinal * i.quantidade), 0);
