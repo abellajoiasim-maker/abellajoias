@@ -21,158 +21,123 @@ body{background:#0b0b0b;color:#eee;font-family:Arial}
 
 <body class="p-3">
 
-<h1 class="text-center text-[#caa85c] font-bold mb-4">CHECKOUT</h1>
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-4">
+    <button onclick="window.location.href='index.html'" 
+    class="text-[#caa85c] text-xs font-bold">
+        ← Continuar Comprando
+    </button>
+
+    <h1 class="text-[#caa85c] font-bold text-sm">Seu Carrinho</h1>
+
+    <div></div>
+</div>
 
 <div id="area">
 
+<!-- LISTA -->
 <div class="card">
-<h3>Produtos</h3>
+<h3 class="text-xs font-bold mb-2">🛍️ Produtos</h3>
 <div id="lista"></div>
 </div>
 
+<!-- CLIENTE -->
 <div class="card">
-<h3>Cliente</h3>
-<input id="nome" class="input mb-2" placeholder="Nome">
-<input id="cidade" class="input mb-2" placeholder="Cidade">
-<input id="tel" class="input" placeholder="WhatsApp">
+<h3 class="text-xs font-bold mb-2">👤 Cliente</h3>
+
+<label>Nome</label>
+<input id="nome" class="input mb-2">
+
+<label>Cidade</label>
+<input id="cidade" class="input mb-2">
+
+<label>WhatsApp</label>
+<input id="tel" class="input">
 </div>
 
+<!-- ENTREGA -->
 <div class="card">
-<h3>Entrega</h3>
-<input id="local" class="input mb-2" placeholder="Nome do Local">
-<input id="rua" class="input mb-2" placeholder="Rua">
-<input id="num" class="input mb-2" placeholder="Número">
-<input id="bairro" class="input mb-2" placeholder="Bairro">
-<input id="cidadeEnt" class="input" placeholder="Cidade">
-</div>
+<h3 class="text-xs font-bold mb-2">🚚 Entrega</h3>
 
-<div class="card">
-<h3>Pagamento</h3>
-<div class="flex gap-2">
-<button onclick="setPay('pix')" id="pix" class="btn-pay">PIX</button>
-<button onclick="setPay('cartao')" id="cartao" class="btn-pay">CARTÃO</button>
-</div>
-</div>
+<label>Local</label>
+<input id="local" class="input mb-2">
 
-</div>
-
-<div class="card">
-<p>Peças: <b id="pecas"></b></p>
-<p>Peso: <b id="peso"></b></p>
-<p>Subtotal: <b id="sub"></b></p>
-<p id="promo"></p>
-<p id="pixdesc"></p>
-<p><b>Total: <span id="total"></span></b></p>
-<p id="economia" style="color:#22c55e"></p>
-</div>
+<label>Rua</label>
+<input id="rua" class="input mb-2">
 
 <div class="flex gap-2">
-<button onclick="baixarPDF()" class="bg-gray-700 p-3 rounded">PDF</button>
-<button onclick="finalizar()" class="bg-[#caa85c] text-black p-3 rounded flex-1">FINALIZAR</button>
+<input id="num" class="input" placeholder="Nº">
+<input id="bairro" class="input" placeholder="Bairro">
 </div>
 
-<script>
-const firebaseConfig={
-apiKey:"AIzaSyDP...",
-databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
-
-let cart=JSON.parse(localStorage.getItem('carrinho')||'[]');
-let pay='pix';
-let empresa={pixDesconto:5,parcelas:3};
-
-async function init(){
-const emp=await db.ref('settings/empresa').once('value');
-empresa=emp.val()||empresa;
-render();
-}
-
-function render(){
-let html='',sub=0,pecas=0,peso=0;
-
-cart.forEach((i,idx)=>{
-let total=i.precoFinal*i.quantidade;
-let pesoItem=(i.peso||0)*i.quantidade;
-
-sub+=total;
-pecas+=i.quantidade;
-peso+=pesoItem;
-
-html+=`
-<div style="display:flex;gap:10px;border-bottom:1px solid #222;padding:5px">
-<img src="${i.image}" width="40">
-<div style="flex:1">
-<b>${i.nome}</b>
-<p>${i.sku||''}</p>
-<p>${i.variacao||''}</p>
-<p>${i.quantidade}x ${f(total/i.quantidade)} = ${f(total)}</p>
-<p>Peso: ${(i.peso||0).toFixed(2)}g x ${i.quantidade} = ${pesoItem.toFixed(2)}g</p>
-<input type="number" value="${i.quantidade}" onchange="edit(${idx},this.value)">
-<button onclick="del(${idx})">Remover</button>
+<input id="cidadeEnt" class="input mt-2" placeholder="Cidade">
 </div>
-</div>`;
-});
 
-document.getElementById('lista').innerHTML=html;
+<!-- PAGAMENTO -->
+<div class="card">
+<h3 class="text-xs font-bold mb-2">💳 Pagamento</h3>
 
-let descPix=pay==='pix'?sub*(empresa.pixDesconto/100):0;
-let total=sub-descPix;
+<div class="flex gap-2">
+<button onclick="setPay('pix')" id="pix" class="btn-pay flex-1">
+PIX<br><small>- Desconto</small>
+</button>
 
-document.getElementById('pecas').innerText=pecas;
-document.getElementById('peso').innerText=peso.toFixed(2)+'g';
-document.getElementById('sub').innerText=f(sub);
-document.getElementById('pixdesc').innerText=descPix?`PIX: -${f(descPix)}`:'';
-document.getElementById('total').innerText=f(total);
-document.getElementById('economia').innerText=descPix?`Você economizou ${f(descPix)}`:'';
-}
+<button onclick="setPay('cartao')" id="cartao" class="btn-pay flex-1">
+Cartão<br><small>Parcelado</small>
+</button>
+</div>
+</div>
 
-function edit(i,v){cart[i].quantidade=parseInt(v)||1;save();}
-function del(i){cart.splice(i,1);save();}
-function save(){localStorage.setItem('carrinho',JSON.stringify(cart));render();}
-function setPay(p){pay=p;render();}
-function f(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+</div>
 
-function baixarPDF(){
-html2pdf().from(document.getElementById('area')).save("pedido-abella.pdf");
-}
+<!-- RESUMO FIXO -->
+<div class="fixed bottom-0 left-0 right-0 bg-black border-t border-[#333] p-3">
 
-async function finalizar(){
+<div class="text-[11px] space-y-1">
 
-if(!document.getElementById('nome').value) return alert("Preencha o nome");
+<div class="flex justify-between">
+<span>Peças</span><b id="pecas"></b>
+</div>
 
-let pedido={
-cliente:{
-nome:document.getElementById('nome').value,
-cidade:document.getElementById('cidade').value,
-tel:document.getElementById('tel').value
-},
-entrega:{
-local:document.getElementById('local').value,
-rua:document.getElementById('rua').value,
-num:document.getElementById('num').value,
-bairro:document.getElementById('bairro').value,
-cidade:document.getElementById('cidadeEnt').value
-},
-itens:cart,
-pagamento:pay,
-total:document.getElementById('total').innerText,
-data:new Date().toISOString()
-};
+<div class="flex justify-between">
+<span>Peso</span><b id="peso"></b>
+</div>
 
-await db.ref('orders').push(pedido);
+<div class="flex justify-between">
+<span>Subtotal</span><b id="sub"></b>
+</div>
 
-let msg=`Pedido Abella Joias%0A`;
-msg+=`Cliente: ${pedido.cliente.nome}%0A`;
-msg+=`Total: ${pedido.total}%0A`;
-msg+=`Pagamento: ${pay}`;
+<div id="pixdesc" class="text-green-400"></div>
 
-window.open(`https://wa.me/55SEUNUMERO?text=${msg}`);
-}
+<div class="flex justify-between text-lg font-bold text-[#caa85c]">
+<span>Total</span><span id="total"></span>
+</div>
 
-init();
-</script>
+<div id="economia" class="text-green-500 text-xs"></div>
+
+</div>
+
+<!-- BOTÕES -->
+<div class="flex gap-2 mt-3">
+
+<button onclick="window.location.href='index.html'" 
+class="bg-[#222] text-white px-3 rounded text-xs">
+Continuar
+</button>
+
+<button onclick="baixarPDF()" 
+class="bg-gray-700 px-3 rounded text-xs">
+PDF
+</button>
+
+<button onclick="finalizar()" 
+class="bg-[#caa85c] text-black flex-1 rounded text-xs font-bold">
+FINALIZAR
+</button>
+
+</div>
+
+</div>
 
 </body>
 </html>
