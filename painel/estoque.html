@@ -2,291 +2,226 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Gestão Master • Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Estoque • Abella Joias</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
-        .serif { font-family: 'Cinzel', serif; }
-        .gold { color: #caa85c; }
-        .card-gold { background: #111; border: 1px solid #222; border-left: 4px solid #caa85c; border-radius: 15px; }
-        .card-item { background: #141414; border: 1px solid #222; transition: 0.3s; border-radius: 12px; }
-        input, select, textarea { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; outline: none; padding: 10px; border-radius: 8px; width: 100%; font-size: 13px; }
-        input:focus { border-color: #caa85c !important; }
-        .btn-nav { padding: 10px 20px; font-size: 11px; font-weight: bold; background: #1a1a1a; color: #666; border-radius: 8px; text-transform: uppercase; border: 1px solid #333; min-width: 120px; }
-        .btn-nav.active { background: #caa85c; color: #000; border-color: #caa85c; }
-        .btn-main { background: #caa85c; color: #000; font-weight: bold; padding: 12px; border-radius: 10px; text-transform: uppercase; font-size: 11px; width: 100%; transition: 0.3s; }
-        section { display: none; padding: 20px; max-width: 1100px; margin: auto; }
-        section.active { display: block; }
-        label { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #555; margin-left: 4px; margin-bottom: 2px; display: block; }
-        #modalEdit { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
+        body { background: #0b0b0b; color: #eee; font-family: 'Poppins', sans-serif; }
+        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 6px; border-radius: 6px; width: 100%; font-size: 10px; transition: 0.3s; }
+        .input-dark:focus { border-color: #caa85c; outline: none; background: #222; }
+        .edit-sku { color: #caa85c; font-family: monospace; font-weight: bold; text-transform: uppercase; }
+        tr.is-paused { opacity: 0.4; background: #2a1010 !important; }
+        .btn-status { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px; border-radius: 4px; cursor: pointer; width: 50px; text-align: center; }
+        .status-on { background: #15803d; color: white; }
+        .status-off { background: #b91c1c; color: white; }
+        .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 10px; font-size: 9px; }
+        .img-preview { width: 35px; height: 35px; object-fit: contain; background: #222; border-radius: 4px; border: 1px solid #444; margin-bottom: 2px; }
+        .img-error { border-color: #ef4444; background: #451a1a; }
+        .highlight-var { border: 1px solid #caa85c !important; background: #262116 !important; }
     </style>
 </head>
-<body class="pb-10">
 
-    <div style="padding:10px 20px;">
-    <a href="index.html" class="btn-voltar">← Voltar ao Dashboard</a>
-</div>
+<body class="p-2">
 
-    <header class="p-6 text-center bg-black border-b border-[#222]">
-        <h1 class="serif gold text-2xl tracking-widest uppercase">Abella Joias • Painel de Controle</h1>
-    </header>
+<!-- BOTÃO VOLTAR -->
+<a href="index.html" style="font-size:11px;color:#caa85c;text-decoration:none;">← Voltar ao Dashboard</a>
 
-    <nav class="flex gap-2 p-3 bg-[#111] sticky top-0 z-50 overflow-x-auto justify-center border-b border-[#222]">
-        <button class="btn-nav active" onclick="showTab('tab-loja', this)">⚙️ Loja</button>
-        <button class="btn-nav" onclick="showTab('tab-categorias', this)">📁 Categorias</button>
-        <button class="btn-nav" onclick="showTab('tab-produtos', this)">💎 Produtos</button>
-    </nav>
+<div class="max-w-[100%] mx-auto">
 
-    <section id="tab-loja" class="active">
-        <div class="card-gold p-6 space-y-4">
-            <h2 class="gold serif text-sm mb-4 uppercase">Dados da Empresa & Checkout</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div><label>Nome da Marca</label><input id="confNome"></div>
-                <div><label>Slogan / Subtítulo</label><input id="confSub"></div>
-                <div><label>WhatsApp (Link)</label><input id="confWhats"></div>
-                <div><label>Nome da Promoção Ativa</label><input id="confPromo"></div>
-                <div><label>Desconto PIX (%)</label><input id="confPix" type="number"></div>
-                <div><label>Parcelas Máximas</label><input id="confParc" type="number"></div>
-            </div>
-            <button onclick="saveConfigGlobais()" class="btn-main bg-green-700 text-white mt-4">SALVAR CONFIGURAÇÕES DA LOJA</button>
-        </div>
-    </section>
-
-    <section id="tab-categorias">
-        <div class="card-gold p-6 mb-8">
-            <h2 class="gold serif text-sm mb-4 uppercase">Nova Categoria / Iniciais</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div><label>Nome Categoria</label><input id="catName" placeholder="Ex: Iniciais A-Z"></div>
-                <div><label>Desconto %</label><input id="catDisc" type="number"></div>
-                <div><label>Variação</label>
-                    <select id="catVar" onchange="toggleVar('new')">
-                        <option value="">Sem Variação</option>
-                        <option value="Aro">Habilitar Aro</option>
-                        <option value="Tamanho">Habilitar Tamanho</option>
-                        <option value="Lista">Lista (Iniciais/Dizeres)</option>
-                    </select>
-                </div>
-                <div><label>Imagem URL</label><input id="catImg"></div>
-            </div>
-            <div id="boxListaNew" class="hidden mt-3">
-                <label>Itens da Lista (separe por vírgula)</label>
-                <textarea id="catOpcoes" placeholder="Ex: Fé, Amor, Gratidão ou A, B, C..." class="h-20"></textarea>
-            </div>
-            <button onclick="addCategoria()" class="btn-main mt-4">+ CADASTRAR CATEGORIA</button>
-        </div>
-        <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </section>
-
-    <section id="tab-produtos">
-        <div class="card-gold p-6 mb-8">
-            <h2 class="gold serif text-sm mb-4 uppercase">Novo Produto no Sistema</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div><label>Nome Produto</label><input id="pName"></div>
-                <div><label>Referência / SKU</label><input id="pSKU"></div>
-                <div><label>Categoria</label><select id="pCatSel"></select></div>
-                <div><label>Preço Base (R$)</label><input id="pPreco" type="number" step="0.01"></div>
-                <div><label>Peso unitário (g)</label><input id="pPeso" type="number" step="0.01"></div>
-                <div><label>URL Imagem</label><input id="pFoto"></div>
-            </div>
-            <button onclick="addProduto()" class="btn-main mt-4">+ ADICIONAR AO ESTOQUE</button>
-        </div>
-        <div id="listaProdutos" class="grid gap-3"></div>
-    </section>
-
-    <div id="modalEdit">
-        <div class="bg-[#141414] border border-[#333] p-8 rounded-3xl w-full max-w-2xl overflow-y-auto max-h-[90vh]">
-            <h3 id="editTitle" class="serif gold text-xl mb-6 text-center uppercase">Editar</h3>
-            <input type="hidden" id="editId">
-            <input type="hidden" id="editType">
-            <div id="formEdit" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-            <div class="flex gap-2 mt-8">
-                <button onclick="confirmarEdicao()" class="btn-main flex-1">SALVAR ALTERAÇÕES</button>
-                <button onclick="fecharModal()" class="btn-main flex-1 bg-zinc-800 text-white">CANCELAR</button>
-            </div>
-        </div>
+<header class="bg-[#141414] p-4 rounded-xl border border-[#2a2a2a] shadow-xl mb-4 flex flex-col xl:flex-row justify-between items-center gap-4">
+    <div>
+        <h1 class="text-xl font-bold text-[#caa85c]">Editor de Estoque</h1>
+        <p class="text-[9px] text-gray-400 uppercase tracking-widest">Controle completo de produtos</p>
     </div>
 
+    <div class="flex flex-wrap gap-2 justify-center">
+        <button onclick="criarNovoProduto()" class="bg-white text-black font-black px-4 py-2 rounded-lg text-[10px]">+ NOVO</button>
+        <select id="filtroCat" class="input-dark"><option value="">Categorias</option></select>
+        <input id="filtroSku" placeholder="SKU ou Nome..." class="input-dark w-32">
+        <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-4 py-2 rounded-lg text-[10px]">BUSCAR</button>
+        <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px]">AUTO-SYNC</button>
+    </div>
+</header>
+
+<div class="bg-[#141414] border border-[#2a2a2a] rounded-xl overflow-hidden">
+<div class="overflow-x-auto" style="max-height: 75vh;">
+
+<table class="w-full text-[10px]">
+<thead class="sticky-header">
+<tr class="text-[#caa85c] uppercase">
+<th>Status</th>
+<th>Imagem</th>
+<th>SKU</th>
+<th>Nome</th>
+<th>Peso</th>
+<th>Categoria</th>
+<th>Variação</th>
+<th>Opções</th>
+<th>Preço</th>
+<th>Ações</th>
+</tr>
+</thead>
+
+<tbody id="tabelaCorpo">
+<tr><td colspan="10" class="p-10 text-center text-gray-500">Carregue produtos</td></tr>
+</tbody>
+</table>
+
+</div>
+</div>
+
+<div class="mt-4 flex justify-between items-center bg-[#141414] p-4 rounded-xl border border-[#2a2a2a]">
+<div id="statusInfo" class="text-[10px] text-gray-400">Pronto</div>
+
+<button onclick="salvarAlteracoes()" class="bg-green-600 px-10 py-3 rounded-lg text-xs font-bold">
+SALVAR TUDO
+</button>
+</div>
+
+</div>
+
 <script>
-    const firebaseConfig = { 
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
-    };
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let categoriasCache = {};
+
+async function carregarCategorias() {
+    const snap = await db.ref('categories').once('value');
+    categoriasCache = snap.val() || {};
+    const el = document.getElementById('filtroCat');
+
+    let html = '<option value="">Categorias</option>';
+    Object.entries(categoriasCache).forEach(([id, c]) => {
+        html += `<option value="${id}">${c.name}</option>`;
+    });
+
+    el.innerHTML = html;
 }
-    const db = firebase.database();
 
-    function showTab(id, btn) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('nav .btn-nav').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        btn.classList.add('active');
-    }
+function atualizarPreview(input) {
+    const img = input.closest('td')?.querySelector('.row-img');
+    if (!img) return;
 
-    function toggleVar(mode) {
-        const val = mode === 'new' ? document.getElementById('catVar').value : document.getElementById('editVar').value;
-        const box = mode === 'new' ? document.getElementById('boxListaNew') : document.getElementById('boxListaEdit');
-        if(val === 'Lista') box.classList.remove('hidden'); else box.classList.add('hidden');
-    }
+    const url = input.value.trim();
+    img.src = url || 'https://via.placeholder.com/40';
+}
 
-    // --- CARREGAR DADOS DA LOJA (SETTINGS/EMPRESA) ---
-    db.ref('settings/empresa').on('value', s => {
-        const v = s.val() || {};
-        document.getElementById('confNome').value = v.nome || "";
-        document.getElementById('confSub').value = v.sub || "";
-        document.getElementById('confWhats').value = v.whats || "";
-        document.getElementById('confPromo').value = v.nomePromo || "";
-        document.getElementById('confPix').value = v.descontoPix || 0;
-        document.getElementById('confParc').value = v.parcelas || 3;
+function criarLinhaHTML(id, p) {
+    p = p || {};
+
+    let catOptions = '';
+    Object.entries(categoriasCache).forEach(([cid, cat]) => {
+        catOptions += `<option value="${cid}" ${p.category === cid ? 'selected' : ''}>${cat.name}</option>`;
     });
 
-    function saveConfigGlobais() {
-        db.ref('settings/empresa').update({
-            nome: document.getElementById('confNome').value,
-            sub: document.getElementById('confSub').value,
-            whats: document.getElementById('confWhats').value,
-            nomePromo: document.getElementById('confPromo').value,
-            descontoPix: parseFloat(document.getElementById('confPix').value) || 0,
-            parcelas: parseInt(document.getElementById('confParc').value) || 1
-        }).then(() => alert("Dados da Loja Atualizados!"));
-    }
+    return `
+<tr data-id="${id}" class="${p.paused ? 'is-paused' : ''}">
+<td><button class="btn-status ${p.paused ? 'status-off':'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'OFF':'ON'}</button></td>
 
-    // --- CARREGAR CATEGORIAS ---
-    db.ref('categories').on('value', snap => {
-        const grid = document.getElementById('listaCategorias');
-        const select = document.getElementById('pCatSel');
-        grid.innerHTML = '';
-        select.innerHTML = '<option value="">Selecionar Categoria...</option>';
-        snap.forEach(c => {
-            const d = c.val();
-            const nomeCat = d.name || d.nome;
-            grid.innerHTML += `
-                <div class="card-item p-4 flex items-center gap-4">
-                    <img src="${d.image || d.foto}" class="w-16 h-16 object-cover rounded-xl border border-[#333]">
-                    <div class="flex-1">
-                        <h4 class="font-bold text-sm uppercase">${nomeCat}</h4>
-                        <p class="text-[9px] text-zinc-500">${d.variacaoTipo || 'Padrão'}</p>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <button onclick="abrirEdicao('cat', '${c.key}')" class="bg-zinc-800 p-2 rounded-lg text-xs">✏️</button>
-                        <button onclick="remover('categories/${c.key}')" class="bg-zinc-800 p-2 rounded-lg text-xs hover:bg-red-900">🗑️</button>
-                    </div>
-                </div>`;
-            select.innerHTML += `<option value="${nomeCat}">${nomeCat}</option>`;
-        });
+<td>
+<img src="${p.image || ''}" class="img-preview row-img">
+<input class="input-dark edit-img" value="${p.image || ''}" onchange="atualizarPreview(this)">
+</td>
+
+<td><input class="input-dark edit-sku" value="${p.sku || ''}"></td>
+<td><input class="input-dark edit-name" value="${p.name || ''}"></td>
+
+<td><input class="input-dark edit-peso" value="${p.peso || 0}"></td>
+
+<td><select class="input-dark edit-cat">${catOptions}</select></td>
+
+<td>
+<select class="input-dark edit-varTipo" onchange="liberarCampoLista(this)">
+<option value="">Padrão</option>
+<option value="Aro" ${p.variacaoTipo==='Aro'?'selected':''}>Aro</option>
+<option value="Lista" ${p.variacaoTipo==='Lista'?'selected':''}>Lista</option>
+</select>
+</td>
+
+<td><input class="input-dark edit-opcoes" value="${p.opcoesPersonalizadas || ''}"></td>
+
+<td><input class="input-dark edit-precoFinal" type="number" value="${p.precoFinal || p.price || 0}"></td>
+
+<td>
+<button onclick="salvarLinhaUnica(this)">💾</button>
+<button onclick="deletarProduto('${id}')">🗑️</button>
+</td>
+</tr>`;
+}
+
+function criarNovoProduto() {
+    const ref = db.ref('products').push();
+    const corpo = document.getElementById('tabelaCorpo');
+    corpo.insertAdjacentHTML('afterbegin', criarLinhaHTML(ref.key, {}));
+}
+
+function carregarProdutos() {
+    const corpo = document.getElementById('tabelaCorpo');
+    corpo.innerHTML = 'Carregando...';
+
+    db.ref('products').once('value', snap => {
+        let html = '';
+        snap.forEach(c => html += criarLinhaHTML(c.key, c.val()));
+        corpo.innerHTML = html;
     });
+}
 
-    function addCategoria() {
-        const name = document.getElementById('catName').value;
-        const slug = name.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        db.ref('categories/' + slug).set({
-            name: name,
-            discount: parseInt(document.getElementById('catDisc').value) || 0,
-            variacaoTipo: document.getElementById('catVar').value,
-            image: document.getElementById('catImg').value,
-            opcoesPersonalizadas: document.getElementById('catOpcoes').value
-        }).then(() => { alert("Categoria salva!"); document.getElementById('catName').value = ''; });
-    }
+function salvarLinhaUnica(btn) {
+    const tr = btn.closest('tr');
+    const id = tr.dataset.id;
 
-    // --- CARREGAR PRODUTOS ---
-    db.ref('products').on('value', snap => {
-        const grid = document.getElementById('listaProdutos');
-        grid.innerHTML = '';
-        snap.forEach(p => {
-            const d = p.val();
-            grid.innerHTML += `
-                <div class="card-item p-3 flex items-center gap-4">
-                    <img src="${d.foto || d.image}" class="w-12 h-12 object-cover rounded bg-black border border-[#222]">
-                    <div class="flex-1">
-                        <h4 class="text-xs font-bold uppercase">${d.name || d.nome}</h4>
-                        <p class="text-[10px] text-gray-500">${d.category} | R$ ${Number(d.price).toFixed(2)} | ${d.weight}g</p>
-                    </div>
-                    <button onclick="abrirEdicao('prod', '${p.key}')" class="bg-zinc-800 p-2 rounded-lg text-xs">✏️</button>
-                    <button onclick="remover('products/${p.key}')" class="bg-zinc-800 p-2 rounded-lg text-xs hover:bg-red-900">✕</button>
-                </div>`;
-        });
+    const peso = tr.querySelector('.edit-peso').value.replace(',', '.');
+
+    const data = {
+        sku: tr.querySelector('.edit-sku').value.toUpperCase(),
+        name: tr.querySelector('.edit-name').value,
+        peso: peso,
+        weight: parseFloat(peso) || 0,
+        category: tr.querySelector('.edit-cat').value,
+        variacaoTipo: tr.querySelector('.edit-varTipo').value,
+        opcoesPersonalizadas: tr.querySelector('.edit-opcoes').value,
+        precoFinal: parseFloat(tr.querySelector('.edit-precoFinal').value) || 0,
+        price: parseFloat(tr.querySelector('.edit-precoFinal').value) || 0,
+        image: tr.querySelector('.edit-img').value,
+        paused: tr.querySelector('.btn-status').classList.contains('status-off')
+    };
+
+    db.ref('products/' + id).update(data);
+}
+
+function salvarAlteracoes() {
+    document.querySelectorAll('#tabelaCorpo tr').forEach(tr => {
+        const btn = tr.querySelector('button');
+        if (btn) salvarLinhaUnica(btn);
     });
+    alert("Salvo");
+}
 
-    function addProduto() {
-        const p = {
-            name: document.getElementById('pName').value,
-            sku: document.getElementById('pSKU').value,
-            category: document.getElementById('pCatSel').value,
-            price: parseFloat(document.getElementById('pPreco').value) || 0,
-            weight: parseFloat(document.getElementById('pPeso').value) || 0,
-            foto: document.getElementById('pFoto').value
-        };
-        db.ref('products').push(p).then(() => {
-            alert("Produto adicionado!");
-            document.querySelectorAll('#tab-produtos input').forEach(i => i.value = '');
-        });
+function toggleStatus(btn) {
+    btn.classList.toggle('status-on');
+    btn.classList.toggle('status-off');
+    btn.innerText = btn.classList.contains('status-on') ? 'ON' : 'OFF';
+}
+
+function deletarProduto(id) {
+    if (confirm("Excluir?")) {
+        db.ref('products/' + id).remove();
     }
+}
 
-    // --- MODAL DE EDIÇÃO ---
-    async function abrirEdicao(type, id) {
-        const snap = await db.ref((type === 'cat' ? 'categories/' : 'products/') + id).once('value');
-        const d = snap.val();
-        const form = document.getElementById('formEdit');
-        document.getElementById('editId').value = id;
-        document.getElementById('editType').value = type;
-        
-        if(type === 'cat') {
-            form.innerHTML = `
-                <div><label>Nome</label><input id="editName" value="${d.name || d.nome}"></div>
-                <div><label>Desconto %</label><input id="editDisc" type="number" value="${d.discount || 0}"></div>
-                <div><label>Variação</label>
-                    <select id="editVar" onchange="toggleVar('edit')">
-                        <option value="" ${d.variacaoTipo==''?'selected':''}>Padrão</option>
-                        <option value="Aro" ${d.variacaoTipo=='Aro'?'selected':''}>Habilitar Aro</option>
-                        <option value="Tamanho" ${d.variacaoTipo=='Tamanho'?'selected':''}>Habilitar Tamanho</option>
-                        <option value="Lista" ${d.variacaoTipo=='Lista'?'selected':''}>Lista Customizada</option>
-                    </select>
-                </div>
-                <div><label>URL Imagem</label><input id="editImg" value="${d.image || d.foto}"></div>
-                <div id="boxListaEdit" class="col-span-full ${d.variacaoTipo==='Lista'?'':'hidden'}">
-                    <label>Opções da Lista</label>
-                    <textarea id="editOpcoes" class="h-24">${d.opcoesPersonalizadas || ''}</textarea>
-                </div>`;
-        } else {
-            form.innerHTML = `
-                <div><label>Nome</label><input id="editName" value="${d.name || d.nome}"></div>
-                <div><label>SKU</label><input id="editSKU" value="${d.sku || ''}"></div>
-                <div><label>Preço</label><input id="editPrice" type="number" step="0.01" value="${d.price}"></div>
-                <div><label>Peso</label><input id="editWeight" type="number" step="0.01" value="${d.weight}"></div>
-                <div class="col-span-full"><label>URL Foto</label><input id="editFoto" value="${d.foto || d.image}"></div>`;
-        }
-        document.getElementById('modalEdit').style.display = 'flex';
-    }
-
-    function confirmarEdicao() {
-        const id = document.getElementById('editId').value;
-        const type = document.getElementById('editType').value;
-        const updates = {};
-        if(type === 'cat') {
-            updates.name = document.getElementById('editName').value;
-            updates.discount = parseInt(document.getElementById('editDisc').value) || 0;
-            updates.variacaoTipo = document.getElementById('editVar').value;
-            updates.image = document.getElementById('editImg').value;
-            updates.opcoesPersonalizadas = document.getElementById('editOpcoes').value;
-        } else {
-            updates.name = document.getElementById('editName').value;
-            updates.sku = document.getElementById('editSKU').value;
-            updates.price = parseFloat(document.getElementById('editPrice').value);
-            updates.weight = parseFloat(document.getElementById('editWeight').value);
-            updates.foto = document.getElementById('editFoto').value;
-        }
-        db.ref((type === 'cat' ? 'categories/' : 'products/') + id).update(updates).then(() => {
-            fecharModal();
-            alert("Atualizado!");
-        });
-    }
-
-    function fecharModal() { document.getElementById('modalEdit').style.display = 'none'; }
-    function remover(path) { if(confirm("Deseja apagar?")) db.ref(path).remove(); }
+carregarCategorias();
 </script>
+
 </body>
 </html>
