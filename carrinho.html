@@ -2,7 +2,184 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Checkout • Abella Joias</title>
+    <title>Checkout • Abella Joias</title><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Checkout • Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+body{background:#0b0b0b;color:#eee;font-family:Arial}
+.card{background:#111;border:1px solid #222;padding:12px;border-radius:10px;margin-bottom:10px}
+.input{background:#000;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%}
+.btn-pay{border:1px solid #333;padding:10px;border-radius:8px;width:100%}
+.active{border-color:#caa85c;background:#1a1a1a}
+</style>
+</head>
+
+<body class="p-3">
+
+<h1 class="text-center text-[#caa85c] font-bold mb-4">CHECKOUT</h1>
+
+<div id="area">
+
+<div class="card">
+<h3>Produtos</h3>
+<div id="lista"></div>
+</div>
+
+<div class="card">
+<h3>Cliente</h3>
+<input id="nome" class="input mb-2" placeholder="Nome">
+<input id="cidade" class="input mb-2" placeholder="Cidade">
+<input id="tel" class="input" placeholder="WhatsApp">
+</div>
+
+<div class="card">
+<h3>Entrega</h3>
+<input id="local" class="input mb-2" placeholder="Nome do Local">
+<input id="rua" class="input mb-2" placeholder="Rua">
+<input id="num" class="input mb-2" placeholder="Número">
+<input id="bairro" class="input mb-2" placeholder="Bairro">
+<input id="cidadeEnt" class="input" placeholder="Cidade">
+</div>
+
+<div class="card">
+<h3>Pagamento</h3>
+<div class="flex gap-2">
+<button onclick="setPay('pix')" id="pix" class="btn-pay">PIX</button>
+<button onclick="setPay('cartao')" id="cartao" class="btn-pay">CARTÃO</button>
+</div>
+</div>
+
+</div>
+
+<div class="card">
+<p>Peças: <b id="pecas"></b></p>
+<p>Peso: <b id="peso"></b></p>
+<p>Subtotal: <b id="sub"></b></p>
+<p id="promo"></p>
+<p id="pixdesc"></p>
+<p><b>Total: <span id="total"></span></b></p>
+<p id="economia" style="color:#22c55e"></p>
+</div>
+
+<div class="flex gap-2">
+<button onclick="baixarPDF()" class="bg-gray-700 p-3 rounded">PDF</button>
+<button onclick="finalizar()" class="bg-[#caa85c] text-black p-3 rounded flex-1">FINALIZAR</button>
+</div>
+
+<script>
+const firebaseConfig={
+apiKey:"AIzaSyDP...",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let cart=JSON.parse(localStorage.getItem('carrinho')||'[]');
+let pay='pix';
+let empresa={pixDesconto:5,parcelas:3};
+
+async function init(){
+const emp=await db.ref('settings/empresa').once('value');
+empresa=emp.val()||empresa;
+render();
+}
+
+function render(){
+let html='',sub=0,pecas=0,peso=0;
+
+cart.forEach((i,idx)=>{
+let total=i.precoFinal*i.quantidade;
+let pesoItem=(i.peso||0)*i.quantidade;
+
+sub+=total;
+pecas+=i.quantidade;
+peso+=pesoItem;
+
+html+=`
+<div style="display:flex;gap:10px;border-bottom:1px solid #222;padding:5px">
+<img src="${i.image}" width="40">
+<div style="flex:1">
+<b>${i.nome}</b>
+<p>${i.sku||''}</p>
+<p>${i.variacao||''}</p>
+<p>${i.quantidade}x ${f(total/i.quantidade)} = ${f(total)}</p>
+<p>Peso: ${(i.peso||0).toFixed(2)}g x ${i.quantidade} = ${pesoItem.toFixed(2)}g</p>
+<input type="number" value="${i.quantidade}" onchange="edit(${idx},this.value)">
+<button onclick="del(${idx})">Remover</button>
+</div>
+</div>`;
+});
+
+document.getElementById('lista').innerHTML=html;
+
+let descPix=pay==='pix'?sub*(empresa.pixDesconto/100):0;
+let total=sub-descPix;
+
+document.getElementById('pecas').innerText=pecas;
+document.getElementById('peso').innerText=peso.toFixed(2)+'g';
+document.getElementById('sub').innerText=f(sub);
+document.getElementById('pixdesc').innerText=descPix?`PIX: -${f(descPix)}`:'';
+document.getElementById('total').innerText=f(total);
+document.getElementById('economia').innerText=descPix?`Você economizou ${f(descPix)}`:'';
+}
+
+function edit(i,v){cart[i].quantidade=parseInt(v)||1;save();}
+function del(i){cart.splice(i,1);save();}
+function save(){localStorage.setItem('carrinho',JSON.stringify(cart));render();}
+function setPay(p){pay=p;render();}
+function f(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+
+function baixarPDF(){
+html2pdf().from(document.getElementById('area')).save("pedido-abella.pdf");
+}
+
+async function finalizar(){
+
+if(!document.getElementById('nome').value) return alert("Preencha o nome");
+
+let pedido={
+cliente:{
+nome:document.getElementById('nome').value,
+cidade:document.getElementById('cidade').value,
+tel:document.getElementById('tel').value
+},
+entrega:{
+local:document.getElementById('local').value,
+rua:document.getElementById('rua').value,
+num:document.getElementById('num').value,
+bairro:document.getElementById('bairro').value,
+cidade:document.getElementById('cidadeEnt').value
+},
+itens:cart,
+pagamento:pay,
+total:document.getElementById('total').innerText,
+data:new Date().toISOString()
+};
+
+await db.ref('orders').push(pedido);
+
+let msg=`Pedido Abella Joias%0A`;
+msg+=`Cliente: ${pedido.cliente.nome}%0A`;
+msg+=`Total: ${pedido.total}%0A`;
+msg+=`Pagamento: ${pay}`;
+
+window.open(`https://wa.me/55SEUNUMERO?text=${msg}`);
+}
+
+init();
+</script>
+
+</body>
+</html>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
