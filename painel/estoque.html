@@ -1,158 +1,127 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Estoque • Abella Joias</title>
+<meta charset="UTF-8">
+<title>Estoque • Abella Joias</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    <style>
-        body { background: #0b0b0b; color: #eee; font-family: 'Poppins', sans-serif; }
-        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 6px; border-radius: 6px; width: 100%; font-size: 10px; transition: 0.3s; }
-        .input-dark:focus { border-color: #caa85c; outline: none; background: #222; }
-        .edit-sku { color: #caa85c; font-family: monospace; font-weight: bold; text-transform: uppercase; }
-        tr.is-paused { opacity: 0.4; background: #2a1010 !important; }
-        .btn-status { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px; border-radius: 4px; cursor: pointer; width: 50px; text-align: center; }
-        .status-on { background: #15803d; color: white; }
-        .status-off { background: #b91c1c; color: white; }
-        .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 10px; font-size: 9px; }
-        .img-preview { width: 35px; height: 35px; object-fit: contain; background: #222; border-radius: 4px; border: 1px solid #444; margin-bottom: 2px; }
-        .img-error { border-color: #ef4444; background: #451a1a; }
-        .highlight-var { border: 1px solid #caa85c !important; background: #262116 !important; }
-    </style>
+<style>
+body { background:#0b0b0b; color:#eee; font-family:'Poppins'; }
+.input-dark { background:#1a1a1a;border:1px solid #333;color:white;padding:6px;border-radius:6px;width:100%;font-size:10px;}
+.edit-sku { color:#caa85c;font-family:monospace;font-weight:bold;text-transform:uppercase;}
+tr.is-paused { opacity:0.4;background:#2a1010!important;}
+.btn-status { font-size:9px;font-weight:800;padding:4px;border-radius:4px;width:50px;}
+.status-on { background:#15803d;color:white;}
+.status-off { background:#b91c1c;color:white;}
+.img-preview { width:35px;height:35px;object-fit:contain;background:#222;border-radius:4px;border:1px solid #444;}
+</style>
 </head>
 
 <body class="p-2">
 
-<!-- BOTÃO VOLTAR -->
-<a href="index.html" style="font-size:11px;color:#caa85c;text-decoration:none;">← Voltar ao Dashboard</a>
+<a href="index.html" class="text-[11px] text-[#caa85c]">← Voltar</a>
 
-<div class="max-w-[100%] mx-auto">
+<div class="max-w-full mx-auto">
 
-<header class="bg-[#141414] p-4 rounded-xl border border-[#2a2a2a] shadow-xl mb-4 flex flex-col xl:flex-row justify-between items-center gap-4">
-    <div>
-        <h1 class="text-xl font-bold text-[#caa85c]">Editor de Estoque</h1>
-        <p class="text-[9px] text-gray-400 uppercase tracking-widest">Controle completo de produtos</p>
-    </div>
+<header class="bg-[#141414] p-4 rounded-xl border border-[#2a2a2a] mb-4 flex flex-wrap gap-2 justify-between items-center">
 
-    <div class="flex flex-wrap gap-2 justify-center">
-    <button onclick="criarNovoProduto()" class="bg-white text-black font-black px-4 py-2 rounded-lg text-[10px]">+ NOVO</button>
-
-    <select id="filtroCat" class="input-dark">
-        <option value="">Categorias</option>
-    </select>
-
-    <input 
-        id="filtroSku" 
-        placeholder="SKU ou Nome..." 
-        class="input-dark w-32"
-        onkeypress="if(event.key === 'Enter') carregarProdutos()"
-    >
-
-    <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-4 py-2 rounded-lg text-[10px]">
-        BUSCAR
-    </button>
-
-    <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px]">
-        AUTO-SYNC
-    </button>
+<div>
+<h1 class="text-xl text-[#caa85c] font-bold">Editor de Estoque</h1>
+<p class="text-[9px] text-gray-400 uppercase">Controle completo</p>
 </div>
+
+<div class="flex gap-2 flex-wrap">
+<button onclick="criarNovoProduto()" class="bg-white text-black px-4 py-2 text-[10px] font-bold">+ NOVO</button>
+
+<select id="filtroCat" class="input-dark"></select>
+
+<input id="filtroSku" class="input-dark w-32" placeholder="SKU ou Nome..." 
+onkeypress="if(event.key==='Enter')carregarProdutos()">
+
+<button onclick="carregarProdutos()" class="bg-[#caa85c] px-4 py-2 text-[10px] font-bold">BUSCAR</button>
+
+<button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white px-4 py-2 text-[10px]">AUTO-SYNC</button>
+</div>
+
 </header>
 
-<div class="bg-[#141414] border border-[#2a2a2a] rounded-xl overflow-hidden">
-<div class="overflow-x-auto" style="max-height: 75vh;">
+<div class="bg-[#141414] rounded-xl border border-[#2a2a2a] overflow-hidden">
+<div class="overflow-x-auto" style="max-height:75vh">
 
 <table class="w-full text-[10px]">
-<thead class="sticky-header">
+<thead>
 <tr class="text-[#caa85c] uppercase">
-<th>Status</th>
-<th>Imagem</th>
-<th>SKU</th>
-<th>Nome</th>
-<th>Peso</th>
-<th>Categoria</th>
-<th>Variação</th>
-<th>Opções</th>
-<th>Preço</th>
-<th>Ações</th>
+<th>Status</th><th>Imagem</th><th>SKU</th><th>Nome</th>
+<th>Peso</th><th>Categoria</th><th>Variação</th><th>Opções</th>
+<th>Preço</th><th>Ações</th>
 </tr>
 </thead>
 
-<tbody id="tabelaCorpo">
-<tr><td colspan="10" class="p-10 text-center text-gray-500">Carregue produtos</td></tr>
-</tbody>
+<tbody id="tabelaCorpo"></tbody>
 </table>
 
 </div>
 </div>
 
-<div class="mt-4 flex justify-between items-center bg-[#141414] p-4 rounded-xl border border-[#2a2a2a]">
+<div class="mt-4 flex justify-between bg-[#141414] p-4 rounded-xl border">
 <div id="statusInfo" class="text-[10px] text-gray-400">Pronto</div>
-
-<button onclick="salvarAlteracoes()" class="bg-green-600 px-10 py-3 rounded-lg text-xs font-bold">
-SALVAR TUDO
-</button>
+<button onclick="salvarAlteracoes()" class="bg-green-600 px-10 py-3 text-xs font-bold">SALVAR TUDO</button>
 </div>
 
 </div>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+const firebaseConfig={
+apiKey:"AIzaSyDP...",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+let categoriasCache={};
 
-let categoriasCache = {};
-
-async function carregarCategorias() {
-    const snap = await db.ref('categories').once('value');
-    categoriasCache = snap.val() || {};
-    const el = document.getElementById('filtroCat');
-
-    let html = '<option value="">Categorias</option>';
-    Object.entries(categoriasCache).forEach(([id, c]) => {
-        html += `<option value="${id}">${c.name}</option>`;
-    });
-
-    el.innerHTML = html;
+async function carregarCategorias(){
+const snap=await db.ref('categories').once('value');
+categoriasCache=snap.val()||{};
+let html='<option value="">Categorias</option>';
+Object.entries(categoriasCache).forEach(([id,c])=>{
+html+=`<option value="${id}">${c.name}</option>`;
+});
+filtroCat.innerHTML=html;
 }
 
-function atualizarPreview(input) {
-    const img = input.closest('td')?.querySelector('.row-img');
-    if (!img) return;
-
-    const url = input.value.trim();
-    img.src = url || 'https://via.placeholder.com/40';
+function atualizarPreview(input){
+const img=input.closest('td').querySelector('.row-img');
+img.src=input.value||'https://via.placeholder.com/40';
 }
 
-function criarLinhaHTML(id, p) {
-    p = p || {};
+function criarLinhaHTML(id,p={}){
+const peso = parseFloat(p.peso ?? p.weight ?? 0);
 
-    let catOptions = '';
-    Object.entries(categoriasCache).forEach(([cid, cat]) => {
-        catOptions += `<option value="${cid}" ${p.category === cid ? 'selected' : ''}>${cat.name}</option>`;
-    });
+let catOptions='';
+Object.entries(categoriasCache).forEach(([cid,cat])=>{
+catOptions+=`<option value="${cid}" ${p.category===cid?'selected':''}>${cat.name}</option>`;
+});
 
-    return `
-<tr data-id="${id}" class="${p.paused ? 'is-paused' : ''}">
-<td><button class="btn-status ${p.paused ? 'status-off':'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'OFF':'ON'}</button></td>
+return `
+<tr data-id="${id}" class="${p.paused?'is-paused':''}">
+
+<td><button class="btn-status ${p.paused?'status-off':'status-on'}" onclick="toggleStatus(this)">${p.paused?'OFF':'ON'}</button></td>
 
 <td>
-<img src="${p.image || ''}" class="img-preview row-img">
-<input class="input-dark edit-img" value="${p.image || ''}" onchange="atualizarPreview(this)">
+<img src="${p.image||''}" class="img-preview row-img">
+<input class="input-dark edit-img" value="${p.image||''}" onchange="atualizarPreview(this)">
 </td>
 
-<td><input class="input-dark edit-sku" value="${p.sku || ''}"></td>
-<td><input class="input-dark edit-name" value="${p.name || ''}"></td>
+<td><input class="input-dark edit-sku" value="${p.sku||''}"></td>
+<td><input class="input-dark edit-name" value="${p.name||''}"></td>
 
-<td><input class="input-dark edit-peso" value="${p.peso || 0}"></td>
+<td><input class="input-dark edit-peso" value="${peso.toFixed(2)}"></td>
 
 <td><select class="input-dark edit-cat">${catOptions}</select></td>
 
@@ -164,96 +133,92 @@ function criarLinhaHTML(id, p) {
 </select>
 </td>
 
-<td><input class="input-dark edit-opcoes" value="${p.opcoesPersonalizadas || ''}"></td>
+<td><input class="input-dark edit-opcoes" value="${p.opcoesPersonalizadas||''}"></td>
 
-<td><input class="input-dark edit-precoFinal" type="number" value="${p.precoFinal || p.price || 0}"></td>
+<td><input class="input-dark edit-precoFinal" type="number" value="${p.precoFinal||p.price||0}"></td>
 
 <td>
 <button onclick="salvarLinhaUnica(this)">💾</button>
 <button onclick="deletarProduto('${id}')">🗑️</button>
 </td>
+
 </tr>`;
 }
 
-function criarNovoProduto() {
-    const ref = db.ref('products').push();
-    const corpo = document.getElementById('tabelaCorpo');
-    corpo.insertAdjacentHTML('afterbegin', criarLinhaHTML(ref.key, {}));
+function criarNovoProduto(){
+const ref=db.ref('products').push();
+tabelaCorpo.insertAdjacentHTML('afterbegin',criarLinhaHTML(ref.key,{}));
 }
 
-async function carregarProdutos() {
-    const filtroTexto = document.getElementById('filtroSku').value.trim().toUpperCase();
-    const filtroCat = document.getElementById('filtroCat').value;
+function carregarProdutos(){
+const filtroTexto=filtroSku.value.toUpperCase();
+const filtroCatVal=filtroCat.value;
 
-    const corpo = document.getElementById('tabelaCorpo');
-    corpo.innerHTML = '<tr><td colspan="10" class="p-10 text-center text-[#caa85c]">BUSCANDO...</td></tr>';
+tabelaCorpo.innerHTML='<tr><td colspan="10">Carregando...</td></tr>';
 
-    db.ref('products').once('value', snapshot => {
-        let html = '';
-        let contador = 0;
+db.ref('products').once('value',snap=>{
+let html='',count=0;
 
-        snapshot.forEach(child => {
-            const p = child.val() || {};
+snap.forEach(child=>{
+const p=child.val()||{};
+const sku=(p.sku||'').toUpperCase();
+const nome=(p.name||'').toUpperCase();
 
-            const sku = String(p.sku || "").toUpperCase();
-            const nome = String(p.name || "").toUpperCase();
+if((!filtroTexto||sku.includes(filtroTexto)||nome.includes(filtroTexto)) &&
+(!filtroCatVal||p.category===filtroCatVal)){
+count++;
+html+=criarLinhaHTML(child.key,p);
+}
+});
 
-            if (
-                (!filtroTexto || sku.includes(filtroTexto) || nome.includes(filtroTexto)) &&
-                (!filtroCat || p.category === filtroCat)
-            ) {
-                contador++;
-                html += criarLinhaHTML(child.key, p);
-            }
-        });
-
-        corpo.innerHTML = html || '<tr><td colspan="10" class="p-10 text-center text-red-500">Nada encontrado</td></tr>';
-
-        document.getElementById('statusInfo').innerText = `Total exibido: ${contador} produtos`;
-    });
+tabelaCorpo.innerHTML=html||'<tr><td colspan="10">Nada encontrado</td></tr>';
+statusInfo.innerText=`${count} produtos`;
+});
 }
 
-function salvarLinhaUnica(btn) {
-    const tr = btn.closest('tr');
-    const id = tr.dataset.id;
+function salvarLinhaUnica(btn){
+const tr=btn.closest('tr');
+const id=tr.dataset.id;
 
-    const peso = tr.querySelector('.edit-peso').value.replace(',', '.');
+const pesoInput=tr.querySelector('.edit-peso').value.replace(',','.').trim();
+const peso=parseFloat(pesoInput)||0;
 
-    const data = {
-        sku: tr.querySelector('.edit-sku').value.toUpperCase(),
-        name: tr.querySelector('.edit-name').value,
-        peso: peso,
-        weight: parseFloat(peso) || 0,
-        category: tr.querySelector('.edit-cat').value,
-        variacaoTipo: tr.querySelector('.edit-varTipo').value,
-        opcoesPersonalizadas: tr.querySelector('.edit-opcoes').value,
-        precoFinal: parseFloat(tr.querySelector('.edit-precoFinal').value) || 0,
-        price: parseFloat(tr.querySelector('.edit-precoFinal').value) || 0,
-        image: tr.querySelector('.edit-img').value,
-        paused: tr.querySelector('.btn-status').classList.contains('status-off')
-    };
+const preco=parseFloat(tr.querySelector('.edit-precoFinal').value)||0;
 
-    db.ref('products/' + id).update(data);
+const data={
+sku:tr.querySelector('.edit-sku').value.toUpperCase().trim(),
+name:tr.querySelector('.edit-name').value.trim(),
+peso:peso,
+weight:peso,
+category:tr.querySelector('.edit-cat').value,
+variacaoTipo:tr.querySelector('.edit-varTipo').value,
+opcoesPersonalizadas:tr.querySelector('.edit-opcoes').value,
+precoFinal:preco,
+price:preco,
+image:tr.querySelector('.edit-img').value.trim(),
+paused:tr.querySelector('.btn-status').classList.contains('status-off')
+};
+
+db.ref('products/'+id).update(data);
 }
 
-function salvarAlteracoes() {
-    document.querySelectorAll('#tabelaCorpo tr').forEach(tr => {
-        const btn = tr.querySelector('button');
-        if (btn) salvarLinhaUnica(btn);
-    });
-    alert("Salvo");
+function salvarAlteracoes(){
+document.querySelectorAll('#tabelaCorpo tr').forEach(tr=>{
+const btn=tr.querySelector('button');
+if(btn) salvarLinhaUnica(btn);
+});
+alert("Salvo com sucesso");
 }
 
-function toggleStatus(btn) {
-    btn.classList.toggle('status-on');
-    btn.classList.toggle('status-off');
-    btn.innerText = btn.classList.contains('status-on') ? 'ON' : 'OFF';
+function toggleStatus(btn){
+btn.classList.toggle('status-on');
+btn.classList.toggle('status-off');
+btn.innerText=btn.classList.contains('status-on')?'ON':'OFF';
+btn.closest('tr').classList.toggle('is-paused');
 }
 
-function deletarProduto(id) {
-    if (confirm("Excluir?")) {
-        db.ref('products/' + id).remove();
-    }
+function deletarProduto(id){
+if(confirm("Excluir produto?")) db.ref('products/'+id).remove().then(carregarProdutos);
 }
 
 carregarCategorias();
