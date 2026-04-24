@@ -8,7 +8,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 180px; }
+       body { 
+    background: #0b0b0b; 
+    color: #eee; 
+    font-family: Inter, Arial; 
+    margin: 0; 
+    padding: 0; /* Resetamos aqui */
+    padding-bottom: 160px !important; /* Espaço para o botão não cobrir os cards */
+    min-height: 100vh; /* Permite que a página cresça */
+}
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; margin-bottom: 12px; }
         .btn-gold { background:#caa85c; color:#000; font-weight:800; padding:12px; border-radius:12px; cursor:pointer; transition: 0.3s; }
         .btn-gold:hover { background: #b8964d; opacity: 0.9; }
@@ -98,13 +106,13 @@
                 </div>
         </div>
 
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-md border-t border-[#2a2a2a] z-[100]">
-            <div class="max-w-3xl mx-auto">
-                <button onclick="salvarTudo()" id="btnSalvar" class="w-full btn-gold py-4 shadow-lg shadow-[#caa85c]/10 uppercase text-xs tracking-widest">
-                    Salvar Alterações de Marketing
-                </button>
-            </div>
-        </div>
+       <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 backdrop-blur-lg border-t border-[#caa85c]/20 z-[9999]">
+    <div class="max-w-3xl mx-auto">
+        <button onclick="salvarTudo()" id="btnSalvar" class="w-full btn-gold py-4 shadow-2xl shadow-black uppercase text-xs tracking-[0.2em]">
+            Salvar Alterações de Marketing
+        </button>
+    </div>
+</div>
     </div>
     <div class="h-32"></div> </div> <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-md border-t border-[#2a2a2a] z-[100]">
         </div>
