@@ -12,8 +12,11 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 
 let pedidoEditando = null;
-const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
+const fMoeda = v => new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+}).format(v || 0);
 // ============================================================
 // NAVEGAÇÃO E UI
 // ============================================================
@@ -25,23 +28,30 @@ function showTab(id, btn) {
     if(btn) btn.classList.add('active');
 }
 
-// BUSCA AUTOMÁTICA POR SKU
+// BUSCA AUTOMÁTICA POR SKU (CORRIGIDO)
+// ============================================================
 function buscarDadosProduto(sku, inputElement) {
-    if(!sku) return;
+    if (!sku) return;
+
     db.ref('products').once('value', s => {
         let achou = false;
+
         s.forEach(child => {
             const p = child.val();
-            if(p.sku && p.sku.toLowerCase() === sku.toLowerCase()) {
+
+            if (p.sku && p.sku.toLowerCase() === sku.toLowerCase()) {
                 const card = inputElement.closest('.item-editor');
+
                 card.querySelector('.in-nome').value = p.name || p.nome || '';
                 card.querySelector('.in-peso').value = p.weight || p.peso || 0;
-                card.querySelector('.in-preco').value = p.price || 0;
+                card.querySelector('.in-preco').value = p.price || p.precoFinal || 0;
                 card.querySelector('.in-foto').value = p.image || p.foto || '';
+
                 achou = true;
             }
         });
-        if(achou) recalcularTotalEd();
+
+        if (achou) recalcularTotalEd();
         inputElement.style.borderColor = achou ? "#333" : "red";
     });
 }
@@ -130,18 +140,26 @@ function addItemEditor(i={}) {
 
 function recalcularTotalEd() {
     let subtotal = 0, qtdT = 0;
+
     document.querySelectorAll('.item-editor').forEach(div => {
-        const preco = Number(div.querySelector('.in-preco').value);
-        const qtd = Number(div.querySelector('.in-qtd').value);
-        subtotal += (preco * qtd);
+        const preco = Number(div.querySelector('.in-preco')?.value || 0);
+        const qtd = Number(div.querySelector('.in-qtd')?.value || 0);
+
+        subtotal += preco * qtd;
         qtdT += qtd;
     });
-    const dP = Number(document.getElementById('edDescPromo').value || 0);
-    const dX = Number(document.getElementById('edDescPix').value || 0);
-    const f = Number(document.getElementById('edFrete').value || 0);
-    
-    document.getElementById('totalPreview').innerText = fMoeda(subtotal - dP - dX + f);
-    if(document.getElementById('edQtdTotal')) document.getElementById('edQtdTotal').value = qtdT;
+
+    const dP = Number(document.getElementById('edDescPromo')?.value || 0);
+    const dX = Number(document.getElementById('edDescPix')?.value || 0);
+    const f = Number(document.getElementById('edFrete')?.value || 0);
+
+    const total = subtotal - dP - dX + f;
+
+    const totalPreview = document.getElementById('totalPreview');
+    if (totalPreview) totalPreview.innerText = fMoeda(total);
+
+    const qtdTotal = document.getElementById('edQtdTotal');
+    if (qtdTotal) qtdTotal.value = qtdT;
 }
 
 async function salvarPedidoEditado() {
@@ -222,11 +240,18 @@ function alternarManutencao() {
 // ============================================================
 // FUNÇÕES DE APOIO
 // ============================================================
+// DUPLICAR PEDIDO (CORRIGIDO)
+// ============================================================
 function duplicarPedido(id) {
-    db.ref('orders/'+id).once('value', s => {
-        const novo = s.val();
+    db.ref('orders/' + id).once('value', s => {
+        const original = s.val();
+        if (!original) return alert("Pedido não encontrado");
+
+        const novo = { ...original };
         novo.data = new Date().toLocaleString('pt-BR') + " (Cópia)";
-        db.ref('orders').push(novo).then(() => alert("Pedido Duplicado!"));
+
+        db.ref('orders').push(novo)
+            .then(() => alert("Pedido duplicado!"));
     });
 }
 
