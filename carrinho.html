@@ -13,16 +13,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-body { background:#0a0a0a; color:#fff; font-family:'Inter'; }
-.serif { font-family:'Cinzel'; }
-.gold { color:#caa85c; }
+body { 
+    background: #0a0a0a; 
+    color: #fff; 
+    font-family: 'Inter', sans-serif; 
+    margin: 0;
+    /* Adicionamos padding inferior para o conteúdo nunca ficar escondido sob o rodapé */
+    padding-bottom: 200px !important; 
+    min-height: 100vh;
+}
+
+.serif { font-family: 'Cinzel', serif; }
+.gold { color: #caa85c; }
 
 .card {
-    background:#111;
-    border:1px solid #222;
-    border-radius:16px;
-    padding:16px;
-    margin-bottom:12px;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
 }
 
 .input {
@@ -134,6 +143,9 @@ Total: <span id="total"></span>
 <button onclick="finalizar()" class="bg-[#caa85c] text-black flex-1 rounded py-2 font-bold">
 Finalizar Pedido
 </button>
+</div>
+    
+</div> <div class="h-40"></div> </div> <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-[#333] p-4 z-[9999]">
 </div>
 
 </div>
