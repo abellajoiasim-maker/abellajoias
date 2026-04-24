@@ -4,71 +4,162 @@
     <meta charset="UTF-8">
     <title>Dashboard • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
     <link rel="stylesheet" href="admin-style.css">
 </head>
+
 <body class="bg-[#0b0b0b] min-h-screen flex flex-col">
 
-    <header class="p-6 text-center border-b border-[#222] bg-black">
-        <h1 class="text-[#caa85c] font-bold tracking-[0.2em] text-xl uppercase">Abella Joias Admin</h1>
-    </header>
+<header class="p-6 text-center border-b border-[#222] bg-black">
+    <h1 class="text-[#caa85c] font-bold tracking-[0.2em] text-xl uppercase">
+        Abella Joias Admin
+    </h1>
+</header>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-6">
-        
-        <div class="card w-full max-w-2xl mb-8 flex flex-col md:flex-row items-center justify-between gap-4 border-dashed border-[#333]">
-            <div>
-                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Status do Sistema</p>
-                <h3 id="statusTexto" class="text-white font-bold uppercase italic">Carregando...</h3>
+<main class="flex-grow flex flex-col items-center justify-center p-6">
+
+    <!-- STATUS -->
+    <div class="card w-full max-w-2xl mb-8 flex flex-col md:flex-row items-center justify-between gap-4 border-dashed border-[#333]">
+        <div>
+            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                Status do Sistema
+            </p>
+            <h3 id="statusTexto" class="text-white font-bold uppercase italic">
+                Carregando...
+            </h3>
+        </div>
+
+        <button id="btnManutencao" onclick="alternarManutencao()" class="btn px-6 font-bold transition-all">
+            AGUARDE...
+        </button>
+    </div>
+
+    <!-- 🔥 NOVO CARD EMPRESA -->
+    <div class="card w-full max-w-2xl mb-8 p-6 border border-[#333]">
+        <h2 class="text-[#caa85c] font-bold mb-4 uppercase">
+            ⚙️ Configuração da Empresa
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+
+            <input id="empresaNome" placeholder="Nome da Loja"
+                class="bg-black p-2 border border-[#333] rounded text-white">
+
+            <input id="empresaSlogan" placeholder="Slogan"
+                class="bg-black p-2 border border-[#333] rounded text-white">
+
+            <input id="empresaWhats" placeholder="WhatsApp (551999999999)"
+                class="bg-black p-2 border border-[#333] rounded text-white">
+
+            <input id="empresaPix" placeholder="Desconto PIX (%)"
+                class="bg-black p-2 border border-[#333] rounded text-white">
+
+            <input id="empresaParcelas" placeholder="Parcelas no cartão"
+                class="bg-black p-2 border border-[#333] rounded text-white">
+
+        </div>
+
+        <button onclick="salvarEmpresa()" 
+            class="mt-4 bg-green-600 hover:bg-green-700 px-6 py-2 rounded text-xs font-bold">
+            💾 SALVAR CONFIGURAÇÕES
+        </button>
+    </div>
+
+    <!-- MENU -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+
+        <a href="pedidos.html" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
+            <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span class="text-3xl">📦</span>
             </div>
-            <button id="btnManutencao" onclick="alternarManutencao()" class="btn px-6 font-bold transition-all">
-                AGUARDE...
-            </button>
-        </div>
+            <h2 class="text-[#caa85c] font-bold text-lg uppercase">Pedidos</h2>
+            <p class="text-gray-500 text-xs mt-2">Gerenciar vendas e romaneios</p>
+        </a>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-            <a href="pedidos.html" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
-                <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="text-3xl">📦</span>
-                </div>
-                <h2 class="text-[#caa85c] font-bold text-lg uppercase">Pedidos</h2>
-                <p class="text-gray-500 text-xs mt-2">Gerenciar vendas e romaneios</p>
-            </a>
+        <a href="estoque.html" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
+            <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span class="text-3xl">💎</span>
+            </div>
+            <h2 class="text-[#caa85c] font-bold text-lg uppercase">Estoque</h2>
+            <p class="text-gray-500 text-xs mt-2">Produtos e configurações da loja</p>
+        </a>
+        
+        <a href="ofertas.html" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
+            <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span class="text-3xl">🔥</span>
+            </div>
+            <h2 class="text-[#caa85c] font-bold text-lg uppercase">Ofertas</h2>
+            <p class="text-gray-500 text-xs mt-2">Marketing e Promoções</p>
+        </a>
 
-            <a href="estoque.html" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
-                <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="text-3xl">💎</span>
-                </div>
-                <h2 class="text-[#caa85c] font-bold text-lg uppercase">Estoque</h2>
-                <p class="text-gray-500 text-xs mt-2">Produtos e configurações da loja</p>
-            </a>
-            
-            <a href="ofertas.html" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
-                <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="text-3xl">🔥</span>
-                </div>
-                <h2 class="text-[#caa85c] font-bold text-lg uppercase">Ofertas</h2>
-                <p class="text-gray-500 text-xs mt-2">Marketing e Promoções</p>
-            </a>
+        <a href="../index.html" target="_blank" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
+            <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span class="text-3xl">🌐</span>
+            </div>
+            <h2 class="text-[#caa85c] font-bold text-lg uppercase">Ver Site</h2>
+            <p class="text-gray-500 text-xs mt-2">Visualizar a loja como cliente</p>
+        </a>
 
-            <a href="../index.html" target="_blank" class="card group hover:border-[#caa85c] transition-all p-8 text-center flex flex-col items-center">
-                <div class="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="text-3xl">🌐</span>
-                </div>
-                <h2 class="text-[#caa85c] font-bold text-lg uppercase">Ver Site</h2>
-                <p class="text-gray-500 text-xs mt-2">Visualizar a loja como cliente</p>
-            </a>
-        </div>
-    </main>
+    </div>
+</main>
 
-    <footer class="p-4 text-center text-gray-600 text-[10px] uppercase tracking-widest">
-        Sistema de Gestão v2.0 • Abella Joias
-    </footer>
+<footer class="p-4 text-center text-gray-600 text-[10px] uppercase tracking-widest">
+    Sistema de Gestão v2.0 • Abella Joias
+</footer>
 
-    <script src="admin-logic.js"></script>
-    <script>
-        window.onload = () => carregarStatusSite();
-    </script>
+<script src="admin-logic.js"></script>
+
+<script>
+// 🔥 CONFIG FIREBASE (GARANTE QUE FUNCIONE MESMO SE NÃO ESTIVER NO admin-logic)
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+
+// =======================
+// EMPRESA
+// =======================
+async function carregarEmpresa() {
+    const snap = await db.ref('settings/empresa').once('value');
+    const e = snap.val() || {};
+
+    empresaNome.value = e.nome || "";
+    empresaSlogan.value = e.slogan || "";
+    empresaWhats.value = e.whatsapp || "";
+    empresaPix.value = e.descontoPix || "";
+    empresaParcelas.value = e.parcelas || "";
+}
+
+function salvarEmpresa() {
+    const data = {
+        nome: empresaNome.value,
+        slogan: empresaSlogan.value,
+        whatsapp: empresaWhats.value,
+        descontoPix: parseFloat(empresaPix.value) || 0,
+        parcelas: parseInt(empresaParcelas.value) || 1
+    };
+
+    db.ref('settings/empresa').update(data)
+        .then(() => alert("✅ Configurações salvas!"));
+}
+
+
+// =======================
+// INIT
+// =======================
+window.onload = () => {
+    carregarStatusSite(); // mantém seu sistema
+    carregarEmpresa();    // novo
+};
+</script>
+
 </body>
 </html>
