@@ -10,36 +10,71 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body { background:#0b0b0b; color:#eee; }
-.card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:20px; }
+body { background:#0b0b0b; color:#eee; font-family: Arial; }
+.card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:20px; transition:.3s; }
+.card:hover { border-color:#caa85c; transform: translateY(-3px); }
 .input { background:#0b0b0b; border:1px solid #333; padding:10px; border-radius:8px; width:100%; color:#fff; }
-.btn { background:#caa85c; color:#000; font-weight:bold; padding:10px 20px; border-radius:8px; }
+.btn { background:#caa85c; color:#000; font-weight:bold; padding:10px 20px; border-radius:8px; cursor:pointer; }
 </style>
 </head>
 
 <body class="p-6">
 
-<h1 class="text-[#caa85c] text-xl font-bold mb-6">Dashboard Admin</h1>
+<header class="mb-8 text-center">
+    <h1 class="text-[#caa85c] text-xl font-bold uppercase">Abella Joias • Admin</h1>
+</header>
+
+<!-- STATUS -->
+<div class="card mb-6 flex justify-between items-center">
+    <div>
+        <p class="text-xs text-gray-400 uppercase">Status do Sistema</p>
+        <h3 id="statusTexto" class="font-bold">Carregando...</h3>
+    </div>
+    <button onclick="alternarManutencao()" class="btn">Alternar</button>
+</div>
 
 <!-- EMPRESA -->
-<div class="card mb-6">
+<div class="card mb-8">
     <h2 class="text-[#caa85c] font-bold mb-4">Configurações da Empresa</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input id="nome" class="input" placeholder="Nome da Loja">
         <input id="slogan" class="input" placeholder="Slogan">
-        <input id="whatsapp" class="input" placeholder="WhatsApp (somente números)">
+        <input id="whatsapp" class="input" placeholder="WhatsApp">
         <input id="pix" class="input" type="number" placeholder="Desconto PIX (%)">
         <input id="parcelas" class="input" type="number" placeholder="Parcelas no cartão">
     </div>
 
-    <button onclick="salvarEmpresa()" class="btn mt-4">💾 Salvar</button>
+    <button onclick="salvarEmpresa()" class="btn mt-4">💾 Salvar Configurações</button>
 </div>
 
-<!-- STATUS -->
-<div class="card mb-6 flex justify-between items-center">
-    <span id="statusTexto">Carregando...</span>
-    <button onclick="alternarManutencao()" class="btn">Alternar Manutenção</button>
+<!-- NAVEGAÇÃO -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+    <a href="pedidos.html" class="card text-center">
+        <div class="text-3xl mb-2">📦</div>
+        <h2 class="text-[#caa85c] font-bold uppercase">Pedidos</h2>
+        <p class="text-xs text-gray-500">Gerenciar vendas</p>
+    </a>
+
+    <a href="estoque.html" class="card text-center">
+        <div class="text-3xl mb-2">💎</div>
+        <h2 class="text-[#caa85c] font-bold uppercase">Estoque</h2>
+        <p class="text-xs text-gray-500">Produtos</p>
+    </a>
+
+    <a href="ofertas.html" class="card text-center">
+        <div class="text-3xl mb-2">🔥</div>
+        <h2 class="text-[#caa85c] font-bold uppercase">Ofertas</h2>
+        <p class="text-xs text-gray-500">Promoções</p>
+    </a>
+
+    <a href="../index.html" target="_blank" class="card text-center">
+        <div class="text-3xl mb-2">🌐</div>
+        <h2 class="text-[#caa85c] font-bold uppercase">Ver Loja</h2>
+        <p class="text-xs text-gray-500">Abrir site</p>
+    </a>
+
 </div>
 
 <script>
@@ -52,59 +87,46 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 
-// 🔥 CARREGAR DADOS DA EMPRESA
+// 🔥 CARREGAR EMPRESA
 function carregarEmpresa() {
     db.ref('settings/empresa').once('value').then(snap => {
         const d = snap.val() || {};
-
-        document.getElementById('nome').value = d.nome || '';
-        document.getElementById('slogan').value = d.slogan || '';
-        document.getElementById('whatsapp').value = d.whatsapp || '';
-        document.getElementById('pix').value = d.pix || 0;
-        document.getElementById('parcelas').value = d.parcelas || 1;
+        nome.value = d.nome || '';
+        slogan.value = d.slogan || '';
+        whatsapp.value = d.whatsapp || '';
+        pix.value = d.pix || 0;
+        parcelas.value = d.parcelas || 1;
     });
 }
-
 
 // 🔥 SALVAR EMPRESA
 function salvarEmpresa() {
     const data = {
-        nome: document.getElementById('nome').value,
-        slogan: document.getElementById('slogan').value,
-        whatsapp: document.getElementById('whatsapp').value,
-        pix: parseFloat(document.getElementById('pix').value) || 0,
-        parcelas: parseInt(document.getElementById('parcelas').value) || 1
+        nome: nome.value,
+        slogan: slogan.value,
+        whatsapp: whatsapp.value,
+        pix: parseFloat(pix.value) || 0,
+        parcelas: parseInt(parcelas.value) || 1
     };
 
     db.ref('settings/empresa').set(data)
-    .then(() => {
-        alert("✅ Dados salvos com sucesso!");
-    })
-    .catch(err => {
-        console.error(err);
-        alert("Erro ao salvar.");
-    });
+    .then(() => alert("✅ Salvo com sucesso"))
+    .catch(() => alert("Erro ao salvar"));
 }
 
-
-// 🔥 STATUS MANUTENÇÃO
+// 🔥 STATUS
 function carregarStatusSite() {
     db.ref('settings').on('value', snap => {
         const s = snap.val() || {};
-        const ativo = s.manutencao;
-
-        document.getElementById('statusTexto').innerText =
-            ativo ? "🚧 Site em manutenção" : "✅ Site online";
+        statusTexto.innerText = s.manutencao ? "🚧 Em manutenção" : "✅ Online";
     });
 }
 
 function alternarManutencao() {
     db.ref('settings/manutencao').get().then(snap => {
-        const atual = snap.val();
-        db.ref('settings').update({ manutencao: !atual });
+        db.ref('settings').update({ manutencao: !snap.val() });
     });
 }
-
 
 // INIT
 window.onload = () => {
