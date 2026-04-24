@@ -1,202 +1,217 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Produtos • Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin: 0; }
-        .serif { font-family: 'Cinzel', serif; }
-        .gold-text { color: #caa85c; }
-        .card-produto { transition: all 0.3s ease; border: 1px solid #222; }
-        .card-produto:hover { transform: translateY(-5px); border-color: #caa85c; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
-    </style>
+<meta charset="UTF-8">
+<title>Produtos • Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin: 0; }
+.serif { font-family: 'Cinzel', serif; }
+.gold-text { color: #caa85c; }
+.card-produto { transition: 0.3s; border: 1px solid #222; }
+.card-produto:hover { transform: translateY(-5px); border-color: #caa85c; }
+.custom-scroll::-webkit-scrollbar { width: 5px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; }
+</style>
 </head>
+
 <body>
 
-    <header class="sticky top-0 z-50 py-4 bg-black/90 border-b border-[#222] backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
-            <a href="index.html" class="serif text-xl gold-text tracking-widest uppercase">Abella Joias</a>
-            <a href="carrinho.html" class="flex items-center gap-2 bg-[#111] border border-[#caa85c]/30 px-4 py-2 rounded-xl">
-                <span class="gold-text text-sm">🛒</span>
-                <span id="valCarrinho" class="text-xs font-bold">R$ 0,00</span>
-            </a>
-        </div>
-    </header>
+<header class="sticky top-0 z-50 py-4 bg-black/90 border-b border-[#222]">
+<div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+<a href="index.html" class="serif text-xl gold-text">Abella Joias</a>
+<a href="carrinho.html" class="flex items-center gap-2 bg-[#111] border border-[#caa85c]/30 px-4 py-2 rounded-xl">
+<span class="gold-text">🛒</span>
+<span id="valCarrinho" class="text-xs font-bold">R$ 0,00</span>
+</a>
+</div>
+</header>
 
-    <main class="max-w-7xl mx-auto p-6">
-        <div class="flex items-center gap-4 mb-8">
-            <a href="index.html" class="text-[#caa85c] text-[10px] font-extrabold border border-[#caa85c]/30 px-3 py-1 rounded-full hover:bg-[#caa85c] hover:text-black transition-all">❮ VOLTAR</a>
-            <h2 id="tituloCategoria" class="serif text-2xl text-white uppercase tracking-widest">Coleção</h2>
-        </div>
+<main class="max-w-7xl mx-auto p-6">
 
-        <div id="gridProdutos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div class="col-span-full text-center py-20 text-gray-600 italic animate-pulse uppercase tracking-[4px] text-xs">Sincronizando...</div>
-        </div>
-    </main>
+<div class="flex items-center gap-4 mb-8">
+<a href="index.html" class="text-[#caa85c] text-[10px] font-bold border px-3 py-1 rounded-full">❮ VOLTAR</a>
+<h2 id="tituloCategoria" class="serif text-2xl uppercase">Coleção</h2>
+</div>
 
-    <div id="modalVariacao" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-[#111] border border-[#333] w-full max-w-lg rounded-2xl p-6 max-h-[90vh] flex flex-col">
-            <h3 id="modalTitle" class="serif text-[#caa85c] text-xl mb-1 uppercase">Escolher Variações</h3>
-            <p class="text-gray-500 text-[10px] mb-4 uppercase tracking-widest font-bold">Informe as quantidades desejadas</p>
-            
-            <div id="listaVariacoes" class="grid grid-cols-2 gap-3 overflow-y-auto pr-2 custom-scroll mb-6">
-                </div>
+<div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+<div class="col-span-full text-center py-20 text-gray-600">Carregando...</div>
+</div>
 
-            <div class="flex gap-2 border-t border-[#222] pt-4">
-                <button onclick="fecharModal()" class="flex-1 bg-[#222] text-white text-[11px] py-3 rounded-xl font-bold uppercase">Cancelar</button>
-                <button onclick="confirmarVariacoes()" class="flex-1 bg-white text-black text-[11px] py-3 rounded-xl font-bold uppercase hover:bg-[#caa85c]">Confirmar</button>
-            </div>
-        </div>
-    </div>
+</main>
 
-    <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
-            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<!-- MODAL -->
+<div id="modalVariacao" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-4">
+<div class="bg-[#111] w-full max-w-lg rounded-2xl p-6">
 
-        const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+<h3 id="modalTitle" class="serif text-[#caa85c] mb-4">Escolher</h3>
 
-        let produtoTemp = null; // Armazena o produto que está sendo configurado no modal
-        const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-        const dizeres = ["Fé", "Amor", "Gratidão", "Paz", "Vida", "Mãe", "Pai", "Deus", "Saúde", "Sucesso", "Alegria", "Família"];
+<div id="listaVariacoes" class="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto mb-4"></div>
 
-        async function carregarPagina() {
-            const params = new URLSearchParams(window.location.search);
-            const categoriaId = params.get('id');
-            const grid = document.getElementById('gridProdutos');
+<div class="flex gap-2">
+<button onclick="fecharModal()" class="flex-1 bg-[#222] py-3 rounded">Cancelar</button>
+<button onclick="confirmarVariacoes()" class="flex-1 bg-white text-black py-3 rounded">Confirmar</button>
+</div>
 
-            db.ref('products').orderByChild('category').equalTo(categoriaId).on('value', snapshot => {
-                grid.innerHTML = '';
-                snapshot.forEach(child => {
-                    const p = child.val();
-                    const id = child.key;
-                    if (p.paused) return;
+</div>
+</div>
 
-                    const precoFinal = p.promoPrice > 0 ? p.promoPrice : p.price;
-                    const precoPix = precoFinal * 0.95;
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
 
-                    grid.innerHTML += `
-                    <div class="card-produto bg-[#111] rounded-2xl overflow-hidden flex flex-col">
-                        <img src="${p.image || p.foto}" class="aspect-square object-cover w-full">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                                <span>${p.sku || '---'}</span>
-                                <span>${p.weight || p.peso || 0}g</span>
-                            </div>
-                            <h3 class="text-white text-sm font-semibold mb-4 leading-tight h-10 line-clamp-2">${p.name || p.nome}</h3>
-                            
-                            <div class="mt-auto">
-                                <p class="text-[#caa85c] text-xl font-black">${fMoeda(precoFinal)}</p>
-                                <div class="bg-[#caa85c]/10 border border-[#caa85c]/20 p-2 rounded-lg mt-2 text-center">
-                                    <p class="text-[#caa85c] text-[11px] font-black">${fMoeda(precoPix)} NO PIX</p>
-                                </div>
-                                <button onclick="abrirCheckVariação('${id}', '${p.name || p.nome}', ${precoFinal})" 
-                                    class="w-full mt-4 bg-white text-black text-[10px] font-extrabold py-3 rounded-xl hover:bg-[#caa85c] transition-all uppercase tracking-widest">
-                                    Adicionar
-                                </button>
-                            </div>
-                        </div>
-                    </div>`;
-                });
-            });
-            atualizarResumoHeader();
-        }
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-        function abrirCheckVariação(id, nome, preco) {
-            const nomeLower = nome.toLowerCase();
-            produtoTemp = { id, nome, preco };
+const fMoeda = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
-            if (nomeLower.includes("letra") || nomeLower.includes("inicial") || nomeLower.includes("alfabeto")) {
-                montarModal(alfabeto, "Iniciais A-Z");
-            } else if (nomeLower.includes("dizeres")) {
-                montarModal(dizeres, "Dizeres / Palavras");
-            } else {
-                adicionarSimples(id, nome, preco);
-            }
-        }
+let produtoTemp = null;
 
-        function montarModal(lista, titulo) {
-            document.getElementById('modalTitle').innerText = titulo;
-            const container = document.getElementById('listaVariacoes');
-            container.innerHTML = '';
+// 🔥 CARREGAR PRODUTOS (ALINHADO COM ESTOQUE)
+function carregarPagina(){
+const params = new URLSearchParams(window.location.search);
+const categoriaId = params.get('id');
 
-            lista.forEach(item => {
-                container.innerHTML += `
-                    <div class="flex items-center justify-between bg-black/40 p-2 rounded-lg border border-[#222]">
-                        <span class="text-white font-bold text-xs uppercase">${item}</span>
-                        <input type="number" min="0" placeholder="0" data-item="${item}" 
-                            class="input-qtd w-12 bg-[#111] border border-[#444] text-white text-center rounded text-xs p-1 outline-none focus:border-[#caa85c]">
-                    </div>`;
-            });
+db.ref('products').orderByChild('category').equalTo(categoriaId).on('value', snap=>{
+const grid = document.getElementById('gridProdutos');
+grid.innerHTML = '';
 
-            document.getElementById('modalVariacao').classList.remove('hidden');
-        }
+snap.forEach(child=>{
+const p = child.val() || {};
+if(p.paused) return;
 
-        function fecharModal() {
-            document.getElementById('modalVariacao').classList.add('hidden');
-            produtoTemp = null;
-        }
+const id = child.key;
+const preco = p.precoFinal || p.price || 0;
 
-        function confirmarVariacoes() {
-            const inputs = document.querySelectorAll('.input-qtd');
-            let resumo = [];
-            let totalItens = 0;
+grid.innerHTML += `
+<div class="card-produto bg-[#111] rounded-xl overflow-hidden flex flex-col">
 
-            inputs.forEach(input => {
-                const qtd = parseInt(input.value);
-                if (qtd > 0) {
-                    resumo.push(`${qtd}x ${input.dataset.item}`);
-                    totalItens += qtd;
-                }
-            });
+<img src="${p.image || ''}" class="aspect-square object-cover">
 
-            if (totalItens === 0) {
-                alert("Por favor, selecione ao menos uma unidade.");
-                return;
-            }
+<div class="p-3 flex flex-col flex-grow">
 
-            const variacaoFinal = resumo.join(", ");
-            processarAdicao(produtoTemp.id, produtoTemp.nome, produtoTemp.preco, totalItens, variacaoFinal);
-            fecharModal();
-        }
+<div class="flex justify-between text-[10px] text-gray-500 mb-1">
+<span>${p.sku || ''}</span>
+<span>${p.weight || p.peso || 0}g</span>
+</div>
 
-        function adicionarSimples(id, nome, preco) {
-            processarAdicao(id, nome, preco, 1, "");
-        }
+<h3 class="text-sm mb-3">${p.name || ''}</h3>
 
-        function processarAdicao(id, nome, preco, qtd, variacao) {
-            let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-            const cartId = id + "-" + variacao;
-            const index = cart.findIndex(i => i.cartId === cartId);
+<div class="mt-auto">
+<p class="text-[#caa85c] font-bold">${fMoeda(preco)}</p>
 
-            if (index > -1) {
-                cart[index].quantidade += qtd;
-            } else {
-                cart.push({ cartId, id, nome, precoFinal: preco, quantidade: qtd, variacao });
-            }
+<button onclick="abrirCheckVariacao('${id}','${p.name || ''}',${preco},'${p.variacaoTipo || ''}',\`${p.opcoesPersonalizadas || ''}\`)"
+class="w-full mt-3 bg-white text-black text-xs py-2 rounded">
+Adicionar
+</button>
 
-            localStorage.setItem('carrinho', JSON.stringify(cart));
-            atualizarResumoHeader();
-            alert(`✅ ${qtd}x ${nome} adicionado(s)!`);
-        }
+</div>
+</div>
+</div>
+`;
+});
 
-        function atualizarResumoHeader() {
-            const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-            const total = cart.reduce((acc, i) => acc + (i.precoFinal * i.quantidade), 0);
-            document.getElementById('valCarrinho').innerText = fMoeda(total);
-        }
+});
+atualizarResumo();
+}
 
-        window.onload = carregarPagina;
-    </script>
+// 🔥 VARIAÇÃO DINÂMICA
+function abrirCheckVariacao(id,nome,preco,tipo,opcoes){
+produtoTemp = {id,nome,preco};
+
+if(tipo === "Lista" && opcoes){
+const lista = opcoes.split(',').map(v=>v.trim()).filter(v=>v);
+montarModal(lista,nome);
+return;
+}
+
+if(tipo === "Aro"){
+montarModal(["12","14","16","18","20","22"],"Aros");
+return;
+}
+
+adicionarSimples(id,nome,preco);
+}
+
+function montarModal(lista,titulo){
+document.getElementById('modalTitle').innerText = titulo;
+
+const container = document.getElementById('listaVariacoes');
+container.innerHTML='';
+
+lista.forEach(item=>{
+container.innerHTML+=`
+<div class="flex justify-between bg-[#222] p-2 rounded">
+<span>${item}</span>
+<input type="number" min="0" data-item="${item}" class="input-qtd w-12 text-center bg-black">
+</div>`;
+});
+
+document.getElementById('modalVariacao').classList.remove('hidden');
+}
+
+function fecharModal(){
+document.getElementById('modalVariacao').classList.add('hidden');
+produtoTemp=null;
+}
+
+function confirmarVariacoes(){
+const inputs = document.querySelectorAll('.input-qtd');
+let total=0;
+let resumo=[];
+
+inputs.forEach(i=>{
+const qtd=parseInt(i.value);
+if(qtd>0){
+total+=qtd;
+resumo.push(`${qtd}x ${i.dataset.item}`);
+}
+});
+
+if(total===0){ alert("Selecione quantidade"); return; }
+
+processarAdicao(produtoTemp.id,produtoTemp.nome,produtoTemp.preco,total,resumo.join(", "));
+fecharModal();
+}
+
+function adicionarSimples(id,nome,preco){
+processarAdicao(id,nome,preco,1,"");
+}
+
+function processarAdicao(id,nome,preco,qtd,variacao){
+let cart = JSON.parse(localStorage.getItem('carrinho')||'[]');
+
+const cartId = id+"-"+variacao;
+const index = cart.findIndex(i=>i.cartId===cartId);
+
+if(index>-1){
+cart[index].quantidade+=qtd;
+}else{
+cart.push({cartId,id,nome,precoFinal:preco,quantidade:qtd,variacao});
+}
+
+localStorage.setItem('carrinho',JSON.stringify(cart));
+atualizarResumo();
+alert("Adicionado ao carrinho");
+}
+
+function atualizarResumo(){
+const cart = JSON.parse(localStorage.getItem('carrinho')||'[]');
+const total = cart.reduce((a,i)=>a+(i.precoFinal*i.quantidade),0);
+document.getElementById('valCarrinho').innerText = fMoeda(total);
+}
+
+window.onload = carregarPagina;
+</script>
+
 </body>
 </html>
