@@ -12,13 +12,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
 <style>
-body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin: 0; }
-.serif { font-family: 'Cinzel', serif; }
-.gold-text { color: #caa85c; }
-.card-produto { transition: 0.3s; border: 1px solid #222; }
-.card-produto:hover { transform: translateY(-5px); border-color: #caa85c; }
-.custom-scroll::-webkit-scrollbar { width: 5px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; }
+body { font-family: 'Inter', sans-serif; background:#0b0b0b; color:#eee; margin:0; }
+.serif { font-family:'Cinzel', serif; }
+.gold-text { color:#caa85c; }
+.card-produto { transition:.3s; border:1px solid #222; position:relative; }
+.card-produto:hover { transform:translateY(-5px); border-color:#caa85c; }
 </style>
 </head>
 
@@ -27,6 +25,7 @@ body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margi
 <header class="sticky top-0 z-50 py-4 bg-black/90 border-b border-[#222]">
 <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
 <a href="index.html" class="serif text-xl gold-text">Abella Joias</a>
+
 <a href="carrinho.html" class="flex items-center gap-2 bg-[#111] border border-[#caa85c]/30 px-4 py-2 rounded-xl">
 <span class="gold-text">🛒</span>
 <span id="valCarrinho" class="text-xs font-bold">R$ 0,00</span>
@@ -35,6 +34,17 @@ body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margi
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
+
+<!-- GUIA -->
+<div class="bg-[#111] border border-[#222] rounded-xl p-4 mb-6 text-[11px] text-gray-300">
+<p class="text-[#caa85c] font-bold mb-2 uppercase">Como comprar</p>
+<ul class="space-y-1">
+<li>1. Escolha o produto</li>
+<li>2. Selecione variações</li>
+<li>3. Clique em adicionar</li>
+<li>4. Finalize no carrinho</li>
+</ul>
+</div>
 
 <div class="flex items-center gap-4 mb-8">
 <a href="index.html" class="text-[#caa85c] text-[10px] font-bold border px-3 py-1 rounded-full">❮ VOLTAR</a>
@@ -51,7 +61,8 @@ body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margi
 <div id="modalVariacao" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-4">
 <div class="bg-[#111] w-full max-w-lg rounded-2xl p-6">
 
-<h3 id="modalTitle" class="serif text-[#caa85c] mb-4">Escolher</h3>
+<h3 id="modalTitle" class="serif text-[#caa85c] mb-2">Escolher opções</h3>
+<p class="text-[10px] text-gray-400 mb-4">Informe as quantidades</p>
 
 <div id="listaVariacoes" class="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto mb-4"></div>
 
@@ -74,68 +85,110 @@ const db = firebase.database();
 
 const fMoeda = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
+// 🔥 SETTINGS DINÂMICO
+let settings = { pixDesconto:5, parcelas:6 };
+
+db.ref('settings').on('value', snap=>{
+const s = snap.val() || {};
+settings.pixDesconto = s.pixDesconto || 5;
+settings.parcelas = s.parcelas || 6;
+});
+
 let produtoTemp = null;
 
-// 🔥 CARREGAR PRODUTOS (ALINHADO COM ESTOQUE)
+// 🔥 CARREGAR PRODUTOS
 function carregarPagina(){
 const params = new URLSearchParams(window.location.search);
 const categoriaId = params.get('id');
 
 db.ref('products').orderByChild('category').equalTo(categoriaId).on('value', snap=>{
 const grid = document.getElementById('gridProdutos');
-grid.innerHTML = '';
+grid.innerHTML='';
 
 snap.forEach(child=>{
 const p = child.val() || {};
 if(p.paused) return;
 
 const id = child.key;
-const preco = p.precoFinal || p.price || 0;
+const precoBase = p.precoFinal || p.price || 0;
+const precoFinal = p.promoPrice > 0 ? p.promoPrice : precoBase;
 
 grid.innerHTML += `
-<div class="card-produto bg-[#111] rounded-xl overflow-hidden flex flex-col">
+<div class="card-produto bg-[#111] rounded-2xl overflow-hidden flex flex-col shadow-lg">
+
+<!-- BADGES -->
+<div class="absolute top-2 left-2 flex flex-col gap-1 z-10">
+
+${p.promoPrice ? `<span class="bg-red-600 text-white text-[9px] px-2 py-1 rounded font-bold">PROMO</span>` : ''}
+
+${p.destaque ? `<span class="bg-[#caa85c] text-black text-[9px] px-2 py-1 rounded font-bold">DESTAQUE</span>` : ''}
+
+</div>
 
 <img src="${p.image || ''}" class="aspect-square object-cover">
 
-<div class="p-3 flex flex-col flex-grow">
+<div class="p-4 flex flex-col flex-grow">
 
-<div class="flex justify-between text-[10px] text-gray-500 mb-1">
+<div class="flex justify-between text-[10px] text-gray-500 font-bold mb-1">
 <span>${p.sku || ''}</span>
-<span>${p.weight || p.peso || 0}g</span>
+<span>${p.peso || 0}g</span>
 </div>
 
-<h3 class="text-sm mb-3">${p.name || ''}</h3>
+<h3 class="text-white text-sm font-semibold mb-2">${p.name || ''}</h3>
 
-<div class="mt-auto">
-<p class="text-[#caa85c] font-bold">${fMoeda(preco)}</p>
+<div class="mb-2">
 
-<button onclick="abrirCheckVariacao('${id}','${p.name || ''}',${preco},'${p.variacaoTipo || ''}',\`${p.opcoesPersonalizadas || ''}\`)"
-class="w-full mt-3 bg-white text-black text-xs py-2 rounded">
-Adicionar
+${p.promoPrice ? `
+<p class="text-gray-500 line-through text-[11px]">${fMoeda(precoBase)}</p>
+<p class="text-red-500 text-lg font-black">${fMoeda(p.promoPrice)}</p>
+` : `
+<p class="text-[#caa85c] text-lg font-black">${fMoeda(precoBase)}</p>
+`}
+
+</div>
+
+<p class="text-green-400 text-[11px] font-bold">
+${fMoeda(precoFinal * (1 - settings.pixDesconto/100))} no PIX
+</p>
+
+<p class="text-gray-400 text-[10px] mb-2">
+ou ${settings.parcelas}x de ${fMoeda(precoFinal / settings.parcelas)}
+</p>
+
+<div class="text-[10px] text-gray-500 mb-3">
+${p.variacaoTipo === "Lista" ? 'Escolha múltiplas opções' : ''}
+${p.variacaoTipo === "Aro" ? 'Escolha o tamanho' : ''}
+</div>
+
+<button onclick="abrirCheckVariacao('${id}','${p.name || ''}',${precoFinal},'${p.variacaoTipo || ''}',\`${p.opcoesPersonalizadas || ''}\`)"
+class="w-full mt-auto bg-white text-black text-[11px] font-extrabold py-3 rounded-xl hover:bg-[#caa85c]">
+
+${p.variacaoTipo ? 'Escolher opções' : 'Adicionar'}
+
 </button>
 
-</div>
 </div>
 </div>
 `;
 });
 
 });
+
 atualizarResumo();
 }
 
-// 🔥 VARIAÇÃO DINÂMICA
+// 🔥 VARIAÇÕES
 function abrirCheckVariacao(id,nome,preco,tipo,opcoes){
 produtoTemp = {id,nome,preco};
 
-if(tipo === "Lista" && opcoes){
+if(tipo==="Lista" && opcoes){
 const lista = opcoes.split(',').map(v=>v.trim()).filter(v=>v);
 montarModal(lista,nome);
 return;
 }
 
-if(tipo === "Aro"){
-montarModal(["12","14","16","18","20","22"],"Aros");
+if(tipo==="Aro"){
+montarModal(["12","14","16","18","20","22"],"Escolha o aro");
 return;
 }
 
@@ -152,7 +205,7 @@ lista.forEach(item=>{
 container.innerHTML+=`
 <div class="flex justify-between bg-[#222] p-2 rounded">
 <span>${item}</span>
-<input type="number" min="0" data-item="${item}" class="input-qtd w-12 text-center bg-black">
+<input type="number" min="0" data-item="${item}" class="input-qtd w-12 text-center bg-black text-white">
 </div>`;
 });
 
@@ -201,7 +254,7 @@ cart.push({cartId,id,nome,precoFinal:preco,quantidade:qtd,variacao});
 
 localStorage.setItem('carrinho',JSON.stringify(cart));
 atualizarResumo();
-alert("Adicionado ao carrinho");
+alert(`✅ ${qtd}x ${nome} adicionado`);
 }
 
 function atualizarResumo(){
