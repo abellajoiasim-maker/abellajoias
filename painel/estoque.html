@@ -40,12 +40,27 @@
     </div>
 
     <div class="flex flex-wrap gap-2 justify-center">
-        <button onclick="criarNovoProduto()" class="bg-white text-black font-black px-4 py-2 rounded-lg text-[10px]">+ NOVO</button>
-        <select id="filtroCat" class="input-dark"><option value="">Categorias</option></select>
-        <input id="filtroSku" placeholder="SKU ou Nome..." class="input-dark w-32">
-        <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-4 py-2 rounded-lg text-[10px]">BUSCAR</button>
-        <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px]">AUTO-SYNC</button>
-    </div>
+    <button onclick="criarNovoProduto()" class="bg-white text-black font-black px-4 py-2 rounded-lg text-[10px]">+ NOVO</button>
+
+    <select id="filtroCat" class="input-dark">
+        <option value="">Categorias</option>
+    </select>
+
+    <input 
+        id="filtroSku" 
+        placeholder="SKU ou Nome..." 
+        class="input-dark w-32"
+        onkeypress="if(event.key === 'Enter') carregarProdutos()"
+    >
+
+    <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-4 py-2 rounded-lg text-[10px]">
+        BUSCAR
+    </button>
+
+    <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px]">
+        AUTO-SYNC
+    </button>
+</div>
 </header>
 
 <div class="bg-[#141414] border border-[#2a2a2a] rounded-xl overflow-hidden">
@@ -166,14 +181,35 @@ function criarNovoProduto() {
     corpo.insertAdjacentHTML('afterbegin', criarLinhaHTML(ref.key, {}));
 }
 
-function carregarProdutos() {
-    const corpo = document.getElementById('tabelaCorpo');
-    corpo.innerHTML = 'Carregando...';
+async function carregarProdutos() {
+    const filtroTexto = document.getElementById('filtroSku').value.trim().toUpperCase();
+    const filtroCat = document.getElementById('filtroCat').value;
 
-    db.ref('products').once('value', snap => {
+    const corpo = document.getElementById('tabelaCorpo');
+    corpo.innerHTML = '<tr><td colspan="10" class="p-10 text-center text-[#caa85c]">BUSCANDO...</td></tr>';
+
+    db.ref('products').once('value', snapshot => {
         let html = '';
-        snap.forEach(c => html += criarLinhaHTML(c.key, c.val()));
-        corpo.innerHTML = html;
+        let contador = 0;
+
+        snapshot.forEach(child => {
+            const p = child.val() || {};
+
+            const sku = String(p.sku || "").toUpperCase();
+            const nome = String(p.name || "").toUpperCase();
+
+            if (
+                (!filtroTexto || sku.includes(filtroTexto) || nome.includes(filtroTexto)) &&
+                (!filtroCat || p.category === filtroCat)
+            ) {
+                contador++;
+                html += criarLinhaHTML(child.key, p);
+            }
+        });
+
+        corpo.innerHTML = html || '<tr><td colspan="10" class="p-10 text-center text-red-500">Nada encontrado</td></tr>';
+
+        document.getElementById('statusInfo').innerText = `Total exibido: ${contador} produtos`;
     });
 }
 
