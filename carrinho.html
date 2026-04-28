@@ -8,243 +8,159 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-/* AJUSTE 1: Padding no body para evitar que o resumo cubra o conteúdo */
-body { 
-    background:#0a0a0a; 
-    color:#fff; 
-    font-family:'Inter'; 
-    padding-bottom: 220px !important; 
-    min-height: 100vh;
-}
-.serif { font-family:'Cinzel'; }
-.gold { color:#caa85c; }
-
-.card {
-    background:#111;
-    border:1px solid #222;
-    border-radius:16px;
-    padding:16px;
-    margin-bottom:12px;
-}
-
-.input {
-    width:100%;
-    background:#000;
-    border:1px solid #333;
-    border-radius:10px;
-    padding:12px;
-    font-size:14px;
-    color: white;
-}
-.input:focus { border-color:#caa85c; }
-
-.btn-pay {
-    flex:1;
-    border:1px solid #333;
-    padding:12px;
-    border-radius:12px;
-    text-align:center;
-}
-.btn-pay.active {
-    border-color:#caa85c;
-    background:rgba(202,168,92,0.1);
-}
-
-.item {
-    display:flex;
-    gap:10px;
-    padding:10px 0;
-    border-bottom:1px solid #222;
-}
+body { background:#0b0b0b; color:#fff; font-family: Arial; }
+.card { background:#141414; border:1px solid #2a2a2a; border-radius:12px; padding:16px; }
+.input { width:100%; padding:10px; background:#0b0b0b; border:1px solid #333; border-radius:8px; color:#fff; }
+.btn { background:#caa85c; color:#000; padding:12px; font-weight:bold; border-radius:8px; width:100%; }
 </style>
 </head>
 
-<body class="p-3">
+<body class="p-4">
 
-<div class="flex justify-between mb-4">
-<button onclick="location.href='index.html'" class="text-sm gold">← Voltar às compras</button>
-<h1 class="serif gold">Checkout</h1>
-<div></div>
+<h1 class="text-xl text-[#caa85c] mb-4 font-bold">Finalizar Pedido</h1>
+
+<div class="card mb-4">
+    <input id="nome" class="input mb-2" placeholder="Seu nome">
+    <input id="telefone" class="input mb-2" placeholder="WhatsApp">
+    <input id="endereco" class="input" placeholder="Endereço">
 </div>
 
-<div id="areaPDF">
-
-<div class="card">
-<h2 class="gold text-sm mb-2">Seu Pedido</h2>
-<div id="lista"></div>
+<div class="card mb-4">
+    <h2 class="text-sm text-gray-400 mb-2">Resumo</h2>
+    <div id="resumo"></div>
+    <div class="mt-2 text-right font-bold" id="total">R$ 0,00</div>
 </div>
 
-<div class="card">
-<h2 class="gold text-sm mb-2">Dados do Cliente</h2>
-
-<input class="input mb-2" id="nome" placeholder="Nome completo *">
-<input class="input mb-2" id="whats" placeholder="WhatsApp com DDD *">
-<input class="input" id="cidade" placeholder="Cidade *">
-
-</div>
-
-<div class="card">
-<h2 class="gold text-sm mb-2">Local de Entrega</h2>
-
-<input class="input mb-2" id="local" placeholder="Nome do local (ex: Loja, Casa)">
-<input class="input mb-2" id="rua" placeholder="Rua / Avenida *">
-<input class="input mb-2" id="numero" placeholder="Número *">
-<input class="input mb-2" id="bairro" placeholder="Bairro *">
-<input class="input" id="cidadeEntrega" placeholder="Cidade *">
-
-</div>
-
-<div class="card">
-<h2 class="gold text-sm mb-2 text-center">Forma de Pagamento</h2>
-
-<div class="flex gap-2">
-<button onclick="setMetodo('pix')" id="pix" class="btn-pay">PIX</button>
-<button onclick="setMetodo('cartao')" id="cartao" class="btn-pay">Cartão</button>
-</div>
-
-</div>
-
-<div class="h-20"></div>
-
-</div> <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-[#333] p-4 z-[9999] shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
-    <div class="max-w-3xl mx-auto">
-        <div class="text-xs flex justify-between mb-2">
-        <span>Peças: <b id="pecas">0</b></span>
-        <span>Peso: <b id="peso">0g</b></span>
-        </div>
-
-        <div class="text-xs mb-1">
-        Subtotal: <b id="sub"></b>
-        </div>
-
-        <div class="text-green-400 text-xs" id="pixDesc"></div>
-        <div class="text-blue-400 text-xs" id="promoDesc"></div>
-        <div class="text-gray-400 text-xs" id="parcelas"></div>
-
-        <div class="text-lg font-bold gold">
-        Total: <span id="total"></span>
-        </div>
-
-        <div class="flex gap-2 mt-3 pb-2">
-        <button onclick="baixarPDF()" class="bg-gray-800 px-4 py-2 rounded">PDF</button>
-        <button onclick="finalizar()" class="bg-[#caa85c] text-black flex-1 rounded py-2 font-bold uppercase">
-        Finalizar Pedido
-        </button>
-        </div>
-    </div>
-</div>
+<button onclick="finalizarPedido()" class="btn">FINALIZAR PEDIDO</button>
 
 <script>
-// TODO SEU CÓDIGO ORIGINAL RESTAURADO ABAIXO
+
+// 🔒 ANTI ERRO GLOBAL
+window.onerror = function(msg){ console.error(msg); return true; };
+
 const firebaseConfig = {
-apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+apiKey:"AIzaSyDP...",
 databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-firebase.initializeApp(firebaseConfig);
+
+// 🔒 FIREBASE SAFE
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
-let metodo='pix';
-let empresa={pixDesconto:5, parcelas:3, whatsapp:'5519988207658'};
+// 🔒 HELPERS
+const money = v => Math.max(0, parseFloat(v) || 0); // AJUSTE CIRÚRGICO: bloqueia negativo
+const safe = id => document.getElementById(id);
+const round = v => Math.round(v * 100) / 100;
 
-const f = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+let carrinho = [];
 
-async function init(){
-const snap = await db.ref('settings/empresa').once('value');
-empresa = {...empresa, ...(snap.val()||{})};
-render();
+// 🔥 CARREGAR CARRINHO
+function carregarCarrinho(){
+    try{
+        const data = JSON.parse(localStorage.getItem("carrinho")) || [];
+        carrinho = Array.isArray(data) ? data : [];
+        render();
+    }catch{
+        carrinho = [];
+        render();
+    }
 }
 
+// 🔥 RENDER
 function render(){
-let html='';
-let sub=0, peso=0, pecas=0;
+    const el = safe("resumo");
+    let total = 0;
+    let html = '';
 
-carrinho.forEach((p,i)=>{
-let total = p.precoFinal * p.quantidade;
-let pesoItem = (p.peso||0)*p.quantidade;
+    carrinho.forEach(item=>{
+        const preco = money(item.precoFinal || item.price);
+        const qtd = Math.max(1, parseInt(item.qtd) || 1);
 
-sub+=total;
-peso+=pesoItem;
-pecas+=p.quantidade;
+        const subtotal = round(preco * qtd);
+        total += subtotal;
 
-html+=`
-<div class="item">
-<img src="${p.image}" class="w-12 h-12 object-cover rounded">
+        html += `
+        <div class="flex justify-between text-sm mb-1">
+            <span>${item.name || "Produto"}</span>
+            <span>R$ ${subtotal.toFixed(2)}</span>
+        </div>`;
+    });
 
-<div class="flex-1">
-<div class="text-sm font-bold">${p.nome}</div>
-<div class="text-xs text-gray-400">${p.sku||''}</div>
-<div class="text-xs">Peso: ${p.peso}g</div>
+    total = round(total);
 
-<div class="flex justify-between mt-1">
-<input type="number" value="${p.quantidade}" onchange="qtd(${i},this.value)" class="w-12 bg-black border">
-<button onclick="rem(${i})">✕</button>
-</div>
-
-<div class="text-xs mt-1">${f(total)}</div>
-</div>
-</div>`;
-});
-
-document.getElementById('lista').innerHTML=html;
-
-let descPix = metodo==='pix' ? sub*(empresa.pixDesconto/100) : 0;
-let total = sub-descPix;
-
-document.getElementById('pecas').innerText=pecas;
-document.getElementById('peso').innerText=peso.toFixed(2)+'g';
-document.getElementById('sub').innerText=f(sub);
-document.getElementById('total').innerText=f(total);
-document.getElementById('pixDesc').innerText = descPix?`Desconto PIX: -${f(descPix)}`:'';
-document.getElementById('parcelas').innerText =
-metodo==='cartao'?`${empresa.parcelas}x de ${f(total/empresa.parcelas)}`:'';
-
-document.querySelectorAll('.btn-pay').forEach(b=>b.classList.remove('active'));
-document.getElementById(metodo).classList.add('active');
+    el.innerHTML = html || "Carrinho vazio";
+    safe("total").innerText = "R$ " + total.toFixed(2);
 }
 
-function qtd(i,v){carrinho[i].quantidade=parseInt(v)||1; salvar();}
-function rem(i){carrinho.splice(i,1); salvar();}
-function salvar(){localStorage.setItem('carrinho',JSON.stringify(carrinho));render();}
-function setMetodo(m){metodo=m;render();}
+// 🔥 VALIDAÇÃO
+function validar(){
+    if(!carrinho.length) return "Carrinho vazio";
 
-function baixarPDF(){
-html2pdf().from(document.getElementById('areaPDF')).save('pedido.pdf');
+    if(!safe("nome").value.trim()) return "Nome obrigatório";
+    if(!safe("telefone").value.trim()) return "Telefone obrigatório";
+
+    return null;
 }
 
-async function finalizar(){
+// 🔥 FINALIZAR
+function finalizarPedido(){
+    try{
 
-const nome=document.getElementById('nome').value;
-if(!nome) return alert("Preencha seu nome");
+        const erro = validar();
+        if(erro) return alert(erro);
 
-let total=document.getElementById('total').innerText;
+        let total = 0;
 
-const pedido={
-nome,
-whats:document.getElementById('whats').value,
-cidade:document.getElementById('cidade').value,
-total,
-metodo,
-itens:carrinho,
-data:new Date().toISOString()
-};
+        const itens = carrinho.map(item=>{
+            const preco = money(item.precoFinal || item.price);
+            const qtd = Math.max(1, parseInt(item.qtd) || 1);
 
-await db.ref('orders').push(pedido);
+            const subtotal = round(preco * qtd);
+            total += subtotal;
 
-const msg = `Pedido Abella Joias
-Nome: ${nome}
-Total: ${total}
-Pagamento: ${metodo}`;
+            return {
+                nome: item.name || "",
+                preco: preco,
+                qtd: qtd,
+                subtotal: subtotal
+            };
+        });
 
-window.open(`https://wa.me/${empresa.whatsapp}?text=${encodeURIComponent(msg)}`);
+        total = round(total);
+
+        if(total <= 0) return alert("Erro no cálculo do pedido"); // AJUSTE CIRÚRGICO
+
+        const pedido = {
+            cliente:{
+                nome: safe("nome").value,
+                telefone: safe("telefone").value,
+                endereco: safe("endereco").value
+            },
+            itens,
+            total,
+            status:"novo",
+            criadoEm: Date.now()
+        };
+
+        db.ref("pedidos").push(pedido)
+        .then(()=>{
+            alert("Pedido enviado!");
+            localStorage.removeItem("carrinho");
+            location.reload();
+        })
+        .catch(()=> alert("Erro ao enviar"));
+
+    }catch(e){
+        console.error(e);
+        alert("Erro inesperado");
+    }
 }
 
-init();
+// INIT
+carregarCarrinho();
+
 </script>
 
 </body>
