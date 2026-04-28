@@ -1,125 +1,212 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Pedidos • Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="admin-style.css">
+<meta charset="UTF-8">
+<title>Pedidos • Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <style>
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
-        
-        @media print {
-            body { background: white !important; }
-            header, nav, main, #editorPedido { display: none !important; }
-            #print-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; color: black; }
-        }
-    </style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body { background:#0b0b0b; color:#fff; font-family: Arial; }
+.card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; }
+.btn { background:#caa85c; color:#000; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold; }
+</style>
 </head>
-<body class="bg-[#0b0b0b]">
 
-    <header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] uppercase">
-        Abella Joias • Gestão de Pedidos
-    </header>
+<body>
 
-    <nav class="flex flex-col md:flex-row gap-2 p-2 bg-[#111] sticky top-0 z-50">
-        <div class="flex gap-2">
-            <a href="estoque.html" class="btn">❮ Estoque</a>
-            <button class="btn active" onclick="location.reload()">Pedidos Recebidos</button>
-        </div>
-        <input type="text" id="buscaPedido" placeholder="🔍 Buscar cliente..." class="md:ml-auto !mb-0 max-w-xs bg-[#1a1a1a] border border-[#333] p-2 rounded-lg text-white" oninput="carregarPedidos()">
-    </nav>
+<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] uppercase">
+Abella Joias • Gestão de Pedidos
+</header>
 
-    <main class="p-6 max-w-4xl mx-auto">
-        <div id="listaPedidos" class="grid gap-4">
-            <div class="text-center py-10 text-gray-600 italic">Carregando pedidos...</div>
-        </div>
-    </main>
+<div class="p-4 max-w-4xl mx-auto">
 
-    <div id="editorPedido" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
-        <div class="bg-[#111] w-full max-w-5xl rounded-2xl p-5 overflow-auto max-h-[95vh] border border-[#333] custom-scroll">
-            
-            <div class="flex justify-between items-center mb-4 border-b border-[#222] pb-4">
-                <h2 class="text-[#caa85c] font-bold uppercase tracking-tighter">Editar Pedido</h2>
-                <div id="totalPreview" class="text-[#caa85c] font-bold text-2xl">R$ 0,00</div>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-4">
-                <div class="card bg-black/40 p-4 border border-[#222] rounded-lg">
-                    <p class="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-widest">Dados Pessoais</p>
-                    <input id="edClienteNome" placeholder="Nome do Cliente" class="w-full bg-[#111] border border-[#333] p-2 rounded mb-2 text-white">
-                    <input id="edClienteTel" placeholder="WhatsApp" class="w-full bg-[#111] border border-[#333] p-2 rounded text-white">
-                </div>
-                <div class="card bg-black/40 p-4 border border-[#222] rounded-lg">
-                    <p class="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-widest">Entrega / Logística</p>
-                    <input id="edRua" placeholder="Endereço Completo" class="w-full bg-[#111] border border-[#333] p-2 rounded mb-2 text-white">
-                    <input id="edCidade" placeholder="Cidade / Estado" class="w-full bg-[#111] border border-[#333] p-2 rounded text-white">
-                </div>
-            </div>
+<input id="buscaPedido" placeholder="🔍 Buscar por número ou cliente..."
+class="w-full mb-4 p-3 bg-[#111] border border-[#333] rounded-lg text-white">
 
-            <div class="mt-6 flex justify-between items-center px-1">
-                <h3 class="text-[#caa85c] font-bold text-sm uppercase italic">Itens do Pedido</h3>
-                <button class="btn bg-green-900/30 text-green-500 border-green-900 hover:bg-green-900 px-4 py-2 rounded text-xs" onclick="addItemEditor()">+ ADICIONAR ITEM (SKU)</button>
-            </div>
+<div id="listaPedidos" class="grid gap-4"></div>
 
-            <div id="edItens" class="mt-2 space-y-2"></div>
+</div>
 
-            <div class="card mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 bg-[#1a1a1a] p-4 border border-[#222] rounded-lg">
-                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Promo (R$)</label><input id="edDescPromo" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded text-white"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Pix (R$)</label><input id="edDescPix" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded text-white"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase">Frete (R$)</label><input id="edFrete" type="number" oninput="recalcularTotalEd()" class="w-full bg-black border border-[#333] p-2 rounded text-white"></div>
-                <div><label class="text-[9px] text-gray-500 uppercase">Total Peças</label><input id="edQtdTotal" type="number" readonly class="w-full bg-black/50 border border-[#333] p-2 rounded opacity-50 cursor-not-allowed text-white"></div>
-            </div>
-            
-            <div class="mt-6 p-4 border border-[#222] rounded-xl bg-black/20">
-                <p class="text-[10px] text-gray-500 mb-2 uppercase font-bold text-center">Gerar Romaneio (Escolha o Modelo):</p>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    <button class="btn bg-blue-900/40 text-blue-400 border-blue-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA</button>
-                    <button class="btn bg-blue-900/40 text-blue-400 border-blue-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO</button>
-                    <button class="btn bg-blue-900/40 text-blue-400 border-blue-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 3)">3. VITRINE (FOTO)</button>
-                    <button class="btn bg-indigo-900/40 text-indigo-400 border-indigo-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 4)">4. GRADE CONF.</button>
-                    <button class="btn bg-indigo-900/40 text-indigo-400 border-indigo-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 5)">5. GRADE FIN.</button>
-                    <button class="btn bg-indigo-900/40 text-indigo-400 border-indigo-900 text-[9px] py-2" onclick="imprimirRomaneio(pedidoEditando, 6)">6. GRADE TOTAL</button>
-                </div>
-            </div>
+<!-- MODAL -->
+<div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4">
 
-            <div class="flex flex-col md:flex-row gap-2 pt-6 mt-4 border-t border-[#222]">
-                <button class="btn bg-[#caa85c] text-black font-bold flex-grow py-3 rounded-lg" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
-                <button class="btn bg-red-900/20 text-red-500 border-red-900 hover:bg-red-600 hover:text-white px-6 py-3 rounded-lg" onclick="excluirPedido(pedidoEditando)">EXCLUIR</button>
-                <button class="btn border-[#333] text-gray-400 py-3 px-6 rounded-lg" onclick="fecharEditorPedido()">CANCELAR</button>
-            </div>
-        </div>
-    </div>
+<div class="bg-[#111] w-full max-w-2xl rounded-xl p-6">
 
-    <div id="print-area"></div>
+<h2 class="text-[#caa85c] font-bold mb-4">Editar Pedido</h2>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
-        var pedidoEditando = null;
-    </script>
+<input id="edNome" class="w-full p-2 mb-2 bg-black border border-[#333]" placeholder="Nome">
+<input id="edTel" class="w-full p-2 mb-4 bg-black border border-[#333]" placeholder="Telefone">
 
-    <script src="admin-logic.js"></script>
-    <script>
-        window.onload = () => {
-            if (typeof carregarPedidos === "function") {
-                carregarPedidos();
-            } else {
-                console.error("Função carregarPedidos não encontrada no admin-logic.js");
-            }
-        };
-    </script>
+<div id="edItens" class="space-y-2 mb-4"></div>
+
+<div class="flex gap-2">
+<button onclick="salvar()" class="btn">Salvar</button>
+<button onclick="excluir()" class="bg-red-600 px-4 py-2 rounded">Excluir</button>
+<button onclick="fechar()" class="border px-4 py-2 rounded">Cancelar</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// 🔒 ANTI ERRO
+window.onerror = e => { console.error(e); return true; };
+
+// 🔥 FIREBASE
+const firebaseConfig = {
+apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// 🔒 HELPERS
+const safe = v => v ?? "";
+const money = v => (parseFloat(v)||0).toFixed(2);
+
+// 🔥 CACHE
+let pedidos = {};
+let atual = null;
+
+// 🔥 CARREGAR
+function carregarPedidos(){
+
+const busca = (document.getElementById("buscaPedido").value||"").toLowerCase();
+
+db.ref("orders").on("value", snap=>{
+
+pedidos = snap.val() || {};
+let html = '';
+
+Object.entries(pedidos).reverse().forEach(([id,p])=>{
+
+const numero = (p.numeroFormatado || "").toLowerCase();
+const nome = (p.cliente?.nome || "").toLowerCase();
+
+if(busca && !numero.includes(busca) && !nome.includes(busca)) return;
+
+html += `
+<div class="card">
+
+<div class="flex justify-between items-center">
+
+<div>
+<h3 class="text-[#caa85c] font-bold">
+#${p.numeroFormatado || "---"} • ${safe(p.cliente?.nome)}
+</h3>
+<p class="text-xs text-gray-400">${safe(p.cliente?.telefone)}</p>
+<p class="text-[10px] text-gray-500">${p.status || "novo"}</p>
+</div>
+
+<div class="text-right">
+<div class="text-[#caa85c] font-bold text-lg">
+R$ ${money(p.total)}
+</div>
+<button class="btn mt-2" onclick="abrir('${id}')">Abrir</button>
+</div>
+
+</div>
+
+<div class="flex gap-2 mt-3">
+<button onclick="status('${id}','novo')" class="px-2 py-1 bg-gray-700 text-xs">Novo</button>
+<button onclick="status('${id}','enviado')" class="px-2 py-1 bg-blue-700 text-xs">Enviado</button>
+<button onclick="status('${id}','entregue')" class="px-2 py-1 bg-green-700 text-xs">Entregue</button>
+<button onclick="copiar('${id}')" class="px-2 py-1 bg-[#caa85c] text-black text-xs">📲 Copiar</button>
+</div>
+
+</div>`;
+});
+
+document.getElementById("listaPedidos").innerHTML = html || "Nenhum pedido";
+
+});
+}
+
+// 🔥 ABRIR
+function abrir(id){
+
+atual = id;
+const p = pedidos[id];
+
+document.getElementById("edNome").value = safe(p.cliente?.nome);
+document.getElementById("edTel").value = safe(p.cliente?.telefone);
+
+let html = '';
+
+(p.itens||[]).forEach(i=>{
+html += `<div class="flex justify-between text-sm">
+<span>${i.nome} x${i.qtd}</span>
+<span>R$ ${money(i.subtotal)}</span>
+</div>`;
+});
+
+document.getElementById("edItens").innerHTML = html;
+
+document.getElementById("editorPedido").classList.remove("hidden");
+
+}
+
+// 🔥 FECHAR
+function fechar(){
+document.getElementById("editorPedido").classList.add("hidden");
+}
+
+// 🔥 SALVAR
+function salvar(){
+
+db.ref("orders/"+atual+"/cliente").update({
+nome: document.getElementById("edNome").value,
+telefone: document.getElementById("edTel").value
+});
+
+alert("Salvo");
+fechar();
+
+}
+
+// 🔥 EXCLUIR
+function excluir(){
+
+if(confirm("Excluir pedido?")){
+db.ref("orders/"+atual).remove();
+fechar();
+}
+
+}
+
+// 🔥 STATUS
+function status(id,s){
+db.ref("orders/"+id+"/status").set(s);
+}
+
+// 🔥 COPIAR
+function copiar(id){
+
+const p = pedidos[id];
+
+let txt = `Pedido #${p.numeroFormatado}\n\n`;
+
+(p.itens||[]).forEach(i=>{
+txt += `${i.nome} x${i.qtd} - R$ ${money(i.subtotal)}\n`;
+});
+
+txt += `\nTotal: R$ ${money(p.total)}`;
+
+navigator.clipboard.writeText(txt);
+alert("Copiado!");
+}
+
+// INIT
+document.getElementById("buscaPedido").oninput = carregarPedidos;
+carregarPedidos();
+
+</script>
+
 </body>
 </html>
