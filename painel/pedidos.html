@@ -2,44 +2,36 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel de Pedidos • Abella Joias</title>
+    <title>Pedidos • Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         body { background:#0b0b0b; color:#eee; font-family: sans-serif; }
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:12px; }
-        .status-novo { color: #caa85c; font-weight: bold; }
     </style>
 </head>
 <body class="p-6">
 
 <div class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-[#caa85c]">Gestão de Pedidos</h1>
-        <span class="text-xs text-gray-500">Monitorando: /pedidos</span>
-    </div>
-
+    <h1 class="text-2xl font-bold text-[#caa85c] mb-6">Pedidos Recebidos</h1>
     <div class="card p-6 overflow-x-auto">
         <table class="w-full text-left">
             <thead>
                 <tr class="text-gray-500 text-xs uppercase border-b border-gray-800">
-                    <th class="pb-3">Data</th>
                     <th class="pb-3">Cliente</th>
                     <th class="pb-3">Total</th>
-                    <th class="pb-3">Status</th>
-                    <th class="pb-3 text-right">Ação</th>
+                    <th class="pb-3">Pagamento</th>
+                    <th class="pb-3">Ação</th>
                 </tr>
             </thead>
             <tbody id="listaPedidos">
-                <tr><td colspan="5" class="py-4 text-center">Conectando ao banco de dados...</td></tr>
-            </tbody>
+                </tbody>
         </table>
     </div>
 </div>
 
 <script>
-// CONFIGURAÇÃO IDENTICA AO CHECKOUT
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -48,66 +40,40 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// AJUSTE CIRÚRGICO: Monitoramento em tempo real na coleção 'orders'
 function carregarPedidos() {
-    const lista = document.getElementById('listaPedidos');
+    const listaPedidos = document.getElementById('listaPedidos');
     
-    // AJUSTE CIRÚRGICO: Ouvindo a chave 'pedidos' (onde o checkout grava)
-    db.ref('pedidos').on('value', (snapshot) => {
-        lista.innerHTML = ''; 
-        const dados = snapshot.val();
+    // Ouve mudanças na coleção 'orders'
+    db.ref('orders').on('value', (snapshot) => {
+        listaPedidos.innerHTML = ''; // Limpa a tabela antes de atualizar
+        const orders = snapshot.val();
         
-        if (!dados) {
-            lista.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-500">Nenhum pedido encontrado no banco.</td></tr>';
+        if (!orders) {
+            listaPedidos.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-500">Nenhum pedido encontrado.</td></tr>';
             return;
         }
 
-        // Converte em array e ordena pelo mais recente (criadoEm)
-        const listaOrdenada = Object.entries(dados).sort((a, b) => b[1].criadoEm - a[1].criadoEm);
-
-        listaOrdenada.forEach(([id, p]) => {
-            const data = p.criadoEm ? new Date(p.criadoEm).toLocaleString('pt-BR') : '---';
+        Object.entries(orders).forEach(([id, p]) => {
             const tr = document.createElement('tr');
-            tr.className = "border-b border-gray-800 hover:bg-[#1a1a1a] transition-colors";
-            
+            tr.className = "border-b border-gray-800 hover:bg-[#1a1a1a]";
             tr.innerHTML = `
-                <td class="py-4 text-xs text-gray-400">${data}</td>
-                <td class="py-4 font-bold">
-                    ${p.cliente?.nome || 'Sem Nome'}<br>
-                    <span class="text-xs font-normal text-gray-500">${p.cliente?.telefone || ''}</span>
-                </td>
-                <td class="py-4 text-[#caa85c] font-mono font-bold">R$ ${parseFloat(p.total || 0).toFixed(2)}</td>
-                <td class="py-4 text-xs uppercase status-novo">${p.status || 'novo'}</td>
-                <td class="py-4 text-right">
-                    <button onclick="verDetalhes('${id}')" class="bg-[#caa85c] text-black px-4 py-2 rounded-lg text-xs font-black hover:opacity-80">
-                        DETALHES
-                    </button>
+                <td class="py-4">${p.nome || 'Sem nome'}</td>
+                <td class="py-4 font-mono text-[#caa85c]">${p.total || 'R$ 0,00'}</td>
+                <td class="py-4 text-sm">${p.metodo || 'N/A'}</td>
+                <td class="py-4">
+                    <button onclick="verDetalhes('${id}')" class="text-xs bg-[#caa85c] text-black px-3 py-1 rounded font-bold">VER</button>
                 </td>
             `;
-            lista.appendChild(tr);
+            listaPedidos.appendChild(tr);
         });
     });
 }
 
 function verDetalhes(id) {
-    db.ref('pedidos/' + id).once('value').then(snap => {
+    db.ref('orders/' + id).once('value').then(snap => {
         const p = snap.val();
-        if(!p) return alert("Pedido não encontrado");
-
-        // AJUSTE CIRÚRGICO: Mapeamento correto da lista de compras (itens)
-        let resumoItens = "🛒 LISTA DE COMPRAS:\n--------------------------\n";
-        
-        if (p.itens && Array.isArray(p.itens)) {
-            p.itens.forEach(item => {
-                resumoItens += `• ${item.qtd}x ${item.nome} - R$ ${parseFloat(item.subtotal).toFixed(2)}\n`;
-            });
-        } else {
-            resumoItens += "Nenhum item listado.";
-        }
-
-        const infoCliente = `👤 CLIENTE: ${p.cliente?.nome}\n📞 WHATS: ${p.cliente?.telefone}\n📍 ENDEREÇO: ${p.cliente?.endereco || 'Não informado'}`;
-        const infoFinanceira = `\n--------------------------\n💰 TOTAL: R$ ${parseFloat(p.total).toFixed(2)}`;
-
-        alert(`${infoCliente}\n\n${resumoItens}${infoFinanceira}`);
+        alert(`Pedido de: ${p.nome}\nValor: ${p.total}\nMetodo: ${p.metodo}\nCidade: ${p.cidade || 'Não informada'}`);
     });
 }
 
