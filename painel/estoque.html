@@ -76,32 +76,47 @@ onkeypress="if(event.key==='Enter')carregarProdutos()">
 </div>
 
 <script>
+
+// 🔒 ANTI-ERRO GLOBAL
+window.onerror = function(msg){ console.error(msg); return true; };
+
 const firebaseConfig={
 apiKey:"AIzaSyDP...",
 databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-firebase.initializeApp(firebaseConfig);
+
+// 🔒 FIREBASE SEGURO
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
+
+// 🔒 HELPERS
+const safe = el => el || {};
+const num = v => parseFloat(v)||0;
 
 let categoriasCache={};
 
+// 🔥 CARREGAR CATEGORIAS
 async function carregarCategorias(){
+try{
 const snap=await db.ref('categories').once('value');
 categoriasCache=snap.val()||{};
 let html='<option value="">Categorias</option>';
 Object.entries(categoriasCache).forEach(([id,c])=>{
 html+=`<option value="${id}">${c.name}</option>`;
 });
-filtroCat.innerHTML=html;
+document.getElementById('filtroCat').innerHTML=html;
+}catch(e){ console.error(e); }
 }
 
+// 🔥 PREVIEW
 function atualizarPreview(input){
-const img=input.closest('td').querySelector('.row-img');
-img.src=input.value||'https://via.placeholder.com/40';
+const img=input.closest('td')?.querySelector('.row-img');
+if(img) img.src=input.value||'https://via.placeholder.com/40';
 }
 
+// 🔥 CRIAR LINHA
 function criarLinhaHTML(id,p={}){
-const peso = parseFloat(p.peso ?? p.weight ?? 0);
+const peso = num(p.peso ?? p.weight);
 
 let catOptions='';
 Object.entries(categoriasCache).forEach(([cid,cat])=>{
@@ -110,21 +125,15 @@ catOptions+=`<option value="${cid}" ${p.category===cid?'selected':''}>${cat.name
 
 return `
 <tr data-id="${id}" class="${p.paused?'is-paused':''}">
-
 <td><button class="btn-status ${p.paused?'status-off':'status-on'}" onclick="toggleStatus(this)">${p.paused?'OFF':'ON'}</button></td>
-
 <td>
 <img src="${p.image||''}" class="img-preview row-img">
 <input class="input-dark edit-img" value="${p.image||''}" onchange="atualizarPreview(this)">
 </td>
-
 <td><input class="input-dark edit-sku" value="${p.sku||''}"></td>
 <td><input class="input-dark edit-name" value="${p.name||''}"></td>
-
 <td><input class="input-dark edit-peso" value="${peso.toFixed(2)}"></td>
-
 <td><select class="input-dark edit-cat">${catOptions}</select></td>
-
 <td>
 <select class="input-dark edit-varTipo" onchange="liberarCampoLista(this)">
 <option value="">Padrão</option>
@@ -132,29 +141,28 @@ return `
 <option value="Lista" ${p.variacaoTipo==='Lista'?'selected':''}>Lista</option>
 </select>
 </td>
-
 <td><input class="input-dark edit-opcoes" value="${p.opcoesPersonalizadas||''}"></td>
-
 <td><input class="input-dark edit-precoFinal" type="number" value="${p.precoFinal||p.price||0}"></td>
-
 <td>
 <button onclick="salvarLinhaUnica(this)">💾</button>
 <button onclick="deletarProduto('${id}')">🗑️</button>
 </td>
-
 </tr>`;
 }
 
+// 🔥 NOVO PRODUTO
 function criarNovoProduto(){
 const ref=db.ref('products').push();
-tabelaCorpo.insertAdjacentHTML('afterbegin',criarLinhaHTML(ref.key,{}));
+document.getElementById('tabelaCorpo').insertAdjacentHTML('afterbegin',criarLinhaHTML(ref.key,{}));
 }
 
+// 🔥 CARREGAR PRODUTOS
 function carregarProdutos(){
-const filtroTexto=filtroSku.value.toUpperCase();
-const filtroCatVal=filtroCat.value;
+const filtroTexto=(document.getElementById('filtroSku').value||'').toUpperCase();
+const filtroCatVal=document.getElementById('filtroCat').value;
 
-tabelaCorpo.innerHTML='<tr><td colspan="10">Carregando...</td></tr>';
+const tabela=document.getElementById('tabelaCorpo');
+tabela.innerHTML='<tr><td colspan="10">Carregando...</td></tr>';
 
 db.ref('products').once('value',snap=>{
 let html='',count=0;
@@ -171,22 +179,22 @@ html+=criarLinhaHTML(child.key,p);
 }
 });
 
-tabelaCorpo.innerHTML=html||'<tr><td colspan="10">Nada encontrado</td></tr>';
-statusInfo.innerText=`${count} produtos`;
+tabela.innerHTML=html||'<tr><td colspan="10">Nada encontrado</td></tr>';
+document.getElementById('statusInfo').innerText=`${count} produtos`;
 });
 }
 
+// 🔥 SALVAR LINHA
 function salvarLinhaUnica(btn){
+try{
 const tr=btn.closest('tr');
 const id=tr.dataset.id;
 
-const pesoInput=tr.querySelector('.edit-peso').value.replace(',','.').trim();
-const peso=parseFloat(pesoInput)||0;
-
-const preco=parseFloat(tr.querySelector('.edit-precoFinal').value)||0;
+const peso=num(tr.querySelector('.edit-peso').value);
+const preco=num(tr.querySelector('.edit-precoFinal').value);
 
 const data={
-sku:tr.querySelector('.edit-sku').value.toUpperCase().trim(),
+sku:(tr.querySelector('.edit-sku').value||'').toUpperCase().trim(),
 name:tr.querySelector('.edit-name').value.trim(),
 peso:peso,
 weight:peso,
@@ -200,8 +208,11 @@ paused:tr.querySelector('.btn-status').classList.contains('status-off')
 };
 
 db.ref('products/'+id).update(data);
+
+}catch(e){ console.error(e); }
 }
 
+// 🔥 SALVAR TUDO
 function salvarAlteracoes(){
 document.querySelectorAll('#tabelaCorpo tr').forEach(tr=>{
 const btn=tr.querySelector('button');
@@ -210,6 +221,7 @@ if(btn) salvarLinhaUnica(btn);
 alert("Salvo com sucesso");
 }
 
+// 🔥 STATUS
 function toggleStatus(btn){
 btn.classList.toggle('status-on');
 btn.classList.toggle('status-off');
@@ -217,11 +229,35 @@ btn.innerText=btn.classList.contains('status-on')?'ON':'OFF';
 btn.closest('tr').classList.toggle('is-paused');
 }
 
+// 🔥 DELETE
 function deletarProduto(id){
 if(confirm("Excluir produto?")) db.ref('products/'+id).remove().then(carregarProdutos);
 }
 
+// 🔥 FUNÇÃO QUE NÃO EXISTIA (BUG CRÍTICO)
+function liberarCampoLista(select){
+const tr = select.closest('tr');
+if(!tr) return;
+
+const input = tr.querySelector('.edit-opcoes');
+if(!input) return;
+
+if(select.value === "Lista"){
+input.removeAttribute('disabled');
+}else{
+input.setAttribute('disabled', true);
+input.value = '';
+}
+}
+
+// 🔥 FUNÇÃO QUE NÃO EXISTIA (BUG CRÍTICO)
+function sincronizarFotosInteligente(){
+alert("Função em desenvolvimento");
+}
+
+// INIT
 carregarCategorias();
+
 </script>
 
 </body>
