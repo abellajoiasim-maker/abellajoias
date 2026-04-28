@@ -78,55 +78,81 @@ body { background:#0b0b0b; color:#eee; font-family: Arial; }
 </div>
 
 <script>
+// 🔒 ANTI-ERRO GLOBAL
+window.onerror = function(msg, src, line){
+    console.error("Erro:", msg, "Linha:", line);
+    return true;
+};
+
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
 
+// 🔒 FIREBASE SEGURO
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+// 🔒 HELPERS
+const safe = id => document.getElementById(id);
+const val = (v,d='') => v ?? d;
 
 
 // 🔥 CARREGAR EMPRESA
 function carregarEmpresa() {
     db.ref('settings/empresa').once('value').then(snap => {
         const d = snap.val() || {};
-        nome.value = d.nome || '';
-        slogan.value = d.slogan || '';
-        whatsapp.value = d.whatsapp || '';
-        pix.value = d.pix || 0;
-        parcelas.value = d.parcelas || 1;
-    });
+        safe('nome').value = val(d.nome);
+        safe('slogan').value = val(d.slogan);
+        safe('whatsapp').value = val(d.whatsapp);
+        safe('pix').value = val(d.pix,0);
+        safe('parcelas').value = val(d.parcelas,1);
+    }).catch(console.error);
 }
+
 
 // 🔥 SALVAR EMPRESA
 function salvarEmpresa() {
-    const data = {
-        nome: nome.value,
-        slogan: slogan.value,
-        whatsapp: whatsapp.value,
-        pix: parseFloat(pix.value) || 0,
-        parcelas: parseInt(parcelas.value) || 1
-    };
+    try{
+        const data = {
+            nome: safe('nome').value,
+            slogan: safe('slogan').value,
+            whatsapp: safe('whatsapp').value,
+            pix: parseFloat(safe('pix').value) || 0,
+            parcelas: parseInt(safe('parcelas').value) || 1
+        };
 
-    db.ref('settings/empresa').set(data)
-    .then(() => alert("✅ Salvo com sucesso"))
-    .catch(() => alert("Erro ao salvar"));
+        db.ref('settings/empresa').set(data)
+        .then(() => alert("✅ Salvo com sucesso"))
+        .catch(() => alert("Erro ao salvar"));
+
+    }catch(e){
+        console.error(e);
+    }
 }
+
 
 // 🔥 STATUS
 function carregarStatusSite() {
     db.ref('settings').on('value', snap => {
         const s = snap.val() || {};
-        statusTexto.innerText = s.manutencao ? "🚧 Em manutenção" : "✅ Online";
+        safe('statusTexto').innerText = s.manutencao ? "🚧 Em manutenção" : "✅ Online";
     });
 }
 
+
+// 🔥 BOTÃO MANUTENÇÃO (CORRIGIDO)
 function alternarManutencao() {
-    db.ref('settings/manutencao').get().then(snap => {
-        db.ref('settings').update({ manutencao: !snap.val() });
+    const ref = db.ref('settings/manutencao');
+
+    ref.transaction(current => {
+        return !current; // AJUSTE CIRÚRGICO: evita null + garante atomicidade
+    })
+    .catch(err => {
+        console.error("Erro ao alternar manutenção:", err);
     });
 }
+
 
 // INIT
 window.onload = () => {
