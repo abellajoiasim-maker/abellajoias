@@ -98,7 +98,7 @@ html += `
 
 <div>
 <h3 class="text-[#caa85c] font-bold">
-#${p.numeroFormatado || "---"} • ${safe(p.cliente?.nome)}
+${gerarNumeroVisual(p, id)} • ${safe(p.cliente?.nome)}
 </h3>
 <p class="text-xs text-gray-400">${safe(p.cliente?.telefone)}</p>
 <p class="text-[10px] text-gray-500">${p.status || "novo"}</p>
@@ -151,6 +151,16 @@ document.getElementById("edItens").innerHTML = html;
 document.getElementById("editorPedido").classList.remove("hidden");
 
 }
+// AJUSTE CIRÚRGICO: compatibilidade com pedidos antigos
+function gerarNumeroVisual(p, id){
+
+    if(p.numeroFormatado) return "#" + p.numeroFormatado;
+
+    if(p.numero) return "#" + String(p.numero).padStart(5,'0');
+
+    // fallback: usa parte do ID do Firebase
+    return "#LEG-" + id.slice(-5);
+}  
 
 // 🔥 FECHAR
 function fechar(){
@@ -169,6 +179,7 @@ alert("Salvo");
 fechar();
 
 }
+  
 
 // 🔥 EXCLUIR
 function excluir(){
