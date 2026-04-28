@@ -1,223 +1,218 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Pedidos • Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body { background:#0b0b0b; color:#fff; font-family: Arial; }
-.card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; }
-.btn { background:#caa85c; color:#000; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold; }
-</style>
-</head>
-
-<body>
-
-<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] uppercase">
-Abella Joias • Gestão de Pedidos
-</header>
-
-<div class="p-4 max-w-4xl mx-auto">
-
-<input id="buscaPedido" placeholder="🔍 Buscar por número ou cliente..."
-class="w-full mb-4 p-3 bg-[#111] border border-[#333] rounded-lg text-white">
-
-<div id="listaPedidos" class="grid gap-4"></div>
-
-</div>
-
-<!-- MODAL -->
-<div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4">
-
-<div class="bg-[#111] w-full max-w-2xl rounded-xl p-6">
-
-<h2 class="text-[#caa85c] font-bold mb-4">Editar Pedido</h2>
-
-<input id="edNome" class="w-full p-2 mb-2 bg-black border border-[#333]" placeholder="Nome">
-<input id="edTel" class="w-full p-2 mb-4 bg-black border border-[#333]" placeholder="Telefone">
-
-<div id="edItens" class="space-y-2 mb-4"></div>
-
-<div class="flex gap-2">
-<button onclick="salvar()" class="btn">Salvar</button>
-<button onclick="excluir()" class="bg-red-600 px-4 py-2 rounded">Excluir</button>
-<button onclick="fechar()" class="border px-4 py-2 rounded">Cancelar</button>
-</div>
-
-</div>
-</div>
-
 <script>
 
 // 🔒 ANTI ERRO
-window.onerror = e => { console.error(e); return true; };
+window.onerror = (e)=>{ console.error(e); return true; };
 
-// 🔥 FIREBASE
-const firebaseConfig = {
-apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
+const fMoeda = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+let pedidosCache = {};
+let pedidoEditando = null;
 
-// 🔒 HELPERS
-const safe = v => v ?? "";
-const money = v => (parseFloat(v)||0).toFixed(2);
+// 🔢 NUMERO COMPATÍVEL
+function numeroPedido(p, id){
+    if(p.numeroFormatado) return "#" + p.numeroFormatado;
+    if(p.numero) return "#" + String(p.numero).padStart(5,'0');
+    return "#LEG-" + id.slice(-5);
+}
 
-// 🔥 CACHE
-let pedidos = {};
-let atual = null;
+// 🔧 NORMALIZAR ITEM (ANTI-UNDEFINED)
+function normalizarItem(i){
+    return {
+        nome: i.nome || i.name || i.produto || "Produto",
+        qtd: i.qtd || i.quantidade || 1,
+        preco: i.preco || i.price || i.valor || 0
+    };
+}
 
-// 🔥 CARREGAR
+// 🔥 CALCULAR TOTAL (ANTIGO + NOVO)
+function calcularTotal(p){
+
+    if(p.total) return p.total;
+
+    let total = 0;
+
+    (p.itens || []).forEach(i=>{
+        const item = normalizarItem(i);
+        total += item.preco * item.qtd;
+    });
+
+    return total;
+}
+
+// 🔥 CARREGAR PEDIDOS (UPGRADE)
 function carregarPedidos(){
 
-const busca = (document.getElementById("buscaPedido").value||"").toLowerCase();
+    const busca = (document.getElementById("buscaPedido")?.value || "").toLowerCase();
 
-db.ref("orders").on("value", snap=>{
+    db.ref('orders').on('value', s => {
 
-pedidos = snap.val() || {};
-let html = '';
+        pedidosCache = s.val() || {};
+        const lista = document.getElementById('listaPedidos');
 
-Object.entries(pedidos).reverse().forEach(([id,p])=>{
+        lista.innerHTML = '';
 
-const numero = (p.numeroFormatado || "").toLowerCase();
-const nome = (p.cliente?.nome || "").toLowerCase();
+        Object.entries(pedidosCache).reverse().forEach(([id,p]) => {
 
-if(busca && !numero.includes(busca) && !nome.includes(busca)) return;
+            const nome = (p.cliente?.nome || "").toLowerCase();
+            const numero = numeroPedido(p,id).toLowerCase();
 
-html += `
-<div class="card">
+            if(busca && !nome.includes(busca) && !numero.includes(busca)) return;
 
-<div class="flex justify-between items-center">
+            lista.innerHTML += `
+            <div class="card border-l-4 border-[#caa85c] mb-2">
 
-<div>
-<h3 class="text-[#caa85c] font-bold">
-${gerarNumeroVisual(p, id)} • ${safe(p.cliente?.nome)}
-</h3>
-<p class="text-xs text-gray-400">${safe(p.cliente?.telefone)}</p>
-<p class="text-[10px] text-gray-500">${p.status || "novo"}</p>
-</div>
+                <div class="flex justify-between items-start">
 
-<div class="text-right">
-<div class="text-[#caa85c] font-bold text-lg">
-R$ ${money(p.total)}
-</div>
-<button class="btn mt-2" onclick="abrir('${id}')">Abrir</button>
-</div>
+                    <div>
+                        <b class="text-[#caa85c] uppercase text-sm">
+                            ${numeroPedido(p,id)} • ${p.cliente?.nome || 'Cliente'}
+                        </b><br>
 
-</div>
+                        <small class="text-gray-500">${p.cliente?.telefone || ''}</small><br>
+                        <small class="text-[10px] text-gray-600">${p.status || 'novo'}</small>
+                    </div>
 
-<div class="flex gap-2 mt-3">
-<button onclick="status('${id}','novo')" class="px-2 py-1 bg-gray-700 text-xs">Novo</button>
-<button onclick="status('${id}','enviado')" class="px-2 py-1 bg-blue-700 text-xs">Enviado</button>
-<button onclick="status('${id}','entregue')" class="px-2 py-1 bg-green-700 text-xs">Entregue</button>
-<button onclick="copiar('${id}')" class="px-2 py-1 bg-[#caa85c] text-black text-xs">📲 Copiar</button>
-</div>
+                    <div class="text-right">
+                        <div class="font-bold text-xs">
+                            ${fMoeda(calcularTotal(p))}
+                        </div>
 
-</div>`;
-});
+                        <div class="flex gap-1 mt-2">
+                            <button class="btn p-1" onclick="abrirEditorPedido('${id}')">EDITAR</button>
+                            <button class="btn p-1 bg-red-900" onclick="excluirPedido('${id}')">🗑</button>
+                        </div>
+                    </div>
 
-document.getElementById("listaPedidos").innerHTML = html || "Nenhum pedido";
+                </div>
 
-});
-}
+                <div class="flex gap-2 mt-2">
+                    <button onclick="mudarStatus('${id}','novo')" class="btn text-xs">Novo</button>
+                    <button onclick="mudarStatus('${id}','enviado')" class="btn text-xs bg-blue-900">Enviado</button>
+                    <button onclick="mudarStatus('${id}','entregue')" class="btn text-xs bg-green-900">Entregue</button>
+                </div>
 
-// 🔥 ABRIR
-function abrir(id){
+            </div>`;
+        });
 
-atual = id;
-const p = pedidos[id];
-
-document.getElementById("edNome").value = safe(p.cliente?.nome);
-document.getElementById("edTel").value = safe(p.cliente?.telefone);
-
-let html = '';
-
-(p.itens||[]).forEach(i=>{
-html += `<div class="flex justify-between text-sm">
-<span>${i.nome} x${i.qtd}</span>
-<span>R$ ${money(i.subtotal)}</span>
-</div>`;
-});
-
-document.getElementById("edItens").innerHTML = html;
-
-document.getElementById("editorPedido").classList.remove("hidden");
-
-}
-// AJUSTE CIRÚRGICO: compatibilidade com pedidos antigos
-function gerarNumeroVisual(p, id){
-
-    if(p.numeroFormatado) return "#" + p.numeroFormatado;
-
-    if(p.numero) return "#" + String(p.numero).padStart(5,'0');
-
-    // fallback: usa parte do ID do Firebase
-    return "#LEG-" + id.slice(-5);
-}  
-
-// 🔥 FECHAR
-function fechar(){
-document.getElementById("editorPedido").classList.add("hidden");
-}
-
-// 🔥 SALVAR
-function salvar(){
-
-db.ref("orders/"+atual+"/cliente").update({
-nome: document.getElementById("edNome").value,
-telefone: document.getElementById("edTel").value
-});
-
-alert("Salvo");
-fechar();
-
-}
-  
-
-// 🔥 EXCLUIR
-function excluir(){
-
-if(confirm("Excluir pedido?")){
-db.ref("orders/"+atual).remove();
-fechar();
-}
-
+    });
 }
 
 // 🔥 STATUS
-function status(id,s){
-db.ref("orders/"+id+"/status").set(s);
+function mudarStatus(id, status){
+    db.ref("orders/"+id+"/status").set(status);
 }
 
-// 🔥 COPIAR
-function copiar(id){
+// 🔥 EDITOR (AJUSTADO)
+function abrirEditorPedido(id){
 
-const p = pedidos[id];
+    pedidoEditando = id;
 
-let txt = `Pedido #${p.numeroFormatado}\n\n`;
+    db.ref('orders/'+id).once('value', s => {
 
-(p.itens||[]).forEach(i=>{
-txt += `${i.nome} x${i.qtd} - R$ ${money(i.subtotal)}\n`;
-});
+        const p = s.val();
 
-txt += `\nTotal: R$ ${money(p.total)}`;
+        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
 
-navigator.clipboard.writeText(txt);
-alert("Copiado!");
+        document.getElementById('edItens').innerHTML = '';
+
+        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+
+        itens.forEach(i => {
+
+            const item = normalizarItem(i);
+
+            addItemEditor({
+                name: item.nome,
+                quantidade: item.qtd,
+                price: item.preco
+            });
+
+        });
+
+        recalcularTotalEd();
+
+        document.getElementById('editorPedido').classList.remove('hidden');
+    });
+}
+
+// 🔥 ADD ITEM (COMPATÍVEL)
+function addItemEditor(i={}){
+
+    const div = document.createElement('div');
+
+    div.className = "card bg-black/40 border-[#222] mb-2 p-2";
+
+    div.innerHTML = `
+    <div class="grid grid-cols-3 gap-2">
+        <input placeholder="Nome" value="${i.name||''}">
+        <input type="number" placeholder="Preço" value="${i.price||0}" oninput="recalcularTotalEd()">
+        <input type="number" placeholder="Qtd" value="${i.quantidade||1}" oninput="recalcularTotalEd()">
+    </div>`;
+
+    document.getElementById('edItens').appendChild(div);
+}
+
+// 🔥 RECALCULO
+function recalcularTotalEd(){
+
+    let total = 0;
+
+    document.querySelectorAll('#edItens > div').forEach(div => {
+
+        const inputs = div.querySelectorAll('input');
+
+        const preco = Number(inputs[1].value);
+        const qtd = Number(inputs[2].value);
+
+        total += preco * qtd;
+    });
+
+    document.getElementById('totalPreview').innerText = fMoeda(total);
+}
+
+// 🔥 SALVAR
+function salvarPedidoEditado(){
+
+    const itens = [];
+
+    document.querySelectorAll('#edItens > div').forEach(div => {
+
+        const i = div.querySelectorAll('input');
+
+        itens.push({
+            name: i[0].value,
+            price: +i[1].value,
+            quantidade: +i[2].value
+        });
+    });
+
+    db.ref('orders/'+pedidoEditando).update({
+        cliente:{
+            nome: document.getElementById('edClienteNome').value,
+            telefone: document.getElementById('edClienteTel').value
+        },
+        itens,
+        total: itens.reduce((t,i)=>t+(i.price*i.quantidade),0)
+    }).then(()=>{
+        alert("Pedido salvo!");
+        fecharEditorPedido();
+    });
+}
+
+// 🔥 EXCLUIR
+function excluirPedido(id){
+    if(confirm("Excluir pedido?")){
+        db.ref('orders/'+id).remove();
+    }
+}
+
+// 🔥 FECHAR
+function fecharEditorPedido(){
+    document.getElementById('editorPedido').classList.add('hidden');
 }
 
 // INIT
-document.getElementById("buscaPedido").oninput = carregarPedidos;
-carregarPedidos();
+window.onload = carregarPedidos;
 
 </script>
-
-</body>
-</html>
