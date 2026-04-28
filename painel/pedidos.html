@@ -7,13 +7,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background:#0b0b0b; color:#eee; }
+        body { background:#0b0b0b; color:#eee; font-family: sans-serif; }
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:12px; }
-        @media print {
-            body * { visibility: hidden; }
-            #romaneioPrint, #romaneioPrint * { visibility: visible; }
-            #romaneioPrint { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
-        }
     </style>
 </head>
 <body class="p-6">
@@ -26,15 +21,15 @@
                 <tr class="text-gray-500 text-xs uppercase border-b border-gray-800">
                     <th class="pb-3">Cliente</th>
                     <th class="pb-3">Total</th>
+                    <th class="pb-3">Pagamento</th>
                     <th class="pb-3">Ação</th>
                 </tr>
             </thead>
-            <tbody id="listaPedidos"></tbody>
+            <tbody id="listaPedidos">
+            </tbody>
         </table>
     </div>
 </div>
-
-<div id="romaneioPrint" class="hidden p-8"></div>
 
 <script>
 const firebaseConfig = {
@@ -46,68 +41,48 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 function carregarPedidos() {
-    const lista = document.getElementById('listaPedidos');
-    db.ref('orders').on('value', (snap) => {
-        lista.innerHTML = '';
-        const orders = snap.val();
-        if(!orders) return;
+    const listaPedidos = document.getElementById('listaPedidos');
+    db.ref('orders').on('value', (snapshot) => {
+        listaPedidos.innerHTML = ''; 
+        const orders = snapshot.val();
+        
+        if (!orders) {
+            listaPedidos.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-500">Nenhum pedido encontrado.</td></tr>';
+            return;
+        }
 
         Object.entries(orders).forEach(([id, p]) => {
-            lista.innerHTML += `
-                <tr class="border-b border-gray-800">
-                    <td class="py-4">${p.nome || 'Anônimo'}</td>
-                    <td class="py-4 text-[#caa85c]">${p.total || '0.00'}</td>
-                    <td class="py-4">
-                        <button onclick="gerarRomaneio('${id}')" class="bg-[#caa85c] text-black px-3 py-1 rounded text-xs font-bold">IMPRIMIR</button>
-                    </td>
-                </tr>`;
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-gray-800 hover:bg-[#1a1a1a]";
+            tr.innerHTML = `
+                <td class="py-4">${p.nome || 'Sem nome'}</td>
+                <td class="py-4 font-mono text-[#caa85c]">${p.total || 'R$ 0,00'}</td>
+                <td class="py-4 text-sm">${p.metodo || 'N/A'}</td>
+                <td class="py-4">
+                    <button onclick="verDetalhes('${id}')" class="text-xs bg-[#caa85c] text-black px-3 py-1 rounded font-bold">VER ITENS</button>
+                </td>
+            `;
+            listaPedidos.appendChild(tr);
         });
     });
 }
 
-function gerarRomaneio(id) {
+function verDetalhes(id) {
     db.ref('orders/' + id).once('value').then(snap => {
         const p = snap.val();
-        if (!p) return alert("Erro: Pedido não encontrado.");
+        
+        // AJUSTE CIRÚRGICO: Mapeamento da lista de itens
+        let listaItens = "";
+        if (p.itens && Array.isArray(p.itens)) {
+            p.itens.forEach(item => {
+                // Ajuste conforme os nomes dos campos que você usa no checkout (ex: nome, qtd, subtotal)
+                listaItens += `• ${item.nome || 'Produto'}: ${item.qtd || 1}x\n`;
+            });
+        } else {
+            listaItens = "Nenhum item listado.";
+        }
 
-        const romaneio = document.getElementById('romaneioPrint');
-        
-        // Verifica se itens existe, se não, cria array vazio para evitar erro
-        const itens = p.itens || [];
-        
-        let itensHtml = itens.map(i => `
-            <tr>
-                <td style="border:1px solid #000; padding:8px;">${i.sku || '---'}</td>
-                <td style="border:1px solid #000; padding:8px;">${i.nome || i.name || 'Sem nome'}</td>
-                <td style="border:1px solid #000; padding:8px;">${i.qtd || i.quantidade || 1}</td>
-                <td style="border:1px solid #000; padding:8px;">${i.subtotal || '0.00'}</td>
-            </tr>`).join('');
-
-        romaneio.innerHTML = `
-            <h2 style="font-size:24px; font-weight:bold; border-bottom:2px solid #000;">Romaneio: ${p.nome}</h2>
-            <div style="margin:20px 0;">
-                <p><strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
-                <p><strong>Cidade:</strong> ${p.cidade || 'Não informada'}</p>
-                <p><strong>Forma de Pagamento:</strong> ${p.metodo || 'Não informada'}</p>
-            </div>
-            <table style="width:100%; border-collapse:collapse; margin-top:20px;">
-                <thead>
-                    <tr style="background:#f0f0f0;">
-                        <th style="border:1px solid #000; padding:8px;">SKU</th>
-                        <th style="border:1px solid #000; padding:8px;">Produto</th>
-                        <th style="border:1px solid #000; padding:8px;">Qtd</th>
-                        <th style="border:1px solid #000; padding:8px;">Valor</th>
-                    </tr>
-                </thead>
-                <tbody>${itensHtml}</tbody>
-            </table>
-            <div style="margin-top:20px; text-align:right; font-size:20px;">
-                <strong>TOTAL: ${p.total}</strong>
-            </div>
-        `;
-        
-        // Pequeno atraso para garantir que o navegador desenhou o HTML antes de abrir a impressão
-        setTimeout(() => window.print(), 500);
+        alert(`PEDIDO: ${p.nome}\nVALOR: ${p.total}\nCIDADE: ${p.cidade}\n\nITENS:\n${listaItens}`);
     });
 }
 
