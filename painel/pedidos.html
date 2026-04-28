@@ -26,7 +26,7 @@
                 </tr>
             </thead>
             <tbody id="listaPedidos">
-                </tbody>
+            </tbody>
         </table>
     </div>
 </div>
@@ -40,13 +40,10 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// AJUSTE CIRÚRGICO: Monitoramento em tempo real na coleção 'orders'
 function carregarPedidos() {
     const listaPedidos = document.getElementById('listaPedidos');
-    
-    // Ouve mudanças na coleção 'orders'
     db.ref('orders').on('value', (snapshot) => {
-        listaPedidos.innerHTML = ''; // Limpa a tabela antes de atualizar
+        listaPedidos.innerHTML = ''; 
         const orders = snapshot.val();
         
         if (!orders) {
@@ -62,7 +59,7 @@ function carregarPedidos() {
                 <td class="py-4 font-mono text-[#caa85c]">${p.total || 'R$ 0,00'}</td>
                 <td class="py-4 text-sm">${p.metodo || 'N/A'}</td>
                 <td class="py-4">
-                    <button onclick="verDetalhes('${id}')" class="text-xs bg-[#caa85c] text-black px-3 py-1 rounded font-bold">VER</button>
+                    <button onclick="verDetalhes('${id}')" class="text-xs bg-[#caa85c] text-black px-3 py-1 rounded font-bold">VER ITENS</button>
                 </td>
             `;
             listaPedidos.appendChild(tr);
@@ -73,7 +70,19 @@ function carregarPedidos() {
 function verDetalhes(id) {
     db.ref('orders/' + id).once('value').then(snap => {
         const p = snap.val();
-        alert(`Pedido de: ${p.nome}\nValor: ${p.total}\nMetodo: ${p.metodo}\nCidade: ${p.cidade || 'Não informada'}`);
+        
+        // AJUSTE CIRÚRGICO: Mapeamento da lista de itens
+        let listaItens = "";
+        if (p.itens && Array.isArray(p.itens)) {
+            p.itens.forEach(item => {
+                // Ajuste conforme os nomes dos campos que você usa no checkout (ex: nome, qtd, subtotal)
+                listaItens += `• ${item.nome || 'Produto'}: ${item.qtd || 1}x\n`;
+            });
+        } else {
+            listaItens = "Nenhum item listado.";
+        }
+
+        alert(`PEDIDO: ${p.nome}\nVALOR: ${p.total}\nCIDADE: ${p.cidade}\n\nITENS:\n${listaItens}`);
     });
 }
 
