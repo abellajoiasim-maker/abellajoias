@@ -9,7 +9,6 @@
     <style>
         body { background:#0b0b0b; color:#eee; }
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:12px; }
-        /* Estilo para Impressão */
         @media print {
             body * { visibility: hidden; }
             #romaneioPrint, #romaneioPrint * { visibility: visible; }
@@ -56,8 +55,8 @@ function carregarPedidos() {
         Object.entries(orders).forEach(([id, p]) => {
             lista.innerHTML += `
                 <tr class="border-b border-gray-800">
-                    <td class="py-4">${p.nome}</td>
-                    <td class="py-4 text-[#caa85c]">${p.total}</td>
+                    <td class="py-4">${p.nome || 'Anônimo'}</td>
+                    <td class="py-4 text-[#caa85c]">${p.total || '0.00'}</td>
                     <td class="py-4">
                         <button onclick="gerarRomaneio('${id}')" class="bg-[#caa85c] text-black px-3 py-1 rounded text-xs font-bold">IMPRIMIR</button>
                     </td>
@@ -69,37 +68,46 @@ function carregarPedidos() {
 function gerarRomaneio(id) {
     db.ref('orders/' + id).once('value').then(snap => {
         const p = snap.val();
+        if (!p) return alert("Erro: Pedido não encontrado.");
+
         const romaneio = document.getElementById('romaneioPrint');
         
-        let itensHtml = p.itens.map(i => `
+        // Verifica se itens existe, se não, cria array vazio para evitar erro
+        const itens = p.itens || [];
+        
+        let itensHtml = itens.map(i => `
             <tr>
-                <td style="border:1px solid #ccc; padding:5px;">${i.sku || '---'}</td>
-                <td style="border:1px solid #ccc; padding:5px;">${i.nome}</td>
-                <td style="border:1px solid #ccc; padding:5px;">${i.qtd || 1}</td>
-                <td style="border:1px solid #ccc; padding:5px;">R$ ${parseFloat(i.subtotal || 0).toFixed(2)}</td>
+                <td style="border:1px solid #000; padding:8px;">${i.sku || '---'}</td>
+                <td style="border:1px solid #000; padding:8px;">${i.nome || i.name || 'Sem nome'}</td>
+                <td style="border:1px solid #000; padding:8px;">${i.qtd || i.quantidade || 1}</td>
+                <td style="border:1px solid #000; padding:8px;">${i.subtotal || '0.00'}</td>
             </tr>`).join('');
 
         romaneio.innerHTML = `
-            <h2 style="font-size:24px; font-weight:bold;">Romaneio de Expedição</h2>
-            <p><strong>Cliente:</strong> ${p.nome}</p>
-            <p><strong>Cidade:</strong> ${p.cidade || 'Não informada'}</p>
-            <p><strong>Método:</strong> ${p.metodo}</p>
-            <hr>
+            <h2 style="font-size:24px; font-weight:bold; border-bottom:2px solid #000;">Romaneio: ${p.nome}</h2>
+            <div style="margin:20px 0;">
+                <p><strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Cidade:</strong> ${p.cidade || 'Não informada'}</p>
+                <p><strong>Forma de Pagamento:</strong> ${p.metodo || 'Não informada'}</p>
+            </div>
             <table style="width:100%; border-collapse:collapse; margin-top:20px;">
                 <thead>
-                    <tr style="background:#eee;">
-                        <th style="border:1px solid #ccc; padding:5px;">SKU</th>
-                        <th style="border:1px solid #ccc; padding:5px;">Produto</th>
-                        <th style="border:1px solid #ccc; padding:5px;">Qtd</th>
-                        <th style="border:1px solid #ccc; padding:5px;">Subtotal</th>
+                    <tr style="background:#f0f0f0;">
+                        <th style="border:1px solid #000; padding:8px;">SKU</th>
+                        <th style="border:1px solid #000; padding:8px;">Produto</th>
+                        <th style="border:1px solid #000; padding:8px;">Qtd</th>
+                        <th style="border:1px solid #000; padding:8px;">Valor</th>
                     </tr>
                 </thead>
                 <tbody>${itensHtml}</tbody>
             </table>
-            <p style="text-align:right; font-size:18px; margin-top:10px;"><strong>TOTAL: ${p.total}</strong></p>
+            <div style="margin-top:20px; text-align:right; font-size:20px;">
+                <strong>TOTAL: ${p.total}</strong>
+            </div>
         `;
         
-        window.print(); // Abre o diálogo de impressão (salvar como PDF ou imprimir físico)
+        // Pequeno atraso para garantir que o navegador desenhou o HTML antes de abrir a impressão
+        setTimeout(() => window.print(), 500);
     });
 }
 
