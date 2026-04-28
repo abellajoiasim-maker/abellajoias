@@ -7,8 +7,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background:#0b0b0b; color:#eee; font-family: sans-serif; }
+        body { background:#0b0b0b; color:#eee; }
         .card { background:#141414; border:1px solid #2a2a2a; border-radius:12px; }
+        /* Estilo para Impressão */
+        @media print {
+            body * { visibility: hidden; }
+            #romaneioPrint, #romaneioPrint * { visibility: visible; }
+            #romaneioPrint { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
+        }
     </style>
 </head>
 <body class="p-6">
@@ -21,15 +27,15 @@
                 <tr class="text-gray-500 text-xs uppercase border-b border-gray-800">
                     <th class="pb-3">Cliente</th>
                     <th class="pb-3">Total</th>
-                    <th class="pb-3">Pagamento</th>
                     <th class="pb-3">Ação</th>
                 </tr>
             </thead>
-            <tbody id="listaPedidos">
-            </tbody>
+            <tbody id="listaPedidos"></tbody>
         </table>
     </div>
 </div>
+
+<div id="romaneioPrint" class="hidden p-8"></div>
 
 <script>
 const firebaseConfig = {
@@ -41,48 +47,59 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 function carregarPedidos() {
-    const listaPedidos = document.getElementById('listaPedidos');
-    db.ref('orders').on('value', (snapshot) => {
-        listaPedidos.innerHTML = ''; 
-        const orders = snapshot.val();
-        
-        if (!orders) {
-            listaPedidos.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-500">Nenhum pedido encontrado.</td></tr>';
-            return;
-        }
+    const lista = document.getElementById('listaPedidos');
+    db.ref('orders').on('value', (snap) => {
+        lista.innerHTML = '';
+        const orders = snap.val();
+        if(!orders) return;
 
         Object.entries(orders).forEach(([id, p]) => {
-            const tr = document.createElement('tr');
-            tr.className = "border-b border-gray-800 hover:bg-[#1a1a1a]";
-            tr.innerHTML = `
-                <td class="py-4">${p.nome || 'Sem nome'}</td>
-                <td class="py-4 font-mono text-[#caa85c]">${p.total || 'R$ 0,00'}</td>
-                <td class="py-4 text-sm">${p.metodo || 'N/A'}</td>
-                <td class="py-4">
-                    <button onclick="verDetalhes('${id}')" class="text-xs bg-[#caa85c] text-black px-3 py-1 rounded font-bold">VER ITENS</button>
-                </td>
-            `;
-            listaPedidos.appendChild(tr);
+            lista.innerHTML += `
+                <tr class="border-b border-gray-800">
+                    <td class="py-4">${p.nome}</td>
+                    <td class="py-4 text-[#caa85c]">${p.total}</td>
+                    <td class="py-4">
+                        <button onclick="gerarRomaneio('${id}')" class="bg-[#caa85c] text-black px-3 py-1 rounded text-xs font-bold">IMPRIMIR</button>
+                    </td>
+                </tr>`;
         });
     });
 }
 
-function verDetalhes(id) {
+function gerarRomaneio(id) {
     db.ref('orders/' + id).once('value').then(snap => {
         const p = snap.val();
+        const romaneio = document.getElementById('romaneioPrint');
         
-        // AJUSTE CIRÚRGICO: Mapeamento da lista de itens
-        let listaItens = "";
-        if (p.itens && Array.isArray(p.itens)) {
-            p.itens.forEach(item => {
-                // Ajuste conforme os nomes dos campos que você usa no checkout (ex: nome, qtd, subtotal)
-                listaItens += `• ${item.nome || 'Produto'}: ${item.qtd || 1}x\n`;
-            });
-        } else {
-            listaItens = "Nenhum item listado.";
-        }
+        let itensHtml = p.itens.map(i => `
+            <tr>
+                <td style="border:1px solid #ccc; padding:5px;">${i.sku || '---'}</td>
+                <td style="border:1px solid #ccc; padding:5px;">${i.nome}</td>
+                <td style="border:1px solid #ccc; padding:5px;">${i.qtd || 1}</td>
+                <td style="border:1px solid #ccc; padding:5px;">R$ ${parseFloat(i.subtotal || 0).toFixed(2)}</td>
+            </tr>`).join('');
 
-        alert(`PEDIDO: ${p.nome}\nVALOR: ${p.total}\nCIDADE: ${p.cidade}\n\nITENS:\n${listaItens}`);
+        romaneio.innerHTML = `
+            <h2 style="font-size:24px; font-weight:bold;">Romaneio de Expedição</h2>
+            <p><strong>Cliente:</strong> ${p.nome}</p>
+            <p><strong>Cidade:</strong> ${p.cidade || 'Não informada'}</p>
+            <p><strong>Método:</strong> ${p.metodo}</p>
+            <hr>
+            <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+                <thead>
+                    <tr style="background:#eee;">
+                        <th style="border:1px solid #ccc; padding:5px;">SKU</th>
+                        <th style="border:1px solid #ccc; padding:5px;">Produto</th>
+                        <th style="border:1px solid #ccc; padding:5px;">Qtd</th>
+                        <th style="border:1px solid #ccc; padding:5px;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>${itensHtml}</tbody>
+            </table>
+            <p style="text-align:right; font-size:18px; margin-top:10px;"><strong>TOTAL: ${p.total}</strong></p>
+        `;
+        
+        window.print(); // Abre o diálogo de impressão (salvar como PDF ou imprimir físico)
     });
 }
 
