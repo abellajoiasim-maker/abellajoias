@@ -30,7 +30,7 @@
             },
             {
                 pergunta: 'As peças são banhadas ou folheadas?',
-                resposta: 'Trabalhamos com semijoias de diversos acabamentos, com informações detalhadas de banho e material descritas em cada produto do catálogo.'
+                resposta: ''Nossas peças são vendidas totalmente no bruto (sem banho), permitindo que você escolha o padrão de acabamento e a espessura de galvanoplastia ideais para a sua marca.'
             },
             {
                 pergunta: 'Como faço um pedido no catálogo?',
