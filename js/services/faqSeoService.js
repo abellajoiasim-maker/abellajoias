@@ -30,7 +30,7 @@
             },
             {
                 pergunta: 'As peças são banhadas ou folheadas?',
-                resposta: ''Nossas peças são vendidas totalmente no bruto (sem banho), permitindo que você escolha o padrão de acabamento e a espessura de galvanoplastia ideais para a sua marca.'
+                resposta: 'Nossas peças são vendidas totalmente no bruto (sem banho), permitindo que você escolha o padrão de acabamento e a espessura de galvanoplastia ideais para a sua marca.'
             },
             {
                 pergunta: 'Como faço um pedido no catálogo?',
