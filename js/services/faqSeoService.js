@@ -12,7 +12,7 @@
     const FAQ_PATH = 'abella/seo_faq';
 
     function faqsPadrao(settings) {
-        const parcelas = settings?.parcelasMax || 6;
+        const parcelas = settings?.parcelasMax || 3;
         const pix = settings?.pixDesc || 5;
 
         return [
