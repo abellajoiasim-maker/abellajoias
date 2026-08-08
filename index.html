@@ -379,6 +379,22 @@
                 : 'display:flex; flex-direction:column; position:absolute; top:100%; left:0; right:0; background:var(--color-bg); padding:16px 24px; border-bottom:1px solid var(--color-border); gap:16px;';
         });
 
+        // Converte gs://bucket/caminho para uma URL https utilizável numa <img>
+        // (o campo do painel aceita colar tanto https:// quanto gs://, mas navegador só entende https)
+        function resolverGsUrl(url) {
+            const valor = String(url || '').trim();
+            if (!valor) return '';
+            if (!valor.startsWith('gs://')) return valor;
+
+            const semGs = valor.replace('gs://', '');
+            const primeiraBarra = semGs.indexOf('/');
+            if (primeiraBarra === -1) return '';
+
+            const bucket = semGs.slice(0, primeiraBarra);
+            const caminho = semGs.slice(primeiraBarra + 1);
+            return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(caminho)}?alt=media`;
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof db === 'undefined') {
                 console.error('[Institucional] Firebase indisponível.');
@@ -397,7 +413,7 @@
                     const cfg = snapSettings.val();
 
                     // Logo
-                    const logoUrl = cfg.logoUrl || cfg.logo;
+                    const logoUrl = resolverGsUrl(cfg.logoUrl || cfg.logo);
                     if (logoUrl) {
                         const img = document.getElementById('logoImg');
                         img.src = logoUrl;
@@ -405,7 +421,7 @@
                     }
 
                     // Hero: usa o banner principal já configurado no painel
-                    const heroUrl = cfg.bannerHeroUrl;
+                    const heroUrl = resolverGsUrl(cfg.bannerHeroUrl);
                     if (heroUrl) document.getElementById('heroImg').src = heroUrl;
 
                     if (cfg.slogan) document.getElementById('heroSlogan').innerText = cfg.slogan;
