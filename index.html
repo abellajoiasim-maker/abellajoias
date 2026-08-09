@@ -11,193 +11,66 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://www.abellajoias.com.br/">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23F8F4EC' stroke='%23B8892B' stroke-width='6'/%3E%3Ctext x='50' y='50' font-family='Georgia, serif' font-size='62' font-weight='bold' text-anchor='middle' dy='22' fill='%238C6A1E'%3EA%3C/text%3E%3C/svg%3E">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Abella Joias">
+    <meta property="og:title" content="Abella Joias — Atacado de Semijoias Direto de Fábrica">
+    <meta property="og:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo. Compre pelo catálogo online.">
+    <meta property="og:url" content="https://www.abellajoias.com.br/">
+    <meta property="og:image" content="https://catalogo-abella-joias.firebasestorage.app/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Abella Joias — Atacado de Semijoias Direto de Fábrica">
+    <meta name="twitter:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo.">
 
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="./js/firebase/firebase-config.js"></script>
+    <script src="./js/utils/image-helper.js"></script>
+    <script src="./js/services/configService.js"></script>
     <script src="./js/services/faqSeoService.js"></script>
 
-    <style>
-        :root{
-            --color-bg:        #F8F4EC;
-            --color-surface:   #FFFFFF;
-            --color-primary:   #B8892B;
-            --color-primary-rgb: 184,137,43;
-            --color-primary-hover: #8C6A1E;
-            --color-text:      #1E1A14;
-            --color-secondary: #6B6252;
-            --color-border:    #E5DDC9;
-
-            --font-heading: 'Cormorant Garamond', serif;
-            --font-body: 'Jost', sans-serif;
-
-            --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
-            --space-6: 32px; --space-7: 48px; --space-8: 64px; --space-9: 96px; --space-10: 128px;
-
-            --radius-md: 10px; --radius-lg: 16px; --radius-xl: 24px;
-            --shadow-md: 0 4px 12px rgba(30,26,20,.08);
-            --shadow-lg: 0 12px 28px rgba(30,26,20,.10);
-            --ease: cubic-bezier(.22,1,.36,1);
-        }
-
-        *{ box-sizing:border-box; }
-        html{ scroll-behavior:smooth; }
-        body{
-            margin:0; background:var(--color-bg); color:var(--color-text);
-            font-family:var(--font-body); font-weight:300; line-height:1.6;
-            -webkit-font-smoothing:antialiased;
-        }
-        h1,h2,h3{ font-family:var(--font-heading); font-weight:600; margin:0; color:var(--color-text); }
-        p{ margin:0; }
-        a{ color:inherit; text-decoration:none; }
-        img{ max-width:100%; display:block; }
-        .wrap{ max-width:1180px; margin:0 auto; padding-inline:var(--space-5); }
-        .eyebrow{ font-family:var(--font-body); font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--color-primary-hover); font-weight:600; }
-
-        /* -------- Header -------- */
-        header.site{
-            position:sticky; top:0; z-index:50; background:rgba(248,244,236,.92);
-            backdrop-filter:blur(8px); border-bottom:1px solid var(--color-border);
-        }
-        .nav-row{ display:flex; align-items:center; justify-content:space-between; padding-block:var(--space-3); gap:var(--space-4); }
-        .brand{ display:flex; align-items:center; gap:var(--space-3); }
-        .brand img{ width:38px; height:38px; border-radius:50%; object-fit:cover; }
-        .brand .word{ font-family:var(--font-heading); font-size:20px; letter-spacing:.08em; }
-        nav.links{ display:flex; gap:var(--space-6); font-size:13px; letter-spacing:.03em; }
-        nav.links a:hover{ color:var(--color-primary-hover); }
-        .btn{
-            display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:999px;
-            font-size:13px; letter-spacing:.03em; font-weight:500; transition:all var(--ease) .25s; cursor:pointer; border:1px solid transparent;
-        }
-        .btn-primary{ background:var(--color-primary); color:#fff; }
-        .btn-primary:hover{ background:var(--color-primary-hover); transform:translateY(-1px); box-shadow:var(--shadow-md); }
-        .btn-outline{ border-color:var(--color-primary); color:var(--color-primary-hover); }
-        .btn-outline:hover{ background:var(--color-primary); color:#fff; }
-        .btn-wa{ background:#25D366; color:#fff; }
-        .btn-wa:hover{ background:#1EBE57; transform:translateY(-1px); box-shadow:var(--shadow-md); }
-        #navToggle{ display:none; background:none; border:none; font-size:24px; cursor:pointer; color:var(--color-text); }
-
-        /* -------- Hero -------- */
-        .hero{ position:relative; padding:var(--space-9) 0 var(--space-8); overflow:hidden; }
-        .hero-grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:var(--space-8); align-items:center; }
-        .hero h1{ font-size:clamp(34px,5.4vw,58px); line-height:1.08; margin-top:var(--space-3); }
-        .hero h1 em{ font-style:italic; color:var(--color-primary-hover); }
-        .hero p.lead{ font-size:16px; color:var(--color-secondary); max-width:480px; margin-top:var(--space-4); }
-        .hero .ctas{ display:flex; gap:var(--space-4); margin-top:var(--space-6); flex-wrap:wrap; }
-        .hero-visual{ position:relative; aspect-ratio:4/5; border-radius:var(--radius-xl); overflow:hidden; box-shadow:var(--shadow-lg); background:linear-gradient(160deg,#EFE6D2,#F8F4EC); }
-        .hero-visual img{ width:100%; height:100%; object-fit:cover; }
-        .hero-badge{
-            position:absolute; bottom:var(--space-5); left:var(--space-5); background:rgba(30,26,20,.82); color:#fff;
-            padding:var(--space-3) var(--space-5); border-radius:var(--radius-md); backdrop-filter:blur(4px);
-        }
-        .hero-badge .num{ font-family:var(--font-heading); font-size:26px; color:var(--color-primary); line-height:1; }
-        .hero-badge .label{ font-size:11px; letter-spacing:.05em; color:#e9e2d0; margin-top:4px; }
-
-        /* -------- Trust strip -------- */
-        .trust{ background:var(--color-text); padding:var(--space-6) 0; }
-        .trust-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-5); }
-        .trust-item{ text-align:center; color:#f2ede1; padding-inline:var(--space-3); }
-        .trust-item .seal{
-            width:52px; height:52px; margin:0 auto var(--space-3); border-radius:50%; border:1.5px solid var(--color-primary);
-            display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-size:20px; color:var(--color-primary);
-        }
-        .trust-item .txt{ font-size:12.5px; letter-spacing:.02em; color:#cfc6b0; }
-        .trust-item strong{ display:block; font-size:14px; color:#fff; margin-bottom:4px; }
-
-        /* -------- Generic section -------- */
-        section{ padding:var(--space-9) 0; }
-        .section-head{ max-width:600px; margin:0 auto var(--space-8); text-align:center; }
-        .section-head h2{ font-size:clamp(26px,3.6vw,38px); margin-top:var(--space-2); }
-        .section-head p{ color:var(--color-secondary); margin-top:var(--space-3); font-size:14.5px; }
-
-        /* -------- Como funciona -------- */
-        .steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-6); }
-        .step{ background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-6); }
-        .step .n{ font-family:var(--font-heading); font-size:34px; color:var(--color-primary); }
-        .step h3{ font-size:19px; margin-top:var(--space-3); }
-        .step p{ font-size:13.5px; color:var(--color-secondary); margin-top:var(--space-2); }
-
-        /* -------- Categorias -------- */
-        .cat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-5); }
-        .cat-card{ position:relative; aspect-ratio:1/1; border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-md); }
-        .cat-card img{ width:100%; height:100%; object-fit:cover; transition:transform .4s var(--ease); }
-        .cat-card:hover img{ transform:scale(1.06); }
-        .cat-card .ov{ position:absolute; inset:0; background:linear-gradient(to top, rgba(30,26,20,.78), transparent 60%); display:flex; align-items:flex-end; padding:var(--space-4); }
-        .cat-card .ov span{ color:#fff; font-family:var(--font-heading); font-size:16px; }
-        .cat-empty{ grid-column:1/-1; text-align:center; color:var(--color-secondary); font-size:13px; padding:var(--space-6); }
-
-        /* -------- Galvânicas -------- */
-        .galv{ background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:var(--space-8); display:grid; grid-template-columns:1fr auto; gap:var(--space-6); align-items:center; }
-        .galv h2{ font-size:clamp(24px,3vw,32px); }
-        .galv p{ color:var(--color-secondary); font-size:14px; margin-top:var(--space-3); max-width:520px; }
-
-        /* -------- FAQ -------- */
-        .faq-item{ border-bottom:1px solid var(--color-border); padding:var(--space-5) 0; }
-        .faq-item summary{ cursor:pointer; font-family:var(--font-heading); font-size:17px; list-style:none; display:flex; justify-content:space-between; align-items:center; }
-        .faq-item summary::-webkit-details-marker{ display:none; }
-        .faq-item summary::after{ content:'+'; color:var(--color-primary); font-size:22px; }
-        .faq-item[open] summary::after{ content:'–'; }
-        .faq-item p{ font-size:13.5px; color:var(--color-secondary); margin-top:var(--space-3); line-height:1.7; }
-
-        /* -------- Contato / Social -------- */
-        .contato{ background:var(--color-text); border-radius:var(--radius-xl); padding:var(--space-8); display:grid; grid-template-columns:1fr 1fr; gap:var(--space-7); }
-        .contato h2{ color:#fff; font-size:clamp(24px,3vw,32px); }
-        .contato .loc{ color:#cfc6b0; font-size:13.5px; margin-top:var(--space-3); }
-        .social-row{ display:flex; gap:var(--space-3); margin-top:var(--space-6); }
-        .social-row a{
-            width:44px; height:44px; border-radius:50%; border:1px solid rgba(var(--color-primary-rgb),.5);
-            display:flex; align-items:center; justify-content:center; color:var(--color-primary); font-size:16px; transition:all .2s;
-        }
-        .social-row a:hover{ background:var(--color-primary); color:#fff; }
-        .contato-cta{ display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:var(--space-4); }
-        .contato-cta p{ color:#cfc6b0; font-size:13.5px; }
-
-        /* -------- Footer -------- */
-        footer{ padding:var(--space-6) 0; border-top:1px solid var(--color-border); }
-        .foot-row{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--color-secondary); flex-wrap:wrap; gap:var(--space-3); }
-
-        /* -------- WhatsApp flutuante -------- */
-        .wa-float{
-            position:fixed; bottom:22px; right:22px; z-index:60; background:#25D366; color:#fff; width:58px; height:58px;
-            border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; box-shadow:0 6px 18px rgba(0,0,0,.25);
-            transition:transform .2s;
-        }
-        .wa-float:hover{ transform:scale(1.08); }
-
-        @media (max-width: 900px){
-            nav.links, .hero .ctas .btn-outline-desktop{ display:none; }
-            #navToggle{ display:block; }
-            .hero-grid{ grid-template-columns:1fr; }
-            .hero-visual{ order:-1; aspect-ratio:16/10; }
-            .trust-grid{ grid-template-columns:repeat(2,1fr); }
-            .steps{ grid-template-columns:1fr; }
-            .cat-grid{ grid-template-columns:repeat(2,1fr); }
-            .galv{ grid-template-columns:1fr; text-align:center; }
-            .contato{ grid-template-columns:1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
     <header class="site">
+        <!-- Faixa promocional dinâmica (configurada no painel do catálogo) -->
+        <div id="bannerTopo" class="util-bar hidden">
+            <span id="bannerTexto"></span>
+        </div>
         <div class="wrap nav-row">
             <a class="brand" href="#topo">
                 <img id="logoImg" src="" alt="Abella Joias" style="display:none;">
-                <span class="word">ABELLA JOIAS</span>
+                <span class="word">Abella Joias</span>
             </a>
-            <nav class="links">
+            <nav class="links" id="navLinks">
                 <a href="#diferenciais">Diferenciais</a>
+                <a href="#promocoes">Promoções</a>
                 <a href="#categorias">Categorias</a>
                 <a href="#galvanicas">Galvânicas</a>
                 <a href="#faq">Dúvidas</a>
                 <a href="#contato">Contato</a>
             </nav>
-            <a id="btnWhatsHeader" class="btn btn-wa" href="#" target="_blank" rel="noopener">💬 WhatsApp</a>
-            <button id="navToggle" aria-label="Abrir menu">☰</button>
+            <a id="btnWhatsHeader" class="btn btn-wa" href="#" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+            </a>
+            <button id="navToggle" aria-label="Abrir menu">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
         </div>
+        <!-- Menu mobile com animação -->
+        <nav class="mobile-nav" id="mobileNav">
+            <a href="#diferenciais">Diferenciais</a>
+            <a href="#promocoes">Promoções</a>
+            <a href="#categorias">Categorias</a>
+            <a href="#galvanicas">Galvânicas</a>
+            <a href="#faq">Dúvidas</a>
+            <a href="#contato">Contato</a>
+        </nav>
     </header>
 
     <main id="topo">
@@ -205,40 +78,98 @@
         <!-- HERO -->
         <section class="hero">
             <div class="wrap hero-grid">
-                <div>
+                <div data-aurora-reveal>
                     <p class="eyebrow">Atacado direto de fábrica · Limeira-SP</p>
                     <h1>Joias no Bruto <em>Direto de quem fabrica.</em></h1>
                     <p class="lead" id="heroSlogan">Peça pelo catálogo online, sem pedido mínimo, com preço de fábrica — de Limeira, a capital nacional da joia folheada, para o Brasil inteiro.</p>
                     <div class="ctas">
                         <a id="btnCatalogo" class="btn btn-primary" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Explorar Catálogo Completo →</a>
-                        <a class="btn btn-outline btn-outline-desktop" href="#galvanicas">Galvânicas Parceiras</a>
+                        <a class="btn btn-outline" href="#galvanicas">Galvânicas Parceiras</a>
                     </div>
                 </div>
-                <div class="hero-visual">
-                    <img id="heroImg" src="" alt="Coleção Abella Joias" onerror="this.style.display='none'">
-                    <div class="hero-badge">
-                        <div class="num" id="heroPix">—</div>
-                        <div class="label">de desconto no PIX</div>
+                <div class="hero-visual" data-aurora-reveal>
+                    <img id="heroImg" src="" alt="Coleção Abella Joias" loading="lazy">
+                </div>
+                <div class="hero-badge-float" data-aurora-reveal>
+                    <svg class="badge-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6m0 8v6M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24"/></svg>
+                    <div class="num" id="heroPix">—</div>
+                    <div class="label">de desconto no PIX</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 100% NACIONAL — bandeira do Brasil oficial (proporção 10:7) -->
+        <section style="padding-block: var(--space-6);">
+            <div class="wrap" data-aurora-reveal>
+                <div class="nacional">
+                    <p class="titulo">
+                        <svg class="bandeira" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+                            <title>Bandeira do Brasil</title>
+                            <!-- Campo verde -->
+                            <rect x="0" y="0" width="100" height="70" fill="#009c3b"/>
+                            <!-- Losango amarelo -->
+                            <polygon points="50,8.5 94.5,35 50,61.5 5.5,35" fill="#ffdf00"/>
+                            <!-- Círculo azul -->
+                            <circle cx="50" cy="35" r="18" fill="#002776"/>
+                            <!-- Faixa branca com texto -->
+                            <path d="M 33.2 39.2 Q 50 33.6 66.8 39.2" stroke="#ffffff" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+                            <path d="M 36.5 42.5 Q 50 38.2 63.5 42.5" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.35"/>
+                            <!-- Estrelas (simplificadas) -->
+                            <circle cx="43" cy="44" r="1.1" fill="#ffffff"/>
+                            <circle cx="50" cy="41.5" r="1.2" fill="#ffffff"/>
+                            <circle cx="57" cy="44" r="1.1" fill="#ffffff"/>
+                            <circle cx="53" cy="38" r="0.9" fill="#ffffff"/>
+                            <circle cx="46" cy="37.5" r="0.9" fill="#ffffff"/>
+                            <circle cx="50" cy="30" r="1" fill="#ffffff"/>
+                            <circle cx="58" cy="35" r="0.8" fill="#ffffff"/>
+                            <circle cx="42" cy="35" r="0.8" fill="#ffffff"/>
+                        </svg>
+                        100% Nacional — Sua reposição nunca vai faltar.
+                    </p>
+                    <p class="sub">
+                        Fabricação própria, sem depender de importação. O que você vende hoje, você repõe amanhã.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOSSOS NÚMEROS -->
+        <section id="numeros" style="padding-block: var(--space-8);">
+            <div class="wrap">
+                <div class="numeros-grid">
+                    <div class="numero-item" data-aurora-reveal>
+                        <span class="contador" data-alvo="1500" data-prefixo="+">0</span>
+                        <p>Produtos no catálogo</p>
+                    </div>
+                    <div class="numero-item" data-aurora-reveal>
+                        <span class="contador" data-alvo="500" data-prefixo="+">0</span>
+                        <p>Revendedoras atendidas</p>
+                    </div>
+                    <div class="numero-item" data-aurora-reveal>
+                        <span class="contador" data-alvo="150" data-prefixo="+">0</span>
+                        <p>Cidades no Brasil</p>
+                    </div>
+                    <div class="numero-item" data-aurora-reveal>
+                        <span class="contador-estatico">100%</span>
+                        <p>Fabricação nacional</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 100% NACIONAL -->
-        <section style="padding-block: var(--space-6);">
+        <!-- GRID DE PROMOÇÕES — cards editáveis pelo painel (config.html: secao Promocoes) -->
+        <section id="promocoes" class="promocoes">
             <div class="wrap">
-                <div style="background: rgba(var(--color-primary-rgb),.08); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6); text-align:center;">
-                    <p style="font-family: var(--font-heading); font-size: clamp(19px,2.8vw,28px); color: var(--color-primary-hover); display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
-                        <svg width="28" height="20" viewBox="0 0 26 18" style="flex-shrink:0; display:inline-block; border-radius:2px;" aria-hidden="true">
-                            <rect width="26" height="18" fill="#009739"/>
-                            <polygon points="13,2.5 24,9 13,15.5 2,9" fill="#FEDD00"/>
-                            <circle cx="13" cy="9" r="4" fill="#012169"/>
-                        </svg>
-                        100% Nacional — Sua reposição nunca vai faltar.
-                    </p>
-                    <p style="font-size:14px; color:var(--color-secondary); margin-top: var(--space-3);">
-                        Fabricação própria, sem depender de importação. O que você vende hoje, você repõe amanhã.
-                    </p>
+                <div class="section-head" data-aurora-reveal>
+                    <p class="eyebrow">Condições especiais</p>
+                    <h2>Promoções vigentes</h2>
+                    <p>Ofertas atuais do catálogo — atualizadas direto pelo painel administrativo.</p>
+                </div>
+                <div class="promo-grid" id="promoGrid">
+                    <div class="promo-empty">⏳ Carregando promoções...</div>
+                </div>
+                <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
+                    <a class="btn btn-outline" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Ver todas as ofertas →</a>
                 </div>
             </div>
         </section>
@@ -246,23 +177,29 @@
         <!-- TRUST STRIP -->
         <section class="trust" id="diferenciais" style="padding-block:var(--space-6);">
             <div class="wrap trust-grid">
-                <div class="trust-item">
-                    <div class="seal">∅</div>
+                <div class="trust-item" data-aurora-reveal>
+                    <div class="seal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><circle cx="12" cy="12" r="9"/></svg>
+                    </div>
                     <strong>Sem pedido mínimo</strong>
                     <p class="txt">Compre qualquer valor ou quantidade</p>
                 </div>
-                <div class="trust-item">
-                    <div class="seal">🚚</div>
+                <div class="trust-item" data-aurora-reveal>
+                    <div class="seal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    </div>
                     <strong>Frete grátis</strong>
                     <p class="txt">Para galvânicas de Limeira acima de R$100</p>
                 </div>
-                <div class="trust-item">
+                <div class="trust-item" data-aurora-reveal>
                     <div class="seal" id="parcelasSeal">6x</div>
                     <strong id="parcelasLabel">Parcelamento em 6x</strong>
                     <p class="txt">Sem juros no cartão</p>
                 </div>
-                <div class="trust-item">
-                    <div class="seal">🏭</div>
+                <div class="trust-item" data-aurora-reveal>
+                    <div class="seal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-4h6v4"/></svg>
+                    </div>
                     <strong>Direto de fábrica</strong>
                     <p class="txt">Sem intermediários no preço</p>
                 </div>
@@ -272,22 +209,22 @@
         <!-- COMO FUNCIONA -->
         <section>
             <div class="wrap">
-                <div class="section-head">
+                <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Como funciona</p>
                     <h2>Do catálogo ao seu pedido, em 3 passos.</h2>
                 </div>
                 <div class="steps">
-                    <div class="step">
+                    <div class="step" data-aurora-reveal>
                         <div class="n">01</div>
                         <h3>Explore o catálogo</h3>
                         <p>Navegue pelas coleções completas, com fotos técnicas, peso e preço de cada peça.</p>
                     </div>
-                    <div class="step">
+                    <div class="step" data-aurora-reveal>
                         <div class="n">02</div>
                         <h3>Monte seu pedido</h3>
                         <p>Adicione as peças no carrinho, sem valor ou quantidade mínima exigida.</p>
                     </div>
-                    <div class="step">
+                    <div class="step" data-aurora-reveal>
                         <div class="n">03</div>
                         <h3>Finalize pelo WhatsApp</h3>
                         <p>Nossa equipe confirma pagamento (PIX ou cartão) e prazo de entrega direto com você.</p>
@@ -299,16 +236,79 @@
         <!-- CATEGORIAS -->
         <section id="categorias">
             <div class="wrap">
-                <div class="section-head">
+                <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Coleções</p>
                     <h2>Categorias em destaque</h2>
                     <p>Uma amostra do catálogo completo — brincos, anéis, pulseiras, colares e muito mais.</p>
                 </div>
                 <div class="cat-grid" id="catGrid">
-                    <div class="cat-empty">Carregando categorias...</div>
+                    <div class="cat-empty">⏳ Carregando categorias...</div>
                 </div>
-                <div style="text-align:center; margin-top:var(--space-7);">
+                <div style="text-align:center; margin-top:var(--space-7);" data-aurora-reveal>
                     <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Ver Catálogo Completo →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRODUTOS EM DESTAQUE -->
+        <section id="destaques">
+            <div class="wrap">
+                <div class="section-head" data-aurora-reveal>
+                    <p class="eyebrow">Destaques do momento</p>
+                    <h2>Peças que estão saindo mais</h2>
+                    <p>Uma seleção do catálogo — com preço de fábrica, pronto para revender.</p>
+                </div>
+                <div class="prod-grid" id="prodGrid"></div>
+                <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
+                    <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Explorar Catálogo Completo →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEPOIMENTOS -->
+        <section id="depoimentos" class="depoimentos">
+            <div class="wrap">
+                <div class="section-head" data-aurora-reveal>
+                    <p class="eyebrow">Prova social</p>
+                    <h2>O que dizem nossas revendedoras</h2>
+                </div>
+                <div class="depo-grid">
+                    <article class="depo-card" data-aurora-reveal>
+                        <span class="aspas">“</span>
+                        <div class="estrelas" aria-label="5 de 5 estrelas">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <p class="txt">Peças lindas e com acabamento impecável. Minhas clientes adoram a qualidade das argolas e dos pingentes — e a reposição é rapidinha.</p>
+                        <p class="autor">— Revendedora de Campinas-SP</p>
+                    </article>
+                    <article class="depo-card" data-aurora-reveal>
+                        <span class="aspas">“</span>
+                        <div class="estrelas" aria-label="5 de 5 estrelas">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <p class="txt">O que mais me ajuda é não ter pedido mínimo: monto pedidos pequenos toda semana e o frete grátis pra galvânica de Limeira dá um lucro extra.</p>
+                        <p class="autor">— Revendedora de Ribeirão Preto-SP</p>
+                    </article>
+                    <article class="depo-card" data-aurora-reveal>
+                        <span class="aspas">“</span>
+                        <div class="estrelas" aria-label="5 de 5 estrelas">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <p class="txt">Compro direto da Abella há meses e nunca tive problema com qualidade. As cruzes e corações vendem sozinhos no mostruário.</p>
+                        <p class="autor">— Revendedora de Piracicaba-SP</p>
+                    </article>
                 </div>
             </div>
         </section>
@@ -316,7 +316,7 @@
         <!-- GALVÂNICAS -->
         <section id="galvanicas">
             <div class="wrap">
-                <div class="galv">
+                <div class="galv" data-aurora-reveal>
                     <div>
                         <p class="eyebrow">Parceria local</p>
                         <h2>Galvânicas Parceiras de Limeira</h2>
@@ -330,7 +330,7 @@
         <!-- FAQ -->
         <section id="faq">
             <div class="wrap" style="max-width:720px;">
-                <div class="section-head">
+                <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Dúvidas frequentes</p>
                     <h2>Perguntas sobre o Atacado Abella Joias</h2>
                 </div>
@@ -341,16 +341,21 @@
         <!-- CONTATO -->
         <section id="contato">
             <div class="wrap">
-                <div class="contato">
+                <div class="contato" data-aurora-reveal>
                     <div>
                         <p class="eyebrow" style="color:var(--color-primary);">Fale com a gente</p>
                         <h2>Vamos conversar sobre o seu pedido.</h2>
                         <p class="loc" id="localizacaoTxt">Atendimento 100% online — sem loja física.</p>
-                        <div class="social-row" id="socialRow"></div>
+                        <div class="social-row" id="socialRow">
+                            <span style="color:#cfc6b0; font-size:13px;">As redes sociais aparecem aqui assim que forem configuradas no painel.</span>
+                        </div>
                     </div>
                     <div class="contato-cta">
                         <p>Atendimento rápido, direto com nossa equipe comercial.</p>
-                        <a id="btnWhatsContato" class="btn btn-wa" href="#" target="_blank" rel="noopener">💬 Chamar no WhatsApp</a>
+                        <a id="btnWhatsContato" class="btn btn-wa" href="#" target="_blank" rel="noopener">
+                            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            Chamar no WhatsApp
+                        </a>
                     </div>
                 </div>
             </div>
@@ -359,41 +364,103 @@
     </main>
 
     <footer>
-        <div class="wrap foot-row">
-            <span>© <span id="anoAtual"></span> Abella Joias — Atacado de Joias no Bruto.</span>
-            <span>Limeira-SP · <a href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener" style="text-decoration:underline;">Catálogo Online</a></span>
+        <div class="wrap">
+            <div class="foot-grid">
+                <div class="foot-brand">
+                    <p class="word">Abella Joias</p>
+                    <p>Atacado de joias no bruto e semijoias — direto de fábrica em Limeira-SP, a capital nacional da joia folheada.</p>
+                </div>
+                <div class="foot-col">
+                    <p class="col-title">Navegação</p>
+                    <ul>
+                        <li><a href="#diferenciais">Diferenciais</a></li>
+                        <li><a href="#categorias">Categorias</a></li>
+                        <li><a href="#galvanicas">Galvânicas</a></li>
+                        <li><a href="#faq">Dúvidas</a></li>
+                        <li><a href="#contato">Contato</a></li>
+                    </ul>
+                </div>
+                <div class="foot-col">
+                    <p class="col-title">Catálogo &amp; Atendimento</p>
+                    <ul>
+                        <li><a href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Catálogo Online</a></li>
+                        <li><a id="btnWhatsFooter" href="#" target="_blank" rel="noopener">WhatsApp</a></li>
+                    </ul>
+                    <div class="social-row" id="socialRowFooter" style="margin-top:var(--space-4);"></div>
+                </div>
+            </div>
+            <div class="foot-bottom">
+                <span>© <span id="anoAtual"></span> Abella Joias — Atacado de Joias no Bruto.</span>
+                <span>Limeira-SP · <a href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener" style="text-decoration:underline;">Catálogo Online</a></span>
+            </div>
         </div>
     </footer>
 
-    <a id="waFloat" class="wa-float" href="#" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">💬</a>
+    <a id="waFloat" class="wa-float" href="#" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
 
     <script>
         document.getElementById('anoAtual').innerText = new Date().getFullYear();
 
-        // Menu mobile simples: reaproveita a nav já existente
-        document.getElementById('navToggle').addEventListener('click', () => {
-            const nav = document.querySelector('nav.links');
-            const visivel = nav.style.display === 'flex';
-            nav.style.cssText = visivel
-                ? ''
-                : 'display:flex; flex-direction:column; position:absolute; top:100%; left:0; right:0; background:var(--color-bg); padding:16px 24px; border-bottom:1px solid var(--color-border); gap:16px;';
-        });
+        // ================= MENU MOBILE =================
+        (function () {
+            const toggle = document.getElementById('navToggle');
+            const mobileNav = document.getElementById('mobileNav');
+            const navDesktop = document.getElementById('navLinks');
 
-        // Converte gs://bucket/caminho para uma URL https utilizável numa <img>
-        // (o campo do painel aceita colar tanto https:// quanto gs://, mas navegador só entende https)
-        function resolverGsUrl(url) {
-            const valor = String(url || '').trim();
-            if (!valor) return '';
-            if (!valor.startsWith('gs://')) return valor;
+            function fecharMenu() { mobileNav.classList.remove('open'); }
 
-            const semGs = valor.replace('gs://', '');
-            const primeiraBarra = semGs.indexOf('/');
-            if (primeiraBarra === -1) return '';
+            toggle.addEventListener('click', () => {
+                const aberto = mobileNav.classList.contains('open');
+                mobileNav.classList.toggle('open');
+                toggle.setAttribute('aria-label', aberto ? 'Abrir menu' : 'Fechar menu');
+            });
 
-            const bucket = semGs.slice(0, primeiraBarra);
-            const caminho = semGs.slice(primeiraBarra + 1);
-            return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(caminho)}?alt=media`;
-        }
+            mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', fecharMenu));
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenu(); });
+            window.addEventListener('resize', () => { if (navDesktop.offsetParent !== null) fecharMenu(); });
+        })();
+
+        // ================= RIPPLE NOS BOTÕES =================
+        (function () {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('pointerdown', function (e) {
+                    const circle = document.createElement('span');
+                    const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+                    const radius = diameter / 2;
+                    const rect = btn.getBoundingClientRect();
+                    circle.style.width = circle.style.height = `${diameter}px`;
+                    circle.style.left = `${e.clientX - rect.left - radius}px`;
+                    circle.style.top = `${e.clientY - rect.top - radius}px`;
+                    circle.classList.add('ripple');
+                    const existing = btn.querySelector('.ripple');
+                    if (existing) existing.remove();
+                    btn.appendChild(circle);
+                });
+            });
+        })();
+
+        // ================= REVEAL ON SCROLL =================
+        (function () {
+            function initReveal() {
+                if (!('IntersectionObserver' in window)) {
+                    document.querySelectorAll('[data-aurora-reveal]').forEach(el => el.classList.add('is-visible'));
+                    return;
+                }
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+                document.querySelectorAll('[data-aurora-reveal]').forEach(el => observer.observe(el));
+            }
+            document.addEventListener('DOMContentLoaded', initReveal);
+            window.AuroraAnimations = { initReveal };
+        })();
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof db === 'undefined') {
@@ -408,21 +475,33 @@
                 ]);
 
                 let whatsNumero = '';
+                let logoUrl = '';
 
                 if (snapSettings && snapSettings.exists()) {
                     const cfg = snapSettings.val();
 
-                    // Logo
-                    const logoUrl = resolverGsUrl(cfg.logoUrl || cfg.logo);
+                    // Logo — usa o helper canônico de imagens (image-helper.js)
+                    const logoBruta = cfg.logoUrl || cfg.logo || '';
+                    logoUrl = (typeof resolverImagemFirebase === 'function')
+                        ? resolverImagemFirebase(logoBruta)
+                        : converterGsUrl(logoBruta);
                     if (logoUrl) {
                         const img = document.getElementById('logoImg');
                         img.src = logoUrl;
                         img.style.display = 'block';
+                        // Atualiza o og:image com a logo real
+                        const ogImg = document.querySelector('meta[property="og:image"]');
+                        if (ogImg) ogImg.setAttribute('content', logoUrl);
                     }
 
-                    // Hero: usa o banner principal já configurado no painel
-                    const heroUrl = resolverGsUrl(cfg.bannerHeroUrl);
-                    if (heroUrl) document.getElementById('heroImg').src = heroUrl;
+                    // Hero: banner principal configurado no painel
+                    const heroUrl = (typeof resolverImagemFirebase === 'function')
+                        ? resolverImagemFirebase(cfg.bannerHeroUrl)
+                        : converterGsUrl(cfg.bannerHeroUrl);
+                    if (heroUrl) {
+                        heroImg.addEventListener('error', () => { heroImg.style.display = 'none'; }, { once: true });
+                        heroImg.src = heroUrl;
+                    }
 
                     if (cfg.slogan) document.getElementById('heroSlogan').innerText = cfg.slogan;
                     if (cfg.pix) document.getElementById('heroPix').innerText = `${cfg.pix}%`;
@@ -436,27 +515,39 @@
                         document.getElementById('localizacaoTxt').innerText = cfg.enderecoTexto;
                     }
 
+                    // Faixa promocional do topo (bannerAtivo/bannerTexto do painel)
+                    if (cfg.bannerAtivo && cfg.bannerTexto) {
+                        const banner = document.getElementById('bannerTopo');
+                        banner.classList.remove('hidden');
+                        document.getElementById('bannerTexto').innerText = cfg.bannerTexto;
+                    }
+
                     // WhatsApp — todos os botões
                     if (cfg.whatsapp) {
                         whatsNumero = String(cfg.whatsapp).replace(/\D/g, '');
                         const link = `https://wa.me/${whatsNumero}?text=${encodeURIComponent('Olá! Vim pelo site institucional e quero conhecer o catálogo Abella Joias.')}`;
-                        ['btnWhatsHeader', 'btnWhatsContato', 'waFloat'].forEach(id => {
+                        ['btnWhatsHeader', 'btnWhatsContato', 'waFloat', 'btnWhatsFooter'].forEach(id => {
                             const el = document.getElementById(id);
                             if (el) el.href = link;
                         });
                     }
 
-                    // Redes sociais
+                    // Redes sociais — ícones oficiais em SVG (Instagram, Facebook, TikTok)
                     const social = [
-                        { url: cfg.instagram, icon: '📷', label: 'Instagram' },
-                        { url: cfg.facebook, icon: 'f', label: 'Facebook' },
-                        { url: cfg.tiktok, icon: '♪', label: 'TikTok' }
-                    ].filter(s => s.url);
+                        { url: cfg.instagram, label: 'Instagram', svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>' },
+                        { url: cfg.facebook, label: 'Facebook', svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' },
+                        { url: cfg.tiktok, label: 'TikTok', svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>' }
+                    ].filter(s => s.url && String(s.url).trim());
 
-                    const socialRow = document.getElementById('socialRow');
-                    socialRow.innerHTML = social.map(s =>
-                        `<a href="${s.url}" target="_blank" rel="noopener" aria-label="${s.label}">${s.icon}</a>`
+                    const socialHTML = social.map(s =>
+                        `<a href="${s.url}" target="_blank" rel="noopener" aria-label="${s.label}">${s.svg}</a>`
                     ).join('');
+
+                    // Mesmo conteúdo nos dois pontos (contato + footer)
+                    const socialRow = document.getElementById('socialRow');
+                    if (social.length > 0) socialRow.innerHTML = socialHTML;
+                    const socialRowFooter = document.getElementById('socialRowFooter');
+                    if (social.length > 0 && socialRowFooter) socialRowFooter.innerHTML = socialHTML;
 
                     // SEO — Organization + WebSite (a marca "mãe" fica melhor aqui do que no catálogo)
                     const orgSchema = {
@@ -486,7 +577,137 @@
                     document.head.appendChild(orgTag);
                 }
 
-                // Categorias em destaque (até 8, linkando pro catálogo)
+                    // ================= NOSSOS NÚMEROS — contadores animados =================
+                    window.iniciarContadores = function () {
+                        document.querySelectorAll('.contador').forEach(el => {
+                            const alvo = parseInt(el.dataset.alvo, 10) || 0;
+                            const prefixo = el.dataset.prefixo || '';
+                            if (el.dataset.iniciado) return;
+                            el.dataset.iniciado = '1';
+                            const duracao = 1400;
+                            const inicio = performance.now();
+                            function tick(agora) {
+                                const progresso = Math.min((agora - inicio) / duracao, 1);
+                                const ease = 1 - Math.pow(1 - progresso, 3);
+                                el.textContent = prefixo + Math.round(alvo * ease).toLocaleString('pt-BR');
+                                if (progresso < 1) requestAnimationFrame(tick);
+                            }
+                            requestAnimationFrame(tick);
+                        });
+                    };
+                    if ('IntersectionObserver' in window) {
+                        const obsNum = new IntersectionObserver(entries => {
+                            entries.forEach(e => {
+                                if (e.isIntersecting) { window.iniciarContadores(); obsNum.disconnect(); }
+                            });
+                        }, { threshold: 0.3 });
+                        const blocoNumeros = document.getElementById('numeros');
+                        if (blocoNumeros) obsNum.observe(blocoNumeros);
+                    } else { window.iniciarContadores(); }
+
+                    // ================= GRID DE PROMOÇÕES (abella/promocoes) =================
+                    const snapPromos = await db.ref('abella/promocoes').once('value').catch(() => null);
+                    let promocoes = [];
+                    if (snapPromos && snapPromos.exists()) {
+                        const dados = snapPromos.val();
+                        promocoes = Array.isArray(dados)
+                            ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
+                            : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
+                    }
+                    promocoes = promocoes.filter(p => p && p.paused !== true && p.ativa !== false).slice(0, 6);
+
+                    const promoGrid = document.getElementById('promoGrid');
+                    if (promoGrid) {
+                        if (promocoes.length === 0) {
+                            promoGrid.innerHTML = '<div class="promo-empty">Nenhuma promoção ativa no momento — confira o catálogo para condições especiais.</div>';
+                        } else {
+                            promoGrid.innerHTML = promocoes.map(p => {
+                                const titulo = p.titulo || 'Promoção';
+                                const desc = p.descricao || p.desc || '';
+                                const precoDe = p.precoDe || p.preco_de || '';
+                                const precoPor = p.precoPor || p.preco_por || p.preco || '';
+                                const imgBruta = p.imagem || p.image || '';
+                                const link = p.link || (typeof resolverImagemFirebase === 'function' && p.categoria ? `https://catalogo.abellajoias.com.br/subcategorias.html?categoria=${encodeURIComponent(p.categoria)}` : 'https://catalogo.abellajoias.com.br');
+                                const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
+                                return `
+                                    <a class="promo-card" href="${link}" target="_blank" rel="noopener" data-aurora-reveal data-track="promo" data-nome="${titulo.replace(/"/g,'')}">
+                                        <div class="promo-img">
+                                            ${img ? `<img src="${img}" alt="${titulo}" loading="lazy" onerror="this.style.display='none'">` : ''}
+                                            <span class="selo">${p.selo || 'Oferta'}</span>
+                                        </div>
+                                        <div class="promo-body">
+                                            <h3>${titulo}</h3>
+                                            ${desc ? `<p class="desc">${desc}</p>` : ''}
+                                            <div class="promo-precos">
+                                                ${precoDe ? `<span class="de">${precoDe}</span>` : ''}
+                                                ${precoPor ? `<span class="por">${precoPor}</span>` : ''}
+                                            </div>
+                                            <span class="btn btn-primary btn-promo" style="margin-top:var(--space-3);">Ver promoção →</span>
+                                        </div>
+                                    </a>
+                                `;
+                            }).join('');
+                            if (window.AuroraAnimations) AuroraAnimations.initReveal();
+                        }
+                    }
+
+                    // ================= PRODUTOS EM DESTAQUE (abella/products) =================
+                    const snapProdutos = await db.ref('abella/products').once('value').catch(() => null);
+                    let produtos = [];
+                    if (snapProdutos && snapProdutos.exists()) {
+                        const dados = snapProdutos.val();
+                        produtos = Array.isArray(dados)
+                            ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
+                            : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
+                    }
+                    // Prioridade: marcados como destaque → com preço promocional → mais recentes (updatedAt) — limita a 4
+                    const destaques = produtos.filter(p => p.destaque === true || p.highlight === true);
+                    const promocionados = produtos.filter(p => (p.promocao || p.promo || p.precoPromocional) && !(p.destaque === true || p.highlight === true));
+                    let selecionados;
+                    if (destaques.length > 0) {
+                        selecionados = destaques.slice(0, 4);
+                    } else if (promocionados.length > 0) {
+                        selecionados = promocionados.slice(0, 4);
+                    } else {
+                        selecionados = produtos.slice().sort((a, b) => ((b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))).slice(0, 4);
+                    }
+
+                    const prodGrid = document.getElementById('prodGrid');
+                    if (prodGrid && selecionados.length > 0) {
+                        prodGrid.innerHTML = selecionados.map(p => {
+                            const nome = p.nome || p.name || 'Produto';
+                            const preco = parseFloat(p.preco || p.price) || 0;
+                            const precoFinal = parseFloat(p.precoFinal || p.promocao || p.promo || preco) || preco;
+                            const imgBruta = p.imagem || p.image || '';
+                            const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
+                            const cat = p.subcategoria || p.category || '';
+                            const href = img ? `https://catalogo.abellajoias.com.br/produtos.html` : 'https://catalogo.abellajoias.com.br';
+                            return `
+                                <a class="prod-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal data-track="destaque" data-nome="${nome.replace(/"/g,'')}">
+                                    <div class="prod-img">
+                                        ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
+                                    </div>
+                                    <div class="prod-body">
+                                        ${cat ? `<span class="prod-cat">${cat}</span>` : ''}
+                                        <h3>${nome}</h3>
+                                        <div class="prod-precos">
+                                            ${precoFinal < preco ? `<span class="de">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>` : ''}
+                                            <span class="por">R$ ${precoFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                                        </div>
+                                        <span class="prod-cta">
+                                            Explorar catálogo
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+                                        </span>
+                                    </div>
+                                </a>
+                            `;
+                        }).join('');
+                        if (window.AuroraAnimations) AuroraAnimations.initReveal();
+                    } else if (prodGrid) {
+                        prodGrid.style.display = 'none';
+                    }
+
+                    // Categorias em destaque (até 8, linkando pro catálogo)
                 let categorias = [];
                 if (snapCategories && snapCategories.exists()) {
                     const dados = snapCategories.val();
@@ -503,15 +724,27 @@
                     catGrid.innerHTML = categorias.map(cat => {
                         const nome = cat.nome || cat.name || 'Coleção';
                         const slug = cat.slug || '';
-                        const img = cat.imagem || cat.image || '';
+                        const imgBruta = cat.imagem || cat.image || '';
+                        let img = '';
+                        if (typeof resolverImagemFirebase === 'function') {
+                            img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
+                            // Categoria sem imagem cadastrada: tenta o padrão canônico do catálogo (images/categorias/{slug}.jpg)
+                            if (!img && slug && typeof ImageHelper !== 'undefined' && typeof ImageHelper.obterImagemCategoria === 'function') {
+                                img = ImageHelper.obterImagemCategoria(slug);
+                            }
+                        } else if (imgBruta) {
+                            img = converterGsUrl(imgBruta);
+                        }
                         const href = `https://catalogo.abellajoias.com.br/subcategorias.html?categoria=${encodeURIComponent(slug)}`;
                         return `
-                            <a class="cat-card" href="${href}" target="_blank" rel="noopener">
-                                <img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.parentElement.style.background='linear-gradient(160deg,#EFE6D2,#F8F4EC)'">
+                            <a class="cat-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal>
+                                ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
                                 <div class="ov"><span>${nome}</span></div>
                             </a>
                         `;
                     }).join('');
+                    // Revela os cards recém-criados
+                    if (window.AuroraAnimations) AuroraAnimations.initReveal();
                 }
             } catch (error) {
                 console.error('[Institucional] Erro ao carregar dados:', error);
@@ -527,7 +760,7 @@
                         faqLista.innerHTML = faqs.map((f, i) => `
                             <details class="faq-item" ${i === 0 ? 'open' : ''}>
                                 <summary>${f.pergunta}</summary>
-                                <p>${f.resposta}</p>
+                                <div class="faq-answer"><p>${f.resposta}</p></div>
                             </details>
                         `).join('');
 
@@ -550,6 +783,34 @@
                 console.error('[Institucional] Falha ao renderizar FAQ:', faqError);
             }
         });
+
+        // ================= RASTREAMENTO DE CONVERSÃO (GA4 + Clarity) =================
+        (function () {
+            document.addEventListener('click', (e) => {
+                const alvo = e.target.closest('[data-track]');
+                if (!alvo || !window.gtag) return;
+                try {
+                    window.gtag('event', 'clique_conversao', {
+                        element: alvo.dataset.track,
+                        nome: alvo.dataset.nome || alvo.href || '',
+                        transport_type: 'beacon'
+                    });
+                } catch (_) { /* falha silenciosa de telemetria */ }
+            });
+        })();
+
+        // Helper de fallback para gs:// (mantido para compatibilidade)
+        function converterGsUrl(url) {
+            const valor = String(url || '').trim();
+            if (!valor) return '';
+            if (!valor.startsWith('gs://')) return valor;
+            const semGs = valor.replace('gs://', '');
+            const primeiraBarra = semGs.indexOf('/');
+            if (primeiraBarra === -1) return '';
+            const bucket = semGs.slice(0, primeiraBarra);
+            const caminho = semGs.slice(primeiraBarra + 1);
+            return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(caminho)}?alt=media`;
+        }
     </script>
 
 </body>

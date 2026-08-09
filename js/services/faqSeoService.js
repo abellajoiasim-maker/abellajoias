@@ -2,8 +2,8 @@
 // js/services/faqSeoService.js
 // SEO IQ200 — FAQ Schema (FAQPage) 100% gratuito
 // Lê abella/seo_faq no Firebase Realtime Database. Se estiver vazio,
-// usa um conjunto padrão de perguntas coerente com abella/settings
-// (parcelamento, PIX, WhatsApp) para nunca ficar sem conteúdo.
+// usa um conjunto padrão de perguntas coerente com as configurações
+// REAIS do painel (parcelas e pix efetivamente exibidos no site).
 // ======================================================================
 
 (function () {
@@ -12,8 +12,8 @@
     const FAQ_PATH = 'abella/seo_faq';
 
     function faqsPadrao(settings) {
-        const parcelas = settings?.parcelasMax || 3;
-        const pix = settings?.pixDesc || 5;
+        const parcelas = settings?.parcelasMax ?? 6;
+        const pix = settings?.pixDesc ?? 5;
 
         return [
             {
@@ -26,7 +26,7 @@
             },
             {
                 pergunta: 'Quais as formas de pagamento aceitas?',
-                resposta: `Aceitamos PIX (com ${pix}% de desconto) e parcelamento em até ${parcelas}x no cartão.`
+                resposta: `Aceitamos PIX (com ${pix}% de desconto) e parcelamento em até ${parcelas}x sem juros no cartão.`
             },
             {
                 pergunta: 'As peças são banhadas ou folheadas?',
@@ -34,9 +34,27 @@
             },
             {
                 pergunta: 'Como faço um pedido no catálogo?',
-                resposta: 'Basta navegar pelas categorias, montar seu carrinho e finalizar o pedido — nossa equipe entra em contato pelo WhatsApp para confirmar pagamento e prazo entrega.'
+                resposta: 'Basta navegar pelas categorias, montar seu carrinho e finalizar o pedido — nossa equipe entra em contato pelo WhatsApp para confirmar pagamento e prazo de entrega.'
             }
         ];
+    }
+
+    // Lê as configurações reais do painel: ConfigService canônico com
+    // fallback direto para o nó abella/settings (campos parcelas/pix usados
+    // pelo painel config.html), garantindo que o FAQ nunca exiba valores
+    // diferentes dos mostrados na página.
+    async function lerParcelasPix() {
+        if (window.ConfigService && typeof window.ConfigService.getSettings === 'function') {
+            try {
+                return await window.ConfigService.getSettings();
+            } catch (_) { /* segue para o fallback */ }
+        }
+        try {
+            if (!window.db) return null;
+            const snap = await window.db.ref('abella/settings').once('value').catch(() => null);
+            if (snap && snap.exists()) return snap.val() || {};
+        } catch (_) { /* segue com padrão */ }
+        return null;
     }
 
     async function obterFaqs() {
@@ -54,11 +72,7 @@
             }
 
             // Sem conteúdo cadastrado ainda — usa padrão coerente com as settings atuais
-            let settings = null;
-            try {
-                settings = window.ConfigService ? await window.ConfigService.getSettings() : null;
-            } catch (_) { /* segue com padrão sem settings */ }
-
+            const settings = await lerParcelasPix();
             return faqsPadrao(settings);
         } catch (error) {
             console.error('[SEO IQ200] [FaqSeoService] Falha ao ler FAQ:', error);
