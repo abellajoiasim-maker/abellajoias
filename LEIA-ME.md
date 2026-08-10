@@ -13,7 +13,7 @@ Este pacote contém a versão melhorada da página principal **abellajoias.com.b
 | Dados vivos do painel | Parcelamento e PIX vêm de `abella/settings` (nada fixado no código) |
 | Nossos Números | Contadores animados: +1.500 produtos (real do Firebase), +500 revendedoras, +150 cidades, 100% nacional |
 | Promoções vigentes | Grid de cards com imagem, selo, preço riscado + preço dourado — **editável pelo painel** |
-| Destaques | 4 produtos reais do Firebase com foto, categoria, nome e preço |
+| Destaques | 4 produtos reais do Firebase com foto, categoria, nome e preço — agora com **desconto dinâmico** (selo -X% OFF + preço riscado) aplicado automaticamente |
 | Depoimentos | Seção de prova social com estrelas e aspas serifadas |
 | FAQ animado | Acordeão com transição suave (+/–) |
 | Correções | FAQ com respostas dinâmicas do painel, race condition do hero, imagens de categoria com fallback, parcelas corretas (3x) |
@@ -46,6 +46,16 @@ Cards vazios são ignorados. Os dados são gravados em `abella/promocoes` no Fir
 ## Como exibir produtos específicos em "Destaques"
 
 Por padrão a seção mostra os 4 produtos mais recentes. Para fixar peças específicas, edite o produto no painel e marque o campo de destaque (campos `destaque`/`highlight` do registro em `abella/products`). Produtos marcados têm prioridade; em seguida, produtos com preço promocional; por último, os mais recentes.
+
+## Descontos nos produtos em destaque
+
+A home agora usa o mesmo motor de desconto do catálogo (`js/services/descontoService.js`), lido de `abella/settings`:
+
+- **Desconto global** (Configurações → Descontos → "ativo" + percentual): aplica automaticamente em todas as peças da seção, mostrando o preço riscado ("de"), o novo preço ("por") e o selo vermelho **-X% OFF** sobre a foto — sem nenhum ajuste na home.
+- **Desconto por categoria/subcategoria** (regras no mesmo painel): tem prioridade sobre o global para as peças daquela categoria.
+- **Preço promocional individual** do produto (campo `promocao`): também é respeitado.
+
+Você controla tudo pelo painel, exatamente como já faz no catálogo; a home reage sozinha.
 
 ## Nota sobre o painel
 

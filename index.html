@@ -30,6 +30,8 @@
     <script src="./js/firebase/firebase-config.js"></script>
     <script src="./js/utils/image-helper.js"></script>
     <script src="./js/services/configService.js"></script>
+    <script src="./js/utils/money.js"></script>
+    <script src="./js/services/descontoService.js"></script>
     <script src="./js/services/faqSeoService.js"></script>
 
     <link rel="stylesheet" href="styles.css">
@@ -142,8 +144,8 @@
                         <p>Produtos no catálogo</p>
                     </div>
                     <div class="numero-item" data-aurora-reveal>
-                        <span class="contador" data-alvo="1000" data-prefixo="+">0</span>
-                        <p>Clientes atendidos</p>
+                        <span class="contador" data-alvo="500" data-prefixo="+">0</span>
+                        <p>Revendedoras atendidas</p>
                     </div>
                     <div class="numero-item" data-aurora-reveal>
                         <span class="contador" data-alvo="150" data-prefixo="+">0</span>
@@ -256,7 +258,7 @@
                 <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Destaques do momento</p>
                     <h2>Peças que estão saindo mais</h2>
-                    <p>Uma seleção do catálogo — com preço de fábrica, pronto para você banhar, expor na sua loja ou enviar para seus revendedores.</p>
+                    <p>Uma seleção do catálogo — com preço de fábrica, pronto para revender.</p>
                 </div>
                 <div class="prod-grid" id="prodGrid"></div>
                 <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
@@ -270,7 +272,7 @@
             <div class="wrap">
                 <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Prova social</p>
-                    <h2>O que dizem nossos clientes</h2>
+                    <h2>O que dizem nossas revendedoras</h2>
                 </div>
                 <div class="depo-grid">
                     <article class="depo-card" data-aurora-reveal>
@@ -283,7 +285,7 @@
                             <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                         </div>
                         <p class="txt">Peças lindas e com acabamento impecável. Minhas clientes adoram a qualidade das argolas e dos pingentes — e a reposição é rapidinha.</p>
-                        <p class="autor">— Cliente Satisfeito</p>
+                        <p class="autor">— Revendedora de Campinas-SP</p>
                     </article>
                     <article class="depo-card" data-aurora-reveal>
                         <span class="aspas">“</span>
@@ -295,7 +297,7 @@
                             <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                         </div>
                         <p class="txt">O que mais me ajuda é não ter pedido mínimo: monto pedidos pequenos toda semana e o frete grátis pra galvânica de Limeira dá um lucro extra.</p>
-                        <p class="autor">— Cliente que nos recomenda</p>
+                        <p class="autor">— Revendedora de Ribeirão Preto-SP</p>
                     </article>
                     <article class="depo-card" data-aurora-reveal>
                         <span class="aspas">“</span>
@@ -306,8 +308,8 @@
                             <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                             <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                         </div>
-                        <p class="txt">Compro direto da Abella há muito tempo e nunca tive problema com qualidade. Itens que vendem sozinhos no mostruário.</p>
-                        <p class="autor">— Cliente fiél</p>
+                        <p class="txt">Compro direto da Abella há meses e nunca tive problema com qualidade. As cruzes e corações vendem sozinhos no mostruário.</p>
+                        <p class="autor">— Revendedora de Piracicaba-SP</p>
                     </article>
                 </div>
             </div>
@@ -672,27 +674,50 @@
                         selecionados = produtos.slice().sort((a, b) => ((b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))).slice(0, 4);
                     }
 
+                    // ================= CARREGA AS CONFIGURAÇÕES COM OS DESCONTOS (global + por categoria) =================
+                    // ConfigService da home já mantém o cache de abella/settings, incluindo o nó descontos {ativo, porcentagem, regrasCategoria}
+                    if (window.ConfigService && typeof window.ConfigService.getSettings === 'function') {
+                        await window.ConfigService.getSettings().catch(() => {});
+                    }
+
                     const prodGrid = document.getElementById('prodGrid');
                     if (prodGrid && selecionados.length > 0) {
+                        const temDescontoService = window.descontoService && typeof window.descontoService.calcularPrecoComDesconto === 'function' && typeof window.descontoService.obterEtiquetaOferta === 'function';
+                        const formatarPreco = (valor) => {
+                            if (typeof window.fM === 'function') return window.fM(valor);
+                            return `R$ ${Number(valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                        };
                         prodGrid.innerHTML = selecionados.map(p => {
                             const nome = p.nome || p.name || 'Produto';
                             const preco = parseFloat(p.preco || p.price) || 0;
-                            const precoFinal = parseFloat(p.precoFinal || p.promocao || p.promo || preco) || preco;
+                            // DescontoService aplica automaticamente: preço promocional do produto → desconto de categoria → desconto global do painel
+                            const precoFinal = temDescontoService
+                                ? window.descontoService.calcularPrecoComDesconto(p)
+                                : (parseFloat(p.precoFinal || p.promocao || p.promo || preco) || preco);
+                            const etiqueta = temDescontoService ? window.descontoService.obterEtiquetaOferta(p) : null;
                             const imgBruta = p.imagem || p.image || '';
                             const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
                             const cat = p.subcategoria || p.category || '';
-                            const href = img ? `https://catalogo.abellajoias.com.br/produtos.html` : 'https://catalogo.abellajoias.com.br';
+                            const catSlug = p.categoriaId || p.categoryId || p.categorySlug || '';
+                            const subSlug = p.subcategoriaId || p.subcategoryId || p.subcategoriaSlug || '';
+                            let href = 'https://catalogo.abellajoias.com.br';
+                            if (img && catSlug) {
+                                href = `https://catalogo.abellajoias.com.br/produtos.html?categoria=${encodeURIComponent(catSlug)}` + (subSlug ? `&subcategoria=${encodeURIComponent(subSlug)}` : '');
+                            } else if (img) {
+                                href = 'https://catalogo.abellajoias.com.br/produtos.html';
+                            }
                             return `
                                 <a class="prod-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal data-track="destaque" data-nome="${nome.replace(/"/g,'')}">
                                     <div class="prod-img">
                                         ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
+                                        ${etiqueta ? `<span class="prod-badge">${etiqueta}</span>` : ''}
                                     </div>
                                     <div class="prod-body">
                                         ${cat ? `<span class="prod-cat">${cat}</span>` : ''}
                                         <h3>${nome}</h3>
                                         <div class="prod-precos">
-                                            ${precoFinal < preco ? `<span class="de">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>` : ''}
-                                            <span class="por">R$ ${precoFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                                            ${precoFinal < preco ? `<span class="de">${formatarPreco(preco)}</span>` : ''}
+                                            <span class="por">${formatarPreco(precoFinal)}</span>
                                         </div>
                                         <span class="prod-cta">
                                             Explorar catálogo
