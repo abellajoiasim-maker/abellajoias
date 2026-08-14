@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Cache-Control" content="public, max-age=300, must-revalidate">
     <script src="./js/analytics.js"></script>
 
     <title>Abella Joias — Atacado de Joias no Bruto Direto de Fábrica | Limeira-SP</title>
@@ -20,8 +20,12 @@
     <meta property="og:title" content="Abella Joias — Atacado de Joias no Bruto Direto de Fábrica">
     <meta property="og:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo. Compre pelo catálogo online.">
     <meta property="og:url" content="https://www.abellajoias.com.br/">
-    <meta property="og:image" content="https://catalogo-abella-joias.firebasestorage.app/">
+    <meta property="og:image" content="https://www.abellajoias.com.br/assets/og-abella-joias.svg">
+    <meta property="og:image:alt" content="Abella Joias — atacado de joias no bruto">
+    <meta property="og:locale" content="pt_BR">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://www.abellajoias.com.br/assets/og-abella-joias.svg">
+    <meta name="twitter:image:alt" content="Abella Joias — atacado de joias no bruto">
     <meta name="twitter:title" content="Abella Joias — Atacado de Joias no Bruto Direto de Fábrica">
     <meta name="twitter:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo.">
 
@@ -319,7 +323,7 @@
                     <p>Ofertas atuais do catálogo — atualizadas direto pelo painel administrativo.</p>
                 </div>
                 <div class="promo-grid" id="promoGrid">
-                    <div class="promo-empty">⏳ Carregando promoções...</div>
+                    <div class="promo-empty">Ofertas selecionadas atualizadas pelo painel administrativo. Consulte o catálogo para ver preços e disponibilidade.</div>
                 </div>
                 <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
                     <a class="btn btn-outline" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Ver todas as ofertas →</a>
@@ -345,8 +349,8 @@
                     <p class="txt">Para galvânicas de Limeira acima de R$100</p>
                 </div>
                 <div class="trust-item" data-aurora-reveal>
-                    <div class="seal" id="parcelasSeal">6x</div>
-                    <strong id="parcelasLabel">Parcelamento em 6x</strong>
+                    <div class="seal" id="parcelasSeal">3x</div>
+                    <strong id="parcelasLabel">Parcelamento em 3x</strong>
                     <p class="txt">Sem juros no cartão</p>
                 </div>
                 <div class="trust-item" data-aurora-reveal>
@@ -395,7 +399,7 @@
                     <p>Uma amostra do catálogo completo — brincos, anéis, pulseiras, colares e muito mais.</p>
                 </div>
                 <div class="cat-grid" id="catGrid">
-                    <div class="cat-empty">⏳ Carregando categorias...</div>
+                    <div class="cat-empty">Explore brincos, anéis, pulseiras, colares e outras categorias no catálogo online da Abella Joias.</div>
                 </div>
                 <div style="text-align:center; margin-top:var(--space-7);" data-aurora-reveal>
                     <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Ver Catálogo Completo →</a>
@@ -656,11 +660,13 @@
                         heroImg.src = heroUrl;
                     }
 
+                    const pixDesc = Number(cfg.pixDesc ?? cfg.pix ?? 5);
+                    const parcelasMax = Number(cfg.parcelasMax ?? cfg.parcelas ?? 3);
                     if (cfg.slogan) document.getElementById('heroSlogan').innerText = cfg.slogan;
-                    if (cfg.pix) document.getElementById('heroPix').innerText = `${cfg.pix}%`;
-                    if (cfg.parcelas) {
-                        document.getElementById('parcelasSeal').innerText = `${cfg.parcelas}x`;
-                        document.getElementById('parcelasLabel').innerText = `Parcelamento em ${cfg.parcelas}x`;
+                    if (Number.isFinite(pixDesc)) document.getElementById('heroPix').innerText = `${pixDesc}%`;
+                    if (Number.isFinite(parcelasMax) && parcelasMax > 0) {
+                        document.getElementById('parcelasSeal').innerText = `${parcelasMax}x`;
+                        document.getElementById('parcelasLabel').innerText = `Parcelamento em ${parcelasMax}x`;
                     }
 
                     // Localização (texto livre — sem loja física)
@@ -686,14 +692,23 @@
                     }
 
                     // Redes sociais — ícones oficiais em SVG (Instagram, Facebook, TikTok)
+                    const urlSocialSegura = valor => {
+                        try {
+                            const url = new URL(String(valor || '').trim());
+                            return url.protocol === 'https:' ? url.href : '';
+                        } catch (_) {
+                            return '';
+                        }
+                    };
                     const social = [
                         { url: cfg.instagram, label: 'Instagram', svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>' },
                         { url: cfg.facebook, label: 'Facebook', svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' },
                         { url: cfg.tiktok, label: 'TikTok', svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>' }
-                    ].filter(s => s.url && String(s.url).trim());
+                    ].map(s => ({ ...s, url: urlSocialSegura(s.url) }))
+                     .filter(s => s.url);
 
                     const socialHTML = social.map(s =>
-                        `<a href="${s.url}" target="_blank" rel="noopener" aria-label="${s.label}">${s.svg}</a>`
+                        `<a href="${s.url}" target="_blank" rel="noopener noreferrer" aria-label="${s.label}">${s.svg}<span class="sr-only">${s.label}</span></a>`
                     ).join('');
 
                     // Mesmo conteúdo nos dois pontos (contato + footer)

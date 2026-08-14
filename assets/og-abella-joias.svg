@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Abella Joias</title>
+  <desc id="desc">Atacado de joias no bruto direto de fábrica em Limeira-SP</desc>
+  <rect width="1200" height="630" fill="#f8f4ec"/>
+  <rect x="36" y="36" width="1128" height="558" fill="none" stroke="#caa85c" stroke-width="3"/>
+  <circle cx="600" cy="238" r="72" fill="#fffdf8" stroke="#caa85c" stroke-width="4"/>
+  <text x="600" y="270" text-anchor="middle" font-family="Georgia,serif" font-size="96" font-weight="700" fill="#8c6a1e">A</text>
+  <text x="600" y="390" text-anchor="middle" font-family="Georgia,serif" font-size="54" letter-spacing="12" fill="#1b1b1b">ABELLA</text>
+  <text x="600" y="448" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" letter-spacing="5" fill="#8c6a1e">JOIAS</text>
+  <text x="600" y="520" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" fill="#5c5548">Atacado direto de fábrica · Limeira-SP</text>
+</svg>

@@ -20,8 +20,11 @@
         whatsEmpresa: '5519988207658',
         email: '',
         instagram: '',
+        facebook: '',
+        tiktok: '',
         endereco: '',
-        parcelasMax: 6,
+        enderecoTexto: '',
+        parcelasMax: 3,
         pixDesc: 5,
         theme: 'dark',
         descontos: Object.freeze({
@@ -111,9 +114,21 @@
                 instagram: String(
                     raw.instagram ?? empresa.instagram ?? DEFAULT_SETTINGS.instagram
                 ).trim(),
-                
+
+                facebook: String(
+                    raw.facebook ?? empresa.facebook ?? DEFAULT_SETTINGS.facebook
+                ).trim(),
+
+                tiktok: String(
+                    raw.tiktok ?? empresa.tiktok ?? DEFAULT_SETTINGS.tiktok
+                ).trim(),
+
                 endereco: String(
-                    raw.endereco ?? empresa.endereco ?? DEFAULT_SETTINGS.endereco
+                    raw.endereco ?? raw.enderecoTexto ?? empresa.endereco ?? empresa.enderecoTexto ?? DEFAULT_SETTINGS.endereco
+                ).trim(),
+
+                enderecoTexto: String(
+                    raw.enderecoTexto ?? raw.endereco ?? empresa.enderecoTexto ?? empresa.endereco ?? DEFAULT_SETTINGS.enderecoTexto
                 ).trim(),
                 
                 parcelasMax: Number(
@@ -177,7 +192,10 @@
                     whatsapp: normalized.whatsEmpresa,
                     email: normalized.email,
                     instagram: normalized.instagram,
+                    facebook: normalized.facebook,
+                    tiktok: normalized.tiktok,
                     endereco: normalized.endereco,
+                    enderecoTexto: normalized.enderecoTexto,
                     parcelasMax: normalized.parcelasMax,
                     parcelas: normalized.parcelasMax,
                     pixDesc: normalized.pixDesc,

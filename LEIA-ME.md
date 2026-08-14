@@ -64,3 +64,13 @@ O arquivo `modulo/config.html` neste pacote é a **versão atualizada** do paine
 ## Configurações do Firebase
 
 Nada precisa ser configurado: todos os dados vêm de `abella/settings` (parcelas, PIX, WhatsApp, slogan, redes sociais, banners), `abella/promocoes` e `abella/products`, já lidos por regras públicas de leitura.
+
+## Atualização de modernização — 2026
+
+A versão aprovada da página institucional usa os seguintes padrões comerciais iniciais, editáveis no `config.html`: **5% de desconto no PIX**, **3x sem juros** e frete grátis para galvânicas de Limeira-SP em compras acima de **R$ 100,00**.
+
+Os campos `instagram`, `facebook`, `tiktok`, `pix`, `pixDesc`, `parcelas`, `parcelasMax`, `freteGratisAlvo` e `enderecoTexto` são tratados com aliases compatíveis para evitar divergência entre painel, home e catálogo.
+
+As rotas antigas `/galvanicas-parceiras/` e `/categoria-produto/brincos/` receberam páginas de contingência com redirecionamento instantâneo e `noindex`. Para SEO, configure redirects permanentes 301 ou 308 no provedor/CDN quando essa camada estiver disponível. A rota de brincos deve ser atualizada para o slug exato do catálogo assim que ele for confirmado.
+
+Antes de publicar, confirme os links de Instagram, Facebook e TikTok no painel e valide a home, o catálogo, o WhatsApp, as imagens sociais e as rotas antigas em desktop e mobile.
