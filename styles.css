@@ -105,7 +105,7 @@ header.site .util-bar.hidden{ display: none; }
 }
 .brand{ display: flex; align-items: center; gap: var(--space-3); }
 .brand img{
-    width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
     border: 1px solid rgba(var(--color-primary-rgb),.28); background: var(--color-surface);
 }
 .brand .word{
@@ -302,7 +302,7 @@ section{ padding: var(--space-9) 0; }
 }
 .contato h2{ color: #fff; font-size: clamp(24px,3vw,32px); }
 .contato .loc{ color: #cfc6b0; font-size: 13.5px; margin-top: var(--space-3); }
-.social-row{ display: flex; gap: var(--space-3); margin-top: var(--space-6); }
+.social-row{ display: flex; gap: var(--space-4); margin-top: var(--space-6); }
 .social-row a{
     width: 46px; height: 46px; border-radius: 50%;
     border: 1px solid rgba(var(--color-primary-rgb),.5);
@@ -311,7 +311,21 @@ section{ padding: var(--space-9) 0; }
     transition: all var(--duration-base) var(--ease);
 }
 .social-row a:hover{ background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-.social-row a svg{ width: 21px; height: 21px; }
+.social-row a svg{ width: 21px; height: 21px; flex-shrink: 0; }
+
+/* Esconde visualmente textos de acessibilidade (leitor de tela), sem tirar
+   do fluxo do documento. Sem esta classe, o <span class="sr-only"> usado nos
+   ícones sociais (Instagram/Facebook) aparecia como texto visível por cima
+   do ícone, dando a impressão de ícones quebrados e colados um no outro. */
+.sr-only{
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
 .contato-cta{ display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: var(--space-4); }
 .contato-cta p{ color: #cfc6b0; font-size: 13.5px; }
 
