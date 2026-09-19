@@ -105,7 +105,7 @@ header.site .util-bar.hidden{ display: none; }
 }
 .brand{ display: flex; align-items: center; gap: var(--space-3); }
 .brand img{
-    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
     border: 1px solid rgba(var(--color-primary-rgb),.28); background: var(--color-surface);
 }
 .brand .word{
