@@ -249,8 +249,15 @@
                 </div>
                 <div class="hero-badge-float" data-aurora-reveal>
                     <svg class="badge-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6m0 8v6M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24"/></svg>
-                    <div class="num" id="heroPix">—</div>
-                    <div class="label">de desconto no PIX</div>
+                    <div>
+                        <div class="num" id="heroPix">—</div>
+                        <div class="label">de desconto no PIX</div>
+                    </div>
+                    <div class="hero-badge-divider" aria-hidden="true"></div>
+                    <div>
+                        <div class="num" id="heroParcelas">—</div>
+                        <div class="label" id="heroParcelasLabel">de parcelamento</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -366,10 +373,6 @@
                     <div class="numero-item" data-aurora-reveal>
                         <span class="contador" data-alvo="150" data-prefixo="+">0</span>
                         <p>Cidades no Brasil</p>
-                    </div>
-                    <div class="numero-item" data-aurora-reveal>
-                        <span class="contador-estatico">100%</span>
-                        <p>Fabricação nacional</p>
                     </div>
                 </div>
             </div>
@@ -714,6 +717,10 @@
                     if (Number.isFinite(parcelasMax) && parcelasMax > 0) {
                         document.getElementById('parcelasSeal').innerText = `${parcelasMax}x`;
                         document.getElementById('parcelasLabel').innerText = `Parcelamento em ${parcelasMax}x`;
+                        const heroParcelasEl = document.getElementById('heroParcelas');
+                        const heroParcelasLabelEl = document.getElementById('heroParcelasLabel');
+                        if (heroParcelasEl) heroParcelasEl.innerText = `${parcelasMax}x`;
+                        if (heroParcelasLabelEl) heroParcelasLabelEl.innerText = 'sem juros no cartão';
                     }
 
                     // Localização (texto livre — sem loja física)
