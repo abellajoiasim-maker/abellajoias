@@ -183,8 +183,8 @@ nav.links a:hover{ color: var(--color-primary-hover); }
 }
 .hero-badge-float:hover{ transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--color-primary); }
 .hero-badge-float .badge-icon{ color: var(--color-primary-hover); flex-shrink: 0; }
-.hero-badge-float .num{ font-family: var(--font-heading); font-size: 30px; color: var(--color-primary-hover); line-height: 1; font-weight: 600; }
-.hero-badge-float .label{ font-size: 12px; letter-spacing: .05em; color: var(--color-secondary); margin-top: 2px; }
+.hero-badge-float .num{ font-family: var(--font-heading); font-size: 30px; color: var(--color-primary-hover); line-height: 1; font-weight: 600; text-align: center; }
+.hero-badge-float .label{ font-size: 12px; letter-spacing: .05em; color: var(--color-secondary); margin-top: 2px; text-align: center; }
 .hero-badge-float .hero-badge-divider{ width: 1px; align-self: stretch; background: var(--color-border); flex-shrink: 0; }
 
 /* ================= FAIXA 100% NACIONAL ================= */
@@ -361,6 +361,7 @@ footer{ padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--co
 
 /* ================= NOSSOS NÚMEROS (contadores) ================= */
 .numeros-grid{ display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-5); text-align: center; }
+.bruto-pronto-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); align-items: stretch; }
 .numero-item .contador,
 .numero-item .contador-estatico{
     font-family: var(--font-heading); font-size: clamp(38px,5vw,56px);
@@ -487,6 +488,7 @@ footer{ padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--co
     .promo-grid{ grid-template-columns: repeat(2,1fr); }
     .prod-grid{ grid-template-columns: repeat(2,1fr); }
     .numeros-grid{ grid-template-columns: 1fr; }
+    .bruto-pronto-grid{ grid-template-columns: 1fr; }
     .depo-grid{ grid-template-columns: 1fr; }
     .galv{ grid-template-columns: 1fr; text-align: center; }
     .contato{ grid-template-columns: 1fr; }
