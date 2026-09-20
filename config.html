@@ -351,6 +351,21 @@
         </section>
 
         <!-- ══════════════════════════════════════════════
+             SEÇÃO 2.4 — PEÇAS EM DESTAQUE (abellajoias.com.br)
+        ══════════════════════════════════════════════ -->
+        <section class="glass-panel rounded-[2rem] p-6 md:p-8 space-y-6">
+            <div class="flex items-center gap-3 border-b border-zinc-900 pb-4">
+                <span class="w-1.5 h-6 bg-[#caa85c] rounded-full"></span>
+                <h2 class="serif text-lg uppercase tracking-wider">⭐ Peças em Destaque (abellajoias.com.br)</h2>
+            </div>
+            <p class="text-[11px] text-zinc-500 -mt-2">Escolha exatamente as 4 peças que aparecem em "Peças que estão saindo mais" na página principal. Deixe um slot em branco para que o site escolha automaticamente (peças marcadas como destaque no catálogo, promoções, ou as mais recentes).</p>
+
+            <div id="destaquesLista" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+            <p id="destaquesStatus" class="text-[11px] text-zinc-500"></p>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
              SEÇÃO 2.5 — TEMA VISUAL DA LOJA
         ══════════════════════════════════════════════ -->
         <section class="glass-panel rounded-[2rem] p-6 md:p-8 space-y-6">
@@ -491,6 +506,7 @@
 
 <!-- SCRIPTS -->
 <script src="../js/firebase/firebase-config.js"></script>
+<script src="../js/utils/image-helper.js"></script>
 <script src="js/auth-guard.js"></script>
 
 <script>
@@ -622,6 +638,108 @@ function _promoTemplate(idx, dados = {}) {
 }
 
 let _promoIdx = 0;
+// ================= PEÇAS EM DESTAQUE (home) =================
+let _produtosCacheDestaques = [];
+
+async function carregarProdutosEDestaques(idsAtuais = []) {
+    const lista = document.getElementById('destaquesLista');
+    const status = document.getElementById('destaquesStatus');
+    if (!lista) return;
+
+    try {
+        const snap = await _db().ref(window.getAbellaPath('products')).once('value').catch(() => null);
+        let produtos = [];
+        if (snap && snap.exists()) {
+            const dados = snap.val();
+            produtos = Array.isArray(dados)
+                ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
+                : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
+        }
+        // Ordena por nome para facilitar achar na lista
+        produtos.sort((a, b) => String(a.nome || a.name || '').localeCompare(String(b.nome || b.name || '')));
+        _produtosCacheDestaques = produtos;
+
+        if (produtos.length === 0) {
+            if (status) status.innerText = 'Nenhum produto encontrado no catálogo — a seleção automática continua funcionando normalmente.';
+            lista.innerHTML = '';
+            return;
+        }
+
+        lista.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'flex items-center gap-3 bg-zinc-900/40 border border-zinc-800 rounded-xl p-3';
+            slot.innerHTML = `
+                <div class="preview-box shrink-0 rounded-lg overflow-hidden" style="width:56px;height:56px;">
+                    <img id="destaqueThumb${i}" src="" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden')">
+                    <span id="destaquePlaceholder${i}" class="placeholder-label text-[9px]">Slot ${i + 1}</span>
+                </div>
+                <select id="destaqueSelect${i}" onchange="atualizarThumbDestaque(${i})"
+                        class="flex-1 h-11 rounded-xl px-3 text-xs bg-zinc-900 border border-zinc-800 text-zinc-200">
+                    <option value="">— Escolha automaticamente —</option>
+                </select>
+            `;
+            lista.appendChild(slot);
+
+            const select = slot.querySelector(`#destaqueSelect${i}`);
+            produtos.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                const nomeP = p.nome || p.name || '(sem nome)';
+                const skuP = p.sku ? `${p.sku} — ` : '';
+                opt.innerText = `${skuP}${nomeP}`;
+                select.appendChild(opt);
+            });
+
+            const idSalvo = idsAtuais[i] || '';
+            if (idSalvo && produtos.some(p => p.id === idSalvo)) {
+                select.value = idSalvo;
+            }
+            atualizarThumbDestaque(i);
+        }
+
+        if (status) {
+            const qtdManual = idsAtuais.filter(Boolean).length;
+            status.innerText = qtdManual > 0
+                ? `${qtdManual} de 4 slots preenchidos manualmente. Os demais usam a seleção automática.`
+                : 'Nenhum slot preenchido — o site está escolhendo as peças automaticamente.';
+        }
+    } catch (err) {
+        console.error('[Destaques] Erro ao carregar produtos:', err);
+        if (status) status.innerText = 'Não foi possível carregar a lista de produtos agora.';
+    }
+}
+
+function atualizarThumbDestaque(i) {
+    const select = document.getElementById(`destaqueSelect${i}`);
+    const img = document.getElementById(`destaqueThumb${i}`);
+    const placeholder = document.getElementById(`destaquePlaceholder${i}`);
+    if (!select || !img) return;
+
+    const produto = _produtosCacheDestaques.find(p => p.id === select.value);
+    const imagemBruta = produto ? (produto.image || produto.imagem || '') : '';
+
+    if (imagemBruta) {
+        const url = typeof resolverImagemFirebase === 'function' ? resolverImagemFirebase(imagemBruta) : imagemBruta;
+        img.src = url;
+        img.classList.remove('hidden');
+        if (placeholder) placeholder.classList.add('hidden');
+    } else {
+        img.classList.add('hidden');
+        img.src = '';
+        if (placeholder) placeholder.classList.remove('hidden');
+    }
+}
+
+function coletarDestaquesHome() {
+    const ids = [];
+    for (let i = 0; i < 4; i++) {
+        const select = document.getElementById(`destaqueSelect${i}`);
+        ids.push(select ? select.value : '');
+    }
+    return ids.filter(Boolean);
+}
+
 function adicionarCampoPromo(dados = {}) {
     const lista = document.getElementById('promoLista');
     const div = document.createElement('div');
@@ -721,6 +839,9 @@ async function carregarConfiguracoes() {
             if (promocoes.length === 0) adicionarCampoPromo();
         }
 
+        // Peças em destaque — carrega os produtos do catálogo e monta os 4 seletores
+        await carregarProdutosEDestaques(Array.isArray(d.destaquesHome) ? d.destaquesHome : []);
+
     } catch (err) {
         console.error('[config.html] Falha ao carregar configurações:', err);
         spawnToast('Erro ao carregar configurações do Firebase.', true);
@@ -767,6 +888,9 @@ async function salvarConfiguracoesAdmin(e) {
         banner_subcategoria: _getVal('cfg-bannerSubcategoria'), // compat. legado
         bannerProduto:      _getVal('cfg-bannerProduto'),
         banner_produto:     _getVal('cfg-bannerProduto'),       // compat. legado
+
+        // Peças em destaque na home (até 4 IDs, na ordem escolhida). Vazio = seleção automática.
+        destaquesHome: coletarDestaquesHome(),
 
         // Tema visual
         theme: _getVal('cfg-theme') || 'dark',
