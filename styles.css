@@ -178,13 +178,14 @@ nav.links a:hover{ color: var(--color-primary-hover); }
     background: var(--color-surface); color: var(--color-text);
     padding: var(--space-3) var(--space-5); border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md); border: 1px solid rgba(var(--color-primary-rgb),.28);
-    max-width: 280px; width: fit-content;
+    max-width: 360px; width: fit-content;
     transition: transform var(--duration-base) var(--ease), box-shadow var(--duration-base) var(--ease);
 }
 .hero-badge-float:hover{ transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--color-primary); }
 .hero-badge-float .badge-icon{ color: var(--color-primary-hover); flex-shrink: 0; }
 .hero-badge-float .num{ font-family: var(--font-heading); font-size: 30px; color: var(--color-primary-hover); line-height: 1; font-weight: 600; }
 .hero-badge-float .label{ font-size: 12px; letter-spacing: .05em; color: var(--color-secondary); margin-top: 2px; }
+.hero-badge-float .hero-badge-divider{ width: 1px; align-self: stretch; background: var(--color-border); flex-shrink: 0; }
 
 /* ================= FAIXA 100% NACIONAL ================= */
 .nacional{
@@ -359,7 +360,7 @@ footer{ padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--co
 .wa-float svg{ width: 30px; height: 30px; }
 
 /* ================= NOSSOS NÚMEROS (contadores) ================= */
-.numeros-grid{ display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-5); text-align: center; }
+.numeros-grid{ display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-5); text-align: center; }
 .numero-item .contador,
 .numero-item .contador-estatico{
     font-family: var(--font-heading); font-size: clamp(38px,5vw,56px);
@@ -485,7 +486,7 @@ footer{ padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--co
     .cat-grid{ grid-template-columns: repeat(2,1fr); }
     .promo-grid{ grid-template-columns: repeat(2,1fr); }
     .prod-grid{ grid-template-columns: repeat(2,1fr); }
-    .numeros-grid{ grid-template-columns: repeat(2,1fr); }
+    .numeros-grid{ grid-template-columns: 1fr; }
     .depo-grid{ grid-template-columns: 1fr; }
     .galv{ grid-template-columns: 1fr; text-align: center; }
     .contato{ grid-template-columns: 1fr; }
