@@ -12,7 +12,7 @@
     <link rel="canonical" href="https://www.abellajoias.com.br/">
 
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23F8F4EC' stroke='%23B8892B' stroke-width='6'/%3E%3Ctext x='50' y='50' font-family='Georgia, serif' font-size='62' font-weight='bold' text-anchor='middle' dy='22' fill='%238C6A1E'%3EA%3C/text%3E%3C/svg%3E">
+    <link id="faviconLink" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23F8F4EC' stroke='%23B8892B' stroke-width='6'/%3E%3Ctext x='50' y='50' font-family='Georgia, serif' font-size='62' font-weight='bold' text-anchor='middle' dy='22' fill='%238C6A1E'%3EA%3C/text%3E%3C/svg%3E">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -679,9 +679,11 @@
 
                 let whatsNumero = '';
                 let logoUrl = '';
+                let cfgSettings = {};
 
                 if (snapSettings && snapSettings.exists()) {
                     const cfg = snapSettings.val();
+                    cfgSettings = cfg;
 
                     // Logo — usa o helper canônico de imagens (image-helper.js)
                     const logoBruta = cfg.logoUrl || cfg.logo || '';
@@ -695,6 +697,9 @@
                         // Atualiza o og:image com a logo real
                         const ogImg = document.querySelector('meta[property="og:image"]');
                         if (ogImg) ogImg.setAttribute('content', logoUrl);
+                        // Atualiza o favicon (aba do navegador / resultado de busca) com a mesma logo
+                        const faviconLink = document.getElementById('faviconLink');
+                        if (faviconLink) faviconLink.setAttribute('href', logoUrl);
                     }
 
                     // Hero: banner principal configurado no painel
@@ -878,11 +883,17 @@
                             ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
                             : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
                     }
-                    // Prioridade: marcados como destaque → com preço promocional → mais recentes (updatedAt) — limita a 4
+                    // Prioridade: escolha manual do painel (destaquesHome) → marcados como destaque → com preço promocional → mais recentes (updatedAt) — limita a 4
+                    const idsManuais = Array.isArray(cfgSettings.destaquesHome) ? cfgSettings.destaquesHome.filter(Boolean) : [];
+                    const manuais = idsManuais
+                        .map(id => produtos.find(p => p.id === id))
+                        .filter(Boolean);
                     const destaques = produtos.filter(p => p.destaque === true || p.highlight === true);
                     const promocionados = produtos.filter(p => (p.promocao || p.promo || p.precoPromocional) && !(p.destaque === true || p.highlight === true));
                     let selecionados;
-                    if (destaques.length > 0) {
+                    if (manuais.length > 0) {
+                        selecionados = manuais.slice(0, 4);
+                    } else if (destaques.length > 0) {
                         selecionados = destaques.slice(0, 4);
                     } else if (promocionados.length > 0) {
                         selecionados = promocionados.slice(0, 4);
