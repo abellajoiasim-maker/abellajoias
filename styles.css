@@ -212,7 +212,7 @@ nav.links a:hover{ color: var(--color-primary-hover); }
 
 /* ================= TRUST STRIP ================= */
 .trust{ background: var(--color-text); padding: var(--space-7) 0; }
-.trust-grid{ display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-5); }
+.trust-grid{ display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-5); }
 .trust-item{ text-align: center; color: #f2ede1; padding-inline: var(--space-3); }
 .trust-item .seal{
     width: 52px; height: 52px; margin: 0 auto var(--space-3);
@@ -482,7 +482,7 @@ footer{ padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--co
     .hero-visual{ order: -1; aspect-ratio: 16/9; }
     .hero-badge-float{ order: 3; width: 100%; max-width: none; }
     .hero::before{ width: 360px; height: 360px; }
-    .trust-grid{ grid-template-columns: repeat(2,1fr); }
+    .trust-grid{ grid-template-columns: 1fr; }
     .steps{ grid-template-columns: 1fr; }
     .cat-grid{ grid-template-columns: repeat(2,1fr); }
     .promo-grid{ grid-template-columns: repeat(2,1fr); }
@@ -496,7 +496,7 @@ footer{ padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--co
     header.site .util-bar{ font-size: 9px; letter-spacing: .1em; }
 }
 @media (max-width: 600px){
-    .trust-grid{ grid-template-columns: repeat(2,1fr); gap: var(--space-3); }
+    .trust-grid{ grid-template-columns: 1fr; gap: var(--space-3); }
     .cat-grid{ gap: var(--space-3); }
     .promo-grid{ gap: var(--space-3); }
     .prod-grid{ gap: var(--space-3); }
