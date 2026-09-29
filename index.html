@@ -4,31 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="public, max-age=300, must-revalidate">
+    
+    <!-- Analytics -->
     <script src="./js/analytics.js"></script>
 
+    <!-- Meta Tags Principais de SEO -->
     <title>Abella Joias — Atacado de Joias no Bruto Direto de Fábrica | Limeira-SP</title>
     <meta name="description" content="Abella Joias: atacado de joias no bruto direto de fábrica em Limeira-SP, a capital nacional da joia folheada. Sem pedido mínimo. Peça pelo catálogo online.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://www.abellajoias.com.br/">
 
     <!-- Favicon -->
-    <link id="faviconLink" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23F8F4EC' stroke='%23B8892B' stroke-width='6'/%3E%3Ctext x='50' y='50' font-family='Georgia, serif' font-size='62' font-weight='bold' text-anchor='middle' dy='22' fill='%238C6A1E'%3EA%3C/text%3E%3C/svg%3E">
+    <link id="faviconLink" rel="icon" href="https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media">
 
-    <!-- Open Graph -->
+    <!-- Meta Tags Open Graph para Pré-visualização com Imagem (WhatsApp, Facebook, LinkedIn) -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Abella Joias">
     <meta property="og:title" content="Abella Joias — Atacado de Joias no Bruto Direto de Fábrica">
     <meta property="og:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo. Compre pelo catálogo online.">
     <meta property="og:url" content="https://www.abellajoias.com.br/">
-    <meta property="og:image" content="https://www.abellajoias.com.br/assets/og-abella-joias.svg">
-    <meta property="og:image:alt" content="Abella Joias — atacado de joias no bruto">
     <meta property="og:locale" content="pt_BR">
+    
+    <!-- Configuração Avançada da Imagem de Compartilhamento (JPEG de Alta Resolução) -->
+    <meta property="og:image" content="https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media">
+    <meta property="og:image:secure_url" content="https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Abella Joias — Atacado de joias no bruto em Limeira-SP">
+
+    <!-- Twitter Card com Imagem Grande -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://www.abellajoias.com.br/assets/og-abella-joias.svg">
-    <meta name="twitter:image:alt" content="Abella Joias — atacado de joias no bruto">
     <meta name="twitter:title" content="Abella Joias — Atacado de Joias no Bruto Direto de Fábrica">
     <meta name="twitter:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo.">
+    <meta name="twitter:image" content="https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media">
+    <meta name="twitter:image:alt" content="Abella Joias — Atacado de joias no bruto em Limeira-SP">
 
+    <!-- Firebase & Scripts Utilitários -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="./js/firebase/firebase-config.js"></script>
@@ -40,7 +52,7 @@
 
     <link rel="stylesheet" href="styles.css">
 
-    <!-- Card de Promoções — visual luxuoso, alinhado à identidade da marca -->
+    <!-- Card de Promoções -->
     <style>
         #promocoes .promo-grid{
             display:flex;
@@ -194,7 +206,7 @@
 <body>
 
     <header class="site">
-        <!-- Faixa promocional dinâmica (configurada no painel do catálogo) -->
+        <!-- Faixa promocional dinâmica -->
         <div id="bannerTopo" class="util-bar hidden">
             <span id="bannerTexto"></span>
         </div>
@@ -219,7 +231,7 @@
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
         </div>
-        <!-- Menu mobile com animação -->
+        <!-- Menu mobile -->
         <nav class="mobile-nav" id="mobileNav">
             <a href="#diferenciais">Diferenciais</a>
             <a href="#promocoes">Promoções</a>
@@ -258,23 +270,18 @@
             </div>
         </section>
 
-        <!-- 100% NACIONAL — bandeira do Brasil oficial (proporção 10:7) -->
+        <!-- 100% NACIONAL -->
         <section style="padding-block: var(--space-6);">
             <div class="wrap" data-aurora-reveal>
                 <div class="nacional">
                     <p class="titulo">
                         <svg class="bandeira" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
                             <title>Bandeira do Brasil</title>
-                            <!-- Campo verde -->
                             <rect x="0" y="0" width="100" height="70" fill="#009c3b"/>
-                            <!-- Losango amarelo -->
                             <polygon points="50,8.5 94.5,35 50,61.5 5.5,35" fill="#ffdf00"/>
-                            <!-- Círculo azul -->
                             <circle cx="50" cy="35" r="18" fill="#002776"/>
-                            <!-- Faixa branca com texto -->
                             <path d="M 33.2 39.2 Q 50 33.6 66.8 39.2" stroke="#ffffff" stroke-width="3.2" fill="none" stroke-linecap="round"/>
                             <path d="M 36.5 42.5 Q 50 38.2 63.5 42.5" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.35"/>
-                            <!-- Estrelas (simplificadas) -->
                             <circle cx="43" cy="44" r="1.1" fill="#ffffff"/>
                             <circle cx="50" cy="41.5" r="1.2" fill="#ffffff"/>
                             <circle cx="57" cy="44" r="1.1" fill="#ffffff"/>
@@ -293,7 +300,7 @@
             </div>
         </section>
 
-        <!-- O QUE VOCÊ ESTÁ COMPRANDO -->
+        <!-- EXPLICAÇÃO JOIA NO BRUTO -->
         <section id="galvanicas" style="background:var(--color-primary-tint); border-top:1px solid var(--color-border); border-bottom:1px solid var(--color-border); padding-block:var(--space-8);">
             <div class="wrap">
                 <div class="section-head">
@@ -353,7 +360,6 @@
             </div>
         </section>
 
-
         <!-- NOSSOS NÚMEROS -->
         <section id="numeros" style="padding-block: var(--space-8);">
             <div class="wrap">
@@ -374,7 +380,7 @@
             </div>
         </section>
 
-        <!-- GRID DE PROMOÇÕES — cards editáveis pelo painel (config.html: secao Promocoes) -->
+        <!-- GRID DE PROMOÇÕES -->
         <section id="promocoes" class="promocoes">
             <div class="wrap">
                 <div class="section-head" data-aurora-reveal>
@@ -391,7 +397,7 @@
             </div>
         </section>
 
-        <!-- TRUST STRIP -->
+        <!-- DIFERENCIAIS -->
         <section class="trust" id="diferenciais" style="padding-block:var(--space-6);">
             <div class="wrap trust-grid">
                 <div class="trust-item" data-aurora-reveal>
@@ -406,7 +412,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                     </div>
                     <strong>Frete grátis</strong>
-                    <p class="txt">Para qualquer galvânicas de Limeira, nas compras acima de R$100</p>
+                    <p class="txt">Para qualquer galvânica de Limeira, nas compras acima de R$100</p>
                 </div>
                 <div class="trust-item" data-aurora-reveal>
                     <div class="seal">
@@ -519,7 +525,7 @@
                             <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                         </div>
                         <p class="txt">Compro direto da Abella há muito tempo e nunca tive problema com qualidade. As peças vendem sozinhas no mostruário.</p>
-                        <p class="autor">— Cliente fiél</p>
+                        <p class="autor">— Cliente fiel</p>
                     </article>
                 </div>
             </div>
@@ -594,10 +600,12 @@
         </div>
     </footer>
 
+    <!-- Botão Flutuante WhatsApp -->
     <a id="waFloat" class="wa-float" href="#" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
 
+    <!-- Lógica JavaScript -->
     <script>
         document.getElementById('anoAtual').innerText = new Date().getFullYear();
 
@@ -680,7 +688,7 @@
                     const cfg = snapSettings.val();
                     cfgSettings = cfg;
 
-                    // Logo — usa o helper canônico de imagens (image-helper.js)
+                    // Logo
                     const logoBruta = cfg.logoUrl || cfg.logo || '';
                     logoUrl = (typeof resolverImagemFirebase === 'function')
                         ? resolverImagemFirebase(logoBruta)
@@ -689,21 +697,21 @@
                         const img = document.getElementById('logoImg');
                         img.src = logoUrl;
                         img.style.display = 'block';
-                        // Atualiza o og:image com a logo real
-                        const ogImg = document.querySelector('meta[property="og:image"]');
-                        if (ogImg) ogImg.setAttribute('content', logoUrl);
-                        // Atualiza o favicon (aba do navegador / resultado de busca) com a mesma logo
+                        
                         const faviconLink = document.getElementById('faviconLink');
                         if (faviconLink) faviconLink.setAttribute('href', logoUrl);
                     }
 
-                    // Hero: banner principal configurado no painel
+                    // Hero: banner principal
                     const heroUrl = (typeof resolverImagemFirebase === 'function')
                         ? resolverImagemFirebase(cfg.bannerHeroUrl)
                         : converterGsUrl(cfg.bannerHeroUrl);
                     if (heroUrl) {
-                        heroImg.addEventListener('error', () => { heroImg.style.display = 'none'; }, { once: true });
-                        heroImg.src = heroUrl;
+                        const heroImg = document.getElementById('heroImg');
+                        if (heroImg) {
+                            heroImg.addEventListener('error', () => { heroImg.style.display = 'none'; }, { once: true });
+                            heroImg.src = heroUrl;
+                        }
                     }
 
                     const pixDesc = Number(cfg.pixDesc ?? cfg.pix ?? 5);
@@ -711,29 +719,25 @@
                     if (cfg.slogan) document.getElementById('heroSlogan').innerText = cfg.slogan;
                     if (Number.isFinite(pixDesc)) document.getElementById('heroPix').innerText = `${pixDesc}%`;
                     if (Number.isFinite(parcelasMax) && parcelasMax > 0) {
-                        const parcelasSealEl = document.getElementById('parcelasSeal');
-                        const parcelasLabelEl = document.getElementById('parcelasLabel');
-                        if (parcelasSealEl) parcelasSealEl.innerText = `${parcelasMax}x`;
-                        if (parcelasLabelEl) parcelasLabelEl.innerText = `Parcelamento em ${parcelasMax}x`;
                         const heroParcelasEl = document.getElementById('heroParcelas');
                         const heroParcelasLabelEl = document.getElementById('heroParcelasLabel');
                         if (heroParcelasEl) heroParcelasEl.innerText = `${parcelasMax}x`;
                         if (heroParcelasLabelEl) heroParcelasLabelEl.innerText = 'sem juros no cartão';
                     }
 
-                    // Localização (texto livre — sem loja física)
+                    // Localização
                     if (cfg.enderecoTexto) {
                         document.getElementById('localizacaoTxt').innerText = cfg.enderecoTexto;
                     }
 
-                    // Faixa promocional do topo (bannerAtivo/bannerTexto do painel)
+                    // Faixa promocional do topo
                     if (cfg.bannerAtivo && cfg.bannerTexto) {
                         const banner = document.getElementById('bannerTopo');
                         banner.classList.remove('hidden');
                         document.getElementById('bannerTexto').innerText = cfg.bannerTexto;
                     }
 
-                    // WhatsApp — todos os botões
+                    // WhatsApp
                     if (cfg.whatsapp) {
                         whatsNumero = String(cfg.whatsapp).replace(/\D/g, '');
                         const link = `https://wa.me/${whatsNumero}?text=${encodeURIComponent('Olá! Vim pelo site institucional e quero conhecer o catálogo Abella Joias.')}`;
@@ -743,7 +747,7 @@
                         });
                     }
 
-                    // Redes sociais — ícones oficiais em SVG (Instagram, Facebook, TikTok)
+                    // Redes sociais
                     const urlSocialSegura = valor => {
                         try {
                             const url = new URL(String(valor || '').trim());
@@ -763,13 +767,12 @@
                         `<a href="${s.url}" target="_blank" rel="noopener noreferrer" aria-label="${s.label}">${s.svg}<span class="sr-only">${s.label}</span></a>`
                     ).join('');
 
-                    // Mesmo conteúdo nos dois pontos (contato + footer)
                     const socialRow = document.getElementById('socialRow');
-                    if (social.length > 0) socialRow.innerHTML = socialHTML;
+                    if (social.length > 0 && socialRow) socialRow.innerHTML = socialHTML;
                     const socialRowFooter = document.getElementById('socialRowFooter');
                     if (social.length > 0 && socialRowFooter) socialRowFooter.innerHTML = socialHTML;
 
-                    // SEO — Organization + WebSite (a marca "mãe" fica melhor aqui do que no catálogo)
+                    // SEO — Schema.org Organization + WebSite
                     const orgSchema = {
                         "@context": "https://schema.org",
                         "@graph": [
@@ -778,7 +781,7 @@
                                 "@id": "https://www.abellajoias.com.br/#organization",
                                 "name": "Abella Joias",
                                 "url": "https://www.abellajoias.com.br/",
-                                "logo": logoUrl || undefined,
+                                "logo": logoUrl || "https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media",
                                 "description": "Atacado de Joias no Bruto, direto de fábrica em Limeira-SP.",
                                 "sameAs": social.map(s => s.url)
                             },
@@ -797,166 +800,162 @@
                     document.head.appendChild(orgTag);
                 }
 
-                    // ================= NOSSOS NÚMEROS — contadores animados =================
-                    window.iniciarContadores = function () {
-                        document.querySelectorAll('.contador').forEach(el => {
-                            const alvo = parseInt(el.dataset.alvo, 10) || 0;
-                            const prefixo = el.dataset.prefixo || '';
-                            if (el.dataset.iniciado) return;
-                            el.dataset.iniciado = '1';
-                            const duracao = 1400;
-                            const inicio = performance.now();
-                            function tick(agora) {
-                                const progresso = Math.min((agora - inicio) / duracao, 1);
-                                const ease = 1 - Math.pow(1 - progresso, 3);
-                                el.textContent = prefixo + Math.round(alvo * ease).toLocaleString('pt-BR');
-                                if (progresso < 1) requestAnimationFrame(tick);
-                            }
-                            requestAnimationFrame(tick);
-                        });
-                    };
-                    if ('IntersectionObserver' in window) {
-                        const obsNum = new IntersectionObserver(entries => {
-                            entries.forEach(e => {
-                                if (e.isIntersecting) { window.iniciarContadores(); obsNum.disconnect(); }
-                            });
-                        }, { threshold: 0.3 });
-                        const blocoNumeros = document.getElementById('numeros');
-                        if (blocoNumeros) obsNum.observe(blocoNumeros);
-                    } else { window.iniciarContadores(); }
-
-                    // ================= GRID DE PROMOÇÕES (abella/promocoes) =================
-                    const snapPromos = await db.ref('abella/promocoes').once('value').catch(() => null);
-                    let promocoes = [];
-                    if (snapPromos && snapPromos.exists()) {
-                        const dados = snapPromos.val();
-                        promocoes = Array.isArray(dados)
-                            ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
-                            : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
-                    }
-                    promocoes = promocoes.filter(p => p && p.paused !== true && p.ativa !== false).slice(0, 6);
-
-                    const promoGrid = document.getElementById('promoGrid');
-                    if (promoGrid) {
-                        if (promocoes.length === 0) {
-                            promoGrid.innerHTML = '<div class="promo-empty">Nenhuma promoção ativa no momento — confira o catálogo para condições especiais.</div>';
-                        } else {
-                            promoGrid.innerHTML = promocoes.map(p => {
-                                const titulo = p.titulo || 'Promoção';
-                                const desc = p.descricao || p.desc || '';
-                                const precoDe = p.precoDe || p.preco_de || '';
-                                const precoPor = p.precoPor || p.preco_por || p.preco || '';
-                                const imgBruta = p.imagem || p.image || '';
-                                const link = p.link || (typeof resolverImagemFirebase === 'function' && p.categoria ? `https://catalogo.abellajoias.com.br/subcategorias.html?categoria=${encodeURIComponent(p.categoria)}` : 'https://catalogo.abellajoias.com.br');
-                                const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
-                                return `
-                                    <a class="promo-card" href="${link}" target="_blank" rel="noopener" data-aurora-reveal data-track="promo" data-nome="${titulo.replace(/"/g,'')}">
-                                        <div class="promo-img">
-                                            ${img ? `<img src="${img}" alt="${titulo}" loading="lazy" onerror="this.style.display='none'">` : ''}
-                                        </div>
-                                        <div class="promo-body">
-                                            <span class="promo-selo">${p.selo || 'Oferta Especial'}</span>
-                                            <h3>${titulo}</h3>
-                                            ${desc ? `<p class="desc">${desc}</p>` : ''}
-                                            <div class="promo-precos">
-                                                ${precoDe ? `<span class="de">${precoDe}</span>` : ''}
-                                                ${precoPor ? `<span class="por">${precoPor}</span>` : ''}
-                                            </div>
-                                            <span class="btn-promo">Ver promoção →</span>
-                                        </div>
-                                    </a>
-                                `;
-                            }).join('');
-                            if (window.AuroraAnimations) AuroraAnimations.initReveal();
+                // Contadores animados
+                window.iniciarContadores = function () {
+                    document.querySelectorAll('.contador').forEach(el => {
+                        const alvo = parseInt(el.dataset.alvo, 10) || 0;
+                        const prefixo = el.dataset.prefixo || '';
+                        if (el.dataset.iniciado) return;
+                        el.dataset.iniciado = '1';
+                        const duracao = 1400;
+                        const inicio = performance.now();
+                        function tick(agora) {
+                            const progresso = Math.min((agora - inicio) / duracao, 1);
+                            const ease = 1 - Math.pow(1 - progresso, 3);
+                            el.textContent = prefixo + Math.round(alvo * ease).toLocaleString('pt-BR');
+                            if (progresso < 1) requestAnimationFrame(tick);
                         }
-                    }
+                        requestAnimationFrame(tick);
+                    });
+                };
+                if ('IntersectionObserver' in window) {
+                    const obsNum = new IntersectionObserver(entries => {
+                        entries.forEach(e => {
+                            if (e.isIntersecting) { window.iniciarContadores(); obsNum.disconnect(); }
+                        });
+                    }, { threshold: 0.3 });
+                    const blocoNumeros = document.getElementById('numeros');
+                    if (blocoNumeros) obsNum.observe(blocoNumeros);
+                } else { window.iniciarContadores(); }
 
-                    // ================= PRODUTOS EM DESTAQUE (abella/products) =================
-                    const snapProdutos = await db.ref('abella/products').once('value').catch(() => null);
-                    let produtos = [];
-                    if (snapProdutos && snapProdutos.exists()) {
-                        const dados = snapProdutos.val();
-                        produtos = Array.isArray(dados)
-                            ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
-                            : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
-                    }
-                    // Prioridade: escolha manual do painel (destaquesHome) → marcados como destaque → com preço promocional → mais recentes (updatedAt) — limita a 4
-                    const idsManuais = Array.isArray(cfgSettings.destaquesHome) ? cfgSettings.destaquesHome.filter(Boolean) : [];
-                    const manuais = idsManuais
-                        .map(id => produtos.find(p => p.id === id))
-                        .filter(Boolean);
-                    const destaques = produtos.filter(p => p.destaque === true || p.highlight === true);
-                    const promocionados = produtos.filter(p => (p.promocao || p.promo || p.precoPromocional) && !(p.destaque === true || p.highlight === true));
-                    let selecionados;
-                    if (manuais.length > 0) {
-                        selecionados = manuais.slice(0, 4);
-                    } else if (destaques.length > 0) {
-                        selecionados = destaques.slice(0, 4);
-                    } else if (promocionados.length > 0) {
-                        selecionados = promocionados.slice(0, 4);
+                // Grid de Promoções
+                const snapPromos = await db.ref('abella/promocoes').once('value').catch(() => null);
+                let promocoes = [];
+                if (snapPromos && snapPromos.exists()) {
+                    const dados = snapPromos.val();
+                    promocoes = Array.isArray(dados)
+                        ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
+                        : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
+                }
+                promocoes = promocoes.filter(p => p && p.paused !== true && p.ativa !== false).slice(0, 6);
+
+                const promoGrid = document.getElementById('promoGrid');
+                if (promoGrid) {
+                    if (promocoes.length === 0) {
+                        promoGrid.innerHTML = '<div class="promo-empty">Nenhuma promoção ativa no momento — confira o catálogo para condições especiais.</div>';
                     } else {
-                        selecionados = produtos.slice().sort((a, b) => ((b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))).slice(0, 4);
-                    }
-
-                    // ================= CARREGA AS CONFIGURAÇÕES COM OS DESCONTOS (global + por categoria) =================
-                    // ConfigService da home já mantém o cache de abella/settings, incluindo o nó descontos {ativo, porcentagem, regrasCategoria}
-                    if (window.ConfigService && typeof window.ConfigService.getSettings === 'function') {
-                        await window.ConfigService.getSettings().catch(() => {});
-                    }
-
-                    const prodGrid = document.getElementById('prodGrid');
-                    if (prodGrid && selecionados.length > 0) {
-                        const temDescontoService = window.descontoService && typeof window.descontoService.calcularPrecoComDesconto === 'function' && typeof window.descontoService.obterEtiquetaOferta === 'function';
-                        const formatarPreco = (valor) => {
-                            if (typeof window.fM === 'function') return window.fM(valor);
-                            return `R$ ${Number(valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-                        };
-                        prodGrid.innerHTML = selecionados.map(p => {
-                            const nome = p.nome || p.name || 'Produto';
-                            const preco = parseFloat(p.preco || p.price) || 0;
-                            // DescontoService aplica automaticamente: preço promocional do produto → desconto de categoria → desconto global do painel
-                            const precoFinal = temDescontoService
-                                ? window.descontoService.calcularPrecoComDesconto(p)
-                                : (parseFloat(p.precoFinal || p.promocao || p.promo || preco) || preco);
-                            const etiqueta = temDescontoService ? window.descontoService.obterEtiquetaOferta(p) : null;
+                        promoGrid.innerHTML = promocoes.map(p => {
+                            const titulo = p.titulo || 'Promoção';
+                            const desc = p.descricao || p.desc || '';
+                            const precoDe = p.precoDe || p.preco_de || '';
+                            const precoPor = p.precoPor || p.preco_por || p.preco || '';
                             const imgBruta = p.imagem || p.image || '';
+                            const link = p.link || (typeof resolverImagemFirebase === 'function' && p.categoria ? `https://catalogo.abellajoias.com.br/subcategorias.html?categoria=${encodeURIComponent(p.categoria)}` : 'https://catalogo.abellajoias.com.br');
                             const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
-                            const cat = p.subcategoria || p.category || '';
-                            const catSlug = p.categoriaId || p.categoryId || p.categorySlug || '';
-                            const subSlug = p.subcategoriaId || p.subcategoryId || p.subcategoriaSlug || '';
-                            let href = 'https://catalogo.abellajoias.com.br';
-                            if (img && catSlug) {
-                                href = `https://catalogo.abellajoias.com.br/produtos.html?categoria=${encodeURIComponent(catSlug)}` + (subSlug ? `&subcategoria=${encodeURIComponent(subSlug)}` : '');
-                            } else if (img) {
-                                href = 'https://catalogo.abellajoias.com.br/produtos.html';
-                            }
                             return `
-                                <a class="prod-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal data-track="destaque" data-nome="${nome.replace(/"/g,'')}">
-                                    <div class="prod-img">
-                                        ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
-                                        ${etiqueta ? `<span class="prod-badge">${etiqueta}</span>` : ''}
+                                <a class="promo-card" href="${link}" target="_blank" rel="noopener" data-aurora-reveal data-track="promo" data-nome="${titulo.replace(/"/g,'')}">
+                                    <div class="promo-img">
+                                        ${img ? `<img src="${img}" alt="${titulo}" loading="lazy" onerror="this.style.display='none'">` : ''}
                                     </div>
-                                    <div class="prod-body">
-                                        ${cat ? `<span class="prod-cat">${cat}</span>` : ''}
-                                        <h3>${nome}</h3>
-                                        <div class="prod-precos">
-                                            ${precoFinal < preco ? `<span class="de">${formatarPreco(preco)}</span>` : ''}
-                                            <span class="por">${formatarPreco(precoFinal)}</span>
+                                    <div class="promo-body">
+                                        <span class="promo-selo">${p.selo || 'Oferta Especial'}</span>
+                                        <h3>${titulo}</h3>
+                                        ${desc ? `<p class="desc">${desc}</p>` : ''}
+                                        <div class="promo-precos">
+                                            ${precoDe ? `<span class="de">${precoDe}</span>` : ''}
+                                            ${precoPor ? `<span class="por">${precoPor}</span>` : ''}
                                         </div>
-                                        <span class="prod-cta">
-                                            Explorar catálogo
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
-                                        </span>
+                                        <span class="btn-promo">Ver promoção →</span>
                                     </div>
                                 </a>
                             `;
                         }).join('');
                         if (window.AuroraAnimations) AuroraAnimations.initReveal();
-                    } else if (prodGrid) {
-                        prodGrid.style.display = 'none';
                     }
+                }
 
-                    // Categorias em destaque (até 8, linkando pro catálogo)
+                // Produtos em Destaque
+                const snapProdutos = await db.ref('abella/products').once('value').catch(() => null);
+                let produtos = [];
+                if (snapProdutos && snapProdutos.exists()) {
+                    const dados = snapProdutos.val();
+                    produtos = Array.isArray(dados)
+                        ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
+                        : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
+                }
+
+                const idsManuais = Array.isArray(cfgSettings.destaquesHome) ? cfgSettings.destaquesHome.filter(Boolean) : [];
+                const manuais = idsManuais.map(id => produtos.find(p => p.id === id)).filter(Boolean);
+                const destaques = produtos.filter(p => p.destaque === true || p.highlight === true);
+                const promocionados = produtos.filter(p => (p.promocao || p.promo || p.precoPromocional) && !(p.destaque === true || p.highlight === true));
+                
+                let selecionados;
+                if (manuais.length > 0) {
+                    selecionados = manuais.slice(0, 4);
+                } else if (destaques.length > 0) {
+                    selecionados = destaques.slice(0, 4);
+                } else if (promocionados.length > 0) {
+                    selecionados = promocionados.slice(0, 4);
+                } else {
+                    selecionados = produtos.slice().sort((a, b) => ((b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))).slice(0, 4);
+                }
+
+                if (window.ConfigService && typeof window.ConfigService.getSettings === 'function') {
+                    await window.ConfigService.getSettings().catch(() => {});
+                }
+
+                const prodGrid = document.getElementById('prodGrid');
+                if (prodGrid && selecionados.length > 0) {
+                    const temDescontoService = window.descontoService && typeof window.descontoService.calcularPrecoComDesconto === 'function' && typeof window.descontoService.obterEtiquetaOferta === 'function';
+                    const formatarPreco = (valor) => {
+                        if (typeof window.fM === 'function') return window.fM(valor);
+                        return `R$ ${Number(valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                    };
+                    prodGrid.innerHTML = selecionados.map(p => {
+                        const nome = p.nome || p.name || 'Produto';
+                        const preco = parseFloat(p.preco || p.price) || 0;
+                        const precoFinal = temDescontoService
+                            ? window.descontoService.calcularPrecoComDesconto(p)
+                            : (parseFloat(p.precoFinal || p.promocao || p.promo || preco) || preco);
+                        const etiqueta = temDescontoService ? window.descontoService.obterEtiquetaOferta(p) : null;
+                        const imgBruta = p.imagem || p.image || '';
+                        const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
+                        const cat = p.subcategoria || p.category || '';
+                        const catSlug = p.categoriaId || p.categoryId || p.categorySlug || '';
+                        const subSlug = p.subcategoriaId || p.subcategoryId || p.subcategoriaSlug || '';
+                        let href = 'https://catalogo.abellajoias.com.br';
+                        if (img && catSlug) {
+                            href = `https://catalogo.abellajoias.com.br/produtos.html?categoria=${encodeURIComponent(catSlug)}` + (subSlug ? `&subcategoria=${encodeURIComponent(subSlug)}` : '');
+                        } else if (img) {
+                            href = 'https://catalogo.abellajoias.com.br/produtos.html';
+                        }
+                        return `
+                            <a class="prod-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal data-track="destaque" data-nome="${nome.replace(/"/g,'')}">
+                                <div class="prod-img">
+                                    ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
+                                    ${etiqueta ? `<span class="prod-badge">${etiqueta}</span>` : ''}
+                                </div>
+                                <div class="prod-body">
+                                    ${cat ? `<span class="prod-cat">${cat}</span>` : ''}
+                                    <h3>${nome}</h3>
+                                    <div class="prod-precos">
+                                        ${precoFinal < preco ? `<span class="de">${formatarPreco(preco)}</span>` : ''}
+                                        <span class="por">${formatarPreco(precoFinal)}</span>
+                                    </div>
+                                    <span class="prod-cta">
+                                        Explorar catálogo
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+                                    </span>
+                                </div>
+                            </a>
+                        `;
+                    }).join('');
+                    if (window.AuroraAnimations) AuroraAnimations.initReveal();
+                } else if (prodGrid) {
+                    prodGrid.style.display = 'none';
+                }
+
+                // Categorias em Destaque
                 let categorias = [];
                 if (snapCategories && snapCategories.exists()) {
                     const dados = snapCategories.val();
@@ -977,7 +976,6 @@
                         let img = '';
                         if (typeof resolverImagemFirebase === 'function') {
                             img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
-                            // Categoria sem imagem cadastrada: tenta o padrão canônico do catálogo (images/categorias/{slug}.jpg)
                             if (!img && slug && typeof ImageHelper !== 'undefined' && typeof ImageHelper.obterImagemCategoria === 'function') {
                                 img = ImageHelper.obterImagemCategoria(slug);
                             }
@@ -992,14 +990,13 @@
                             </a>
                         `;
                     }).join('');
-                    // Revela os cards recém-criados
                     if (window.AuroraAnimations) AuroraAnimations.initReveal();
                 }
             } catch (error) {
                 console.error('[Institucional] Erro ao carregar dados:', error);
             }
 
-            // FAQ — mesmo conteúdo/schema compartilhado com o catálogo
+            // FAQ
             try {
                 const faqLista = document.getElementById('faqLista');
                 if (faqLista && window.FaqSeoService) {
@@ -1033,7 +1030,7 @@
             }
         });
 
-        // ================= RASTREAMENTO DE CONVERSÃO (GA4 + Clarity) =================
+        // Telemetria
         (function () {
             document.addEventListener('click', (e) => {
                 const alvo = e.target.closest('[data-track]');
@@ -1044,11 +1041,10 @@
                         nome: alvo.dataset.nome || alvo.href || '',
                         transport_type: 'beacon'
                     });
-                } catch (_) { /* falha silenciosa de telemetria */ }
+                } catch (_) {}
             });
         })();
 
-        // Helper de fallback para gs:// (mantido para compatibilidade)
         function converterGsUrl(url) {
             const valor = String(url || '').trim();
             if (!valor) return '';
@@ -1061,6 +1057,5 @@
             return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(caminho)}?alt=media`;
         }
     </script>
-
 </body>
 </html>
