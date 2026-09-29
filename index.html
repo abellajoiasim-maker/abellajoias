@@ -355,7 +355,7 @@
                         <h2 style="font-size:24px;">Galvânicas Parceiras de Limeira</h2>
                         <p>Trabalhamos junto com galvânicas da região pra oferecer acabamento e frete grátis pra quem compra acima de R$100. Confira quem são nossas parceiras e as condições especiais.</p>
                     </div>
-                    <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br/galvanicas.html" target="_blank" rel="noopener">Ver Galvânicas Parceiras →</a>
+                    <a class="btn btn-primary" href="./galvanicas.html" target="_blank" rel="noopener">Ver Galvânicas Parceiras →</a>
                 </div>
             </div>
         </section>
@@ -392,7 +392,7 @@
                     <div class="promo-empty">Ofertas selecionadas atualizadas pelo painel administrativo. Consulte o catálogo para ver preços e disponibilidade.</div>
                 </div>
                 <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
-                    <a class="btn btn-outline" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Ver todas as ofertas →</a>
+                    <a class="btn btn-outline" href="./" target="_blank" rel="noopener">Ver todas as ofertas →</a>
                 </div>
             </div>
         </section>
@@ -463,7 +463,7 @@
                     <div class="cat-empty">Explore brincos, anéis, pulseiras, colares e outras categorias no catálogo online da Abella Joias.</div>
                 </div>
                 <div style="text-align:center; margin-top:var(--space-7);" data-aurora-reveal>
-                    <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Ver Catálogo Completo →</a>
+                    <a class="btn btn-primary" href="./" target="_blank" rel="noopener">Ver Catálogo Completo →</a>
                 </div>
             </div>
         </section>
@@ -478,7 +478,7 @@
                 </div>
                 <div class="prod-grid" id="prodGrid"></div>
                 <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
-                    <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Explorar Catálogo Completo →</a>
+                    <a class="btn btn-primary" href="./" target="_blank" rel="noopener">Explorar Catálogo Completo →</a>
                 </div>
             </div>
         </section>
@@ -587,7 +587,7 @@
                 <div class="foot-col">
                     <p class="col-title">Catálogo &amp; Atendimento</p>
                     <ul>
-                        <li><a href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener">Catálogo Online</a></li>
+                        <li><a href="./" target="_blank" rel="noopener">Catálogo Online</a></li>
                         <li><a id="btnWhatsFooter" href="#" target="_blank" rel="noopener">WhatsApp</a></li>
                     </ul>
                     <div class="social-row" id="socialRowFooter" style="margin-top:var(--space-4);"></div>
@@ -595,7 +595,7 @@
             </div>
             <div class="foot-bottom">
                 <span>© <span id="anoAtual"></span> Abella Joias — Atacado de Joias no Bruto.</span>
-                <span>Limeira-SP · <a href="https://catalogo.abellajoias.com.br" target="_blank" rel="noopener" style="text-decoration:underline;">Catálogo Online</a></span>
+                <span>Limeira-SP · <a href="./" target="_blank" rel="noopener" style="text-decoration:underline;">Catálogo Online</a></span>
             </div>
         </div>
     </footer>
@@ -864,7 +864,7 @@
                             const precoDe = p.precoDe || p.preco_de || '';
                             const precoPor = p.precoPor || p.preco_por || p.preco || '';
                             const imgBruta = p.imagem || p.image || '';
-                            const link = p.link || (typeof resolverImagemFirebase === 'function' && p.categoria ? `https://catalogo.abellajoias.com.br/subcategorias.html?categoria=${encodeURIComponent(p.categoria)}` : 'https://catalogo.abellajoias.com.br');
+                            const link = p.link || (typeof resolverImagemFirebase === 'function' && p.categoria ? `./subcategorias.html?categoria=${encodeURIComponent(p.categoria)}` : './');
                             const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
                             return `
                                 <a class="promo-card" href="${link}" target="_blank" rel="noopener" data-aurora-reveal data-track="promo" data-nome="${titulo.replace(/"/g,'')}">
@@ -937,11 +937,11 @@
                         const cat = p.subcategoria || p.category || '';
                         const catSlug = p.categoriaId || p.categoryId || p.categorySlug || '';
                         const subSlug = p.subcategoriaId || p.subcategoryId || p.subcategoriaSlug || '';
-                        let href = 'https://catalogo.abellajoias.com.br';
+                        let href = './';
                         if (img && catSlug) {
-                            href = `https://catalogo.abellajoias.com.br/produtos.html?categoria=${encodeURIComponent(catSlug)}` + (subSlug ? `&subcategoria=${encodeURIComponent(subSlug)}` : '');
+                            href = `./produtos.html?categoria=${encodeURIComponent(catSlug)}` + (subSlug ? `&subcategoria=${encodeURIComponent(subSlug)}` : '');
                         } else if (img) {
-                            href = 'https://catalogo.abellajoias.com.br/produtos.html';
+                            href = './produtos.html';
                         }
                         return `
                             <a class="prod-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal data-track="destaque" data-nome="${nome.replace(/"/g,'')}">
@@ -996,7 +996,7 @@
                         } else if (imgBruta) {
                             img = converterGsUrl(imgBruta);
                         }
-                        const href = `https://catalogo.abellajoias.com.br/subcategorias.html?categoria=${encodeURIComponent(slug)}`;
+                        const href = `./subcategorias.html?categoria=${encodeURIComponent(slug)}`;
                         return `
                             <a class="cat-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal>
                                 ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
