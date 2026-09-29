@@ -688,18 +688,32 @@
                     const cfg = snapSettings.val();
                     cfgSettings = cfg;
 
-                    // Logo
+                   // Logo & Identidade Visual / Social Preview
                     const logoBruta = cfg.logoUrl || cfg.logo || '';
                     logoUrl = (typeof resolverImagemFirebase === 'function')
                         ? resolverImagemFirebase(logoBruta)
                         : converterGsUrl(logoBruta);
                     if (logoUrl) {
                         const img = document.getElementById('logoImg');
-                        img.src = logoUrl;
-                        img.style.display = 'block';
+                        if (img) {
+                            img.src = logoUrl;
+                            img.style.display = 'block';
+                        }
                         
                         const faviconLink = document.getElementById('faviconLink');
                         if (faviconLink) faviconLink.setAttribute('href', logoUrl);
+                    }
+
+                    // Atualização dinâmica do OG Image (WhatsApp / Redes Sociais)
+                    const ogImageBruta = cfg.ogImageUrl || cfg.ogImage || '';
+                    const ogImageUrlReal = (typeof resolverImagemFirebase === 'function')
+                        ? resolverImagemFirebase(ogImageBruta)
+                        : converterGsUrl(ogImageBruta);
+
+                    if (ogImageUrlReal) {
+                        document.querySelectorAll('meta[property="og:image"], meta[property="og:image:secure_url"], meta[name="twitter:image"]').forEach(meta => {
+                            meta.setAttribute('content', ogImageUrlReal);
+                        });
                     }
 
                     // Hero: banner principal
