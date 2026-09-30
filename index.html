@@ -17,23 +17,25 @@
     <!-- Favicon -->
     <link id="faviconLink" rel="icon" href="https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media">
 
-    <!-- Meta Tags Open Graph para Pré-visualização com Imagem (WhatsApp, Facebook, LinkedIn) -->
+    <!-- ═══════════════════════════════════════════════════════════════
+         PRÉ-VISUALIZAÇÃO SOCIAL (Open Graph + Twitter Card) — INSTITUCIONAL
+         IMPORTANTE: WhatsApp/Facebook/Instagram/X/LinkedIn NÃO executam JavaScript.
+         Eles leem SOMENTE as tags abaixo. O JS da página só atualiza a aba do
+         navegador; para o link compartilhado mudar, troque a URL de og:image
+         e twitter:image aqui (o config.html gera o bloco pronto para colar).
+         Requisitos da imagem: URL https pública, JPG/PNG, 1200x630, até ~300 KB.
+         ═══════════════════════════════════════════════════════════════ -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Abella Joias">
+    <meta property="og:locale" content="pt_BR">
     <meta property="og:title" content="Abella Joias — Atacado de Joias no Bruto Direto de Fábrica">
     <meta property="og:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo. Compre pelo catálogo online.">
     <meta property="og:url" content="https://www.abellajoias.com.br/">
-    <meta property="og:locale" content="pt_BR">
-    
-    <!-- Configuração Avançada da Imagem de Compartilhamento (JPEG de Alta Resolução) -->
     <meta property="og:image" content="https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media">
     <meta property="og:image:secure_url" content="https://firebasestorage.googleapis.com/v0/b/catalogo-abella-joias.firebasestorage.app/o/images%2Flogo%2FInCollage_20250630_100544920-01.jpeg?alt=media">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Abella Joias — Atacado de joias no bruto em Limeira-SP">
+    <!-- og:image:type/width/height: só declare quando a imagem for realmente 1200x630 (valores errados fazem o Facebook ignorar/cortar a imagem) -->
 
-    <!-- Twitter Card com Imagem Grande -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Abella Joias — Atacado de Joias no Bruto Direto de Fábrica">
     <meta name="twitter:description" content="Joias no bruto direto de fábrica em Limeira-SP. Sem pedido mínimo.">
@@ -704,16 +706,20 @@
                         if (faviconLink) faviconLink.setAttribute('href', logoUrl);
                     }
 
-                    // Atualização dinâmica do OG Image (WhatsApp / Redes Sociais)
-                    const ogImageBruta = cfg.ogImageUrl || cfg.ogImage || '';
-                    const ogImageUrlReal = (typeof resolverImagemFirebase === 'function')
-                        ? resolverImagemFirebase(ogImageBruta)
-                        : converterGsUrl(ogImageBruta);
+                    // Atualização dinâmica do OG Image (Institucional: ogImageUrlInstitutional → ogImageUrl → ogImage)
+                    // Obs.: isto só afeta o navegador/inspeção. Robôs sociais leem as tags estáticas do <head>.
+                    const ogImageBruta = cfg.ogImageUrlInstitutional || cfg.ogImageUrl || cfg.ogImage || '';
+                    const ogImageUrlReal = ogImageBruta
+                        ? ((typeof resolverImagemFirebase === 'function')
+                            ? resolverImagemFirebase(ogImageBruta)
+                            : converterGsUrl(ogImageBruta))
+                        : '';
 
                     if (ogImageUrlReal) {
                         document.querySelectorAll('meta[property="og:image"], meta[property="og:image:secure_url"], meta[name="twitter:image"]').forEach(meta => {
                             meta.setAttribute('content', ogImageUrlReal);
                         });
+                        document.querySelectorAll('meta[property="og:image:width"], meta[property="og:image:height"], meta[property="og:image:type"]').forEach(m => m.remove());
                     }
 
                     // Hero: banner principal
