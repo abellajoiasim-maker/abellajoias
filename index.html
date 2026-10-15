@@ -91,14 +91,15 @@
             transition:opacity .35s ease;
             z-index:3;
         }
-        #promocoes .promo-card:hover{
+        #promocoes a.promo-card:hover{
             transform:translateY(-6px);
             box-shadow:0 22px 44px rgba(184,137,43,.16);
             border-color:var(--color-primary,#b8892b);
         }
-        #promocoes .promo-card:hover::before{
+        #promocoes a.promo-card:hover::before{
             opacity:1;
         }
+        #promocoes .promo-card.is-static{ cursor:default; }
         #promocoes .promo-img{
             position:relative;
             width:100%;
@@ -116,7 +117,7 @@
             display:block;
             transition:transform .6s ease;
         }
-        #promocoes .promo-card:hover .promo-img img{
+        #promocoes a.promo-card:hover .promo-img img{
             transform:scale(1.06);
         }
         #promocoes .promo-body{
@@ -228,7 +229,7 @@
                 <a href="#faq">Dúvidas</a>
                 <a href="#contato">Contato</a>
             </nav>
-            <a id="btnWhatsHeader" class="btn btn-wa" href="#" target="_blank" rel="noopener">
+            <a id="btnWhatsHeader" class="btn btn-wa" hidden target="_blank" rel="noopener">
                 <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 WhatsApp
             </a>
@@ -360,7 +361,7 @@
                         <h2 style="font-size:24px;">Galvânicas Parceiras de Limeira</h2>
                         <p>Trabalhamos junto com galvânicas da região pra oferecer acabamento e frete grátis pra quem compra acima de R$100. Confira quem são nossas parceiras e as condições especiais.</p>
                     </div>
-                    <a class="btn btn-primary" href="./galvanicas.html" target="_blank" rel="noopener">Ver Galvânicas Parceiras →</a>
+                    <a class="btn btn-primary" href="./galvanicas-parceiras/" target="_blank" rel="noopener">Ver Galvânicas Parceiras →</a>
                 </div>
             </div>
         </section>
@@ -391,13 +392,10 @@
                 <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Condições especiais</p>
                     <h2>Promoções vigentes</h2>
-                    <p>Ofertas atuais do catálogo — atualizadas direto pelo painel administrativo.</p>
+                    <p>Banners e condições especiais publicados diretamente pelo painel administrativo.</p>
                 </div>
                 <div class="promo-grid" id="promoGrid">
-                    <div class="promo-empty">Ofertas selecionadas atualizadas pelo painel administrativo. Consulte o catálogo para ver preços e disponibilidade.</div>
-                </div>
-                <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
-                    <a class="btn btn-outline" href="./" target="_blank" rel="noopener">Ver todas as ofertas →</a>
+                    <div class="promo-empty">Quando houver uma promoção vigente, ela aparecerá aqui.</div>
                 </div>
             </div>
         </section>
@@ -462,13 +460,13 @@
                 <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Catálogo</p>
                     <h2>Categorias em destaque</h2>
-                    <p>Uma amostra do catálogo completo — brincos, anéis, pulseiras, colares e muito mais.</p>
+                    <p>Uma amostra visual das coleções. Para navegar e comprar, use o botão abaixo.</p>
                 </div>
                 <div class="cat-grid" id="catGrid">
-                    <div class="cat-empty">Explore brincos, anéis, pulseiras, colares e outras categorias no catálogo online da Abella Joias.</div>
+                    <div class="cat-empty">Brincos, anéis, pulseiras, colares e outras coleções.</div>
                 </div>
                 <div style="text-align:center; margin-top:var(--space-7);" data-aurora-reveal>
-                    <a class="btn btn-primary" href="./" target="_blank" rel="noopener">Ver Catálogo Completo →</a>
+                    <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br/" target="_blank" rel="noopener">Ver Catálogo Completo →</a>
                 </div>
             </div>
         </section>
@@ -478,12 +476,12 @@
             <div class="wrap">
                 <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Destaques do momento</p>
-                    <h2>Peças que estão saindo mais</h2>
-                    <p>Uma seleção do catálogo — com preço de fábrica, pronto para revender.</p>
+                    <h2>Escolhas da Abella</h2>
+                    <p>Produtos selecionados no painel, com preços atualizados. Abra uma peça para encontrá-la no catálogo.</p>
                 </div>
                 <div class="prod-grid" id="prodGrid"></div>
                 <div style="text-align:center; margin-top:var(--space-6);" data-aurora-reveal>
-                    <a class="btn btn-primary" href="./" target="_blank" rel="noopener">Explorar Catálogo Completo →</a>
+                    <a class="btn btn-primary" href="https://catalogo.abellajoias.com.br/" target="_blank" rel="noopener">Ver Catálogo Completo →</a>
                 </div>
             </div>
         </section>
@@ -561,7 +559,7 @@
                     </div>
                     <div class="contato-cta">
                         <p>Atendimento rápido, direto com nossa equipe comercial.</p>
-                        <a id="btnWhatsContato" class="btn btn-wa" href="#" target="_blank" rel="noopener">
+                        <a id="btnWhatsContato" class="btn btn-wa" hidden target="_blank" rel="noopener">
                             <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                             Chamar no WhatsApp
                         </a>
@@ -592,21 +590,21 @@
                 <div class="foot-col">
                     <p class="col-title">Catálogo &amp; Atendimento</p>
                     <ul>
-                        <li><a href="./" target="_blank" rel="noopener">Catálogo Online</a></li>
-                        <li><a id="btnWhatsFooter" href="#" target="_blank" rel="noopener">WhatsApp</a></li>
+                        <li><a href="https://catalogo.abellajoias.com.br/" target="_blank" rel="noopener">Catálogo Online</a></li>
+                        <li><a id="btnWhatsFooter" hidden target="_blank" rel="noopener">WhatsApp</a></li>
                     </ul>
                     <div class="social-row" id="socialRowFooter" style="margin-top:var(--space-4);"></div>
                 </div>
             </div>
             <div class="foot-bottom">
                 <span>© <span id="anoAtual"></span> Abella Joias — Atacado de Joias no Bruto.</span>
-                <span>Limeira-SP · <a href="./" target="_blank" rel="noopener" style="text-decoration:underline;">Catálogo Online</a></span>
+                <span>Limeira-SP · <a href="https://catalogo.abellajoias.com.br/" target="_blank" rel="noopener" style="text-decoration:underline;">Catálogo Online</a></span>
             </div>
         </div>
     </footer>
 
     <!-- Botão Flutuante WhatsApp -->
-    <a id="waFloat" class="wa-float" href="#" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+    <a id="waFloat" class="wa-float" hidden target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
 
@@ -674,6 +672,19 @@
         })();
 
         document.addEventListener('DOMContentLoaded', async () => {
+            const URL_CATALOGO = 'https://catalogo.abellajoias.com.br/';
+            const escaparHTML = valor => String(valor ?? '').replace(/[&<>"']/g, caractere => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[caractere]);
+            const resolverLinkSeguro = valor => {
+                try {
+                    const url = new URL(String(valor || '').trim(), URL_CATALOGO);
+                    return url.protocol === 'https:' ? url.href : '';
+                } catch (_) {
+                    return '';
+                }
+            };
+
             if (typeof db === 'undefined') {
                 console.error('[Institucional] Firebase indisponível.');
                 return;
@@ -766,7 +777,10 @@
                         const link = `https://wa.me/${whatsNumero}?text=${encodeURIComponent('Olá! Vim pelo site institucional e quero conhecer o catálogo Abella Joias.')}`;
                         ['btnWhatsHeader', 'btnWhatsContato', 'waFloat', 'btnWhatsFooter'].forEach(id => {
                             const el = document.getElementById(id);
-                            if (el) el.href = link;
+                            if (el) {
+                                el.href = link;
+                                el.hidden = false;
+                            }
                         });
                     }
 
@@ -865,7 +879,7 @@
                 const promoGrid = document.getElementById('promoGrid');
                 if (promoGrid) {
                     if (promocoes.length === 0) {
-                        promoGrid.innerHTML = '<div class="promo-empty">Nenhuma promoção ativa no momento — confira o catálogo para condições especiais.</div>';
+                        promoGrid.innerHTML = '<div class="promo-empty">Quando houver uma promoção vigente, ela aparecerá aqui.</div>';
                     } else {
                         promoGrid.innerHTML = promocoes.map(p => {
                             const titulo = p.titulo || 'Promoção';
@@ -873,24 +887,37 @@
                             const precoDe = p.precoDe || p.preco_de || '';
                             const precoPor = p.precoPor || p.preco_por || p.preco || '';
                             const imgBruta = p.imagem || p.image || '';
-                            const link = p.link || (typeof resolverImagemFirebase === 'function' && p.categoria ? `./subcategorias.html?categoria=${encodeURIComponent(p.categoria)}` : './');
-                            const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
+                            const linkConfigurado = String(p.link || '').trim();
+                            let href = linkConfigurado ? resolverLinkSeguro(linkConfigurado) : '';
+                            if (!href && p.categoria) {
+                                href = `${URL_CATALOGO}subcategorias.html?categoria=${encodeURIComponent(String(p.categoria).trim())}`;
+                            }
+                            const tagCard = href ? 'a' : 'article';
+                            const atributosLink = href ? `href="${escaparHTML(href)}" target="_blank" rel="noopener noreferrer"` : '';
+                            const img = imgBruta
+                                ? (typeof resolverImagemFirebase === 'function' ? resolverImagemFirebase(imgBruta) : converterGsUrl(imgBruta))
+                                : '';
+                            const selo = escaparHTML(p.selo || 'Oferta Especial');
+                            const tituloSeguro = escaparHTML(titulo);
+                            const descricaoSegura = escaparHTML(desc);
+                            const precoDeSeguro = escaparHTML(precoDe);
+                            const precoPorSeguro = escaparHTML(precoPor);
                             return `
-                                <a class="promo-card" href="${link}" target="_blank" rel="noopener" data-aurora-reveal data-track="promo" data-nome="${titulo.replace(/"/g,'')}">
+                                <${tagCard} class="promo-card${href ? '' : ' is-static'}" ${atributosLink} data-aurora-reveal${href ? ' data-track="promo"' : ''} data-nome="${tituloSeguro}">
                                     <div class="promo-img">
-                                        ${img ? `<img src="${img}" alt="${titulo}" loading="lazy" onerror="this.style.display='none'">` : ''}
+                                        ${img ? `<img src="${escaparHTML(img)}" alt="${tituloSeguro}" loading="lazy" onerror="this.style.display='none'">` : ''}
                                     </div>
                                     <div class="promo-body">
-                                        <span class="promo-selo">${p.selo || 'Oferta Especial'}</span>
-                                        <h3>${titulo}</h3>
-                                        ${desc ? `<p class="desc">${desc}</p>` : ''}
+                                        <span class="promo-selo">${selo}</span>
+                                        <h3>${tituloSeguro}</h3>
+                                        ${desc ? `<p class="desc">${descricaoSegura}</p>` : ''}
                                         <div class="promo-precos">
-                                            ${precoDe ? `<span class="de">${precoDe}</span>` : ''}
-                                            ${precoPor ? `<span class="por">${precoPor}</span>` : ''}
+                                            ${precoDe ? `<span class="de">${precoDeSeguro}</span>` : ''}
+                                            ${precoPor ? `<span class="por">${precoPorSeguro}</span>` : ''}
                                         </div>
-                                        <span class="btn-promo">Ver promoção →</span>
+                                        ${href ? '<span class="btn-promo">Ver promoção →</span>' : ''}
                                     </div>
-                                </a>
+                                </${tagCard}>
                             `;
                         }).join('');
                         if (window.AuroraAnimations) AuroraAnimations.initReveal();
@@ -906,9 +933,11 @@
                         ? dados.map((val, i) => ({ id: val?.id || String(i), ...val })).filter(Boolean)
                         : Object.entries(dados).map(([id, val]) => ({ id, ...val }));
                 }
+                produtos = produtos.filter(p => p && p.ativo !== false && p.paused !== true
+                    && !(p.vitrine === true || p.isVitrine === true || p.showcase === true || p.tipo === 'vitrine'));
 
                 const idsManuais = Array.isArray(cfgSettings.destaquesHome) ? cfgSettings.destaquesHome.filter(Boolean) : [];
-                const manuais = idsManuais.map(id => produtos.find(p => p.id === id)).filter(Boolean);
+                const manuais = idsManuais.map(id => produtos.find(p => String(p.id) === String(id))).filter(Boolean);
                 const destaques = produtos.filter(p => p.destaque === true || p.highlight === true);
                 const promocionados = produtos.filter(p => (p.promocao || p.promo || p.precoPromocional) && !(p.destaque === true || p.highlight === true));
                 
@@ -936,6 +965,7 @@
                     };
                     prodGrid.innerHTML = selecionados.map(p => {
                         const nome = p.nome || p.name || 'Produto';
+                        const nomeSeguro = escaparHTML(nome);
                         const preco = parseFloat(p.preco || p.price) || 0;
                         const precoFinal = temDescontoService
                             ? window.descontoService.calcularPrecoComDesconto(p)
@@ -943,30 +973,25 @@
                         const etiqueta = temDescontoService ? window.descontoService.obterEtiquetaOferta(p) : null;
                         const imgBruta = p.imagem || p.image || '';
                         const img = imgBruta ? resolverImagemFirebase(imgBruta) : '';
-                        const cat = p.subcategoria || p.category || '';
-                        const catSlug = p.categoriaId || p.categoryId || p.categorySlug || '';
-                        const subSlug = p.subcategoriaId || p.subcategoryId || p.subcategoriaSlug || '';
-                        let href = './';
-                        if (img && catSlug) {
-                            href = `./produtos.html?categoria=${encodeURIComponent(catSlug)}` + (subSlug ? `&subcategoria=${encodeURIComponent(subSlug)}` : '');
-                        } else if (img) {
-                            href = './produtos.html';
-                        }
+                        const categoria = p.subcategoria || p.subCategory || p.subcategory || p.categoryName || p.category || p.categoria || '';
+                        const categoriaSegura = escaparHTML(categoria);
+                        const termoBusca = String(p.sku || p.codigo || nome).trim();
+                        const href = `${URL_CATALOGO}produtos.html?busca=${encodeURIComponent(termoBusca)}`;
                         return `
-                            <a class="prod-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal data-track="destaque" data-nome="${nome.replace(/"/g,'')}">
+                            <a class="prod-card" href="${href}" target="_blank" rel="noopener noreferrer" aria-label="Encontrar ${nomeSeguro} no catálogo" data-aurora-reveal data-track="destaque" data-nome="${nomeSeguro}">
                                 <div class="prod-img">
-                                    ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
-                                    ${etiqueta ? `<span class="prod-badge">${etiqueta}</span>` : ''}
+                                    ${img ? `<img src="${escaparHTML(img)}" alt="${nomeSeguro} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
+                                    ${etiqueta ? `<span class="prod-badge">${escaparHTML(etiqueta)}</span>` : ''}
                                 </div>
                                 <div class="prod-body">
-                                    ${cat ? `<span class="prod-cat">${cat}</span>` : ''}
-                                    <h3>${nome}</h3>
+                                    ${categoria ? `<span class="prod-cat">${categoriaSegura}</span>` : ''}
+                                    <h3>${nomeSeguro}</h3>
                                     <div class="prod-precos">
                                         ${precoFinal < preco ? `<span class="de">${formatarPreco(preco)}</span>` : ''}
                                         <span class="por">${formatarPreco(precoFinal)}</span>
                                     </div>
                                     <span class="prod-cta">
-                                        Explorar catálogo
+                                        Encontrar no catálogo
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
                                     </span>
                                 </div>
@@ -975,7 +1000,7 @@
                     }).join('');
                     if (window.AuroraAnimations) AuroraAnimations.initReveal();
                 } else if (prodGrid) {
-                    prodGrid.style.display = 'none';
+                    prodGrid.innerHTML = '<div class="prod-empty">Os destaques serão exibidos assim que houver produtos ativos selecionados.</div>';
                 }
 
                 // Categorias em Destaque
@@ -995,6 +1020,7 @@
                     catGrid.innerHTML = categorias.map(cat => {
                         const nome = cat.nome || cat.name || 'Coleção';
                         const slug = cat.slug || '';
+                        const nomeSeguro = escaparHTML(nome);
                         const imgBruta = cat.imagem || cat.image || '';
                         let img = '';
                         if (typeof resolverImagemFirebase === 'function') {
@@ -1005,12 +1031,11 @@
                         } else if (imgBruta) {
                             img = converterGsUrl(imgBruta);
                         }
-                        const href = `./subcategorias.html?categoria=${encodeURIComponent(slug)}`;
                         return `
-                            <a class="cat-card" href="${href}" target="_blank" rel="noopener" data-aurora-reveal>
-                                ${img ? `<img src="${img}" alt="${nome} — Abella Joias atacado" loading="lazy" onerror="this.style.display='none'">` : ''}
-                                <div class="ov"><span>${nome}</span></div>
-                            </a>
+                            <div class="cat-card" role="group" aria-label="Categoria: ${nomeSeguro}" data-aurora-reveal>
+                                ${img ? `<img src="${escaparHTML(img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+                                <div class="ov"><span>${nomeSeguro}</span></div>
+                            </div>
                         `;
                     }).join('');
                     if (window.AuroraAnimations) AuroraAnimations.initReveal();

@@ -137,6 +137,7 @@ nav.links a:hover{ color: var(--color-primary-hover); }
 .btn-outline:hover{ background: var(--color-primary); color: #fff; transform: translateY(-2px); }
 .btn-wa{ background: #25D366; color: #fff; }
 .btn-wa:hover{ background: #1EBE57; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn-wa[hidden], .wa-float[hidden]{ display: none !important; }
 #navToggle{
     display: none; background: none; border: none; font-size: 22px;
     cursor: pointer; color: var(--color-text); padding: 6px;
@@ -252,15 +253,12 @@ section{ padding: var(--space-9) 0; }
     overflow: hidden;
     box-shadow: var(--shadow-md);
     background: var(--color-surface);
-    transition: transform var(--duration-slow) var(--ease), box-shadow var(--duration-slow) var(--ease);
+    cursor: default;
 }
-.cat-card:hover{ transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 .cat-card img{
     width: 100%; height: 100%; object-fit: cover;
-    transition: transform var(--duration-slower) var(--ease);
     background-color: #f4f0e4;
 }
-.cat-card:hover img{ transform: scale(1.06); }
 .cat-card .ov{
     position: absolute; inset: 0;
     background: linear-gradient(to top, rgba(30,26,20,.78), transparent 60%);
@@ -396,6 +394,7 @@ footer{ padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--co
 
 /* ================= PRODUTOS EM DESTAQUE ================= */
 .prod-grid{ display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-5); }
+.prod-empty{ grid-column:1/-1; text-align:center; color:var(--color-secondary); font-size:13px; padding:var(--space-6); }
 .prod-card{
     background: var(--color-surface);
     border: 1px solid var(--color-border);
