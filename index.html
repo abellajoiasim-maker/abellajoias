@@ -209,6 +209,27 @@
             font-size:13px;
         }
     </style>
+    <style>
+        /* Vídeo institucional – desktop, tablet e celular */
+        .video-section{ padding-block: var(--space-8); }
+        .video-section .section-head{ max-width: 820px; }
+        .video-frame{
+            position: relative; display: block; width: 100%; max-width: 1120px;
+            margin: 0 auto; aspect-ratio: 16 / 9; background: #000;
+            border-radius: 18px; overflow: hidden;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 28px 70px rgba(60,40,10,.22);
+        }
+        .video-frame iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        @supports not (aspect-ratio: 16 / 9){ .video-frame{ height: 0; padding-top: 56.25%; } }
+        @media (max-width: 900px){
+            .video-frame{ max-width: 100%; border-radius: 14px; }
+        }
+        @media (max-width: 600px){
+            .video-section{ padding-block: var(--space-6); }
+            .video-frame{ border-radius: 10px; box-shadow: 0 12px 30px rgba(60,40,10,.2); }
+        }
+    </style>
 </head>
 <body>
 
@@ -278,7 +299,7 @@
         </section>
 
         <!-- VÍDEO INSTITUCIONAL -->
-        <section id="video" style="padding-block: var(--space-8);">
+        <section id="video" class="video-section">
             <div class="wrap">
                 <div class="section-head" data-aurora-reveal>
                     <p class="eyebrow">Conheça a Abella</p>
@@ -286,7 +307,7 @@
                     <p>Veja em 1 minuto como funciona o atacado de joias no bruto da Abella Joias.</p>
                 </div>
                 <div class="video-frame" data-aurora-reveal>
-                    <iframe src="https://www.youtube-nocookie.com/embed/X4lALzc5tBg?rel=0&cc_load_policy=0"
+                    <iframe src="https://www.youtube-nocookie.com/embed/X4lALzc5tBg?rel=0"
                             title="Abella Joias – apresentação"
                             loading="lazy"
                             allow="accelerometer; encrypted-media; picture-in-picture; fullscreen"
